@@ -3,7 +3,7 @@
 
 import type { Appointment, Patient } from '@/lib/types';
 import { useState, useEffect, useCallback } from 'react';
-import { format } from 'date-fns';
+import { format, addDays, subDays, setHours, setMinutes } from 'date-fns';
 import { MOCK_DOCTORS, APPOINTMENT_TYPES } from '@/lib/constants';
 
 const APPOINTMENTS_STORAGE_KEY = 'nephrolite_appointments';
@@ -12,19 +12,71 @@ const getInitialAppointments = (): Appointment[] => {
   if (typeof window === 'undefined') return [];
   const storedAppointments = localStorage.getItem(APPOINTMENTS_STORAGE_KEY);
   if (storedAppointments) {
-    return JSON.parse(storedAppointments);
+    try {
+      // Ensure dates are correctly parsed, especially if stored as strings
+      const parsedAppointments = JSON.parse(storedAppointments).map((app: any) => ({
+        ...app,
+        date: format(new Date(app.date), 'yyyy-MM-dd') // Re-format to ensure consistency
+      }));
+      return parsedAppointments;
+    } catch (e) {
+      console.error("Error parsing appointments from localStorage", e);
+      localStorage.removeItem(APPOINTMENTS_STORAGE_KEY); // Clear corrupted data
+      // Fall through to generate mock data
+    }
   }
 
-  // Initialize with some mock data if localStorage is empty
-  // Requires patient data, which might not be available here directly without prop drilling or another hook.
-  // For simplicity, we'll create appointments without real patient names initially, or assume some patient IDs.
-  // This part might need adjustment if direct access to patient list is needed for mock data generation.
+  const today = new Date();
   const mockAppointments: Appointment[] = [
     {
       id: crypto.randomUUID(),
-      patientId: 'mock-patient-id-1', // Replace with actual patient ID if available
-      patientName: 'Rajesh Kumar', // Ideally fetched or passed
-      date: format(new Date(Date.now() + 86400000 * 2), 'yyyy-MM-dd'), // 2 days from now
+      patientId: 'mock-patient-id-1', 
+      patientName: 'Rajesh Kumar', 
+      date: format(setMinutes(setHours(today, 9), 0), 'yyyy-MM-dd'), 
+      time: '09:00',
+      type: APPOINTMENT_TYPES[2], // Dialysis Follow-up
+      doctorName: MOCK_DOCTORS[0],
+      status: 'Scheduled',
+      notes: 'Scheduled dialysis session.'
+    },
+    {
+      id: crypto.randomUUID(),
+      patientId: 'mock-patient-id-2', 
+      patientName: 'Priya Sharma', 
+      date: format(setMinutes(setHours(today, 10), 30), 'yyyy-MM-dd'), 
+      time: '10:30',
+      type: APPOINTMENT_TYPES[3], // Initial Consultation
+      doctorName: MOCK_DOCTORS[1],
+      status: 'Scheduled',
+      notes: 'First consultation for kidney health assessment.'
+    },
+    {
+      id: crypto.randomUUID(),
+      patientId: 'mock-patient-id-3', // Assume a third mock patient ID
+      patientName: 'Amit Singh', 
+      date: format(setMinutes(setHours(today, 13), 15), 'yyyy-MM-dd'), 
+      time: '13:15',
+      type: 'Lab Results Review', 
+      doctorName: MOCK_DOCTORS[2],
+      status: 'Scheduled',
+      notes: 'Review recent blood work.'
+    },
+    {
+      id: crypto.randomUUID(),
+      patientId: 'mock-patient-id-4', 
+      patientName: 'Sunita Devi', 
+      date: format(setMinutes(setHours(today, 15), 45), 'yyyy-MM-dd'), 
+      time: '15:45',
+      type: 'Transplant Evaluation', 
+      doctorName: MOCK_DOCTORS[3],
+      status: 'Scheduled',
+      notes: 'Pre-transplant assessment.'
+    },
+    {
+      id: crypto.randomUUID(),
+      patientId: 'mock-patient-id-1',
+      patientName: 'Rajesh Kumar',
+      date: format(addDays(today, 2), 'yyyy-MM-dd'), 
       time: '10:00',
       type: APPOINTMENT_TYPES[0],
       doctorName: MOCK_DOCTORS[0],
@@ -33,14 +85,25 @@ const getInitialAppointments = (): Appointment[] => {
     },
     {
       id: crypto.randomUUID(),
-      patientId: 'mock-patient-id-2', // Replace with actual patient ID
-      patientName: 'Priya Sharma', // Ideally fetched or passed
-      date: format(new Date(Date.now() + 86400000 * 5), 'yyyy-MM-dd'), // 5 days from now
+      patientId: 'mock-patient-id-2',
+      patientName: 'Priya Sharma',
+      date: format(addDays(today, 5), 'yyyy-MM-dd'), 
       time: '14:30',
       type: APPOINTMENT_TYPES[1],
       doctorName: MOCK_DOCTORS[1],
       status: 'Scheduled',
       notes: 'Follow-up regarding recent lab results.'
+    },
+     {
+      id: crypto.randomUUID(),
+      patientId: 'mock-patient-id-3',
+      patientName: 'Amit Singh',
+      date: format(subDays(today, 3), 'yyyy-MM-dd'), 
+      time: '11:00',
+      type: APPOINTMENT_TYPES[0],
+      doctorName: MOCK_DOCTORS[2],
+      status: 'Completed',
+      notes: 'Completed routine checkup.'
     }
   ];
   localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(mockAppointments));
@@ -69,11 +132,11 @@ export function useAppointmentData() {
     return appointments.find(a => a.id === id);
   }, [appointments]);
 
-  const addAppointment = useCallback((appointmentData: Omit<Appointment, 'id' | 'status'>, patient: Patient): Appointment => {
+  const addAppointment = useCallback((appointmentData: Omit<Appointment, 'id' | 'status' | 'patientName'>, patient: Patient): Appointment => {
     const newAppointment: Appointment = {
       ...appointmentData,
       id: crypto.randomUUID(),
-      patientName: patient.name, // Store patient name
+      patientName: patient.name, 
       status: 'Scheduled',
     };
     const updatedAppointments = [...appointments, newAppointment];
@@ -96,9 +159,12 @@ export function useAppointmentData() {
     if (appointmentIndex === -1) return undefined;
 
     const updatedAppointments = [...appointments];
-    updatedAppointments[appointmentIndex] = updatedAppointmentData;
+    updatedAppointments[appointmentIndex] = {
+        ...updatedAppointmentData,
+        date: format(new Date(updatedAppointmentData.date), 'yyyy-MM-dd') // Ensure date is stored correctly
+    };
     saveData(updatedAppointments);
-    return updatedAppointmentData;
+    return updatedAppointments[appointmentIndex];
   }, [appointments, saveData]);
 
 
