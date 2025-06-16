@@ -34,12 +34,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import React, { useState } from "react"; // Ensured React import for useState
 
 const addressSchema = z.object({
   street: z.string().min(1, "Street is required"),
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
   pincode: z.string().regex(/^\d{6}$/, "Invalid pincode (must be 6 digits)"),
+  country: z.string().optional(), // Added country
 });
 
 const guardianSchema = z.object({
@@ -81,13 +83,17 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     defaultValues: patient ? {
       ...patient,
       dob: patient.dob ? format(new Date(patient.dob), "yyyy-MM-dd") : "",
+      address: {
+        ...patient.address,
+        country: patient.address.country || "India",
+      }
     } : {
       name: "",
       dob: "",
       gender: "",
       contact: "",
       email: "",
-      address: { street: "", city: "", state: "", pincode: "" },
+      address: { street: "", city: "", state: "", pincode: "", country: "India" },
       guardian: { name: "", relation: "", contact: "" },
       clinicalProfile: { primaryDiagnosis: "", labels: [], tags: [], nutritionalStatus: "", disability: "" },
     },
@@ -154,7 +160,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                           )}
                         >
                           {field.value ? (
-                            format(new Date(field.value), "PPP")
+                            format(new Date(field.value), "PPP") // Ensure date is treated as local
                           ) : (
                             <span>Pick a date</span>
                           )}
@@ -165,7 +171,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={field.value ? new Date(field.value) : undefined}
+                        selected={field.value ? new Date(field.value) : undefined} // Ensure date is treated as local
                         onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
                         disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
                         initialFocus
@@ -220,6 +226,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormItem>
                 <FormLabel>City</FormLabel>
                 <FormControl><Input placeholder="Enter city" {...field} /></FormControl>
+                <FormDescription className="text-xs">Dynamic city dropdown based on state is a future enhancement.</FormDescription>
                 <FormMessage />
               </FormItem>
             )} />
@@ -240,6 +247,16 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 <FormMessage />
               </FormItem>
             )} />
+            <FormField control={form.control} name="address.country" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter country" {...field} disabled />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} 
+            />
           </CardContent>
         </Card>
 
@@ -351,4 +368,3 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
-

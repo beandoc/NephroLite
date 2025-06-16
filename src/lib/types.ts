@@ -4,6 +4,7 @@ export type Address = {
   city: string;
   state: string;
   pincode: string;
+  country?: string; // Added country
 };
 
 export type Guardian = {

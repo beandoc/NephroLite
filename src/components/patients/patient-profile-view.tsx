@@ -5,10 +5,11 @@ import type { Patient } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, MapPin, ShieldCheck, Stethoscope, Users, FileText, Microscope, Pill, MessageSquare, CalendarDays, FlaskConical, Trash2 } from 'lucide-react';
+import { User, MapPin, ShieldCheck, Stethoscope, FileText, Microscope, Pill, MessageSquare, CalendarDays, FlaskConical, Trash2, Eye, Edit, Copy, PlusCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface PatientProfileViewProps {
   patient: Patient;
@@ -32,95 +33,154 @@ const DetailItem = ({ label, value, icon: Icon, className }: { label: string; va
 
 
 const MockVisitHistory = ({ patientId }: { patientId: string }) => {
+  const { toast } = useToast();
   const visits = [
     { id: 'v1', date: '2024-05-10', doctor: 'Dr. Anya Sharma', type: 'Routine Checkup', notes: 'BP stable, advised diet modification. Patient reports feeling well. Next follow-up in 3 months.' },
     { id: 'v2', date: '2024-02-15', doctor: 'Dr. Vikram Singh', type: 'Follow-up', notes: 'Reviewed lab reports, adjusted medication (Telmisartan increased to 80mg). Creatinine slightly elevated.' },
     { id: 'v3', date: '2023-11-20', doctor: 'Dr. Anya Sharma', type: 'Consultation', notes: 'Discussed new symptoms (ankle swelling), ordered UACR and KFT. Advised low salt diet.' },
   ];
+
+  const handleAddNewVisit = () => {
+    toast({ title: "Feature Under Development", description: "Adding new visit records will be available soon." });
+  };
+  
+  const handleVisitAction = (action: string, visitId: string) => {
+     toast({ title: "Feature Under Development", description: `${action} functionality for visit ${visitId} is under development.` });
+  };
+
   return (
-    <Accordion type="single" collapsible className="w-full">
-      {visits.map(visit => (
-        <AccordionItem value={visit.id} key={visit.id} className="border-b last:border-b-0">
-          <AccordionTrigger className="hover:bg-muted/50 px-4 py-3 text-left">
-            <div className="flex items-center gap-4 w-full">
-              <CalendarDays className="w-5 h-5 text-primary flex-shrink-0"/>
-              <div className="flex-grow">
-                <p className="font-medium">{format(new Date(visit.date), 'PPP')} - {visit.type}</p>
-                <p className="text-sm text-muted-foreground">With {visit.doctor}</p>
+    <>
+      <div className="flex justify-end mb-4">
+        <Button onClick={handleAddNewVisit}><PlusCircle className="mr-2 h-4 w-4"/>Add New Visit</Button>
+      </div>
+      <Accordion type="single" collapsible className="w-full">
+        {visits.map(visit => (
+          <AccordionItem value={visit.id} key={visit.id} className="border-b last:border-b-0 rounded-md mb-2 shadow-sm bg-card">
+            <AccordionTrigger className="hover:bg-muted/50 px-4 py-3 text-left rounded-t-md">
+              <div className="flex items-center gap-4 w-full">
+                <CalendarDays className="w-5 h-5 text-primary flex-shrink-0"/>
+                <div className="flex-grow">
+                  <p className="font-medium">{format(new Date(visit.date), 'PPP')} - {visit.type}</p>
+                  <p className="text-sm text-muted-foreground">With {visit.doctor}</p>
+                </div>
               </div>
-              {/* Placeholder for delete visit button */}
-              <Button variant="ghost" size="icon" disabled className="ml-auto opacity-50 cursor-not-allowed" title="Delete visit (feature under development)">
-                <Trash2 className="w-4 h-4 text-destructive" />
-              </Button>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pt-0 pb-4 bg-muted/20 rounded-b-md">
-            <p className="text-sm text-foreground mt-2 flex items-start gap-2">
-                <MessageSquare className="w-4 h-4 mt-1 text-primary shrink-0" />
-                <span>{visit.notes || "No specific notes for this visit."}</span>
-            </p>
-          </AccordionContent>
-        </AccordionItem>
-      ))}
-       {visits.length === 0 && (
-        <p className="text-muted-foreground text-center py-4">No visit history recorded.</p>
-      )}
-      <CardDescription className="text-xs text-center pt-2 px-4">Note: Deleting individual visit records is currently under development.</CardDescription>
-    </Accordion>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pt-2 pb-4 bg-card rounded-b-md">
+              <p className="text-sm text-foreground mt-2 flex items-start gap-2">
+                  <MessageSquare className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                  <span className="font-medium">Remark: </span>
+                  <span>{visit.notes || "No specific notes for this visit."}</span>
+              </p>
+              <div className="mt-3 pt-3 border-t flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => handleVisitAction('View Details', visit.id)} disabled title="View Details (Under Development)">
+                    <Eye className="w-4 h-4 mr-1"/> View
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => handleVisitAction('Edit Visit', visit.id)} disabled title="Edit Visit (Under Development)">
+                    <Edit className="w-4 h-4 mr-1"/> Edit
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => handleVisitAction('Copy Visit', visit.id)} disabled title="Copy Visit (Under Development)">
+                    <Copy className="w-4 h-4 mr-1"/> Copy
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive/90" onClick={() => handleVisitAction('Delete Visit', visit.id)} disabled title="Delete visit (Under Development)">
+                    <Trash2 className="w-4 h-4 mr-1" /> Delete
+                  </Button>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+        {visits.length === 0 && (
+          <Card className="flex items-center justify-center h-32 border-dashed">
+            <p className="text-muted-foreground text-center py-4">No visit history recorded.</p>
+          </Card>
+        )}
+      </Accordion>
+    </>
   );
 };
 
 const MockInvestigations = ({ patientId }: { patientId: string }) => {
+  const { toast } = useToast();
   const investigations = [
     { id: 'i1', date: '2024-05-01', name: 'Serum Creatinine', result: '1.8 mg/dL', normalRange: '0.6-1.2 mg/dL', status: 'High' },
     { id: 'i2', date: '2024-05-01', name: 'eGFR', result: '40 mL/min/1.73m²', normalRange: '>60 mL/min/1.73m²', status: 'Low' },
     { id: 'i3', date: '2024-02-10', name: 'Urine Albumin-to-Creatinine Ratio (UACR)', result: '150 mg/g', normalRange: '<30 mg/g', status: 'High' },
   ];
+
+  const handleAddNewInvestigation = () => {
+    toast({ title: "Feature Under Development", description: "Adding new investigation results will be available soon." });
+  };
+
   return (
-     <div className="space-y-4">
-      {investigations.map(inv => (
-        <Card key={inv.id} className="shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-md font-medium flex items-center"><FlaskConical className="w-5 h-5 mr-2 text-primary"/>{inv.name}</CardTitle>
-            <CardDescription>{format(new Date(inv.date), 'PPP')}</CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-3 gap-2 text-sm">
-            <div><span className="font-semibold">Result:</span> {inv.result}</div>
-            <div><span className="font-semibold">Range:</span> {inv.normalRange}</div>
-            <div><span className="font-semibold">Status:</span> <Badge variant={inv.status === 'Normal' ? 'default' : 'destructive'}>{inv.status}</Badge></div>
-          </CardContent>
-        </Card>
-      ))}
-       {investigations.length === 0 && (
-        <p className="text-muted-foreground text-center py-4">No investigation results found.</p>
-      )}
-    </div>
+    <>
+      <div className="flex justify-end mb-4">
+        <Button onClick={handleAddNewInvestigation}><PlusCircle className="mr-2 h-4 w-4"/>Add New Investigation</Button>
+      </div>
+      <div className="space-y-4">
+        {investigations.map(inv => (
+          <Card key={inv.id} className="shadow-sm">
+            <CardHeader className="pb-3 pt-4">
+              <CardTitle className="text-md font-semibold flex items-center"><FlaskConical className="w-5 h-5 mr-2 text-primary"/>{inv.name}</CardTitle>
+              <CardDescription>{format(new Date(inv.date), 'PPP')}</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-2 text-sm pb-4">
+              <div><span className="font-medium text-muted-foreground">Result:</span> {inv.result}</div>
+              <div><span className="font-medium text-muted-foreground">Range:</span> {inv.normalRange}</div>
+              <div>
+                <span className="font-medium text-muted-foreground">Status:</span>{' '}
+                <Badge variant={inv.status === 'Normal' ? 'secondary' : inv.status === 'High' ? 'destructive' : 'outline'}>
+                  {inv.status}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        {investigations.length === 0 && (
+          <Card className="flex items-center justify-center h-32 border-dashed">
+            <p className="text-muted-foreground text-center py-4">No investigation results found.</p>
+          </Card>
+        )}
+      </div>
+    </>
   );
 };
 
 const MockDiagnosisRx = ({ patientId }: { patientId: string }) => {
+  const { toast } = useToast();
    const history = [
     { id: 'd1', date: '2024-01-20', diagnosis: 'Chronic Kidney Disease Stage 3a', medication: 'Telmisartan 40mg OD, Atorvastatin 10mg OD', doctor: 'Dr. Anya Sharma' },
     { id: 'd2', date: '2023-07-15', diagnosis: 'Hypertension', medication: 'Amlodipine 5mg OD (discontinued)', doctor: 'Dr. Vikram Singh' },
   ];
+
+  const handleAddNew = (type: string) => {
+    toast({ title: "Feature Under Development", description: `Adding new ${type} will be available soon.` });
+  };
+
   return (
-    <div className="space-y-4">
-      {history.map(item => (
-        <Card key={item.id} className="shadow-sm">
-           <CardHeader className="pb-3">
-            <CardTitle className="text-md font-medium flex items-center"><Pill className="w-5 h-5 mr-2 text-primary"/>{item.diagnosis}</CardTitle>
-            <CardDescription>{format(new Date(item.date), 'PPP')} - Prescribed by {item.doctor}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm font-semibold">Medication:</p>
-            <p className="text-sm text-muted-foreground">{item.medication}</p>
-          </CardContent>
-        </Card>
-      ))}
-      {history.length === 0 && (
-        <p className="text-muted-foreground text-center py-4">No diagnosis or medication history found.</p>
-      )}
-    </div>
+    <>
+      <div className="flex justify-end gap-2 mb-4">
+        <Button onClick={() => handleAddNew('Diagnosis')} variant="outline"><PlusCircle className="mr-2 h-4 w-4"/>Add New Diagnosis</Button>
+        <Button onClick={() => handleAddNew('Medication')}><PlusCircle className="mr-2 h-4 w-4"/>Add New Medication</Button>
+      </div>
+      <div className="space-y-4">
+        {history.map(item => (
+          <Card key={item.id} className="shadow-sm">
+            <CardHeader className="pb-3 pt-4">
+              <CardTitle className="text-md font-semibold flex items-center"><Stethoscope className="w-5 h-5 mr-2 text-primary"/>{item.diagnosis}</CardTitle>
+              <CardDescription>{format(new Date(item.date), 'PPP')} - Diagnosed by {item.doctor}</CardDescription>
+            </CardHeader>
+            <CardContent className="pb-4">
+              <p className="text-sm font-medium flex items-center text-muted-foreground"><Pill className="w-4 h-4 mr-2 text-primary"/>Medication:</p>
+              <p className="text-sm text-foreground pl-6">{item.medication}</p>
+            </CardContent>
+          </Card>
+        ))}
+        {history.length === 0 && (
+         <Card className="flex items-center justify-center h-32 border-dashed">
+            <p className="text-muted-foreground text-center py-4">No diagnosis or medication history found.</p>
+          </Card>
+        )}
+      </div>
+    </>
   );
 };
 
@@ -162,6 +222,7 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
               <DetailItem label="City" value={patient.address.city} />
               <DetailItem label="State" value={patient.address.state} />
               <DetailItem label="Pincode" value={patient.address.pincode} />
+              <DetailItem label="Country" value="India" /> 
             </CardContent>
           </Card>
 
@@ -197,7 +258,7 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
             <CardTitle className="font-headline text-xl">Visit History</CardTitle>
             <CardDescription>Chronological record of patient consultations and visits. Click on a visit to see details.</CardDescription>
           </CardHeader>
-          <CardContent className="px-0 sm:px-6">
+          <CardContent className="px-2 sm:px-4 md:px-6">
             <MockVisitHistory patientId={patient.id} />
           </CardContent>
         </Card>
@@ -229,4 +290,3 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
     </Tabs>
   );
 }
-
