@@ -53,11 +53,17 @@ export const APPOINTMENT_TYPES: string[] = [
   'Emergency',
 ];
 
-export const APPOINTMENT_STATUSES: string[] = ['Scheduled', 'Completed', 'Cancelled'];
+export const APPOINTMENT_STATUSES: Array<'Scheduled' | 'Completed' | 'Cancelled'> = ['Scheduled', 'Completed', 'Cancelled'];
 
 export const MOCK_DOCTORS: string[] = [
   'Dr. Anya Sharma',
   'Dr. Vikram Singh',
   'Dr. Priya Patel',
   'Dr. Rohan Gupta',
+];
+
+export const TIME_SLOTS: string[] = [
+  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+  "12:00", "12:30", "14:00", "14:30", "15:00", "15:30",
+  "16:00", "16:30", "17:00",
 ];

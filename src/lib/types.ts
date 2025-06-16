@@ -37,11 +37,12 @@ export type Patient = {
 export type Appointment = {
   id: string;
   patientId: string;
-  patientName: string;
+  patientName: string; // Denormalized for easier display
   date: string; // ISO string (YYYY-MM-DD)
   time: string; // HH:mm
   type: string;
   doctorName: string;
+  notes?: string;
   status: 'Scheduled' | 'Completed' | 'Cancelled';
 };
 

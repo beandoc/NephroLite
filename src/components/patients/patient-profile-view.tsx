@@ -5,28 +5,107 @@ import type { Patient } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, MapPin, ShieldCheck, Stethoscope, Users, FileText, Microscope, Pill } from 'lucide-react';
+import { User, MapPin, ShieldCheck, Stethoscope, Users, FileText, Microscope, Pill, MessageSquare, CalendarDays, FlaskConical } from 'lucide-react';
 import { format } from 'date-fns';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'; // Using ShadCN Accordion
 
 interface PatientProfileViewProps {
   patient: Patient;
 }
 
-const DetailItem = ({ label, value, icon: Icon }: { label: string; value?: string | string[] | null; icon?: React.ElementType }) => (
-  <div>
+const DetailItem = ({ label, value, icon: Icon, className }: { label: string; value?: string | string[] | null; icon?: React.ElementType, className?: string }) => (
+  <div className={className}>
     <h3 className="text-sm font-medium text-muted-foreground flex items-center">
       {Icon && <Icon className="w-4 h-4 mr-2 text-primary" />}
       {label}
     </h3>
     {Array.isArray(value) ? (
       <div className="flex flex-wrap gap-1 mt-1">
-        {value.map((item, index) => <Badge key={index} variant="secondary">{item}</Badge>)}
+        {value.length > 0 ? value.map((item, index) => <Badge key={index} variant="secondary">{item}</Badge>) : <p className="text-base text-muted-foreground italic">None</p>}
       </div>
     ) : (
       <p className="text-base">{value || 'N/A'}</p>
     )}
   </div>
 );
+
+
+const MockVisitHistory = ({ patientId }: { patientId: string }) => {
+  const visits = [
+    { id: 'v1', date: '2024-05-10', doctor: 'Dr. Anya Sharma', type: 'Routine Checkup', notes: 'BP stable, advised diet modification.' },
+    { id: 'v2', date: '2024-02-15', doctor: 'Dr. Vikram Singh', type: 'Follow-up', notes: 'Reviewed lab reports, adjusted medication.' },
+    { id: 'v3', date: '2023-11-20', doctor: 'Dr. Anya Sharma', type: 'Consultation', notes: 'Discussed new symptoms, ordered tests.' },
+  ];
+  return (
+    <Accordion type="single" collapsible className="w-full">
+      {visits.map(visit => (
+        <AccordionItem value={visit.id} key={visit.id}>
+          <AccordionTrigger className="hover:bg-muted/50 px-4">
+            <div className="flex items-center gap-4">
+              <CalendarDays className="w-5 h-5 text-primary"/>
+              <div>
+                <p className="font-medium">{format(new Date(visit.date), 'PPP')} - {visit.type}</p>
+                <p className="text-sm text-muted-foreground">With {visit.doctor}</p>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pt-0 pb-4">
+            <p className="text-sm text-muted-foreground flex items-start gap-2"><MessageSquare className="w-4 h-4 mt-1 text-primary shrink-0" />{visit.notes || "No specific notes for this visit."}</p>
+          </AccordionContent>
+        </AccordionItem>
+      ))}
+    </Accordion>
+  );
+};
+
+const MockInvestigations = ({ patientId }: { patientId: string }) => {
+  const investigations = [
+    { id: 'i1', date: '2024-05-01', name: 'Serum Creatinine', result: '1.8 mg/dL', normalRange: '0.6-1.2 mg/dL', status: 'High' },
+    { id: 'i2', date: '2024-05-01', name: 'eGFR', result: '40 mL/min/1.73m²', normalRange: '>60 mL/min/1.73m²', status: 'Low' },
+    { id: 'i3', date: '2024-02-10', name: 'Urine Albumin-to-Creatinine Ratio (UACR)', result: '150 mg/g', normalRange: '<30 mg/g', status: 'High' },
+  ];
+  return (
+     <div className="space-y-4">
+      {investigations.map(inv => (
+        <Card key={inv.id} className="shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-md font-medium flex items-center"><FlaskConical className="w-5 h-5 mr-2 text-primary"/>{inv.name}</CardTitle>
+            <CardDescription>{format(new Date(inv.date), 'PPP')}</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-3 gap-2 text-sm">
+            <div><span className="font-semibold">Result:</span> {inv.result}</div>
+            <div><span className="font-semibold">Range:</span> {inv.normalRange}</div>
+            <div><span className="font-semibold">Status:</span> <Badge variant={inv.status === 'Normal' ? 'default' : 'destructive'}>{inv.status}</Badge></div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+};
+
+const MockDiagnosisRx = ({ patientId }: { patientId: string }) => {
+   const history = [
+    { id: 'd1', date: '2024-01-20', diagnosis: 'Chronic Kidney Disease Stage 3a', medication: 'Telmisartan 40mg OD, Atorvastatin 10mg OD', doctor: 'Dr. Anya Sharma' },
+    { id: 'd2', date: '2023-07-15', diagnosis: 'Hypertension', medication: 'Amlodipine 5mg OD (discontinued)', doctor: 'Dr. Vikram Singh' },
+  ];
+  return (
+    <div className="space-y-4">
+      {history.map(item => (
+        <Card key={item.id} className="shadow-sm">
+           <CardHeader className="pb-3">
+            <CardTitle className="text-md font-medium flex items-center"><Pill className="w-5 h-5 mr-2 text-primary"/>{item.diagnosis}</CardTitle>
+            <CardDescription>{format(new Date(item.date), 'PPP')} - Prescribed by {item.doctor}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm font-semibold">Medication:</p>
+            <p className="text-sm text-muted-foreground">{item.medication}</p>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+};
+
 
 export function PatientProfileView({ patient }: PatientProfileViewProps) {
   return (
@@ -98,10 +177,10 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
         <Card className="shadow-md">
           <CardHeader>
             <CardTitle className="font-headline text-xl">Visit History</CardTitle>
-            <CardDescription>Detailed records of past patient visits.</CardDescription>
+            <CardDescription>Chronological record of patient consultations and visits.</CardDescription>
           </CardHeader>
-          <CardContent className="min-h-[200px] flex items-center justify-center">
-            <p className="text-muted-foreground">Visit history feature coming soon.</p>
+          <CardContent>
+            <MockVisitHistory patientId={patient.id} />
           </CardContent>
         </Card>
       </TabsContent>
@@ -110,10 +189,10 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
         <Card className="shadow-md">
           <CardHeader>
             <CardTitle className="font-headline text-xl">Investigation Results</CardTitle>
-            <CardDescription>Lab reports and other investigation findings.</CardDescription>
+            <CardDescription>Summary of lab reports and other diagnostic findings.</CardDescription>
           </CardHeader>
-          <CardContent className="min-h-[200px] flex items-center justify-center">
-            <p className="text-muted-foreground">Investigation results feature coming soon.</p>
+          <CardContent>
+            <MockInvestigations patientId={patient.id} />
           </CardContent>
         </Card>
       </TabsContent>
@@ -121,11 +200,11 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
       <TabsContent value="diagnosis">
         <Card className="shadow-md">
           <CardHeader>
-            <CardTitle className="font-headline text-xl">Diagnosis & Medication</CardTitle>
-            <CardDescription>History of diagnoses and prescribed medications.</CardDescription>
+            <CardTitle className="font-headline text-xl">Diagnosis & Medication History</CardTitle>
+            <CardDescription>Historical view of diagnoses and prescribed medications.</CardDescription>
           </CardHeader>
-          <CardContent className="min-h-[200px] flex items-center justify-center">
-            <p className="text-muted-foreground">Diagnosis and medication management feature coming soon.</p>
+          <CardContent>
+            <MockDiagnosisRx patientId={patient.id} />
           </CardContent>
         </Card>
       </TabsContent>
