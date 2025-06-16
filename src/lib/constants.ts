@@ -23,6 +23,19 @@ export const PRIMARY_DIAGNOSIS_OPTIONS: string[] = [
   'Kidney Stones',
   'Urinary Tract Infection (UTI) - Complicated',
   'End-Stage Renal Disease (ESRD)',
+  'IgA Nephropathy (IgAN)',
+  'Focal Segmental Glomerulosclerosis (FSGS)',
+  'Systemic Lupus Erythematosus (SLE)',
+  'Lupus Nephritis (LN)',
+  'Nephrotic Syndrome (NS)',
+  'Membranous Glomerulonephritis (MGN)',
+  'Minimal Change Disease (MCD)',
+  'Proteinuria (PRT)', // PRT could be a symptom/finding rather than primary diagnosis but including for now
+  'Congenital Anomalies of the Kidney and Urinary Tract (CAKUT)',
+  'Renal Artery Stenosis (RAS)',
+  'Glomerulonephritis (GN) - General', // Adding a general GN as IgAN, MGN, FSGS are specific types
+  'Transplant Prospect',
+  'Potential Kidney Donor',
   'Other',
 ];
 
@@ -67,3 +80,4 @@ export const TIME_SLOTS: string[] = [
   "12:00", "12:30", "14:00", "14:30", "15:00", "15:30",
   "16:00", "16:30", "17:00",
 ];
+

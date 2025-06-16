@@ -5,9 +5,10 @@ import type { Patient } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, MapPin, ShieldCheck, Stethoscope, Users, FileText, Microscope, Pill, MessageSquare, CalendarDays, FlaskConical } from 'lucide-react';
+import { User, MapPin, ShieldCheck, Stethoscope, Users, FileText, Microscope, Pill, MessageSquare, CalendarDays, FlaskConical, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'; // Using ShadCN Accordion
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
 
 interface PatientProfileViewProps {
   patient: Patient;
@@ -32,28 +33,39 @@ const DetailItem = ({ label, value, icon: Icon, className }: { label: string; va
 
 const MockVisitHistory = ({ patientId }: { patientId: string }) => {
   const visits = [
-    { id: 'v1', date: '2024-05-10', doctor: 'Dr. Anya Sharma', type: 'Routine Checkup', notes: 'BP stable, advised diet modification.' },
-    { id: 'v2', date: '2024-02-15', doctor: 'Dr. Vikram Singh', type: 'Follow-up', notes: 'Reviewed lab reports, adjusted medication.' },
-    { id: 'v3', date: '2023-11-20', doctor: 'Dr. Anya Sharma', type: 'Consultation', notes: 'Discussed new symptoms, ordered tests.' },
+    { id: 'v1', date: '2024-05-10', doctor: 'Dr. Anya Sharma', type: 'Routine Checkup', notes: 'BP stable, advised diet modification. Patient reports feeling well. Next follow-up in 3 months.' },
+    { id: 'v2', date: '2024-02-15', doctor: 'Dr. Vikram Singh', type: 'Follow-up', notes: 'Reviewed lab reports, adjusted medication (Telmisartan increased to 80mg). Creatinine slightly elevated.' },
+    { id: 'v3', date: '2023-11-20', doctor: 'Dr. Anya Sharma', type: 'Consultation', notes: 'Discussed new symptoms (ankle swelling), ordered UACR and KFT. Advised low salt diet.' },
   ];
   return (
     <Accordion type="single" collapsible className="w-full">
       {visits.map(visit => (
-        <AccordionItem value={visit.id} key={visit.id}>
-          <AccordionTrigger className="hover:bg-muted/50 px-4">
-            <div className="flex items-center gap-4">
-              <CalendarDays className="w-5 h-5 text-primary"/>
-              <div>
+        <AccordionItem value={visit.id} key={visit.id} className="border-b last:border-b-0">
+          <AccordionTrigger className="hover:bg-muted/50 px-4 py-3 text-left">
+            <div className="flex items-center gap-4 w-full">
+              <CalendarDays className="w-5 h-5 text-primary flex-shrink-0"/>
+              <div className="flex-grow">
                 <p className="font-medium">{format(new Date(visit.date), 'PPP')} - {visit.type}</p>
                 <p className="text-sm text-muted-foreground">With {visit.doctor}</p>
               </div>
+              {/* Placeholder for delete visit button */}
+              <Button variant="ghost" size="icon" disabled className="ml-auto opacity-50 cursor-not-allowed" title="Delete visit (feature under development)">
+                <Trash2 className="w-4 h-4 text-destructive" />
+              </Button>
             </div>
           </AccordionTrigger>
-          <AccordionContent className="px-4 pt-0 pb-4">
-            <p className="text-sm text-muted-foreground flex items-start gap-2"><MessageSquare className="w-4 h-4 mt-1 text-primary shrink-0" />{visit.notes || "No specific notes for this visit."}</p>
+          <AccordionContent className="px-4 pt-0 pb-4 bg-muted/20 rounded-b-md">
+            <p className="text-sm text-foreground mt-2 flex items-start gap-2">
+                <MessageSquare className="w-4 h-4 mt-1 text-primary shrink-0" />
+                <span>{visit.notes || "No specific notes for this visit."}</span>
+            </p>
           </AccordionContent>
         </AccordionItem>
       ))}
+       {visits.length === 0 && (
+        <p className="text-muted-foreground text-center py-4">No visit history recorded.</p>
+      )}
+      <CardDescription className="text-xs text-center pt-2 px-4">Note: Deleting individual visit records is currently under development.</CardDescription>
     </Accordion>
   );
 };
@@ -79,6 +91,9 @@ const MockInvestigations = ({ patientId }: { patientId: string }) => {
           </CardContent>
         </Card>
       ))}
+       {investigations.length === 0 && (
+        <p className="text-muted-foreground text-center py-4">No investigation results found.</p>
+      )}
     </div>
   );
 };
@@ -102,6 +117,9 @@ const MockDiagnosisRx = ({ patientId }: { patientId: string }) => {
           </CardContent>
         </Card>
       ))}
+      {history.length === 0 && (
+        <p className="text-muted-foreground text-center py-4">No diagnosis or medication history found.</p>
+      )}
     </div>
   );
 };
@@ -177,9 +195,9 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
         <Card className="shadow-md">
           <CardHeader>
             <CardTitle className="font-headline text-xl">Visit History</CardTitle>
-            <CardDescription>Chronological record of patient consultations and visits.</CardDescription>
+            <CardDescription>Chronological record of patient consultations and visits. Click on a visit to see details.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-0 sm:px-6">
             <MockVisitHistory patientId={patient.id} />
           </CardContent>
         </Card>
@@ -211,3 +229,4 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
     </Tabs>
   );
 }
+
