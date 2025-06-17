@@ -60,8 +60,8 @@ const vaccinationSchema = z.object({
 
 const clinicalProfileSchema = z.object({
   primaryDiagnosis: z.string().optional(),
-  labels: z.array(z.string()).default([]), 
-  tags: z.array(z.string()).default([]),   
+  labels: z.array(z.string()).default([]),
+  tags: z.array(z.string()).default([]),
   nutritionalStatus: z.string().optional(),
   disability: z.string().optional(),
   subspecialityFollowUp: z.string().optional().default('NIL'),
@@ -73,7 +73,7 @@ const clinicalProfileSchema = z.object({
   bloodGroup: z.string().optional(),
   drugAllergies: z.string().optional(),
   compliance: z.enum(['Yes', 'No', 'Unknown']).optional().default('Unknown'),
-  whatsappNumber: z.string().optional().regex(/^$|^\d{10}$/, "Invalid WhatsApp (must be 10 digits if provided)"),
+  whatsappNumber: z.string().regex(/^$|^\d{10}$/, "Invalid WhatsApp (must be 10 digits if provided)").optional(),
 });
 
 const patientFormSchema = z.object({
@@ -84,7 +84,7 @@ const patientFormSchema = z.object({
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
   address: addressSchema,
   guardian: guardianSchema,
-  clinicalProfile: clinicalProfileSchema.optional(), 
+  clinicalProfile: clinicalProfileSchema.optional(),
   serviceName: z.string().optional(),
   serviceNumber: z.string().optional(),
   rank: z.string().optional(),
@@ -141,8 +141,8 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
         country: patient.address.country || "India",
       },
       clinicalProfile: {
-        ...(getInitialClinicalProfile()), 
-        ...(patient.clinicalProfile || {}), 
+        ...(getInitialClinicalProfile()),
+        ...(patient.clinicalProfile || {}),
         labels: Array.isArray(patient.clinicalProfile?.labels) ? patient.clinicalProfile.labels : [],
         tags: Array.isArray(patient.clinicalProfile?.tags) ? patient.clinicalProfile.tags : [],
         compliance: patient.clinicalProfile?.compliance || 'Unknown',
@@ -172,7 +172,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
       email: "",
       address: { street: "", city: "", state: "", pincode: "", country: "India" },
       guardian: { name: "", relation: "", contact: "" },
-      clinicalProfile: getInitialClinicalProfile(), 
+      clinicalProfile: getInitialClinicalProfile(),
       serviceName: "",
       serviceNumber: "",
       rank: "",
@@ -185,7 +185,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
 
   const { fields: vaccinationFields, replace: replaceVaccinations } = useFieldArray({
     control: form.control,
-    name: "clinicalProfile.vaccinations" as any, 
+    name: "clinicalProfile.vaccinations" as any,
   });
 
    useEffect(() => {
@@ -213,7 +213,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
   const currentGender = form.watch("gender");
 
   useEffect(() => {
-    if (!currentGender && guardianRelation) { 
+    if (!currentGender && guardianRelation) {
       if (MALE_IMPLYING_RELATIONS.includes(guardianRelation)) {
         form.setValue("gender", "Male", { shouldValidate: true });
       } else if (FEMALE_IMPLYING_RELATIONS.includes(guardianRelation)) {
@@ -251,7 +251,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     const currentTags = form.getValues("clinicalProfile.tags") || [];
     form.setValue("clinicalProfile.tags", currentTags.filter(tag => tag !== tagToRemove), { shouldValidate: true });
   };
-  
+
   const handleAiSuggestedTags = (suggested: string[]) => {
     const currentTags = form.getValues("clinicalProfile.tags") || [];
     const newTags = suggested.filter(st => !currentTags.includes(st));
@@ -259,7 +259,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
       form.setValue("clinicalProfile.tags", [...currentTags, ...newTags], { shouldValidate: true });
     }
   };
-  
+
   const watchedLabels = form.watch("clinicalProfile.labels") || [];
   const watchedTags = form.watch("clinicalProfile.tags") || [];
 
@@ -346,7 +346,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
             <FormField control={form.control} name="formation" render={({ field }) => ( <FormItem className="md:col-span-2"> <FormLabel>Formation</FormLabel> <FormControl><Input placeholder="Enter formation" {...field} /></FormControl> <FormMessage /> </FormItem> )} />
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader><CardTitle className="font-headline flex items-center"><HeartPulse className="mr-2 h-5 w-5 text-primary" />Clinical Profile</CardTitle></CardHeader>
           <CardContent className="space-y-6">
@@ -406,10 +406,10 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
             <div>
               <FormLabel className="flex items-center"><TagsIcon className="inline h-4 w-4 mr-1"/>Clinical Labels</FormLabel>
               <div className="flex items-center gap-2 mt-1">
-                <Input 
-                  value={currentLabelsInput} 
-                  onChange={(e) => setCurrentLabelsInput(e.target.value)} 
-                  placeholder="Type a label and add" 
+                <Input
+                  value={currentLabelsInput}
+                  onChange={(e) => setCurrentLabelsInput(e.target.value)}
+                  placeholder="Type a label and add"
                   className="flex-grow"
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddLabel();}}}
                 />
@@ -425,14 +425,14 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               </div>
               <FormMessage>{form.formState.errors.clinicalProfile?.labels?.message}</FormMessage>
             </div>
-            
+
             <div>
               <FormLabel className="flex items-center"><TagsIcon className="inline h-4 w-4 mr-1"/>Clinical Tags</FormLabel>
                <div className="flex items-center gap-2 mt-1">
-                <Input 
-                  value={currentTagsInput} 
-                  onChange={(e) => setCurrentTagsInput(e.target.value)} 
-                  placeholder="Type a tag and add" 
+                <Input
+                  value={currentTagsInput}
+                  onChange={(e) => setCurrentTagsInput(e.target.value)}
+                  placeholder="Type a tag and add"
                   className="flex-grow"
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTagManually();}}}
                 />
@@ -467,7 +467,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                           checked={field.value}
                           onCheckedChange={(checked) => {
                             field.onChange(checked);
-                            if (!checked) { 
+                            if (!checked) {
                               form.setValue(`clinicalProfile.vaccinations.${index}.date` as any, "");
                               form.setValue(`clinicalProfile.vaccinations.${index}.nextDoseDate` as any, "");
                             }
@@ -517,3 +517,4 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
+
