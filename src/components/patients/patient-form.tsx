@@ -2,7 +2,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useFieldArray } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,24 +24,25 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Patient } from "@/lib/types";
-import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES } from "@/lib/constants";
+import type { Patient, Vaccination } from "@/lib/types";
+import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, SUBSPECIALITY_FOLLOWUP_OPTIONS, YES_NO_NIL_OPTIONS, VACCINATION_NAMES } from "@/lib/constants";
 import { AiTagSuggester } from "./ai-tag-suggester";
 import { Badge } from "@/components/ui/badge";
-import { XIcon, Tag } from "lucide-react";
+import { XIcon, Tag, ShieldQuestion, Cigarette, Wine, CheckSquare } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import React, { useState } from "react"; // Ensured React import for useState
+import React, { useState, useEffect } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const addressSchema = z.object({
   street: z.string().min(1, "Street is required"),
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
   pincode: z.string().regex(/^\d{6}$/, "Invalid pincode (must be 6 digits)"),
-  country: z.string().optional(), // Added country
+  country: z.string().optional(), 
 });
 
 const guardianSchema = z.object({
@@ -50,17 +51,27 @@ const guardianSchema = z.object({
   contact: z.string().regex(/^\d{10}$/, "Invalid contact (must be 10 digits)"),
 });
 
+const vaccinationSchema = z.object({
+  name: z.string(),
+  administered: z.boolean(),
+  date: z.string().optional().nullable(), // Allow empty string or null
+});
+
 const clinicalProfileSchema = z.object({
   primaryDiagnosis: z.string().min(1, "Primary diagnosis is required"),
   labels: z.array(z.string()),
   tags: z.array(z.string()),
   nutritionalStatus: z.string().min(1, "Nutritional status is required"),
   disability: z.string().min(1, "Disability profile is required"),
+  subspecialityFollowUp: z.string().optional(),
+  smokingStatus: z.string().optional(),
+  alcoholConsumption: z.string().optional(),
+  vaccinations: z.array(vaccinationSchema).optional(),
 });
 
 const patientFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  dob: z.string().min(1, "Date of birth is required"), // Storing as string YYYY-MM-DD
+  dob: z.string().min(1, "Date of birth is required"), 
   gender: z.string().min(1, "Gender is required"),
   contact: z.string().regex(/^\d{10}$/, "Invalid contact (must be 10 digits)"),
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
@@ -77,15 +88,32 @@ interface PatientFormProps {
   isSubmitting?: boolean;
 }
 
+const getDefaultVaccinations = (): Vaccination[] => {
+  return VACCINATION_NAMES.map(name => ({ name, administered: false, date: "" }));
+};
+
+
 export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProps) {
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientFormSchema),
     defaultValues: patient ? {
       ...patient,
-      dob: patient.dob ? format(new Date(patient.dob), "yyyy-MM-dd") : "",
+      dob: patient.dob ? format(parseISO(patient.dob), "yyyy-MM-dd") : "", // Use parseISO for safety
       address: {
         ...patient.address,
         country: patient.address.country || "India",
+      },
+      clinicalProfile: {
+        ...patient.clinicalProfile,
+        subspecialityFollowUp: patient.clinicalProfile.subspecialityFollowUp || 'NIL',
+        smokingStatus: patient.clinicalProfile.smokingStatus || 'NIL',
+        alcoholConsumption: patient.clinicalProfile.alcoholConsumption || 'NIL',
+        vaccinations: patient.clinicalProfile.vaccinations && patient.clinicalProfile.vaccinations.length > 0 
+                      ? VACCINATION_NAMES.map(vaccineName => {
+                          const existingVaccine = patient.clinicalProfile.vaccinations?.find(v => v.name === vaccineName);
+                          return existingVaccine || { name: vaccineName, administered: false, date: '' };
+                        })
+                      : getDefaultVaccinations(),
       }
     } : {
       name: "",
@@ -95,9 +123,39 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
       email: "",
       address: { street: "", city: "", state: "", pincode: "", country: "India" },
       guardian: { name: "", relation: "", contact: "" },
-      clinicalProfile: { primaryDiagnosis: "", labels: [], tags: [], nutritionalStatus: "", disability: "" },
+      clinicalProfile: { 
+        primaryDiagnosis: "", 
+        labels: [], 
+        tags: [], 
+        nutritionalStatus: "", 
+        disability: "",
+        subspecialityFollowUp: 'NIL',
+        smokingStatus: 'NIL',
+        alcoholConsumption: 'NIL',
+        vaccinations: getDefaultVaccinations(),
+      },
     },
   });
+
+  const { fields: vaccinationFields, replace: replaceVaccinations } = useFieldArray({
+    control: form.control,
+    name: "clinicalProfile.vaccinations",
+  });
+
+  useEffect(() => {
+    // Ensure vaccinationFields are initialized/updated when patient data changes
+    if (patient && patient.clinicalProfile.vaccinations) {
+      const currentVaccinations = patient.clinicalProfile.vaccinations;
+      const fullVaccinationList = VACCINATION_NAMES.map(vaccineName => {
+        const existing = currentVaccinations.find(v => v.name === vaccineName);
+        return existing || { name: vaccineName, administered: false, date: '' };
+      });
+      replaceVaccinations(fullVaccinationList);
+    } else if (!patient) {
+      replaceVaccinations(getDefaultVaccinations());
+    }
+  }, [patient, replaceVaccinations]);
+
 
   const [currentLabelInput, setCurrentLabelInput] = useState("");
   const [currentTagInput, setCurrentTagInput] = useState("");
@@ -160,7 +218,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                           )}
                         >
                           {field.value ? (
-                            format(new Date(field.value), "PPP") // Ensure date is treated as local
+                            format(parseISO(field.value), "PPP") 
                           ) : (
                             <span>Pick a date</span>
                           )}
@@ -171,7 +229,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={field.value ? new Date(field.value) : undefined} // Ensure date is treated as local
+                        selected={field.value ? parseISO(field.value) : undefined} 
                         onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
                         disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
                         initialFocus
@@ -226,7 +284,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormItem>
                 <FormLabel>City</FormLabel>
                 <FormControl><Input placeholder="Enter city" {...field} /></FormControl>
-                <FormDescription className="text-xs">Dynamic city dropdown based on state is a future enhancement.</FormDescription>
                 <FormMessage />
               </FormItem>
             )} />
@@ -304,6 +361,42 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               </FormItem>
             )} />
             
+            <FormField control={form.control} name="clinicalProfile.subspecialityFollowUp" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center"><ShieldQuestion className="mr-2 h-4 w-4 text-muted-foreground" /> Subspeciality Follow-up</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value || 'NIL'}>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Select follow-up status" /></SelectTrigger></FormControl>
+                    <SelectContent>{SUBSPECIALITY_FOLLOWUP_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} 
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField control={form.control} name="clinicalProfile.smokingStatus" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center"><Cigarette className="mr-2 h-4 w-4 text-muted-foreground" />Smoking Status</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value || 'NIL'}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl>
+                        <SelectContent>{YES_NO_NIL_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} 
+                />
+                <FormField control={form.control} name="clinicalProfile.alcoholConsumption" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center"><Wine className="mr-2 h-4 w-4 text-muted-foreground" />Alcohol Consumption</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value || 'NIL'}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl>
+                        <SelectContent>{YES_NO_NIL_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} 
+                />
+            </div>
+            
             <FormItem>
               <FormLabel>Labels</FormLabel>
               <div className="flex items-center gap-2">
@@ -360,6 +453,58 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
             )} />
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="font-headline flex items-center"><CheckSquare className="mr-2 h-5 w-5 text-primary" />Vaccination Status</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            {vaccinationFields.map((item, index) => (
+              <div key={item.id} className="p-3 border rounded-md bg-muted/20 space-y-3">
+                 <FormField
+                  control={form.control}
+                  name={`clinicalProfile.vaccinations.${index}.administered`}
+                  render={({ field: administeredField }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={administeredField.value}
+                          onCheckedChange={(checked) => {
+                            administeredField.onChange(Boolean(checked)); // Ensure boolean
+                            if (!checked) {
+                               form.setValue(`clinicalProfile.vaccinations.${index}.date`, "");
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormLabel className="font-medium text-sm">{item.name}</FormLabel>
+                    </FormItem>
+                  )}
+                />
+                {form.watch(`clinicalProfile.vaccinations.${index}.administered`) && (
+                  <FormField
+                    control={form.control}
+                    name={`clinicalProfile.vaccinations.${index}.date`}
+                    render={({ field: dateField }) => (
+                      <FormItem className="ml-8">
+                        <FormLabel className="text-xs">Date Administered</FormLabel>
+                        <FormControl>
+                           <Input 
+                              type="date" 
+                              {...dateField} 
+                              value={dateField.value || ""}
+                              onChange={(e) => dateField.onChange(e.target.value)}
+                              className="text-sm h-9"
+                            />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
 
         <Button type="submit" className="w-full md:w-auto" disabled={isSubmitting}>
           {isSubmitting ? (patient ? "Updating Patient..." : "Registering Patient...") : (patient ? "Update Patient" : "Register Patient")}

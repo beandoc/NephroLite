@@ -1,8 +1,9 @@
 
 "use client";
 
-import type { Patient } from '@/lib/types';
+import type { Patient, Vaccination } from '@/lib/types';
 import { useState, useEffect, useCallback } from 'react';
+import { VACCINATION_NAMES } from '@/lib/constants';
 
 const LOCAL_STORAGE_KEY = 'nephrolite_patients';
 let nextNephroIdCounter = 1;
@@ -11,12 +12,27 @@ const generateNephroId = (currentMaxId: number): string => {
   return `NL-${String(currentMaxId).padStart(4, '0')}`;
 };
 
+const getDefaultVaccinations = (): Vaccination[] => {
+  return VACCINATION_NAMES.map(name => ({ name, administered: false, date: '' }));
+};
+
 const getInitialPatients = (): Patient[] => {
   if (typeof window === 'undefined') return [];
   const storedPatients = localStorage.getItem(LOCAL_STORAGE_KEY);
   if (storedPatients) {
-    const patients: Patient[] = JSON.parse(storedPatients);
-    // Determine the next Nephro ID counter based on existing patients
+    const patients: Patient[] = JSON.parse(storedPatients).map((p: any) => ({
+      ...p,
+      clinicalProfile: {
+        ...p.clinicalProfile,
+        vaccinations: p.clinicalProfile.vaccinations && p.clinicalProfile.vaccinations.length > 0 
+                      ? p.clinicalProfile.vaccinations 
+                      : getDefaultVaccinations(), // Ensure vaccinations array exists
+        subspecialityFollowUp: p.clinicalProfile.subspecialityFollowUp || 'NIL',
+        smokingStatus: p.clinicalProfile.smokingStatus || 'NIL',
+        alcoholConsumption: p.clinicalProfile.alcoholConsumption || 'NIL',
+      }
+    }));
+    
     if (patients.length > 0) {
       const maxIdNum = patients.reduce((max, p) => {
         const num = parseInt(p.nephroId.replace('NL-', ''), 10);
@@ -29,7 +45,6 @@ const getInitialPatients = (): Patient[] => {
     return patients;
   }
 
-  // Initialize with some mock data if localStorage is empty
   const mockPatients: Patient[] = [
     {
       id: crypto.randomUUID(),
@@ -39,7 +54,7 @@ const getInitialPatients = (): Patient[] => {
       gender: 'Male',
       contact: '9876543210',
       email: 'rajesh.kumar@example.com',
-      address: { street: '123 MG Road', city: 'Bangalore', state: 'Karnataka', pincode: '560001' },
+      address: { street: '123 MG Road', city: 'Bangalore', state: 'Karnataka', pincode: '560001', country: 'India' },
       guardian: { name: 'Sunita Kumar', relation: 'Spouse', contact: '9876543211' },
       clinicalProfile: {
         primaryDiagnosis: 'Chronic Kidney Disease (CKD)',
@@ -47,6 +62,16 @@ const getInitialPatients = (): Patient[] => {
         tags: ['Stage 3 CKD', 'Anemia'],
         nutritionalStatus: 'Mild malnutrition',
         disability: 'None',
+        subspecialityFollowUp: 'Cardiology',
+        smokingStatus: 'No',
+        alcoholConsumption: 'No',
+        vaccinations: [
+          { name: 'Hepatitis B', administered: true, date: '2023-01-10' },
+          { name: 'Pneumococcal', administered: true, date: '2023-02-15' },
+          { name: 'Influenza', administered: false, date: '' },
+          { name: 'Covid', administered: true, date: '2021-06-01' },
+          { name: 'Varicella', administered: false, date: '' },
+        ],
       },
       registrationDate: new Date().toISOString().split('T')[0],
     },
@@ -58,7 +83,7 @@ const getInitialPatients = (): Patient[] => {
       gender: 'Female',
       contact: '9123456789',
       email: 'priya.sharma@example.com',
-      address: { street: '456 Park Street', city: 'Mumbai', state: 'Maharashtra', pincode: '400001' },
+      address: { street: '456 Park Street', city: 'Mumbai', state: 'Maharashtra', pincode: '400001', country: 'India' },
       guardian: { name: 'Amit Sharma', relation: 'Spouse', contact: '9123456788' },
       clinicalProfile: {
         primaryDiagnosis: 'Diabetic Nephropathy',
@@ -66,8 +91,12 @@ const getInitialPatients = (): Patient[] => {
         tags: ['Proteinuria', 'Controlled BP'],
         nutritionalStatus: 'Well-nourished',
         disability: 'Mild visual impairment',
+        subspecialityFollowUp: 'Endocrinology',
+        smokingStatus: 'NIL',
+        alcoholConsumption: 'NIL',
+        vaccinations: getDefaultVaccinations(),
       },
-      registrationDate: new Date(Date.now() - 86400000 * 10).toISOString().split('T')[0], // 10 days ago
+      registrationDate: new Date(Date.now() - 86400000 * 10).toISOString().split('T')[0], 
     },
   ];
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mockPatients));
@@ -103,20 +132,38 @@ export function usePatientData() {
       id: crypto.randomUUID(),
       nephroId: generateNephroId(nextNephroIdCounter++),
       registrationDate: new Date().toISOString().split('T')[0],
+      clinicalProfile: {
+        ...patientData.clinicalProfile,
+        vaccinations: patientData.clinicalProfile.vaccinations && patientData.clinicalProfile.vaccinations.length > 0 
+                      ? patientData.clinicalProfile.vaccinations 
+                      : getDefaultVaccinations(),
+        subspecialityFollowUp: patientData.clinicalProfile.subspecialityFollowUp || 'NIL',
+        smokingStatus: patientData.clinicalProfile.smokingStatus || 'NIL',
+        alcoholConsumption: patientData.clinicalProfile.alcoholConsumption || 'NIL',
+      },
     };
     const updatedPatients = [...patients, newPatient];
     saveData(updatedPatients);
     return newPatient;
   }, [patients, saveData]);
 
-  const updatePatient = useCallback((updatedPatient: Patient): Patient | undefined => {
-    const patientIndex = patients.findIndex(p => p.id === updatedPatient.id);
+  const updatePatient = useCallback((updatedPatientData: Patient): Patient | undefined => {
+    const patientIndex = patients.findIndex(p => p.id === updatedPatientData.id);
     if (patientIndex === -1) return undefined;
 
     const updatedPatients = [...patients];
-    updatedPatients[patientIndex] = updatedPatient;
+    updatedPatients[patientIndex] = {
+      ...updatedPatientData,
+      clinicalProfile: {
+        ...updatedPatientData.clinicalProfile,
+        // Ensure vaccinations are an array, even if empty, to prevent issues
+        vaccinations: Array.isArray(updatedPatientData.clinicalProfile.vaccinations) 
+                      ? updatedPatientData.clinicalProfile.vaccinations 
+                      : getDefaultVaccinations(),
+      }
+    };
     saveData(updatedPatients);
-    return updatedPatient;
+    return updatedPatientData;
   }, [patients, saveData]);
 
   const deletePatient = useCallback((id: string): boolean => {

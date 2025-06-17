@@ -4,7 +4,7 @@ export type Address = {
   city: string;
   state: string;
   pincode: string;
-  country?: string; // Added country
+  country?: string;
 };
 
 export type Guardian = {
@@ -13,38 +13,46 @@ export type Guardian = {
   contact: string;
 };
 
+export type Vaccination = {
+  name: string;
+  administered: boolean;
+  date?: string; // YYYY-MM-DD
+};
+
 export type ClinicalProfile = {
   primaryDiagnosis: string;
   labels: string[];
   tags: string[];
   nutritionalStatus: string;
   disability: string;
+  subspecialityFollowUp?: string;
+  smokingStatus?: string; // 'Yes', 'No', 'NIL'
+  alcoholConsumption?: string; // 'Yes', 'No', 'NIL'
+  vaccinations?: Vaccination[];
 };
 
 export type Patient = {
-  id: string; // Unique internal ID, e.g., UUID
-  nephroId: string; // User-facing ID, e.g., NL-0001
+  id: string; 
+  nephroId: string; 
   name: string;
-  dob: string; // Store as ISO string (YYYY-MM-DD)
+  dob: string; 
   gender: string;
   contact: string;
   email?: string;
   address: Address;
   guardian: Guardian;
   clinicalProfile: ClinicalProfile;
-  registrationDate: string; // Store as ISO string (YYYY-MM-DD)
+  registrationDate: string; 
 };
 
 export type Appointment = {
   id: string;
   patientId: string;
-  patientName: string; // Denormalized for easier display
-  date: string; // ISO string (YYYY-MM-DD)
-  time: string; // HH:mm
+  patientName: string; 
+  date: string; 
+  time: string; 
   type: string;
   doctorName: string;
   notes?: string;
   status: 'Scheduled' | 'Completed' | 'Cancelled';
 };
-
-// Add other types as needed, e.g., User, Visit, Investigation etc.

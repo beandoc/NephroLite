@@ -1,12 +1,12 @@
 
 "use client";
 
-import type { Patient } from '@/lib/types';
+import type { Patient, Vaccination } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, MapPin, ShieldCheck, Stethoscope, FileText, Microscope, Pill, MessageSquare, CalendarDays, FlaskConical, Trash2, Eye, Edit, Copy, PlusCircle } from 'lucide-react';
-import { format } from 'date-fns';
+import { User, MapPin, ShieldCheck, Stethoscope, FileText, Microscope, Pill, MessageSquare, CalendarDays, FlaskConical, Trash2, Eye, Edit, Copy, PlusCircle, ShieldQuestion, Cigarette, Wine, CheckSquare } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -186,6 +186,7 @@ const MockDiagnosisRx = ({ patientId }: { patientId: string }) => {
 
 
 export function PatientProfileView({ patient }: PatientProfileViewProps) {
+  const { clinicalProfile } = patient;
   return (
     <Tabs defaultValue="overview" className="w-full">
       <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6">
@@ -204,12 +205,12 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
             <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <DetailItem label="Full Name" value={patient.name} />
               <DetailItem label="Nephro ID" value={patient.nephroId} />
-              <DetailItem label="Date of Birth" value={patient.dob ? format(new Date(patient.dob), 'PPP') : 'N/A'} />
-              <DetailItem label="Age" value={patient.dob ? `${new Date().getFullYear() - new Date(patient.dob).getFullYear()} years` : 'N/A'} />
+              <DetailItem label="Date of Birth" value={patient.dob ? format(parseISO(patient.dob), 'PPP') : 'N/A'} />
+              <DetailItem label="Age" value={patient.dob ? `${new Date().getFullYear() - parseISO(patient.dob).getFullYear()} years` : 'N/A'} />
               <DetailItem label="Gender" value={patient.gender} />
               <DetailItem label="Contact Number" value={patient.contact} />
               <DetailItem label="Email Address" value={patient.email} />
-              <DetailItem label="Registration Date" value={patient.registrationDate ? format(new Date(patient.registrationDate), 'PPP') : 'N/A'} />
+              <DetailItem label="Registration Date" value={patient.registrationDate ? format(parseISO(patient.registrationDate), 'PPP') : 'N/A'} />
             </CardContent>
           </Card>
 
@@ -222,7 +223,7 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
               <DetailItem label="City" value={patient.address.city} />
               <DetailItem label="State" value={patient.address.state} />
               <DetailItem label="Pincode" value={patient.address.pincode} />
-              <DetailItem label="Country" value="India" /> 
+              <DetailItem label="Country" value={patient.address.country || "India"} /> 
             </CardContent>
           </Card>
 
@@ -241,14 +242,45 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
             <CardHeader className="bg-muted/30">
               <CardTitle className="font-headline text-xl flex items-center"><Stethoscope className="w-6 h-6 mr-3 text-primary"/>Clinical Profile</CardTitle>
             </CardHeader>
-            <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <DetailItem label="Primary Diagnosis" value={patient.clinicalProfile.primaryDiagnosis} />
-              <DetailItem label="Labels" value={patient.clinicalProfile.labels} />
-              <DetailItem label="Clinical Tags" value={patient.clinicalProfile.tags} />
-              <DetailItem label="Nutritional Status" value={patient.clinicalProfile.nutritionalStatus} />
-              <DetailItem label="Disability Profile" value={patient.clinicalProfile.disability} />
+            <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-6">
+              <DetailItem label="Primary Diagnosis" value={clinicalProfile.primaryDiagnosis} />
+              <DetailItem label="Nutritional Status" value={clinicalProfile.nutritionalStatus} />
+              <DetailItem label="Disability Profile" value={clinicalProfile.disability} />
+              <DetailItem label="Subspeciality Follow-up" icon={ShieldQuestion} value={clinicalProfile.subspecialityFollowUp || 'NIL'} />
+              <DetailItem label="Smoking Status" icon={Cigarette} value={clinicalProfile.smokingStatus || 'NIL'} />
+              <DetailItem label="Alcohol Consumption" icon={Wine} value={clinicalProfile.alcoholConsumption || 'NIL'} />
+              <DetailItem label="Labels" value={clinicalProfile.labels} className="lg:col-span-1" />
+              <DetailItem label="Clinical Tags" value={clinicalProfile.tags} className="lg:col-span-2" />
             </CardContent>
           </Card>
+
+          <Card className="shadow-md">
+            <CardHeader className="bg-muted/30">
+              <CardTitle className="font-headline text-xl flex items-center"><CheckSquare className="w-6 h-6 mr-3 text-primary"/>Vaccination Status</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-3">
+              {(clinicalProfile.vaccinations && clinicalProfile.vaccinations.length > 0) ? (
+                clinicalProfile.vaccinations.map((vaccination, index) => (
+                  <div key={index} className="flex justify-between items-center p-2 border-b last:border-b-0">
+                    <span className="font-medium">{vaccination.name}</span>
+                    <div>
+                      {vaccination.administered ? (
+                        <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+                          Administered
+                          {vaccination.date && ` on ${format(parseISO(vaccination.date), 'PPP')}`}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">Not Administered</Badge>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground">No vaccination data recorded.</p>
+              )}
+            </CardContent>
+          </Card>
+
         </div>
       </TabsContent>
 

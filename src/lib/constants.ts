@@ -30,10 +30,10 @@ export const PRIMARY_DIAGNOSIS_OPTIONS: string[] = [
   'Nephrotic Syndrome (NS)',
   'Membranous Glomerulonephritis (MGN)',
   'Minimal Change Disease (MCD)',
-  'Proteinuria (PRT)', // PRT could be a symptom/finding rather than primary diagnosis but including for now
+  'Proteinuria (PRT)',
   'Congenital Anomalies of the Kidney and Urinary Tract (CAKUT)',
   'Renal Artery Stenosis (RAS)',
-  'Glomerulonephritis (GN) - General', // Adding a general GN as IgAN, MGN, FSGS are specific types
+  'Glomerulonephritis (GN) - General',
   'Transplant Prospect',
   'Potential Kidney Donor',
   'Other',
@@ -81,3 +81,12 @@ export const TIME_SLOTS: string[] = [
   "16:00", "16:30", "17:00",
 ];
 
+export const SUBSPECIALITY_FOLLOWUP_OPTIONS: string[] = [
+  'NIL', 'Endocrinology', 'Cardiology', 'Gastroenterology', 'Urology', 'Surgery', 'Neurology', 'Gynaecology', 'Rheumatology', 'Ophthalmology (Eye)', 'ENT'
+];
+
+export const YES_NO_NIL_OPTIONS: string[] = ['Yes', 'No', 'NIL'];
+
+export const VACCINATION_NAMES: string[] = [
+  'Hepatitis B', 'Pneumococcal', 'Influenza', 'Covid', 'Varicella'
+];
