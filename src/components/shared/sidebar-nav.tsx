@@ -47,7 +47,7 @@ export function SidebarNav() {
         
         return (
           <SidebarMenuItem key={item.label}>
-            <Link href={item.href} passHref legacyBehavior>
+            <Link href={item.href}>
               <SidebarMenuButton
                 isActive={isActive}
                 className={cn(
