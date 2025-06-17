@@ -455,7 +455,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                   return (
                     <FormItem className="space-y-3">
                       <FormLabel htmlFor={formItemId}><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
-                      <FormControl>
                         <RadioGroup
                           ref={field.ref}
                           name={field.name}
@@ -475,7 +474,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                             </FormItem>
                           ))}
                         </RadioGroup>
-                      </FormControl>
                       <FormMessage id={formMessageId}/>
                     </FormItem>
                   );
@@ -612,3 +610,5 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
+
+    
