@@ -13,7 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  useFormField, 
+  useFormField,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -354,18 +354,26 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                  );
                 }}
             />
-            <FormField control={form.control} name="isTracked" render={({ field }) => (
-                <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 shadow-sm h-fit mt-7">
-                  <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} id="isTracked" />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel htmlFor="isTracked" className="cursor-pointer">Track Patient</FormLabel>
-                    <FormDescription>Enable special monitoring for this patient.</FormDescription>
-                  </div>
-                </FormItem>
-              )}
-            />
+             <FormField control={form.control} name="isTracked" render={({ field }) => {
+                  const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
+                  return (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 shadow-sm h-fit mt-7">
+                      <Checkbox
+                        id={formItemId}
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        aria-invalid={!!error}
+                        aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                      />
+                      <div className="space-y-1 leading-none">
+                        <FormLabel htmlFor={formItemId} className="cursor-pointer">Track Patient</FormLabel>
+                        <FormDescription id={formDescriptionId}>Enable special monitoring for this patient.</FormDescription>
+                      </div>
+                       <FormMessage id={formMessageId} />
+                    </FormItem>
+                  );
+                }}
+              />
           </CardContent>
         </Card>
 
@@ -527,10 +535,12 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 <FormField
                   control={form.control}
                   name={`clinicalProfile.vaccinations.${index}.administered` as any}
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
-                      <FormControl>
+                  render={({ field }) => {
+                    const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
+                    return (
+                      <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
                         <Checkbox
+                          id={formItemId}
                           checked={field.value}
                           onCheckedChange={(checked) => {
                             field.onChange(checked);
@@ -539,11 +549,14 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                               form.setValue(`clinicalProfile.vaccinations.${index}.nextDoseDate` as any, "");
                             }
                           }}
+                          aria-invalid={!!error}
+                          aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
                         />
-                      </FormControl>
-                      <FormLabel className="font-medium text-sm">{vaccField.name}</FormLabel>
-                    </FormItem>
-                  )}
+                        <FormLabel htmlFor={formItemId} className="font-medium text-sm cursor-pointer">{vaccField.name}</FormLabel>
+                        <FormMessage id={formMessageId} />
+                      </FormItem>
+                    );
+                  }}
                 />
                 {form.watch(`clinicalProfile.vaccinations.${index}.administered` as any) && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
@@ -584,3 +597,4 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
+
