@@ -13,7 +13,13 @@ export const INDIAN_STATES: string[] = [
   'Lakshadweep', 'Delhi', 'Puducherry', 'Ladakh', 'Jammu and Kashmir'
 ];
 
-export const RELATIONSHIPS: string[] = ['Parent', 'Spouse', 'Sibling', 'Child', 'Guardian', 'Friend', 'Other'];
+export const RELATIONSHIPS: string[] = [
+  'Parent', 'Spouse', 'Sibling', 'Child', 'Guardian', 'Friend', 'Other',
+  'F/O', 'S/O', 'W/O', 'M/O', 'D/O' // Father of, Son of, Wife of, Mother of, Daughter of
+];
+
+export const MALE_IMPLYING_RELATIONS = ['F/O', 'S/O'];
+export const FEMALE_IMPLYING_RELATIONS = ['W/O', 'M/O', 'D/O'];
 
 export const PRIMARY_DIAGNOSIS_OPTIONS: string[] = [
   'Chronic Kidney Disease (CKD)',
@@ -35,11 +41,11 @@ export const PRIMARY_DIAGNOSIS_OPTIONS: string[] = [
   'Proteinuria (PRT)',
   'Congenital Anomalies of the Kidney and Urinary Tract (CAKUT)',
   'Renal Artery Stenosis (RAS)',
-  'Glomerulonephritis (GN) - Unspecified',
+  'Glomerulonephritis (GN) - Unspecified', // Duplicate 'GN' to ensure it's there
   'Transplant Prospect',
-  'Potential Kidney Donor',
+  'Potential Kidney Donor', // Changed from "Donor" for clarity
   'Other',
-  'Not Set', // Added for default if not specified
+  'Not Set',
 ];
 
 export const NUTRITIONAL_STATUSES: string[] = [
@@ -48,7 +54,7 @@ export const NUTRITIONAL_STATUSES: string[] = [
   'Moderate malnutrition',
   'Severe malnutrition',
   'Obese',
-  'Not Set', // Added for default
+  'Not Set',
 ];
 
 export const DISABILITY_PROFILES: string[] = [
@@ -60,7 +66,7 @@ export const DISABILITY_PROFILES: string[] = [
   'Visual impairment',
   'Hearing impairment',
   'Other',
-  'Not Set', // Added for default
+  'Not Set',
 ];
 
 export const VISIT_REMARK_OPTIONS_GN: string[] = [
@@ -140,3 +146,4 @@ export const MOCK_MEDICATIONS: MedicationEntry[] = [
   { id: 'm003', name: 'Telmisartan', defaultDosage: '40mg', defaultFrequency: 'Once Daily', commonInstructions: 'Monitor blood pressure regularly.' },
   { id: 'm004', name: 'Prednisolone', defaultDosage: '10mg', defaultFrequency: 'Once Daily', commonInstructions: 'Take in the morning with food.' },
 ];
+

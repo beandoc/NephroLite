@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Patient, Vaccination } from "@/lib/types";
-import { GENDERS, INDIAN_STATES, RELATIONSHIPS, VACCINATION_NAMES } from "@/lib/constants"; // Removed other clinical constants as they are not used here anymore
+import { GENDERS, INDIAN_STATES, RELATIONSHIPS, VACCINATION_NAMES, MALE_IMPLYING_RELATIONS, FEMALE_IMPLYING_RELATIONS } from "@/lib/constants";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
@@ -53,7 +53,6 @@ const vaccinationSchema = z.object({
   date: z.string().optional().nullable(),
 });
 
-// Clinical profile fields are now optional for initial registration
 const clinicalProfileSchema = z.object({
   primaryDiagnosis: z.string().optional(),
   labels: z.array(z.string()).default([]),
@@ -74,8 +73,7 @@ const patientFormSchema = z.object({
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
   address: addressSchema,
   guardian: guardianSchema,
-  clinicalProfile: clinicalProfileSchema, // Stays here for data structure, but form fields removed for new patient
-  // Service-related details
+  clinicalProfile: clinicalProfileSchema,
   serviceName: z.string().optional(),
   serviceNumber: z.string().optional(),
   rank: z.string().optional(),
@@ -107,8 +105,9 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
         country: patient.address.country || "India",
       },
       clinicalProfile: {
-        ...patient.clinicalProfile,
         primaryDiagnosis: patient.clinicalProfile.primaryDiagnosis || "",
+        labels: patient.clinicalProfile.labels || [],
+        tags: patient.clinicalProfile.tags || [],
         nutritionalStatus: patient.clinicalProfile.nutritionalStatus || "",
         disability: patient.clinicalProfile.disability || "",
         subspecialityFollowUp: patient.clinicalProfile.subspecialityFollowUp || 'NIL',
@@ -134,7 +133,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
       email: "",
       address: { street: "", city: "", state: "", pincode: "", country: "India" },
       guardian: { name: "", relation: "", contact: "" },
-      clinicalProfile: { // Initialize with defaults, these won't be on the form for new patients
+      clinicalProfile: {
         primaryDiagnosis: "",
         labels: [],
         tags: [],
@@ -159,8 +158,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
   });
 
   useEffect(() => {
-    // This ensures vaccinations are correctly structured if editing an existing patient
-    // or set to default for a new one (though not displayed in the form for new patients).
     if (patient && patient.clinicalProfile.vaccinations) {
       const currentVaccinations = patient.clinicalProfile.vaccinations;
       const fullVaccinationList = VACCINATION_NAMES.map(vaccineName => {
@@ -172,6 +169,19 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
       replaceVaccinations(getDefaultVaccinations());
     }
   }, [patient, replaceVaccinations]);
+
+  const guardianRelation = form.watch("guardian.relation");
+  const currentGender = form.watch("gender");
+
+  useEffect(() => {
+    if (!currentGender && guardianRelation) { // Only update if gender is not already set
+      if (MALE_IMPLYING_RELATIONS.includes(guardianRelation)) {
+        form.setValue("gender", "Male", { shouldValidate: true });
+      } else if (FEMALE_IMPLYING_RELATIONS.includes(guardianRelation)) {
+        form.setValue("gender", "Female", { shouldValidate: true });
+      }
+    }
+  }, [guardianRelation, currentGender, form]);
 
 
   return (
@@ -229,7 +239,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
             <FormField control={form.control} name="gender" render={({ field }) => (
               <FormItem>
                 <FormLabel>Gender</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                   <FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl>
                   <SelectContent>{GENDERS.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
                 </Select>
@@ -244,7 +254,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               </FormItem>
             )} />
             <FormField control={form.control} name="email" render={({ field }) => (
-              <FormItem className="md:col-span-2">
+              <FormItem>
                 <FormLabel>Patient Email Address (Optional)</FormLabel>
                 <FormControl><Input type="email" placeholder="Enter email address" {...field} /></FormControl>
                 <FormMessage />
@@ -365,15 +375,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
           </CardContent>
         </Card>
 
-        {/* Clinical Profile and Vaccination sections are removed for initial patient registration
-            These will be editable via the patient's profile page after creation.
-            The 'patient' prop being present indicates an edit mode, where these would normally appear.
-            For simplicity in this step, they are removed entirely from this component.
-            If needed, a more complex conditional rendering based on `!patient` could be added
-            to hide them only for new patients, but show them for edits.
-            However, the request was to remove them from the "register new patient" form.
-        */}
-
         <Button type="submit" className="w-full md:w-auto" disabled={isSubmitting}>
           {isSubmitting ? (patient ? "Updating Patient..." : "Registering Patient...") : (patient ? "Update Patient" : "Register Patient")}
         </Button>
@@ -381,3 +382,4 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
+

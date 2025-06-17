@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Loader2, FileSignature, Wand2, Pill, FileText, MessageCircleQuestion, BookMarked, ListPlus } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { generateConsentForm } from '@/ai/flows/generate-consent-form-flow';
+import { generateConsentForm, type GenerateConsentFormInput } from '@/ai/flows/generate-consent-form-flow';
 import { generateDischargeSummary, type GenerateDischargeSummaryInput } from '@/ai/flows/generate-discharge-summary-flow';
 import { generateOpinionReport, type GenerateOpinionReportInput } from '@/ai/flows/generate-opinion-report-flow';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -24,6 +24,8 @@ const consentFormSchema = z.object({
   patientName: z.string().min(1, "Patient name is required."),
   procedureName: z.string().min(1, "Procedure name is required."),
   doctorName: z.string().min(1, "Doctor name is required."),
+  patientServiceNumber: z.string().optional(),
+  patientRank: z.string().optional(),
 });
 type ConsentFormData = z.infer<typeof consentFormSchema>;
 
@@ -101,9 +103,9 @@ export default function TemplatesPage() {
 
   const { toast } = useToast();
 
-  const consentForm = useForm<ConsentFormData>({
+  const consentForm = useForm<GenerateConsentFormInput>({ // Changed to GenerateConsentFormInput
     resolver: zodResolver(consentFormSchema),
-    defaultValues: { patientName: "", procedureName: "", doctorName: "Dr. Sarah Johnson" },
+    defaultValues: { patientName: "", procedureName: "", doctorName: "Dr. Sarah Johnson", patientServiceNumber: "", patientRank: "" },
   });
 
   const prescriptionForm = useForm<MedicinePrescriptionData>({
@@ -113,12 +115,12 @@ export default function TemplatesPage() {
 
   const dischargeSummaryFormHook = useForm<GenerateDischargeSummaryInput>({
     resolver: zodResolver(dischargeSummarySchema),
-    defaultValues: { patientName: "", admissionDate: "", dischargeDate: "", primaryDiagnosis: "", treatmentSummary: "", conditionAtDischarge: "", followUpInstructions: "", doctorName: "Dr. Sarah Johnson", hospitalName: "NephroConnect Clinic" },
+    defaultValues: { patientName: "", admissionDate: "", dischargeDate: "", primaryDiagnosis: "", treatmentSummary: "", conditionAtDischarge: "", followUpInstructions: "", doctorName: "Dr. Sarah Johnson", hospitalName: "NephroConnect Clinic", patientServiceNumber: "", patientRank: "" },
   });
 
   const opinionReportFormHook = useForm<GenerateOpinionReportInput>({
     resolver: zodResolver(opinionReportSchema),
-    defaultValues: { patientName: "", dateOfOpinion: new Date().toISOString().split('T')[0], reasonForOpinion: "", historyOfPresentIllness: "", examinationFindings: "", investigationResultsSummary: "", medicalOpinion: "", recommendations: "", providingDoctorName: "Dr. Sarah Johnson" },
+    defaultValues: { patientName: "", dateOfOpinion: new Date().toISOString().split('T')[0], reasonForOpinion: "", historyOfPresentIllness: "", examinationFindings: "", investigationResultsSummary: "", medicalOpinion: "", recommendations: "", providingDoctorName: "Dr. Sarah Johnson", patientServiceNumber: "", patientRank: "" },
   });
 
   const diagnosisForm = useForm<DiagnosisEntryFormData>({
@@ -132,7 +134,7 @@ export default function TemplatesPage() {
   });
 
 
-  const onConsentSubmit = async (data: ConsentFormData) => {
+  const onConsentSubmit = async (data: GenerateConsentFormInput) => {
     setIsLoadingConsent(true);
     setGeneratedConsent(null);
     try {
@@ -212,7 +214,6 @@ export default function TemplatesPage() {
   };
 
   const onDiagnosisSubmit = (data: DiagnosisEntryFormData) => {
-    // In a real app, this would save to a backend. Here, we just add to mock state.
     const newDiagnosis: DiagnosisEntry = { ...data, id: crypto.randomUUID() };
     setDiagnoses(prev => [...prev, newDiagnosis]);
     toast({ title: "Diagnosis Added (Mock)", description: `${data.name} added to the local list.` });
@@ -240,10 +241,14 @@ export default function TemplatesPage() {
           </CardHeader>
           <CardContent>
             <Form {...consentForm}>
-              <form onSubmit={consentForm.handleSubmit(onConsentSubmit)} className="space-y-6">
+              <form onSubmit={consentForm.handleSubmit(onConsentSubmit)} className="space-y-4">
                 <FormField control={consentForm.control} name="patientName" render={({ field }) => ( <FormItem><FormLabel>Patient Full Name</FormLabel><FormControl><Input placeholder="e.g., John Doe" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 <FormField control={consentForm.control} name="procedureName" render={({ field }) => ( <FormItem><FormLabel>Procedure Name</FormLabel><FormControl><Input placeholder="e.g., Kidney Biopsy" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 <FormField control={consentForm.control} name="doctorName" render={({ field }) => ( <FormItem><FormLabel>Doctor Full Name</FormLabel><FormControl><Input placeholder="e.g., Dr. Emily Carter" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField control={consentForm.control} name="patientServiceNumber" render={({ field }) => ( <FormItem><FormLabel>Service No. (Optional)</FormLabel><FormControl><Input placeholder="If applicable" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField control={consentForm.control} name="patientRank" render={({ field }) => ( <FormItem><FormLabel>Rank (Optional)</FormLabel><FormControl><Input placeholder="If applicable" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                </div>
                 <Button type="submit" disabled={isLoadingConsent} className="w-full"> {isLoadingConsent ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />} Generate Consent </Button>
               </form>
             </Form>
@@ -452,3 +457,4 @@ export default function TemplatesPage() {
     </div>
   );
 }
+

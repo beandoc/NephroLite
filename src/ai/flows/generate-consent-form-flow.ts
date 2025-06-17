@@ -15,6 +15,8 @@ const GenerateConsentFormInputSchema = z.object({
   patientName: z.string().describe("The full name of the patient."),
   procedureName: z.string().describe("The name of the medical procedure for which consent is being sought."),
   doctorName: z.string().describe("The full name of the doctor performing the procedure."),
+  patientServiceNumber: z.string().optional().describe("Patient's service number, if applicable."),
+  patientRank: z.string().optional().describe("Patient's rank, if applicable."),
 });
 export type GenerateConsentFormInput = z.infer<typeof GenerateConsentFormInputSchema>;
 
@@ -35,6 +37,8 @@ const prompt = ai.definePrompt({
 
 Please generate a consent form based on the following information:
 Patient Name: {{{patientName}}}
+{{#if patientServiceNumber}}Service Number: {{{patientServiceNumber}}}{{/if}}
+{{#if patientRank}}Rank: {{{patientRank}}}{{/if}}
 Procedure Name: {{{procedureName}}}
 Doctor Name: {{{doctorName}}}
 
@@ -51,15 +55,17 @@ Example structure:
 
 PATIENT CONSENT FORM
 
-Patient Name: [Patient Name]
+Patient Name: {{patientName}}
+{{#if patientServiceNumber}}Service Number: {{patientServiceNumber}}{{/if}}
+{{#if patientRank}}Rank: {{patientRank}}{{/if}}
 Date of Birth: [Placeholder for DOB]
 
-Procedure: [Procedure Name]
-Physician: [Doctor Name]
+Procedure: {{procedureName}}
+Physician: {{doctorName}}
 
-1. I, [Patient Name], hereby authorize Dr. [Doctor Name] and such assistants as may be selected to perform the following procedure: [ProcedureName].
-2. The procedure, its purpose, potential risks, benefits, and alternatives have been explained to me by Dr. [Doctor Name]. I have had the opportunity to ask questions and all my questions have been answered to my satisfaction.
-3. I_understand that no guarantee can be made as to the outcome of the procedure.
+1. I, {{patientName}}, hereby authorize Dr. {{doctorName}} and such assistants as may be selected to perform the following procedure: {{procedureName}}.
+2. The procedure, its purpose, potential risks, benefits, and alternatives have been explained to me by Dr. {{doctorName}}. I have had the opportunity to ask questions and all my questions have been answered to my satisfaction.
+3. I understand that no guarantee can be made as to the outcome of the procedure.
 ... (include other standard consent clauses as appropriate) ...
 
 _________________________
@@ -73,7 +79,7 @@ Date: _______________
 Physician's Confirmation:
 I confirm that I have explained the procedure, its risks, benefits, and alternatives to the patient.
 _________________________
-Dr. [Doctor Name] Signature
+Dr. {{doctorName}} Signature
 Date: _______________
 
 `,

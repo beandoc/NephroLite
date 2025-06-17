@@ -40,6 +40,7 @@ const prompt = ai.definePrompt({
   input: {schema: GenerateDischargeSummaryInputSchema},
   output: {schema: GenerateDischargeSummaryOutputSchema},
   prompt: `You are a medical assistant tasked with generating a comprehensive patient discharge summary.
+
 {{#if hospitalName}}Hospital/Clinic: {{{hospitalName}}}{{/if}}
 
 Patient Name: {{{patientName}}}
@@ -78,3 +79,4 @@ const generateDischargeSummaryFlow = ai.defineFlow(
     return output!;
   }
 );
+
