@@ -1,9 +1,9 @@
 
 "use client";
 
-import type { Patient, Vaccination } from '@/lib/types';
+import type { Patient, Vaccination, ClinicalProfile } from '@/lib/types';
 import { useState, useEffect, useCallback } from 'react';
-import { VACCINATION_NAMES } from '@/lib/constants';
+import { VACCINATION_NAMES, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES } from '@/lib/constants';
 
 const LOCAL_STORAGE_KEY = 'nephrolite_patients';
 let nextNephroIdCounter = 1;
@@ -13,8 +13,27 @@ const generateNephroId = (currentMaxId: number): string => {
 };
 
 const getDefaultVaccinations = (): Vaccination[] => {
-  return VACCINATION_NAMES.map(name => ({ name: name, administered: false, date: "" }));
+  return VACCINATION_NAMES.map(name => ({ 
+    name: name, 
+    administered: false, 
+    date: "", 
+    nextDoseDate: "" 
+  }));
 };
+
+const getInitialClinicalProfile = (): ClinicalProfile => ({
+  primaryDiagnosis: PRIMARY_DIAGNOSIS_OPTIONS.includes('Not Set') ? 'Not Set' : PRIMARY_DIAGNOSIS_OPTIONS[0] || "",
+  labels: [],
+  tags: [],
+  nutritionalStatus: NUTRITIONAL_STATUSES.includes('Not Set') ? 'Not Set' : NUTRITIONAL_STATUSES[0] || "",
+  disability: DISABILITY_PROFILES.includes('Not Set') ? 'Not Set' : DISABILITY_PROFILES[0] || "",
+  subspecialityFollowUp: 'NIL',
+  smokingStatus: 'NIL',
+  alcoholConsumption: 'NIL',
+  vaccinations: getDefaultVaccinations(),
+  pomr: "",
+});
+
 
 const getInitialPatients = (): Patient[] => {
   if (typeof window === 'undefined') return [];
@@ -23,16 +42,28 @@ const getInitialPatients = (): Patient[] => {
     const patients: Patient[] = JSON.parse(storedPatients).map((p: any) => ({
       ...p,
       clinicalProfile: {
-        ...p.clinicalProfile,
-        primaryDiagnosis: p.clinicalProfile.primaryDiagnosis || "",
-        nutritionalStatus: p.clinicalProfile.nutritionalStatus || "",
-        disability: p.clinicalProfile.disability || "",
-        vaccinations: p.clinicalProfile.vaccinations && p.clinicalProfile.vaccinations.length > 0
-                      ? p.clinicalProfile.vaccinations
+        ...getInitialClinicalProfile(), // Start with defaults
+        ...(p.clinicalProfile || {}), // Spread existing clinical profile
+        primaryDiagnosis: p.clinicalProfile?.primaryDiagnosis || getInitialClinicalProfile().primaryDiagnosis,
+        labels: Array.isArray(p.clinicalProfile?.labels) ? p.clinicalProfile.labels : [],
+        tags: Array.isArray(p.clinicalProfile?.tags) ? p.clinicalProfile.tags : [],
+        nutritionalStatus: p.clinicalProfile?.nutritionalStatus || getInitialClinicalProfile().nutritionalStatus,
+        disability: p.clinicalProfile?.disability || getInitialClinicalProfile().disability,
+        vaccinations: Array.isArray(p.clinicalProfile?.vaccinations) && p.clinicalProfile.vaccinations.length > 0
+                      ? VACCINATION_NAMES.map(vaccineName => {
+                          const existingVaccine = p.clinicalProfile.vaccinations.find((v: Vaccination) => v.name === vaccineName);
+                          return {
+                            name: vaccineName,
+                            administered: existingVaccine?.administered || false,
+                            date: existingVaccine?.date || "",
+                            nextDoseDate: existingVaccine?.nextDoseDate || "",
+                          };
+                        })
                       : getDefaultVaccinations(),
-        subspecialityFollowUp: p.clinicalProfile.subspecialityFollowUp || 'NIL',
-        smokingStatus: p.clinicalProfile.smokingStatus || 'NIL',
-        alcoholConsumption: p.clinicalProfile.alcoholConsumption || 'NIL',
+        pomr: p.clinicalProfile?.pomr || "",
+        subspecialityFollowUp: p.clinicalProfile?.subspecialityFollowUp || 'NIL',
+        smokingStatus: p.clinicalProfile?.smokingStatus || 'NIL',
+        alcoholConsumption: p.clinicalProfile?.alcoholConsumption || 'NIL',
       },
       serviceName: p.serviceName || undefined,
       serviceNumber: p.serviceNumber || undefined,
@@ -74,12 +105,13 @@ const getInitialPatients = (): Patient[] => {
         smokingStatus: 'No',
         alcoholConsumption: 'No',
         vaccinations: [
-          { name: 'Hepatitis B', administered: true, date: '2023-01-10' },
+          { name: 'Hepatitis B', administered: true, date: '2023-01-10', nextDoseDate: '2023-07-10' },
           { name: 'Pneumococcal', administered: true, date: '2023-02-15' },
           { name: 'Influenza', administered: false, date: '' },
-          { name: 'Covid', administered: true, date: '2021-06-01' },
+          { name: 'Covid', administered: true, date: '2021-06-01', nextDoseDate: '2021-12-01'},
           { name: 'Varicella', administered: false, date: '' },
         ],
+        pomr: 'Patient has a history of hypertension and type 2 diabetes. Compliant with medications. Advised regular follow-ups.',
       },
       registrationDate: new Date().toISOString().split('T')[0],
       serviceName: "Indian Army",
@@ -99,15 +131,13 @@ const getInitialPatients = (): Patient[] => {
       address: { street: '456 Park Street', city: 'Mumbai', state: 'Maharashtra', pincode: '400001', country: 'India' },
       guardian: { name: 'Amit Sharma', relation: 'Spouse', contact: '9123456788' },
       clinicalProfile: {
+        ...getInitialClinicalProfile(), // Use defaults
         primaryDiagnosis: 'Diabetic Nephropathy',
         labels: ['Type 2 Diabetes'],
         tags: ['Proteinuria', 'Controlled BP'],
         nutritionalStatus: 'Well-nourished',
         disability: 'Mild visual impairment',
-        subspecialityFollowUp: 'Endocrinology',
-        smokingStatus: 'NIL',
-        alcoholConsumption: 'NIL',
-        vaccinations: getDefaultVaccinations(),
+        pomr: 'Recent onset of proteinuria. Blood pressure well controlled with medication. Needs regular monitoring of kidney function.',
       },
       registrationDate: new Date(Date.now() - 86400000 * 10).toISOString().split('T')[0],
     },
@@ -139,22 +169,24 @@ export function usePatientData() {
     return patients.find(p => p.id === id);
   }, [patients]);
 
-  const addPatient = useCallback((patientData: Omit<Patient, 'id' | 'nephroId' | 'registrationDate'>): Patient => {
+  const addPatient = useCallback((patientData: Omit<Patient, 'id' | 'nephroId' | 'registrationDate' | 'clinicalProfile'> & { clinicalProfile?: Partial<ClinicalProfile> }): Patient => {
     const newPatient: Patient = {
-      ...patientData,
       id: crypto.randomUUID(),
       nephroId: generateNephroId(nextNephroIdCounter++),
+      name: patientData.name,
+      dob: patientData.dob,
+      gender: patientData.gender,
+      contact: patientData.contact,
+      email: patientData.email,
+      address: patientData.address,
+      guardian: patientData.guardian,
       registrationDate: new Date().toISOString().split('T')[0],
-      clinicalProfile: { // Ensure clinical profile data is defaulted correctly for new patients
-        primaryDiagnosis: patientData.clinicalProfile.primaryDiagnosis || "",
-        labels: patientData.clinicalProfile.labels || [],
-        tags: patientData.clinicalProfile.tags || [],
-        nutritionalStatus: patientData.clinicalProfile.nutritionalStatus || "",
-        disability: patientData.clinicalProfile.disability || "",
-        subspecialityFollowUp: patientData.clinicalProfile.subspecialityFollowUp || 'NIL',
-        smokingStatus: patientData.clinicalProfile.smokingStatus || 'NIL',
-        alcoholConsumption: patientData.clinicalProfile.alcoholConsumption || 'NIL',
-        vaccinations: patientData.clinicalProfile.vaccinations && patientData.clinicalProfile.vaccinations.length > 0
+      clinicalProfile: {
+        ...getInitialClinicalProfile(),
+        ...(patientData.clinicalProfile || {}),
+        labels: patientData.clinicalProfile?.labels || [], // Ensure arrays are initialized
+        tags: patientData.clinicalProfile?.tags || [],     // Ensure arrays are initialized
+        vaccinations: patientData.clinicalProfile?.vaccinations && patientData.clinicalProfile.vaccinations.length > 0
                       ? patientData.clinicalProfile.vaccinations
                       : getDefaultVaccinations(),
       },
@@ -177,14 +209,26 @@ export function usePatientData() {
     updatedPatients[patientIndex] = {
       ...updatedPatientData,
       clinicalProfile: {
-        ...updatedPatientData.clinicalProfile,
-        vaccinations: Array.isArray(updatedPatientData.clinicalProfile.vaccinations)
-                      ? updatedPatientData.clinicalProfile.vaccinations
+        ...getInitialClinicalProfile(), // Ensure all defaults are there
+        ...(updatedPatientData.clinicalProfile || {}), // Then spread updates
+        // Ensure arrays are handled correctly
+        labels: Array.isArray(updatedPatientData.clinicalProfile?.labels) ? updatedPatientData.clinicalProfile.labels : [],
+        tags: Array.isArray(updatedPatientData.clinicalProfile?.tags) ? updatedPatientData.clinicalProfile.tags : [],
+        vaccinations: Array.isArray(updatedPatientData.clinicalProfile?.vaccinations) && updatedPatientData.clinicalProfile.vaccinations.length > 0
+                      ? VACCINATION_NAMES.map(vaccineName => {
+                          const existingVaccine = updatedPatientData.clinicalProfile.vaccinations.find((v: Vaccination) => v.name === vaccineName);
+                          return {
+                            name: vaccineName,
+                            administered: existingVaccine?.administered || false,
+                            date: existingVaccine?.date || "",
+                            nextDoseDate: existingVaccine?.nextDoseDate || "",
+                          };
+                        })
                       : getDefaultVaccinations(),
       }
     };
     saveData(updatedPatients);
-    return updatedPatientData;
+    return updatedPatients[patientIndex];
   }, [patients, saveData]);
 
   const deletePatient = useCallback((id: string): boolean => {

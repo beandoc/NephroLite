@@ -5,9 +5,9 @@ import type { Patient, Vaccination, InvestigationRecord, InvestigationTest } fro
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, MapPin, ShieldCheck, Stethoscope, FileText, Microscope, Pill, MessageSquare, CalendarDays, FlaskConical, Trash2, Eye, Edit, Copy, PlusCircle, ShieldQuestion, Cigarette, Wine, CheckSquare, TrendingUp, Link as LinkIcon, Briefcase, Notebook } from 'lucide-react';
+import { User, MapPin, ShieldCheck, Stethoscope, FileText, Microscope, Pill, MessageSquare, CalendarDays, FlaskConical, Trash2, Eye, Edit, Copy, PlusCircle, ShieldQuestion, Cigarette, Wine, CheckSquare, TrendingUp, Link as LinkIcon, Briefcase, Notebook, Leaf, Accessibility, PencilLine, TagsIcon, Syringe } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'; // Correct import
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
@@ -44,6 +44,17 @@ const DetailItem = ({ label, value, icon: Icon, className }: { label: string; va
     )}
   </div>
 );
+
+const POMRDisplay = ({ pomrText }: { pomrText?: string }) => {
+  if (!pomrText) return <p className="text-base text-muted-foreground italic">No POMR recorded.</p>;
+  
+  // Split by newlines to render as paragraphs for better readability
+  const paragraphs = pomrText.split('\n').map((para, index) => (
+    <p key={index} className="mb-1 last:mb-0">{para}</p>
+  ));
+
+  return <div className="text-base prose prose-sm max-w-none">{paragraphs}</div>;
+};
 
 
 const MockVisitHistory = ({ patientId }: { patientId: string }) => {
@@ -395,18 +406,21 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
             </CardContent>
           </Card>
           
-          <Card className="shadow-md">
-            <CardHeader className="bg-muted/30">
-              <CardTitle className="font-headline text-xl flex items-center"><Briefcase className="w-6 h-6 mr-3 text-primary"/>Service Details</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <DetailItem label="Service Name" value={patient.serviceName} />
-              <DetailItem label="Service Number" value={patient.serviceNumber} />
-              <DetailItem label="Rank" value={patient.rank} />
-              <DetailItem label="Unit Name" value={patient.unitName} />
-              <DetailItem label="Formation" value={patient.formation} />
-            </CardContent>
-          </Card>
+          { (patient.serviceName || patient.serviceNumber || patient.rank || patient.unitName || patient.formation) && (
+            <Card className="shadow-md">
+              <CardHeader className="bg-muted/30">
+                <CardTitle className="font-headline text-xl flex items-center"><Briefcase className="w-6 h-6 mr-3 text-primary"/>Service Details</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <DetailItem label="Service Name" value={patient.serviceName} />
+                <DetailItem label="Service Number" value={patient.serviceNumber} />
+                <DetailItem label="Rank" value={patient.rank} />
+                <DetailItem label="Unit Name" value={patient.unitName} />
+                <DetailItem label="Formation" value={patient.formation} />
+              </CardContent>
+            </Card>
+          )}
+
 
           <Card className="shadow-md">
             <CardHeader className="bg-muted/30">
@@ -434,43 +448,82 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
 
           <Card className="shadow-md">
             <CardHeader className="bg-muted/30">
-              <CardTitle className="font-headline text-xl flex items-center"><Stethoscope className="w-6 h-6 mr-3 text-primary"/>Clinical Profile</CardTitle>
+              <CardTitle className="font-headline text-xl flex items-center"><HeartPulse className="w-6 h-6 mr-3 text-primary"/>Clinical Profile</CardTitle>
             </CardHeader>
-            <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-6">
-              <DetailItem label="Primary Diagnosis" value={clinicalProfile.primaryDiagnosis} />
-              <DetailItem label="Nutritional Status" value={clinicalProfile.nutritionalStatus} />
-              <DetailItem label="Disability Profile" value={clinicalProfile.disability} />
-              <DetailItem label="Subspeciality Follow-up" icon={ShieldQuestion} value={clinicalProfile.subspecialityFollowUp || 'NIL'} />
-              <DetailItem label="Smoking Status" icon={Cigarette} value={clinicalProfile.smokingStatus || 'NIL'} />
-              <DetailItem label="Alcohol Consumption" icon={Wine} value={clinicalProfile.alcoholConsumption || 'NIL'} />
-              <DetailItem label="Labels" value={clinicalProfile.labels} className="lg:col-span-1" />
-              <DetailItem label="Clinical Tags" value={clinicalProfile.tags} className="lg:col-span-2" />
+            <CardContent className="pt-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-6">
+                <DetailItem label="Primary Diagnosis" icon={Stethoscope} value={clinicalProfile.primaryDiagnosis} />
+                <DetailItem label="Subspeciality Follow-up" icon={ShieldQuestion} value={clinicalProfile.subspecialityFollowUp || 'NIL'} />
+                <DetailItem label="Nutritional Status" icon={Leaf} value={clinicalProfile.nutritionalStatus} />
+                <DetailItem label="Disability Profile" icon={Accessibility} value={clinicalProfile.disability} />
+                <DetailItem label="Smoking Status" icon={Cigarette} value={clinicalProfile.smokingStatus || 'NIL'} />
+                <DetailItem label="Alcohol Consumption" icon={Wine} value={clinicalProfile.alcoholConsumption || 'NIL'} />
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground flex items-center mb-1">
+                  <TagsIcon className="w-4 h-4 mr-2 text-primary" />
+                  Clinical Labels
+                </h3>
+                {clinicalProfile.labels && clinicalProfile.labels.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {clinicalProfile.labels.map((label, index) => <Badge key={index} variant="secondary">{label}</Badge>)}
+                  </div>
+                ) : <p className="text-base text-muted-foreground italic">None</p>}
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground flex items-center mb-1">
+                  <TagsIcon className="w-4 h-4 mr-2 text-primary" />
+                  Clinical Tags
+                </h3>
+                {clinicalProfile.tags && clinicalProfile.tags.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {clinicalProfile.tags.map((tag, index) => <Badge key={index} variant="outline">{tag}</Badge>)}
+                  </div>
+                ) : <p className="text-base text-muted-foreground italic">None</p>}
+              </div>
+              
+              <div>
+                 <h3 className="text-sm font-medium text-muted-foreground flex items-center mb-1">
+                  <PencilLine className="w-4 h-4 mr-2 text-primary" />
+                  Problem Oriented Medical Record (POMR)
+                </h3>
+                <POMRDisplay pomrText={clinicalProfile.pomr} />
+              </div>
+
             </CardContent>
           </Card>
 
           <Card className="shadow-md">
             <CardHeader className="bg-muted/30">
-              <CardTitle className="font-headline text-xl flex items-center"><CheckSquare className="w-6 h-6 mr-3 text-primary"/>Vaccination Status</CardTitle>
+              <CardTitle className="font-headline text-xl flex items-center"><Syringe className="w-6 h-6 mr-3 text-primary"/>Vaccination Status</CardTitle>
             </CardHeader>
             <CardContent className="pt-6 space-y-3">
               {(clinicalProfile.vaccinations && clinicalProfile.vaccinations.length > 0) ? (
                 clinicalProfile.vaccinations.map((vaccination, index) => (
-                  <div key={index} className="flex justify-between items-center p-2 border-b last:border-b-0">
-                    <span className="font-medium">{vaccination.name}</span>
-                    <div>
+                  <div key={index} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border-b last:border-b-0 rounded-md bg-muted/20">
+                    <span className="font-medium mb-1 sm:mb-0">{vaccination.name}</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
                       {vaccination.administered ? (
-                        <Badge variant="default" className="bg-green-500 hover:bg-green-600">
-                          Administered
-                          {vaccination.date && ` on ${format(parseISO(vaccination.date), 'PPP')}`}
-                        </Badge>
+                        <>
+                          <Badge variant="default" className="bg-green-600 hover:bg-green-700 whitespace-nowrap">
+                            Administered {vaccination.date && `on ${format(parseISO(vaccination.date), 'PPP')}`}
+                          </Badge>
+                          {vaccination.nextDoseDate && (
+                            <Badge variant="outline" className="whitespace-nowrap">
+                              Next Dose: {format(parseISO(vaccination.nextDoseDate), 'PPP')}
+                            </Badge>
+                          )}
+                        </>
                       ) : (
-                        <Badge variant="outline">Not Administered</Badge>
+                        <Badge variant="destructive" className="whitespace-nowrap">Not Administered</Badge>
                       )}
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-muted-foreground">No vaccination data recorded.</p>
+                <p className="text-muted-foreground text-center py-4">No vaccination data recorded.</p>
               )}
             </CardContent>
           </Card>

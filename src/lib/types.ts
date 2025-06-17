@@ -17,18 +17,20 @@ export type Vaccination = {
   name: string;
   administered: boolean;
   date?: string; // YYYY-MM-DD
+  nextDoseDate?: string; // YYYY-MM-DD
 };
 
 export type ClinicalProfile = {
   primaryDiagnosis?: string;
-  labels: string[];
-  tags: string[];
+  labels: string[]; // Stored as an array, but might be input as comma-separated string
+  tags: string[];   // Stored as an array, but might be input as comma-separated string
   nutritionalStatus?: string;
   disability?: string;
   subspecialityFollowUp?: string;
   smokingStatus?: string; // 'Yes', 'No', 'NIL'
   alcoholConsumption?: string; // 'Yes', 'No', 'NIL'
   vaccinations?: Vaccination[];
+  pomr?: string; // Problem Oriented Medical Record
 };
 
 export type Patient = {
