@@ -453,14 +453,13 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                         className="flex flex-row space-x-4"
                       >
                         {YES_NO_UNKNOWN_OPTIONS.map(option => (
                           <FormItem key={option} className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} />
-                            </FormControl>
+                            {/* Removed FormControl from around RadioGroupItem */}
+                            <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} />
                             <FormLabel htmlFor={`compliance-${option.toLowerCase()}`} className="font-normal cursor-pointer">
                               {option}
                             </FormLabel>
