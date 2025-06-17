@@ -433,7 +433,10 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormField control={form.control} name="clinicalProfile.disability" render={({ field }) => (
                 <FormItem> <FormLabel><Accessibility className="inline h-4 w-4 mr-1"/>Disability Profile</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select disability profile" /></SelectTrigger></FormControl> <SelectContent>{DISABILITY_PROFILES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
-                <FormField control={form.control} name="clinicalProfile.compliance" render={({ field }) => {
+              <FormField
+                  control={form.control}
+                  name="clinicalProfile.compliance"
+                  render={({ field }) => {
                     const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
                     return (
                         <FormItem className="space-y-3">
@@ -448,9 +451,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                         >
                             {YES_NO_UNKNOWN_OPTIONS.map(option => (
                             <FormItem key={option} className="flex items-center space-x-2 space-y-0">
-                                <FormControl>
-                                    <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} />
-                                </FormControl>
+                                <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} />
                                 <FormLabel htmlFor={`compliance-${option.toLowerCase()}`} className="font-normal cursor-pointer">{option}</FormLabel>
                             </FormItem>
                             ))}
@@ -458,7 +459,8 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                         <FormMessage />
                         </FormItem>
                     );
-                }} />
+                  }}
+                />
             </div>
 
             <FormField control={form.control} name="clinicalProfile.drugAllergies" render={({ field }) => (
