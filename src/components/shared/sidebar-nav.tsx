@@ -14,7 +14,8 @@ import {
   Settings2,
   FileSignature, 
   SearchCheck, 
-  LineChart, // Added for Medication Impact
+  LineChart, 
+  CalendarRange, // Added CalendarRange
   LucideIcon
 } from "lucide-react";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
@@ -29,8 +30,9 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, matchStartsWith: true },
-  { href: "/analytics", label: "Analytics Dashboard", icon: BarChartBig, matchStartsWith: false }, // Exact match for main analytics
-  { href: "/analytics/medication-impact", label: "Medication Impact", icon: LineChart }, // New Medication Impact page
+  { href: "/my-schedule", label: "My Schedule", icon: CalendarRange },
+  { href: "/analytics", label: "Analytics Dashboard", icon: BarChartBig, matchStartsWith: false },
+  { href: "/analytics/medication-impact", label: "Medication Impact", icon: LineChart },
   { href: "/patients", label: "Patient Management", icon: Users, matchStartsWith: true },
   { href: "/appointments", label: "Appointments", icon: CalendarDays, matchStartsWith: true },
   { href: "/search", label: "Advanced Search", icon: SearchCheck }, 

@@ -11,12 +11,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2, FileSignature, Wand2, Pill, FileText, MessageCircleQuestion, BookMarked, ListPlus, Copy, Mail, MessageSquare as MessageSquareIcon, DraftingCompass } from 'lucide-react'; // Added Copy, Mail, MessageSquareIcon, DraftingCompass
+import { Loader2, FileSignature, Wand2, Pill, FileText, MessageCircleQuestion, BookMarked, ListPlus, Copy, Mail, MessageSquare as MessageSquareIcon, DraftingCompass } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { generateConsentForm, type GenerateConsentFormInput } from '@/ai/flows/generate-consent-form-flow';
 import { generateDischargeSummary, type GenerateDischargeSummaryInput } from '@/ai/flows/generate-discharge-summary-flow';
 import { generateOpinionReport, type GenerateOpinionReportInput } from '@/ai/flows/generate-opinion-report-flow';
-import { generateOpdConsultationNote, type GenerateOpdConsultationNoteInput } from '@/ai/flows/generate-opd-consultation-note-flow'; // Added OPD note flow
+import { generateOpdConsultationNote, type GenerateOpdConsultationNoteInput } from '@/ai/flows/generate-opd-consultation-note-flow';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { MOCK_DIAGNOSES, MOCK_MEDICATIONS } from '@/lib/constants';
 import type { DiagnosisEntry, MedicationEntry } from '@/lib/types';
@@ -124,7 +124,7 @@ export default function TemplatesPage() {
 
   const { toast } = useToast();
 
-  const consentForm = useForm<GenerateConsentFormInput>({ // Changed to GenerateConsentFormInput
+  const consentForm = useForm<GenerateConsentFormInput>({
     resolver: zodResolver(consentFormSchema),
     defaultValues: { patientName: "", procedureName: "", doctorName: "Dr. Sarah Johnson", patientServiceNumber: "", patientRank: "" },
   });

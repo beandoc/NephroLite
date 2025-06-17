@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, TrendingUp, AlertTriangle, Heart, Activity, CalendarClock, BarChart3, Presentation, Droplets, LineChart } from 'lucide-react'; // Added icons
+import { ArrowLeft, TrendingUp, AlertTriangle, Heart, Activity, CalendarClock, LineChart as LineChartIcon } from 'lucide-react'; // Added icons
+import { EgfrTrendChart } from '@/components/charts/EgfrTrendChart'; // Import the new chart
 
 interface PredictionCardProps {
   title: string;
@@ -69,6 +70,16 @@ export default function PatientHealthTrendsPage() {
         </CardContent>
       </Card>
 
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="font-headline flex items-center"><LineChartIcon className="mr-2 h-5 w-5 text-primary"/>eGFR Trend</CardTitle>
+          <CardDescription>Chart showing eGFR values over time.</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <EgfrTrendChart />
+        </CardContent>
+      </Card>
+      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -77,7 +88,6 @@ export default function PatientHealthTrendsPage() {
           </CardHeader>
           <CardContent className="h-64 flex items-center justify-center border-2 border-dashed rounded-lg">
             <p className="text-muted-foreground">Medications chart placeholder - (Under Development)</p>
-            {/* Placeholder for actual chart component */}
           </CardContent>
         </Card>
 
@@ -88,21 +98,10 @@ export default function PatientHealthTrendsPage() {
           </CardHeader>
           <CardContent className="h-64 flex items-center justify-center border-2 border-dashed rounded-lg">
              <p className="text-muted-foreground">Patient events timeline placeholder - (Under Development)</p>
-            {/* Placeholder for actual chart component */}
           </CardContent>
         </Card>
       </div>
 
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="font-headline flex items-center"><Droplets className="mr-2 h-5 w-5 text-primary"/>Albuminuria and eGFR Trends</CardTitle>
-          <CardDescription>Chart showing Albuminuria and eGFR values over time.</CardDescription>
-        </CardHeader>
-        <CardContent className="h-80 flex items-center justify-center border-2 border-dashed rounded-lg">
-           <p className="text-muted-foreground">Albuminuria and eGFR chart placeholder - (Under Development)</p>
-          {/* Placeholder for actual chart component */}
-        </CardContent>
-      </Card>
     </div>
   );
 }
