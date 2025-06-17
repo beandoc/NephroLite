@@ -12,8 +12,9 @@ import {
   MessageCircle, 
   FileText, 
   Settings2,
-  FileSignature, // Added for Templates
-  SearchCheck, // Added for Advanced Search
+  FileSignature, 
+  SearchCheck, 
+  LineChart, // Added for Medication Impact
   LucideIcon
 } from "lucide-react";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
@@ -28,10 +29,11 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, matchStartsWith: true },
-  { href: "/analytics", label: "Analytics", icon: BarChartBig },
+  { href: "/analytics", label: "Analytics Dashboard", icon: BarChartBig, matchStartsWith: false }, // Exact match for main analytics
+  { href: "/analytics/medication-impact", label: "Medication Impact", icon: LineChart }, // New Medication Impact page
   { href: "/patients", label: "Patient Management", icon: Users, matchStartsWith: true },
   { href: "/appointments", label: "Appointments", icon: CalendarDays, matchStartsWith: true },
-  { href: "/search", label: "Advanced Search", icon: SearchCheck }, // New search page
+  { href: "/search", label: "Advanced Search", icon: SearchCheck }, 
   { href: "/clinical-tools", label: "Clinical Tools", icon: Stethoscope },
   { href: "/communication", label: "Communication", icon: MessageCircle },
   { href: "/documents", label: "Documents", icon: FileText },

@@ -15,7 +15,7 @@ export const INDIAN_STATES: string[] = [
 
 export const RELATIONSHIPS: string[] = [
   'Parent', 'Spouse', 'Sibling', 'Child', 'Guardian', 'Friend', 'Other',
-  'F/O', 'S/O', 'W/O', 'M/O', 'D/O' // Father of, Son of, Wife of, Mother of, Daughter of
+  'F/O', 'S/O', 'W/O', 'M/O', 'D/O'
 ];
 
 export const MALE_IMPLYING_RELATIONS = ['F/O', 'S/O'];
@@ -24,9 +24,9 @@ export const FEMALE_IMPLYING_RELATIONS = ['W/O', 'M/O', 'D/O'];
 export const PRIMARY_DIAGNOSIS_OPTIONS: string[] = [
   'Chronic Kidney Disease (CKD)',
   'Acute Kidney Injury (AKI)',
-  'Glomerulonephritis',
+  'Glomerulonephritis', // Already present, can be used for patient group
+  'Diabetic Nephropathy', // Already present, can be used for patient group
   'Polycystic Kidney Disease (PKD)',
-  'Diabetic Nephropathy',
   'Hypertensive Nephropathy',
   'Kidney Stones',
   'Urinary Tract Infection (UTI) - Complicated',
@@ -130,7 +130,6 @@ export const PATIENT_GROUP_NAMES: string[] = [
   "Glomerulonephritis", "Kidney transplant", "ADPKD", "Infection", "Misc"
 ];
 
-// Mock data for Diagnosis Database
 export const MOCK_DIAGNOSES: DiagnosisEntry[] = [
   { id: 'd001', name: 'Hypertension', icdName: 'Essential (primary) hypertension', icdCode: 'I10' },
   { id: 'd002', name: 'Type 2 Diabetes Mellitus', icdName: 'Type 2 diabetes mellitus without complications', icdCode: 'E11.9' },
@@ -138,7 +137,6 @@ export const MOCK_DIAGNOSES: DiagnosisEntry[] = [
   { id: 'd004', name: 'IgA Nephropathy', icdName: 'IgA nephropathy', icdCode: 'N02.8' },
 ];
 
-// Mock data for Medication Database
 export const MOCK_MEDICATIONS: MedicationEntry[] = [
   { id: 'm001', name: 'Amlodipine', defaultDosage: '5mg', defaultFrequency: 'Once Daily', commonInstructions: 'Take with or without food.' },
   { id: 'm002', name: 'Metformin', defaultDosage: '500mg', defaultFrequency: 'Twice Daily', commonInstructions: 'Take with meals to reduce stomach upset.' },
@@ -149,3 +147,8 @@ export const MOCK_MEDICATIONS: MedicationEntry[] = [
 export const INVESTIGATION_GROUPS: string[] = [
   'Hematological', 'Biochemistry', 'Radiology', 'Pathology', 'Special Investigations', 'Urine Analysis', 'Serology'
 ];
+
+// Medications for Analysis
+export const SGLT2_INHIBITORS: string[] = ['Empagliflozin', 'Dapagliflozin', 'Canagliflozin'];
+export const ARBS: string[] = ['Telmisartan', 'Losartan', 'Valsartan'];
+export const ACE_INHIBITORS: string[] = ['Ramipril', 'Enalapril'];
