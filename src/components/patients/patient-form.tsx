@@ -354,26 +354,29 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                  );
                 }}
             />
-             <FormField control={form.control} name="isTracked" render={({ field }) => {
-                  const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
-                  return (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 shadow-sm h-fit mt-7">
-                      <Checkbox
-                        id={formItemId}
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        aria-invalid={!!error}
-                        aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
-                      />
-                      <div className="space-y-1 leading-none">
-                        <FormLabel htmlFor={formItemId} className="cursor-pointer">Track Patient</FormLabel>
-                        <FormDescription id={formDescriptionId}>Enable special monitoring for this patient.</FormDescription>
-                      </div>
-                       <FormMessage id={formMessageId} />
-                    </FormItem>
-                  );
-                }}
-              />
+            <FormField
+              control={form.control}
+              name="isTracked"
+              render={({ field }) => {
+                const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
+                return (
+                  <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 shadow-sm h-fit mt-7">
+                    <Checkbox
+                      id={formItemId}
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      aria-invalid={!!error}
+                      aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                    />
+                    <div className="space-y-1 leading-none">
+                      <FormLabel htmlFor={formItemId} className="cursor-pointer">Track Patient</FormLabel>
+                      <FormDescription id={formDescriptionId}>Enable special monitoring for this patient.</FormDescription>
+                    </div>
+                    <FormMessage id={formMessageId} />
+                  </FormItem>
+                );
+              }}
+            />
           </CardContent>
         </Card>
 
@@ -442,33 +445,33 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 <FormItem> <FormLabel><Accessibility className="inline h-4 w-4 mr-1"/>Disability Profile</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select disability profile" /></SelectTrigger></FormControl> <SelectContent>{DISABILITY_PROFILES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
               <FormField
-                  control={form.control}
-                  name="clinicalProfile.compliance"
-                  render={({ field }) => {
-                    const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
-                    return (
-                        <FormItem className="space-y-3">
-                        <FormLabel><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
-                        <RadioGroup
-                            onValueChange={field.onChange}
-                            value={field.value}
-                            className="flex space-x-2"
-                            id={formItemId}
-                            aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
-                            aria-invalid={!!error}
-                        >
-                            {YES_NO_UNKNOWN_OPTIONS.map(option => (
-                            <FormItem key={option} className="flex items-center space-x-2 space-y-0">
-                                <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} />
-                                <FormLabel htmlFor={`compliance-${option.toLowerCase()}`} className="font-normal cursor-pointer">{option}</FormLabel>
-                            </FormItem>
-                            ))}
-                        </RadioGroup>
-                        <FormMessage />
-                        </FormItem>
-                    );
-                  }}
-                />
+                control={form.control}
+                name="clinicalProfile.compliance"
+                render={({ field }) => {
+                  const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
+                  return (
+                      <FormItem className="space-y-3">
+                      <FormLabel><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
+                      <RadioGroup
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          className="flex space-x-2"
+                          id={formItemId}
+                          aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                          aria-invalid={!!error}
+                      >
+                          {YES_NO_UNKNOWN_OPTIONS.map(option => (
+                          <FormItem key={option} className="flex items-center space-x-2 space-y-0">
+                              <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} />
+                              <FormLabel htmlFor={`compliance-${option.toLowerCase()}`} className="font-normal cursor-pointer">{option}</FormLabel>
+                          </FormItem>
+                          ))}
+                      </RadioGroup>
+                      <FormMessage />
+                      </FormItem>
+                  );
+                }}
+              />
             </div>
 
             <FormField control={form.control} name="clinicalProfile.drugAllergies" render={({ field }) => (
