@@ -11,11 +11,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2, FileSignature, Wand2, Pill, FileText, MessageCircleQuestion, BookMarked, ListPlus } from 'lucide-react';
+import { Loader2, FileSignature, Wand2, Pill, FileText, MessageCircleQuestion, BookMarked, ListPlus, Copy, Mail, MessageSquare as MessageSquareIcon, DraftingCompass } from 'lucide-react'; // Added Copy, Mail, MessageSquareIcon, DraftingCompass
 import { useToast } from "@/hooks/use-toast";
 import { generateConsentForm, type GenerateConsentFormInput } from '@/ai/flows/generate-consent-form-flow';
 import { generateDischargeSummary, type GenerateDischargeSummaryInput } from '@/ai/flows/generate-discharge-summary-flow';
 import { generateOpinionReport, type GenerateOpinionReportInput } from '@/ai/flows/generate-opinion-report-flow';
+import { generateOpdConsultationNote, type GenerateOpdConsultationNoteInput } from '@/ai/flows/generate-opd-consultation-note-flow'; // Added OPD note flow
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { MOCK_DIAGNOSES, MOCK_MEDICATIONS } from '@/lib/constants';
 import type { DiagnosisEntry, MedicationEntry } from '@/lib/types';
@@ -69,6 +70,22 @@ const opinionReportSchema = z.object({
   patientRank: z.string().optional(),
 });
 
+const opdConsultationNoteSchema = z.object({
+  patientName: z.string().min(1, "Patient name is required."),
+  visitDate: z.string().min(1, "Visit date is required."),
+  doctorName: z.string().min(1, "Doctor name is required."),
+  chiefComplaints: z.string().min(1, "Chief complaints are required."),
+  examinationFindings: z.string().min(1, "Examination findings are required."),
+  investigationsOrdered: z.string().optional(),
+  medicationsPrescribed: z.string().min(1, "Medications prescribed are required."),
+  assessmentAndPlan: z.string().min(1, "Assessment and plan are required."),
+  followUpInstructions: z.string().optional(),
+  patientServiceNumber: z.string().optional(),
+  patientRank: z.string().optional(),
+});
+type OpdConsultationNoteData = z.infer<typeof opdConsultationNoteSchema>;
+
+
 const diagnosisEntrySchema = z.object({
   name: z.string().min(1, "Diagnosis name is required."),
   icdName: z.string().min(1, "ICD name is required."),
@@ -97,6 +114,10 @@ export default function TemplatesPage() {
 
   const [generatedOpinionReport, setGeneratedOpinionReportText] = useState<string | null>(null);
   const [isLoadingOpinionReport, setIsLoadingOpinionReport] = useState(false);
+  
+  const [generatedOpdNote, setGeneratedOpdNote] = useState<string | null>(null);
+  const [isLoadingOpdNote, setIsLoadingOpdNote] = useState(false);
+
 
   const [diagnoses, setDiagnoses] = useState<DiagnosisEntry[]>(MOCK_DIAGNOSES);
   const [medications, setMedications] = useState<MedicationEntry[]>(MOCK_MEDICATIONS);
@@ -122,6 +143,12 @@ export default function TemplatesPage() {
     resolver: zodResolver(opinionReportSchema),
     defaultValues: { patientName: "", dateOfOpinion: new Date().toISOString().split('T')[0], reasonForOpinion: "", historyOfPresentIllness: "", examinationFindings: "", investigationResultsSummary: "", medicalOpinion: "", recommendations: "", providingDoctorName: "Dr. Sarah Johnson", patientServiceNumber: "", patientRank: "" },
   });
+
+  const opdConsultationNoteFormHook = useForm<GenerateOpdConsultationNoteInput>({
+    resolver: zodResolver(opdConsultationNoteSchema),
+    defaultValues: { patientName: "", visitDate: new Date().toISOString().split('T')[0], doctorName: "Dr. Sarah Johnson", chiefComplaints: "", examinationFindings: "", investigationsOrdered: "", medicationsPrescribed: "", assessmentAndPlan: "", followUpInstructions: "", patientServiceNumber: "", patientRank:"" },
+  });
+
 
   const diagnosisForm = useForm<DiagnosisEntryFormData>({
     resolver: zodResolver(diagnosisEntrySchema),
@@ -212,6 +239,26 @@ export default function TemplatesPage() {
       setIsLoadingOpinionReport(false);
     }
   };
+  
+  const onOpdConsultationNoteSubmit = async (data: GenerateOpdConsultationNoteInput) => {
+    setIsLoadingOpdNote(true);
+    setGeneratedOpdNote(null);
+    try {
+      const result = await generateOpdConsultationNote(data);
+      if (result && result.opdConsultationNoteText) {
+        setGeneratedOpdNote(result.opdConsultationNoteText);
+        toast({ title: "OPD Consultation Note Generated", description: "AI generated OPD note." });
+      } else {
+        throw new Error("AI did not return OPD consultation note text.");
+      }
+    } catch (error) {
+      console.error("Error generating OPD consultation note:", error);
+      toast({ title: "Generation Failed", description: String(error), variant: "destructive" });
+    } finally {
+      setIsLoadingOpdNote(false);
+    }
+  };
+
 
   const onDiagnosisSubmit = (data: DiagnosisEntryFormData) => {
     const newDiagnosis: DiagnosisEntry = { ...data, id: crypto.randomUUID() };
@@ -259,7 +306,27 @@ export default function TemplatesPage() {
           <CardContent>
             {isLoadingConsent && ( <div className="flex items-center justify-center h-40"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="ml-2 text-muted-foreground">Generating...</p></div> )}
             {generatedConsent ? ( <Textarea value={generatedConsent} readOnly rows={15} className="bg-muted/20 text-sm" /> ) : ( !isLoadingConsent && <p className="text-muted-foreground text-center py-10">Generated consent form will appear here.</p> )}
-            {generatedConsent && ( <Button onClick={() => navigator.clipboard.writeText(generatedConsent)} variant="outline" className="mt-4 w-full"> Copy to Clipboard </Button> )}
+            {generatedConsent && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button onClick={() => navigator.clipboard.writeText(generatedConsent)} variant="outline" className="flex-grow sm:flex-grow-0">
+                  <Copy className="mr-2 h-4 w-4" /> Copy to Clipboard
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => toast({ title: "Feature Under Development", description: "Sharing via Email is not yet implemented."})}
+                  className="flex-grow sm:flex-grow-0"
+                >
+                  <Mail className="mr-2 h-4 w-4" /> Share via Email
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => toast({ title: "Feature Under Development", description: "Sharing via WhatsApp is not yet implemented."})}
+                  className="flex-grow sm:flex-grow-0"
+                >
+                  <MessageSquareIcon className="mr-2 h-4 w-4" /> Share via WhatsApp
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -289,7 +356,27 @@ export default function TemplatesPage() {
           <CardContent>
             {isLoadingPrescription && ( <div className="flex items-center justify-center h-40"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="ml-2 text-muted-foreground">Generating...</p></div> )}
             {generatedPrescription ? ( <Textarea value={generatedPrescription} readOnly rows={15} className="bg-muted/20 text-sm" /> ) : ( !isLoadingPrescription && <p className="text-muted-foreground text-center py-10">Generated prescription will appear here.</p> )}
-            {generatedPrescription && ( <Button onClick={() => navigator.clipboard.writeText(generatedPrescription)} variant="outline" className="mt-4 w-full"> Copy to Clipboard </Button> )}
+            {generatedPrescription && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button onClick={() => navigator.clipboard.writeText(generatedPrescription)} variant="outline" className="flex-grow sm:flex-grow-0">
+                   <Copy className="mr-2 h-4 w-4" /> Copy to Clipboard
+                </Button>
+                 <Button
+                  variant="outline"
+                  onClick={() => toast({ title: "Feature Under Development", description: "Sharing via Email is not yet implemented."})}
+                  className="flex-grow sm:flex-grow-0"
+                >
+                  <Mail className="mr-2 h-4 w-4" /> Share via Email
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => toast({ title: "Feature Under Development", description: "Sharing via WhatsApp is not yet implemented."})}
+                  className="flex-grow sm:flex-grow-0"
+                >
+                  <MessageSquareIcon className="mr-2 h-4 w-4" /> Share via WhatsApp
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -327,7 +414,27 @@ export default function TemplatesPage() {
           <CardContent>
             {isLoadingDischargeSummary && ( <div className="flex items-center justify-center h-40"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="ml-2 text-muted-foreground">Generating...</p></div> )}
             {generatedDischargeSummary ? ( <Textarea value={generatedDischargeSummary} readOnly rows={15} className="bg-muted/20 text-sm" /> ) : ( !isLoadingDischargeSummary && <p className="text-muted-foreground text-center py-10">Generated summary will appear here.</p> )}
-            {generatedDischargeSummary && ( <Button onClick={() => navigator.clipboard.writeText(generatedDischargeSummary)} variant="outline" className="mt-4 w-full"> Copy to Clipboard </Button> )}
+            {generatedDischargeSummary && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button onClick={() => navigator.clipboard.writeText(generatedDischargeSummary)} variant="outline" className="flex-grow sm:flex-grow-0">
+                  <Copy className="mr-2 h-4 w-4" /> Copy to Clipboard
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => toast({ title: "Feature Under Development", description: "Sharing via Email is not yet implemented."})}
+                  className="flex-grow sm:flex-grow-0"
+                >
+                  <Mail className="mr-2 h-4 w-4" /> Share via Email
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => toast({ title: "Feature Under Development", description: "Sharing via WhatsApp is not yet implemented."})}
+                  className="flex-grow sm:flex-grow-0"
+                >
+                  <MessageSquareIcon className="mr-2 h-4 w-4" /> Share via WhatsApp
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -364,9 +471,88 @@ export default function TemplatesPage() {
           <CardContent>
             {isLoadingOpinionReport && ( <div className="flex items-center justify-center h-40"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="ml-2 text-muted-foreground">Generating...</p></div> )}
             {generatedOpinionReport ? ( <Textarea value={generatedOpinionReport} readOnly rows={15} className="bg-muted/20 text-sm" /> ) : ( !isLoadingOpinionReport && <p className="text-muted-foreground text-center py-10">Generated report will appear here.</p> )}
-            {generatedOpinionReport && ( <Button onClick={() => navigator.clipboard.writeText(generatedOpinionReport)} variant="outline" className="mt-4 w-full"> Copy to Clipboard </Button> )}
+            {generatedOpinionReport && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button onClick={() => navigator.clipboard.writeText(generatedOpinionReport)} variant="outline" className="flex-grow sm:flex-grow-0">
+                  <Copy className="mr-2 h-4 w-4" /> Copy to Clipboard
+                </Button>
+                 <Button
+                  variant="outline"
+                  onClick={() => toast({ title: "Feature Under Development", description: "Sharing via Email is not yet implemented."})}
+                  className="flex-grow sm:flex-grow-0"
+                >
+                  <Mail className="mr-2 h-4 w-4" /> Share via Email
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => toast({ title: "Feature Under Development", description: "Sharing via WhatsApp is not yet implemented."})}
+                  className="flex-grow sm:flex-grow-0"
+                >
+                  <MessageSquareIcon className="mr-2 h-4 w-4" /> Share via WhatsApp
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
+
+        {/* OPD Consultation Note Template */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center"><DraftingCompass className="mr-2 h-5 w-5 text-primary"/>Generate OPD Consultation Note</CardTitle>
+            <CardDescription>Enter details to generate an OPD consultation note.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...opdConsultationNoteFormHook}>
+              <form onSubmit={opdConsultationNoteFormHook.handleSubmit(onOpdConsultationNoteSubmit)} className="space-y-4">
+                <FormField control={opdConsultationNoteFormHook.control} name="patientName" render={({ field }) => ( <FormItem><FormLabel>Patient Full Name</FormLabel><FormControl><Input placeholder="e.g., Sita Devi" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField control={opdConsultationNoteFormHook.control} name="visitDate" render={({ field }) => ( <FormItem><FormLabel>Visit Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField control={opdConsultationNoteFormHook.control} name="doctorName" render={({ field }) => ( <FormItem><FormLabel>Doctor Name</FormLabel><FormControl><Input placeholder="e.g., Dr. Sarah Johnson" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                </div>
+                <FormField control={opdConsultationNoteFormHook.control} name="chiefComplaints" render={({ field }) => ( <FormItem><FormLabel>Chief Complaints</FormLabel><FormControl><Textarea rows={2} placeholder="Patient complains of..." {...field} /></FormControl><FormMessage /></FormItem> )} />
+                <FormField control={opdConsultationNoteFormHook.control} name="examinationFindings" render={({ field }) => ( <FormItem><FormLabel>Key Examination Findings</FormLabel><FormControl><Textarea rows={3} placeholder="On examination..." {...field} /></FormControl><FormMessage /></FormItem> )} />
+                <FormField control={opdConsultationNoteFormHook.control} name="investigationsOrdered" render={({ field }) => ( <FormItem><FormLabel>Investigations Ordered (Optional)</FormLabel><FormControl><Textarea rows={2} placeholder="e.g., CBC, KFT, Urine R/M" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                <FormField control={opdConsultationNoteFormHook.control} name="medicationsPrescribed" render={({ field }) => ( <FormItem><FormLabel>Medications Prescribed / Advice</FormLabel><FormControl><Textarea rows={3} placeholder="e.g., Tab Telmisartan 40mg OD, Lifestyle modifications" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                <FormField control={opdConsultationNoteFormHook.control} name="assessmentAndPlan" render={({ field }) => ( <FormItem><FormLabel>Assessment & Plan</FormLabel><FormControl><Textarea rows={3} placeholder="Assessment: CKD Stage X. Plan: Monitor BP, follow up in Y weeks." {...field} /></FormControl><FormMessage /></FormItem> )} />
+                <FormField control={opdConsultationNoteFormHook.control} name="followUpInstructions" render={({ field }) => ( <FormItem><FormLabel>Follow-up Instructions (Optional)</FormLabel><FormControl><Textarea rows={2} placeholder="e.g., Review with reports in 1 month." {...field} /></FormControl><FormMessage /></FormItem> )} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField control={opdConsultationNoteFormHook.control} name="patientServiceNumber" render={({ field }) => ( <FormItem><FormLabel>Service No. (Optional)</FormLabel><FormControl><Input placeholder="If applicable" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField control={opdConsultationNoteFormHook.control} name="patientRank" render={({ field }) => ( <FormItem><FormLabel>Rank (Optional)</FormLabel><FormControl><Input placeholder="If applicable" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                </div>
+                <Button type="submit" disabled={isLoadingOpdNote} className="w-full"> {isLoadingOpdNote ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />} Generate OPD Note </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+        <Card className="md:col-span-1">
+          <CardHeader> <CardTitle className="font-headline">Generated OPD Consultation Note</CardTitle> <CardDescription>Review the generated text.</CardDescription> </CardHeader>
+          <CardContent>
+            {isLoadingOpdNote && ( <div className="flex items-center justify-center h-40"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="ml-2 text-muted-foreground">Generating...</p></div> )}
+            {generatedOpdNote ? ( <Textarea value={generatedOpdNote} readOnly rows={15} className="bg-muted/20 text-sm" /> ) : ( !isLoadingOpdNote && <p className="text-muted-foreground text-center py-10">Generated OPD note will appear here.</p> )}
+            {generatedOpdNote && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button onClick={() => navigator.clipboard.writeText(generatedOpdNote)} variant="outline" className="flex-grow sm:flex-grow-0">
+                  <Copy className="mr-2 h-4 w-4" /> Copy to Clipboard
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => toast({ title: "Feature Under Development", description: "Sharing via Email is not yet implemented."})}
+                  className="flex-grow sm:flex-grow-0"
+                >
+                  <Mail className="mr-2 h-4 w-4" /> Share via Email
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => toast({ title: "Feature Under Development", description: "Sharing via WhatsApp is not yet implemented."})}
+                  className="flex-grow sm:flex-grow-0"
+                >
+                  <MessageSquareIcon className="mr-2 h-4 w-4" /> Share via WhatsApp
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
 
         {/* Diagnosis Database Management */}
         <Card className="md:col-span-2">
@@ -457,4 +643,3 @@ export default function TemplatesPage() {
     </div>
   );
 }
-
