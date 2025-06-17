@@ -13,6 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  useFormField, // Import useFormField
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -273,9 +274,41 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
             <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem> <FormLabel>Patient Full Name</FormLabel> <FormControl><Input placeholder="Enter full name" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
-            <FormField control={form.control} name="dob" render={({ field }) => (
-                <FormItem className="flex flex-col"> <FormLabel>Date of Birth</FormLabel> <Popover> <PopoverTrigger asChild> <FormControl> <Button variant={"outline"} className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}> {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>} <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> </Button> </FormControl> </PopoverTrigger> <PopoverContent className="w-auto p-0" align="start"> <Calendar mode="single" selected={field.value ? parseISO(field.value) : undefined} onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")} disabled={(date) => date > new Date() || date < new Date("1900-01-01")} initialFocus captionLayout="dropdown-buttons" fromYear={1900} toYear={new Date().getFullYear()} /> </PopoverContent> </Popover> <FormMessage /> </FormItem>
-              )}
+            <FormField control={form.control} name="dob" render={({ field }) => {
+                const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
+                return (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Date of Birth</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
+                          id={formItemId}
+                          aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                          aria-invalid={!!error}
+                        >
+                          {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ? parseISO(field.value) : undefined}
+                          onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                          disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                          initialFocus
+                          captionLayout="dropdown-buttons"
+                          fromYear={1900}
+                          toYear={new Date().getFullYear()}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
             <FormField control={form.control} name="gender" render={({ field }) => (
               <FormItem> <FormLabel>Gender</FormLabel> <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl> <SelectContent>{GENDERS.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
@@ -295,9 +328,31 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
             <FormField control={form.control} name="guardian.contact" render={({ field }) => (
               <FormItem> <FormLabel>Guardian Contact Number</FormLabel> <FormControl><Input type="tel" placeholder="Enter 10-digit mobile" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
-             <FormField control={form.control} name="nextAppointmentDate" render={({ field }) => (
-                <FormItem className="flex flex-col"> <FormLabel>Next Appointment Date (Optional)</FormLabel> <Popover> <PopoverTrigger asChild> <FormControl> <Button variant={"outline"} className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}> {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>} <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> </Button> </FormControl> </PopoverTrigger> <PopoverContent className="w-auto p-0" align="start"> <Calendar mode="single" selected={field.value ? parseISO(field.value) : undefined} onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")} initialFocus /> </PopoverContent> </Popover> <FormMessage /> </FormItem>
-              )}
+             <FormField control={form.control} name="nextAppointmentDate" render={({ field }) => {
+                 const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
+                 return(
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Next Appointment Date (Optional)</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                              <Button
+                                variant={"outline"}
+                                className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}
+                                id={formItemId}
+                                aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                                aria-invalid={!!error}
+                                > {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                               </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar mode="single" selected={field.value ? parseISO(field.value) : undefined} onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")} initialFocus />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                    </FormItem>
+                 );
+                }}
             />
             <FormField control={form.control} name="isTracked" render={({ field }) => (
                 <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 shadow-sm h-fit mt-7">
