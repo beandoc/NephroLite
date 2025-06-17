@@ -311,7 +311,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               }}
             />
             <FormField control={form.control} name="gender" render={({ field }) => (
-              <FormItem> <FormLabel>Gender</FormLabel> <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl> <SelectContent>{GENDERS.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+              <FormItem> <FormLabel>Gender</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl> <SelectContent>{GENDERS.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="contact" render={({ field }) => (
               <FormItem> <FormLabel>Patient Contact Number</FormLabel> <FormControl><Input type="tel" placeholder="Enter 10-digit mobile" {...field} /></FormControl> <FormMessage /> </FormItem>
@@ -323,7 +323,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormItem> <FormLabel>Guardian Name</FormLabel> <FormControl><Input placeholder="Enter guardian's name" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="guardian.relation" render={({ field }) => (
-              <FormItem> <FormLabel>Guardian Relation to Patient</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select relation" /></SelectTrigger></FormControl> <SelectContent>{RELATIONSHIPS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+              <FormItem> <FormLabel>Guardian Relation to Patient</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select relation" /></SelectTrigger></FormControl> <SelectContent>{RELATIONSHIPS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="guardian.contact" render={({ field }) => (
               <FormItem> <FormLabel>Guardian Contact Number</FormLabel> <FormControl><Input type="tel" placeholder="Enter 10-digit mobile" {...field} /></FormControl> <FormMessage /> </FormItem>
@@ -372,7 +372,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       <FormLabel htmlFor={formItemId} className="cursor-pointer">Track Patient</FormLabel>
                       <FormDescription id={formDescriptionId}>Enable special monitoring for this patient.</FormDescription>
                     </div>
-                    <FormMessage id={formMessageId} />
+                    <FormMessage /> {/* Removed id={formMessageId} as FormMessage handles it internally */}
                   </FormItem>
                 );
               }}
@@ -390,7 +390,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormItem> <FormLabel>City</FormLabel> <FormControl><Input placeholder="Enter city" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="address.state" render={({ field }) => (
-              <FormItem> <FormLabel>State</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl> <SelectContent>{INDIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+              <FormItem> <FormLabel>State</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl> <SelectContent>{INDIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="address.pincode" render={({ field }) => (
               <FormItem> <FormLabel>Pincode</FormLabel> <FormControl><Input placeholder="Enter 6-digit pincode" {...field} /></FormControl> <FormMessage /> </FormItem>
@@ -421,28 +421,28 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 <FormItem> <FormLabel><Info className="inline h-4 w-4 mr-1"/>Aabha Number (Optional)</FormLabel> <FormControl><Input placeholder="Enter Aabha number" {...field} /></FormControl> <FormMessage /> </FormItem>
               )} />
               <FormField control={form.control} name="clinicalProfile.bloodGroup" render={({ field }) => (
-                <FormItem> <FormLabel><Droplet className="inline h-4 w-4 mr-1"/>Blood Group</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select blood group" /></SelectTrigger></FormControl> <SelectContent>{BLOOD_GROUPS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+                <FormItem> <FormLabel><Droplet className="inline h-4 w-4 mr-1"/>Blood Group</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select blood group" /></SelectTrigger></FormControl> <SelectContent>{BLOOD_GROUPS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
                <FormField control={form.control} name="clinicalProfile.whatsappNumber" render={({ field }) => (
                 <FormItem> <FormLabel><MessageCircle className="inline h-4 w-4 mr-1"/>WhatsApp Number (Optional)</FormLabel> <FormControl><Input type="tel" placeholder="Enter 10-digit WhatsApp" {...field} /></FormControl> <FormMessage /> </FormItem>
               )} />
               <FormField control={form.control} name="clinicalProfile.primaryDiagnosis" render={({ field }) => (
-                <FormItem> <FormLabel>Primary Diagnosis</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select primary diagnosis" /></SelectTrigger></FormControl> <SelectContent>{PRIMARY_DIAGNOSIS_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+                <FormItem> <FormLabel>Primary Diagnosis</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select primary diagnosis" /></SelectTrigger></FormControl> <SelectContent>{PRIMARY_DIAGNOSIS_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
               <FormField control={form.control} name="clinicalProfile.subspecialityFollowUp" render={({ field }) => (
-                <FormItem> <FormLabel>Subspeciality Follow-up</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select follow-up type" /></SelectTrigger></FormControl> <SelectContent>{SUBSPECIALITY_FOLLOWUP_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+                <FormItem> <FormLabel>Subspeciality Follow-up</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select follow-up type" /></SelectTrigger></FormControl> <SelectContent>{SUBSPECIALITY_FOLLOWUP_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
               <FormField control={form.control} name="clinicalProfile.smokingStatus" render={({ field }) => (
-                <FormItem> <FormLabel>Smoking Status</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl> <SelectContent>{YES_NO_NIL_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+                <FormItem> <FormLabel>Smoking Status</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl> <SelectContent>{YES_NO_NIL_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
               <FormField control={form.control} name="clinicalProfile.alcoholConsumption" render={({ field }) => (
-                <FormItem> <FormLabel>Alcohol Consumption</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl> <SelectContent>{YES_NO_NIL_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+                <FormItem> <FormLabel>Alcohol Consumption</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl> <SelectContent>{YES_NO_NIL_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
               <FormField control={form.control} name="clinicalProfile.nutritionalStatus" render={({ field }) => (
-                <FormItem> <FormLabel><Leaf className="inline h-4 w-4 mr-1"/>Nutritional Status</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select nutritional status" /></SelectTrigger></FormControl> <SelectContent>{NUTRITIONAL_STATUSES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+                <FormItem> <FormLabel><Leaf className="inline h-4 w-4 mr-1"/>Nutritional Status</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select nutritional status" /></SelectTrigger></FormControl> <SelectContent>{NUTRITIONAL_STATUSES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
               <FormField control={form.control} name="clinicalProfile.disability" render={({ field }) => (
-                <FormItem> <FormLabel><Accessibility className="inline h-4 w-4 mr-1"/>Disability Profile</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select disability profile" /></SelectTrigger></FormControl> <SelectContent>{DISABILITY_PROFILES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+                <FormItem> <FormLabel><Accessibility className="inline h-4 w-4 mr-1"/>Disability Profile</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select disability profile" /></SelectTrigger></FormControl> <SelectContent>{DISABILITY_PROFILES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
               <FormField
                 control={form.control}
@@ -556,7 +556,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                           aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
                         />
                         <FormLabel htmlFor={formItemId} className="font-medium text-sm cursor-pointer">{vaccField.name}</FormLabel>
-                        <FormMessage id={formMessageId} />
+                         <FormMessage /> {/* Removed id={formMessageId} as FormMessage handles it internally */}
                       </FormItem>
                     );
                   }}
