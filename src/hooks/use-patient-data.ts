@@ -13,7 +13,7 @@ const generateNephroId = (currentMaxId: number): string => {
 };
 
 const getDefaultVaccinations = (): Vaccination[] => {
-  return VACCINATION_NAMES.map(name => ({ name, administered: false, date: '' }));
+  return VACCINATION_NAMES.map(name => ({ name: name, administered: false, date: "" }));
 };
 
 const getInitialPatients = (): Patient[] => {
@@ -24,21 +24,23 @@ const getInitialPatients = (): Patient[] => {
       ...p,
       clinicalProfile: {
         ...p.clinicalProfile,
-        vaccinations: p.clinicalProfile.vaccinations && p.clinicalProfile.vaccinations.length > 0 
-                      ? p.clinicalProfile.vaccinations 
+        primaryDiagnosis: p.clinicalProfile.primaryDiagnosis || "",
+        nutritionalStatus: p.clinicalProfile.nutritionalStatus || "",
+        disability: p.clinicalProfile.disability || "",
+        vaccinations: p.clinicalProfile.vaccinations && p.clinicalProfile.vaccinations.length > 0
+                      ? p.clinicalProfile.vaccinations
                       : getDefaultVaccinations(),
         subspecialityFollowUp: p.clinicalProfile.subspecialityFollowUp || 'NIL',
         smokingStatus: p.clinicalProfile.smokingStatus || 'NIL',
         alcoholConsumption: p.clinicalProfile.alcoholConsumption || 'NIL',
       },
-      // Initialize new service fields if they don't exist
       serviceName: p.serviceName || undefined,
       serviceNumber: p.serviceNumber || undefined,
       rank: p.rank || undefined,
       unitName: p.unitName || undefined,
       formation: p.formation || undefined,
     }));
-    
+
     if (patients.length > 0) {
       const maxIdNum = patients.reduce((max, p) => {
         const num = parseInt(p.nephroId.replace('NL-', ''), 10);
@@ -107,7 +109,7 @@ const getInitialPatients = (): Patient[] => {
         alcoholConsumption: 'NIL',
         vaccinations: getDefaultVaccinations(),
       },
-      registrationDate: new Date(Date.now() - 86400000 * 10).toISOString().split('T')[0], 
+      registrationDate: new Date(Date.now() - 86400000 * 10).toISOString().split('T')[0],
     },
   ];
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mockPatients));
@@ -143,14 +145,18 @@ export function usePatientData() {
       id: crypto.randomUUID(),
       nephroId: generateNephroId(nextNephroIdCounter++),
       registrationDate: new Date().toISOString().split('T')[0],
-      clinicalProfile: {
-        ...patientData.clinicalProfile,
-        vaccinations: patientData.clinicalProfile.vaccinations && patientData.clinicalProfile.vaccinations.length > 0 
-                      ? patientData.clinicalProfile.vaccinations 
-                      : getDefaultVaccinations(),
+      clinicalProfile: { // Ensure clinical profile data is defaulted correctly for new patients
+        primaryDiagnosis: patientData.clinicalProfile.primaryDiagnosis || "",
+        labels: patientData.clinicalProfile.labels || [],
+        tags: patientData.clinicalProfile.tags || [],
+        nutritionalStatus: patientData.clinicalProfile.nutritionalStatus || "",
+        disability: patientData.clinicalProfile.disability || "",
         subspecialityFollowUp: patientData.clinicalProfile.subspecialityFollowUp || 'NIL',
         smokingStatus: patientData.clinicalProfile.smokingStatus || 'NIL',
         alcoholConsumption: patientData.clinicalProfile.alcoholConsumption || 'NIL',
+        vaccinations: patientData.clinicalProfile.vaccinations && patientData.clinicalProfile.vaccinations.length > 0
+                      ? patientData.clinicalProfile.vaccinations
+                      : getDefaultVaccinations(),
       },
       serviceName: patientData.serviceName || undefined,
       serviceNumber: patientData.serviceNumber || undefined,
@@ -172,8 +178,8 @@ export function usePatientData() {
       ...updatedPatientData,
       clinicalProfile: {
         ...updatedPatientData.clinicalProfile,
-        vaccinations: Array.isArray(updatedPatientData.clinicalProfile.vaccinations) 
-                      ? updatedPatientData.clinicalProfile.vaccinations 
+        vaccinations: Array.isArray(updatedPatientData.clinicalProfile.vaccinations)
+                      ? updatedPatientData.clinicalProfile.vaccinations
                       : getDefaultVaccinations(),
       }
     };
@@ -187,7 +193,7 @@ export function usePatientData() {
     saveData(updatedPatients);
     return true;
   }, [patients, saveData]);
-  
+
   return {
     patients,
     isLoading,
@@ -198,4 +204,3 @@ export function usePatientData() {
     deletePatient,
   };
 }
-

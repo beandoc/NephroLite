@@ -11,11 +11,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2, FileSignature, Wand2, Pill, FileText, MessageCircleQuestion } from 'lucide-react';
+import { Loader2, FileSignature, Wand2, Pill, FileText, MessageCircleQuestion, BookMarked, ListPlus } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { generateConsentForm } from '@/ai/flows/generate-consent-form-flow';
 import { generateDischargeSummary, type GenerateDischargeSummaryInput } from '@/ai/flows/generate-discharge-summary-flow';
 import { generateOpinionReport, type GenerateOpinionReportInput } from '@/ai/flows/generate-opinion-report-flow';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { MOCK_DIAGNOSES, MOCK_MEDICATIONS } from '@/lib/constants';
+import type { DiagnosisEntry, MedicationEntry } from '@/lib/types';
 
 const consentFormSchema = z.object({
   patientName: z.string().min(1, "Patient name is required."),
@@ -64,19 +67,37 @@ const opinionReportSchema = z.object({
   patientRank: z.string().optional(),
 });
 
+const diagnosisEntrySchema = z.object({
+  name: z.string().min(1, "Diagnosis name is required."),
+  icdName: z.string().min(1, "ICD name is required."),
+  icdCode: z.string().min(1, "ICD-10 code is required. e.g., I10, E11.9"),
+});
+type DiagnosisEntryFormData = z.infer<typeof diagnosisEntrySchema>;
+
+const medicationEntrySchema = z.object({
+  name: z.string().min(1, "Medication name is required."),
+  defaultDosage: z.string().optional(),
+  defaultFrequency: z.string().optional(),
+  commonInstructions: z.string().optional(),
+});
+type MedicationEntryFormData = z.infer<typeof medicationEntrySchema>;
+
 
 export default function TemplatesPage() {
   const [generatedConsent, setGeneratedConsent] = useState<string | null>(null);
   const [isLoadingConsent, setIsLoadingConsent] = useState(false);
-  
+
   const [generatedPrescription, setGeneratedPrescription] = useState<string | null>(null);
   const [isLoadingPrescription, setIsLoadingPrescription] = useState(false);
 
   const [generatedDischargeSummary, setGeneratedDischargeSummaryText] = useState<string | null>(null);
   const [isLoadingDischargeSummary, setIsLoadingDischargeSummary] = useState(false);
-  
+
   const [generatedOpinionReport, setGeneratedOpinionReportText] = useState<string | null>(null);
   const [isLoadingOpinionReport, setIsLoadingOpinionReport] = useState(false);
+
+  const [diagnoses, setDiagnoses] = useState<DiagnosisEntry[]>(MOCK_DIAGNOSES);
+  const [medications, setMedications] = useState<MedicationEntry[]>(MOCK_MEDICATIONS);
 
   const { toast } = useToast();
 
@@ -98,6 +119,16 @@ export default function TemplatesPage() {
   const opinionReportFormHook = useForm<GenerateOpinionReportInput>({
     resolver: zodResolver(opinionReportSchema),
     defaultValues: { patientName: "", dateOfOpinion: new Date().toISOString().split('T')[0], reasonForOpinion: "", historyOfPresentIllness: "", examinationFindings: "", investigationResultsSummary: "", medicalOpinion: "", recommendations: "", providingDoctorName: "Dr. Sarah Johnson" },
+  });
+
+  const diagnosisForm = useForm<DiagnosisEntryFormData>({
+    resolver: zodResolver(diagnosisEntrySchema),
+    defaultValues: { name: "", icdName: "", icdCode: "" },
+  });
+
+  const medicationForm = useForm<MedicationEntryFormData>({
+    resolver: zodResolver(medicationEntrySchema),
+    defaultValues: { name: "", defaultDosage: "", defaultFrequency: "", commonInstructions: "" },
   });
 
 
@@ -123,8 +154,6 @@ export default function TemplatesPage() {
   const onPrescriptionSubmit = async (data: MedicinePrescriptionData) => {
     setIsLoadingPrescription(true);
     setGeneratedPrescription(null);
-    // Placeholder for AI generation call
-    // For now, just show a toast and mock output
     setTimeout(() => {
       let prescriptionText = `MEDICINE PRESCRIPTION\n\n`;
       prescriptionText += `Date: ${new Date().toLocaleDateString()}\n`;
@@ -142,7 +171,7 @@ export default function TemplatesPage() {
       setIsLoadingPrescription(false);
     }, 1000);
   };
-  
+
   const onDischargeSummarySubmit = async (data: GenerateDischargeSummaryInput) => {
     setIsLoadingDischargeSummary(true);
     setGeneratedDischargeSummaryText(null);
@@ -182,11 +211,26 @@ export default function TemplatesPage() {
     }
   };
 
+  const onDiagnosisSubmit = (data: DiagnosisEntryFormData) => {
+    // In a real app, this would save to a backend. Here, we just add to mock state.
+    const newDiagnosis: DiagnosisEntry = { ...data, id: crypto.randomUUID() };
+    setDiagnoses(prev => [...prev, newDiagnosis]);
+    toast({ title: "Diagnosis Added (Mock)", description: `${data.name} added to the local list.` });
+    diagnosisForm.reset();
+  };
+
+  const onMedicationSubmit = (data: MedicationEntryFormData) => {
+    const newMedication: MedicationEntry = { ...data, id: crypto.randomUUID() };
+    setMedications(prev => [...prev, newMedication]);
+    toast({ title: "Medication Added (Mock)", description: `${data.name} added to the local list.` });
+    medicationForm.reset();
+  };
+
 
   return (
     <div className="container mx-auto py-2">
-      <PageHeader title="Document Templates" description="Generate patient consent forms, prescriptions, discharge summaries and other templates using AI." />
-      
+      <PageHeader title="Document Templates & Databases" description="Generate patient documents using AI and manage clinical databases." />
+
       <div className="grid md:grid-cols-2 gap-x-6 gap-y-8 mt-6">
         {/* Consent Form Generator */}
         <Card>
@@ -319,8 +363,92 @@ export default function TemplatesPage() {
           </CardContent>
         </Card>
 
+        {/* Diagnosis Database Management */}
+        <Card className="md:col-span-2">
+            <CardHeader>
+                <CardTitle className="font-headline flex items-center"><BookMarked className="mr-2 h-5 w-5 text-primary"/>Diagnosis Database Management</CardTitle>
+                <CardDescription>Add and view diagnosis codes. (Mock Implementation)</CardDescription>
+            </CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-x-6 gap-y-4">
+                <div>
+                    <Form {...diagnosisForm}>
+                        <form onSubmit={diagnosisForm.handleSubmit(onDiagnosisSubmit)} className="space-y-4">
+                            <FormField control={diagnosisForm.control} name="name" render={({ field }) => ( <FormItem><FormLabel>Diagnosis Name</FormLabel><FormControl><Input placeholder="e.g., Hypertension" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <FormField control={diagnosisForm.control} name="icdName" render={({ field }) => ( <FormItem><FormLabel>Full ICD Name</FormLabel><FormControl><Input placeholder="e.g., Essential (primary) hypertension" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <FormField control={diagnosisForm.control} name="icdCode" render={({ field }) => ( <FormItem><FormLabel>ICD-10 Code</FormLabel><FormControl><Input placeholder="e.g., I10" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <Button type="submit" className="w-full"><ListPlus className="mr-2 h-4 w-4"/>Add Diagnosis to List</Button>
+                        </form>
+                    </Form>
+                </div>
+                <div className="max-h-96 overflow-y-auto border rounded-md p-0">
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-muted/80 backdrop-blur-sm">
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>ICD Name</TableHead>
+                                <TableHead>ICD Code</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {diagnoses.map(diag => (
+                                <TableRow key={diag.id}>
+                                    <TableCell>{diag.name}</TableCell>
+                                    <TableCell>{diag.icdName}</TableCell>
+                                    <TableCell>{diag.icdCode}</TableCell>
+                                </TableRow>
+                            ))}
+                             {diagnoses.length === 0 && <TableRow><TableCell colSpan={3} className="text-center">No diagnoses in the list.</TableCell></TableRow>}
+                        </TableBody>
+                    </Table>
+                </div>
+            </CardContent>
+        </Card>
+
+        {/* Medication Database Management */}
+        <Card className="md:col-span-2">
+            <CardHeader>
+                <CardTitle className="font-headline flex items-center"><Pill className="mr-2 h-5 w-5 text-primary"/>Medication Database Management</CardTitle>
+                <CardDescription>Add and view common medications. (Mock Implementation)</CardDescription>
+            </CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-x-6 gap-y-4">
+                 <div>
+                    <Form {...medicationForm}>
+                        <form onSubmit={medicationForm.handleSubmit(onMedicationSubmit)} className="space-y-4">
+                            <FormField control={medicationForm.control} name="name" render={({ field }) => ( <FormItem><FormLabel>Medication Name</FormLabel><FormControl><Input placeholder="e.g., Amlodipine" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <FormField control={medicationForm.control} name="defaultDosage" render={({ field }) => ( <FormItem><FormLabel>Default Dosage (Optional)</FormLabel><FormControl><Input placeholder="e.g., 5mg" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <FormField control={medicationForm.control} name="defaultFrequency" render={({ field }) => ( <FormItem><FormLabel>Default Frequency (Optional)</FormLabel><FormControl><Input placeholder="e.g., Once Daily" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <FormField control={medicationForm.control} name="commonInstructions" render={({ field }) => ( <FormItem><FormLabel>Common Instructions (Optional)</FormLabel><FormControl><Textarea rows={2} placeholder="e.g., Take with food" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <Button type="submit" className="w-full"><ListPlus className="mr-2 h-4 w-4"/>Add Medication to List</Button>
+                        </form>
+                    </Form>
+                </div>
+                <div className="max-h-96 overflow-y-auto border rounded-md p-0">
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-muted/80 backdrop-blur-sm">
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Dosage</TableHead>
+                                <TableHead>Frequency</TableHead>
+                                <TableHead>Instructions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {medications.map(med => (
+                                <TableRow key={med.id}>
+                                    <TableCell>{med.name}</TableCell>
+                                    <TableCell>{med.defaultDosage || 'N/A'}</TableCell>
+                                    <TableCell>{med.defaultFrequency || 'N/A'}</TableCell>
+                                    <TableCell>{med.commonInstructions || 'N/A'}</TableCell>
+                                </TableRow>
+                            ))}
+                            {medications.length === 0 && <TableRow><TableCell colSpan={4} className="text-center">No medications in the list.</TableCell></TableRow>}
+                        </TableBody>
+                    </Table>
+                </div>
+            </CardContent>
+        </Card>
+
       </div>
     </div>
   );
 }
-

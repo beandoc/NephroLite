@@ -1,4 +1,6 @@
 
+import type { DiagnosisEntry, MedicationEntry } from '@/lib/types';
+
 export const GENDERS: string[] = ['Male', 'Female', 'Other', 'Prefer not to say'];
 
 export const INDIAN_STATES: string[] = [
@@ -23,20 +25,21 @@ export const PRIMARY_DIAGNOSIS_OPTIONS: string[] = [
   'Kidney Stones',
   'Urinary Tract Infection (UTI) - Complicated',
   'End-Stage Renal Disease (ESRD)',
-  'IgA Nephropathy (IgAN)', 
-  'Focal Segmental Glomerulosclerosis (FSGS)', 
-  'Systemic Lupus Erythematosus (SLE)', 
-  'Lupus Nephritis (LN)', 
-  'Nephrotic Syndrome (NS)', 
-  'Membranous Glomerulonephritis (MGN)', 
-  'Minimal Change Disease (MCD)', 
-  'Proteinuria (PRT)', 
-  'Congenital Anomalies of the Kidney and Urinary Tract (CAKUT)', 
-  'Renal Artery Stenosis (RAS)', 
-  'Glomerulonephritis (GN) - Unspecified', 
-  'Transplant Prospect', 
-  'Potential Kidney Donor', 
+  'IgA Nephropathy (IgAN)',
+  'Focal Segmental Glomerulosclerosis (FSGS)',
+  'Systemic Lupus Erythematosus (SLE)',
+  'Lupus Nephritis (LN)',
+  'Nephrotic Syndrome (NS)',
+  'Membranous Glomerulonephritis (MGN)',
+  'Minimal Change Disease (MCD)',
+  'Proteinuria (PRT)',
+  'Congenital Anomalies of the Kidney and Urinary Tract (CAKUT)',
+  'Renal Artery Stenosis (RAS)',
+  'Glomerulonephritis (GN) - Unspecified',
+  'Transplant Prospect',
+  'Potential Kidney Donor',
   'Other',
+  'Not Set', // Added for default if not specified
 ];
 
 export const NUTRITIONAL_STATUSES: string[] = [
@@ -45,6 +48,7 @@ export const NUTRITIONAL_STATUSES: string[] = [
   'Moderate malnutrition',
   'Severe malnutrition',
   'Obese',
+  'Not Set', // Added for default
 ];
 
 export const DISABILITY_PROFILES: string[] = [
@@ -56,6 +60,7 @@ export const DISABILITY_PROFILES: string[] = [
   'Visual impairment',
   'Hearing impairment',
   'Other',
+  'Not Set', // Added for default
 ];
 
 export const VISIT_REMARK_OPTIONS_GN: string[] = [
@@ -74,7 +79,7 @@ export const VISIT_REMARK_OPTIONS_GN: string[] = [
 ];
 
 
-export const APPOINTMENT_TYPES: string[] = [ 
+export const APPOINTMENT_TYPES: string[] = [
   'Routine Checkup',
   'Follow-up',
   'Dialysis Session',
@@ -116,6 +121,22 @@ export const VISIT_TYPES: string[] = [
 ];
 
 export const PATIENT_GROUP_NAMES: string[] = [
-  "Peritoneal Dialysis", "Chronic Kidney disease", "Hemodialysis", 
+  "Peritoneal Dialysis", "Chronic Kidney disease", "Hemodialysis",
   "Glomerulonephritis", "Kidney transplant", "ADPKD", "Infection", "Misc"
+];
+
+// Mock data for Diagnosis Database
+export const MOCK_DIAGNOSES: DiagnosisEntry[] = [
+  { id: 'd001', name: 'Hypertension', icdName: 'Essential (primary) hypertension', icdCode: 'I10' },
+  { id: 'd002', name: 'Type 2 Diabetes Mellitus', icdName: 'Type 2 diabetes mellitus without complications', icdCode: 'E11.9' },
+  { id: 'd003', name: 'Chronic Kidney Disease, Stage 3', icdName: 'Chronic kidney disease, stage 3 (moderate)', icdCode: 'N18.3' },
+  { id: 'd004', name: 'IgA Nephropathy', icdName: 'IgA nephropathy', icdCode: 'N02.8' },
+];
+
+// Mock data for Medication Database
+export const MOCK_MEDICATIONS: MedicationEntry[] = [
+  { id: 'm001', name: 'Amlodipine', defaultDosage: '5mg', defaultFrequency: 'Once Daily', commonInstructions: 'Take with or without food.' },
+  { id: 'm002', name: 'Metformin', defaultDosage: '500mg', defaultFrequency: 'Twice Daily', commonInstructions: 'Take with meals to reduce stomach upset.' },
+  { id: 'm003', name: 'Telmisartan', defaultDosage: '40mg', defaultFrequency: 'Once Daily', commonInstructions: 'Monitor blood pressure regularly.' },
+  { id: 'm004', name: 'Prednisolone', defaultDosage: '10mg', defaultFrequency: 'Once Daily', commonInstructions: 'Take in the morning with food.' },
 ];

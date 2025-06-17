@@ -22,27 +22,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Patient, Vaccination } from "@/lib/types";
-import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, SUBSPECIALITY_FOLLOWUP_OPTIONS, YES_NO_NIL_OPTIONS, VACCINATION_NAMES } from "@/lib/constants";
-import { AiTagSuggester } from "./ai-tag-suggester";
-import { Badge } from "@/components/ui/badge";
-import { XIcon, Tag, ShieldQuestion, Cigarette, Wine, CheckSquare, Briefcase } from "lucide-react";
+import { GENDERS, INDIAN_STATES, RELATIONSHIPS, VACCINATION_NAMES } from "@/lib/constants"; // Removed other clinical constants as they are not used here anymore
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
-import React, { useState, useEffect } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
+import React, { useEffect } from "react";
+
 
 const addressSchema = z.object({
   street: z.string().min(1, "Street is required"),
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
   pincode: z.string().regex(/^\d{6}$/, "Invalid pincode (must be 6 digits)"),
-  country: z.string().optional(), 
+  country: z.string().optional(),
 });
 
 const guardianSchema = z.object({
@@ -54,30 +50,31 @@ const guardianSchema = z.object({
 const vaccinationSchema = z.object({
   name: z.string(),
   administered: z.boolean(),
-  date: z.string().optional().nullable(), 
+  date: z.string().optional().nullable(),
 });
 
+// Clinical profile fields are now optional for initial registration
 const clinicalProfileSchema = z.object({
-  primaryDiagnosis: z.string().min(1, "Primary diagnosis is required"),
-  labels: z.array(z.string()),
-  tags: z.array(z.string()),
-  nutritionalStatus: z.string().min(1, "Nutritional status is required"),
-  disability: z.string().min(1, "Disability profile is required"),
-  subspecialityFollowUp: z.string().optional(),
-  smokingStatus: z.string().optional(),
-  alcoholConsumption: z.string().optional(),
-  vaccinations: z.array(vaccinationSchema).optional(),
+  primaryDiagnosis: z.string().optional(),
+  labels: z.array(z.string()).default([]),
+  tags: z.array(z.string()).default([]),
+  nutritionalStatus: z.string().optional(),
+  disability: z.string().optional(),
+  subspecialityFollowUp: z.string().optional().default('NIL'),
+  smokingStatus: z.string().optional().default('NIL'),
+  alcoholConsumption: z.string().optional().default('NIL'),
+  vaccinations: z.array(vaccinationSchema).optional().default(() => getDefaultVaccinations()),
 });
 
 const patientFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  dob: z.string().min(1, "Date of birth is required"), 
+  dob: z.string().min(1, "Date of birth is required"),
   gender: z.string().min(1, "Gender is required"),
   contact: z.string().regex(/^\d{10}$/, "Invalid contact (must be 10 digits)"),
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
   address: addressSchema,
   guardian: guardianSchema,
-  clinicalProfile: clinicalProfileSchema,
+  clinicalProfile: clinicalProfileSchema, // Stays here for data structure, but form fields removed for new patient
   // Service-related details
   serviceName: z.string().optional(),
   serviceNumber: z.string().optional(),
@@ -111,10 +108,13 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
       },
       clinicalProfile: {
         ...patient.clinicalProfile,
+        primaryDiagnosis: patient.clinicalProfile.primaryDiagnosis || "",
+        nutritionalStatus: patient.clinicalProfile.nutritionalStatus || "",
+        disability: patient.clinicalProfile.disability || "",
         subspecialityFollowUp: patient.clinicalProfile.subspecialityFollowUp || 'NIL',
         smokingStatus: patient.clinicalProfile.smokingStatus || 'NIL',
         alcoholConsumption: patient.clinicalProfile.alcoholConsumption || 'NIL',
-        vaccinations: patient.clinicalProfile.vaccinations && patient.clinicalProfile.vaccinations.length > 0 
+        vaccinations: patient.clinicalProfile.vaccinations && patient.clinicalProfile.vaccinations.length > 0
                       ? VACCINATION_NAMES.map(vaccineName => {
                           const existingVaccine = patient.clinicalProfile.vaccinations?.find(v => v.name === vaccineName);
                           return existingVaccine || { name: vaccineName, administered: false, date: '' };
@@ -134,11 +134,11 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
       email: "",
       address: { street: "", city: "", state: "", pincode: "", country: "India" },
       guardian: { name: "", relation: "", contact: "" },
-      clinicalProfile: { 
-        primaryDiagnosis: "", 
-        labels: [], 
-        tags: [], 
-        nutritionalStatus: "", 
+      clinicalProfile: { // Initialize with defaults, these won't be on the form for new patients
+        primaryDiagnosis: "",
+        labels: [],
+        tags: [],
+        nutritionalStatus: "",
         disability: "",
         subspecialityFollowUp: 'NIL',
         smokingStatus: 'NIL',
@@ -153,12 +153,14 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     },
   });
 
-  const { fields: vaccinationFields, replace: replaceVaccinations } = useFieldArray({
+  const { replace: replaceVaccinations } = useFieldArray({
     control: form.control,
     name: "clinicalProfile.vaccinations",
   });
 
   useEffect(() => {
+    // This ensures vaccinations are correctly structured if editing an existing patient
+    // or set to default for a new one (though not displayed in the form for new patients).
     if (patient && patient.clinicalProfile.vaccinations) {
       const currentVaccinations = patient.clinicalProfile.vaccinations;
       const fullVaccinationList = VACCINATION_NAMES.map(vaccineName => {
@@ -170,40 +172,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
       replaceVaccinations(getDefaultVaccinations());
     }
   }, [patient, replaceVaccinations]);
-
-
-  const [currentLabelInput, setCurrentLabelInput] = useState("");
-  const [currentTagInput, setCurrentTagInput] = useState("");
-
-  const handleAddLabel = () => {
-    if (currentLabelInput.trim() && !form.getValues("clinicalProfile.labels").includes(currentLabelInput.trim())) {
-      form.setValue("clinicalProfile.labels", [...form.getValues("clinicalProfile.labels"), currentLabelInput.trim()]);
-      setCurrentLabelInput("");
-    }
-  };
-
-  const handleRemoveLabel = (labelToRemove: string) => {
-    form.setValue("clinicalProfile.labels", form.getValues("clinicalProfile.labels").filter(label => label !== labelToRemove));
-  };
-  
-  const handleAddTag = (isAI: boolean = false) => {
-    if (currentTagInput.trim() && !form.getValues("clinicalProfile.tags").includes(currentTagInput.trim())) {
-      form.setValue("clinicalProfile.tags", [...form.getValues("clinicalProfile.tags"), currentTagInput.trim()]);
-      if (!isAI) setCurrentTagInput("");
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    form.setValue("clinicalProfile.tags", form.getValues("clinicalProfile.tags").filter(tag => tag !== tagToRemove));
-  };
-
-  const handleAiTagsSuggested = (suggestedTags: string[]) => {
-    const currentTags = form.getValues("clinicalProfile.tags");
-    const newTagsToAdd = suggestedTags.filter(st => !currentTags.includes(st));
-    if (newTagsToAdd.length > 0) {
-      form.setValue("clinicalProfile.tags", [...currentTags, ...newTagsToAdd]);
-    }
-  };
 
 
   return (
@@ -233,7 +201,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                           )}
                         >
                           {field.value ? (
-                            format(parseISO(field.value), "PPP") 
+                            format(parseISO(field.value), "PPP")
                           ) : (
                             <span>Pick a date</span>
                           )}
@@ -244,7 +212,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={field.value ? parseISO(field.value) : undefined} 
+                        selected={field.value ? parseISO(field.value) : undefined}
                         onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
                         disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
                         initialFocus
@@ -351,7 +319,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                   </FormControl>
                   <FormMessage />
                 </FormItem>
-              )} 
+              )}
             />
           </CardContent>
         </Card>
@@ -397,165 +365,14 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
           </CardContent>
         </Card>
 
-
-        <Card>
-          <CardHeader><CardTitle className="font-headline">Clinical Profile</CardTitle></CardHeader>
-          <CardContent className="space-y-6">
-            <FormField control={form.control} name="clinicalProfile.primaryDiagnosis" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Primary Diagnosis</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl><SelectTrigger><SelectValue placeholder="Select primary diagnosis" /></SelectTrigger></FormControl>
-                  <SelectContent>{PRIMARY_DIAGNOSIS_OPTIONS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )} />
-            
-            <FormField control={form.control} name="clinicalProfile.subspecialityFollowUp" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center"><ShieldQuestion className="mr-2 h-4 w-4 text-muted-foreground" /> Subspeciality Follow-up</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value || 'NIL'}>
-                    <FormControl><SelectTrigger><SelectValue placeholder="Select follow-up status" /></SelectTrigger></FormControl>
-                    <SelectContent>{SUBSPECIALITY_FOLLOWUP_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )} 
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="clinicalProfile.smokingStatus" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center"><Cigarette className="mr-2 h-4 w-4 text-muted-foreground" />Smoking Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value || 'NIL'}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl>
-                        <SelectContent>{YES_NO_NIL_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} 
-                />
-                <FormField control={form.control} name="clinicalProfile.alcoholConsumption" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center"><Wine className="mr-2 h-4 w-4 text-muted-foreground" />Alcohol Consumption</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value || 'NIL'}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl>
-                        <SelectContent>{YES_NO_NIL_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} 
-                />
-            </div>
-            
-            <FormItem>
-              <FormLabel>Labels</FormLabel>
-              <div className="flex items-center gap-2">
-                <Input placeholder="Add a label (e.g., Hypertension)" value={currentLabelInput} onChange={e => setCurrentLabelInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddLabel())} />
-                <Button type="button" variant="outline" onClick={handleAddLabel}>Add Label</Button>
-              </div>
-              {form.watch("clinicalProfile.labels")?.length > 0 && <FormDescription>Current labels:</FormDescription>}
-              <div className="flex flex-wrap gap-2 mt-2">
-                {form.watch("clinicalProfile.labels")?.map(label => (
-                  <Badge key={label} variant="secondary">
-                    {label} <Button variant="ghost" size="icon" className="h-4 w-4 ml-1" onClick={() => handleRemoveLabel(label)}><XIcon className="h-3 w-3" /></Button>
-                  </Badge>
-                ))}
-              </div>
-            </FormItem>
-
-            <FormItem>
-              <FormLabel>Clinical Tags</FormLabel>
-               <div className="flex items-center gap-2">
-                <Input placeholder="Add a clinical tag (e.g., Stage 3 CKD)" value={currentTagInput} onChange={e => setCurrentTagInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddTag())} />
-                <Button type="button" variant="outline" onClick={() => handleAddTag()}>Add Tag</Button>
-              </div>
-              {form.watch("clinicalProfile.tags")?.length > 0 && <FormDescription>Current tags:</FormDescription>}
-              <div className="flex flex-wrap gap-2 mt-2">
-                {form.watch("clinicalProfile.tags")?.map(tag => (
-                  <Badge key={tag}>
-                    {tag} <Button variant="ghost" size="icon" className="h-4 w-4 ml-1" onClick={() => handleRemoveTag(tag)}><XIcon className="h-3 w-3"/></Button>
-                  </Badge>
-                ))}
-              </div>
-            </FormItem>
-            
-            <AiTagSuggester onTagsSuggested={handleAiTagsSuggested} currentTags={form.watch("clinicalProfile.tags") || []} />
-            
-            <FormField control={form.control} name="clinicalProfile.nutritionalStatus" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nutritional Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl><SelectTrigger><SelectValue placeholder="Select nutritional status" /></SelectTrigger></FormControl>
-                  <SelectContent>{NUTRITIONAL_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="clinicalProfile.disability" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Disability Profile</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl><SelectTrigger><SelectValue placeholder="Select disability profile" /></SelectTrigger></FormControl>
-                  <SelectContent>{DISABILITY_PROFILES.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle className="font-headline flex items-center"><CheckSquare className="mr-2 h-5 w-5 text-primary" />Vaccination Status</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            {vaccinationFields.map((item, index) => (
-              <div key={item.id} className="p-3 border rounded-md bg-muted/20 space-y-3">
-                 <FormField
-                  control={form.control}
-                  name={`clinicalProfile.vaccinations.${index}.administered`}
-                  render={({ field: administeredField }) => (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={administeredField.value}
-                          onCheckedChange={(checked) => {
-                            administeredField.onChange(Boolean(checked)); 
-                            if (!checked) {
-                               form.setValue(`clinicalProfile.vaccinations.${index}.date`, "");
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormLabel className="font-medium text-sm">{item.name}</FormLabel>
-                    </FormItem>
-                  )}
-                />
-                {form.watch(`clinicalProfile.vaccinations.${index}.administered`) && (
-                  <FormField
-                    control={form.control}
-                    name={`clinicalProfile.vaccinations.${index}.date`}
-                    render={({ field: dateField }) => (
-                      <FormItem className="ml-8">
-                        <FormLabel className="text-xs">Date Administered</FormLabel>
-                        <FormControl>
-                           <Input 
-                              type="date" 
-                              {...dateField} 
-                              value={dateField.value || ""}
-                              onChange={(e) => dateField.onChange(e.target.value)}
-                              className="text-sm h-9"
-                            />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
+        {/* Clinical Profile and Vaccination sections are removed for initial patient registration
+            These will be editable via the patient's profile page after creation.
+            The 'patient' prop being present indicates an edit mode, where these would normally appear.
+            For simplicity in this step, they are removed entirely from this component.
+            If needed, a more complex conditional rendering based on `!patient` could be added
+            to hide them only for new patients, but show them for edits.
+            However, the request was to remove them from the "register new patient" form.
+        */}
 
         <Button type="submit" className="w-full md:w-auto" disabled={isSubmitting}>
           {isSubmitting ? (patient ? "Updating Patient..." : "Registering Patient...") : (patient ? "Update Patient" : "Register Patient")}
@@ -564,4 +381,3 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
-
