@@ -195,11 +195,11 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <Card>
-          <CardHeader><CardTitle className="font-headline">Demographic Information</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="font-headline">Personal Details</CardTitle></CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem>
-                <FormLabel>Full Name</FormLabel>
+                <FormLabel>Patient Full Name</FormLabel>
                 <FormControl><Input placeholder="Enter full name" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -255,15 +255,39 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
             )} />
             <FormField control={form.control} name="contact" render={({ field }) => (
               <FormItem>
-                <FormLabel>Contact Number</FormLabel>
+                <FormLabel>Patient Contact Number</FormLabel>
                 <FormControl><Input type="tel" placeholder="Enter 10-digit mobile" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
             <FormField control={form.control} name="email" render={({ field }) => (
               <FormItem className="md:col-span-2">
-                <FormLabel>Email Address (Optional)</FormLabel>
+                <FormLabel>Patient Email Address (Optional)</FormLabel>
                 <FormControl><Input type="email" placeholder="Enter email address" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+             <FormField control={form.control} name="guardian.name" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Guardian Name</FormLabel>
+                <FormControl><Input placeholder="Enter guardian's name" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="guardian.relation" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Guardian Relation to Patient</FormLabel>
+                 <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select relation" /></SelectTrigger></FormControl>
+                  <SelectContent>{RELATIONSHIPS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="guardian.contact" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Guardian Contact Number</FormLabel>
+                <FormControl><Input type="tel" placeholder="Enter 10-digit mobile" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -314,36 +338,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 </FormItem>
               )} 
             />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle className="font-headline">Guardian Information</CardTitle></CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField control={form.control} name="guardian.name" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Guardian Name</FormLabel>
-                <FormControl><Input placeholder="Enter guardian's name" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="guardian.relation" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Relation</FormLabel>
-                 <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl><SelectTrigger><SelectValue placeholder="Select relation" /></SelectTrigger></FormControl>
-                  <SelectContent>{RELATIONSHIPS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="guardian.contact" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Guardian Contact</FormLabel>
-                <FormControl><Input type="tel" placeholder="Enter 10-digit mobile" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
           </CardContent>
         </Card>
 
@@ -513,3 +507,4 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
+
