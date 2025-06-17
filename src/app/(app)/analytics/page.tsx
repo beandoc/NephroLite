@@ -2,82 +2,67 @@
 "use client";
 
 import { PageHeader } from '@/components/shared/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PatientAnalysisChart } from '@/components/dashboard/patient-analysis-chart'; // Reusing this chart
-import { KidneyFunctionChart } from '@/components/dashboard/kidney-function-chart'; // For GFR Tracker idea
-import { AlertTriangle, TrendingDown, TrendingUp, Users2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, Droplets, Activity, ShieldAlert, Users2, HeartPulse, Waves, Stethoscope } from 'lucide-react'; // Added more icons
 
-// Mock data for placeholder cards
-const mockAnalyticsCounts = {
-  ipdPatients: 12,
-  opdPatients: 125,
-  criticalAlerts: 3,
+interface MetricCardProps {
+  title: string;
+  value: string | number;
+  colorClass: string; // Tailwind class for border highlight
+  icon?: React.ElementType;
+}
+
+const MetricCard: React.FC<MetricCardProps> = ({ title, value, colorClass, icon: Icon }) => {
+  return (
+    <Card className={`shadow-lg relative overflow-hidden border-t-4 ${colorClass}`}>
+      <CardHeader className="pb-2 pt-4">
+        {Icon && <Icon className="h-6 w-6 text-muted-foreground mb-2" />}
+        <CardTitle className="text-3xl font-bold text-center">{value}</CardTitle>
+      </CardHeader>
+      <CardContent className="pb-4">
+        <p className="text-sm text-muted-foreground text-center font-medium">{title}</p>
+      </CardContent>
+    </Card>
+  );
 };
 
+
 export default function AnalyticsPage() {
+  const patientGroupMetrics = [
+    { title: "Peritoneal dialysis", value: 22, colorClass: "border-orange-500", icon: Waves },
+    { title: "Hemodialysis", value: 10, colorClass: "border-blue-500", icon: Droplets },
+    { title: "Glomerulonephritis", value: 11, colorClass: "border-green-500", icon: Stethoscope },
+    { title: "Kidney transplant", value: 0, colorClass: "border-green-600", icon: HeartPulse }, // Slightly different green
+    { title: "Chronic Kidney disease", value: 33, colorClass: "border-cyan-500", icon: Activity },
+  ];
+
   return (
     <div className="container mx-auto py-2">
-      <PageHeader title="Clinical Analytics" description="View detailed analytics, reports, and patient population insights." />
+      <PageHeader title="Patient Group Analytics" description="Overview of patient distribution by specific groups and conditions." />
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium font-headline">IPD Patient Count</CardTitle>
-            <Users2 className="h-5 w-5 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{mockAnalyticsCounts.ipdPatients}</div>
-            <p className="text-xs text-muted-foreground">Currently admitted</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium font-headline">OPD Patient Visits (Today)</CardTitle>
-            <TrendingUp className="h-5 w-5 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{mockAnalyticsCounts.opdPatients}</div>
-            <p className="text-xs text-muted-foreground">+15% from yesterday</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium font-headline">Active Critical Alerts</CardTitle>
-            <AlertTriangle className="h-5 w-5 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{mockAnalyticsCounts.criticalAlerts}</div>
-            <p className="text-xs text-muted-foreground">Require immediate attention</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+        {patientGroupMetrics.map(metric => (
+          <MetricCard 
+            key={metric.title}
+            title={metric.title}
+            value={metric.value}
+            colorClass={metric.colorClass}
+            icon={metric.icon}
+          />
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div>
-          <PatientAnalysisChart />
-        </div>
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-headline">GFR Tracker (All Patients Average)</CardTitle>
-              <CardDescription>Average eGFR trends over time for the patient population.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Using KidneyFunctionChart as a placeholder for GFR tracker */}
-              <KidneyFunctionChart period="monthly" />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-      
-      <Card className="mt-8">
+      <Card className="mt-10">
         <CardHeader>
-          <CardTitle className="font-headline">Tag-Based Analytics</CardTitle>
+          <CardTitle className="font-headline">Additional Analytics</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Further analytics based on patient tags (e.g., 'High-Risk CKD', 'Post-Transplant') are under development.</p>
+          <p className="text-muted-foreground">
+            Tabs for "Overall Patient", "Tagged Patient", and "Health Tracking" analytics are planned for future updates.
+            This section will provide more in-depth data visualizations and reporting capabilities.
+          </p>
           <div className="mt-6 flex items-center justify-center h-40 border-2 border-dashed rounded-lg">
-            <p className="text-lg text-muted-foreground">Tag-Specific Charts Coming Soon</p>
+            <p className="text-lg text-muted-foreground">More Charts & Data Views Coming Soon</p>
           </div>
         </CardContent>
       </Card>
