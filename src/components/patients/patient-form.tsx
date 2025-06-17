@@ -186,7 +186,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
 
   const { fields: vaccinationFields, replace: replaceVaccinations } = useFieldArray({
     control: form.control,
-    name: "clinicalProfile.vaccinations" as any,
+    name: "clinicalProfile.vaccinations" as any, // Type assertion to avoid overly complex type literal
   });
 
    useEffect(() => {
@@ -274,23 +274,22 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
             <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem> <FormLabel>Patient Full Name</FormLabel> <FormControl><Input placeholder="Enter full name" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
-            <FormField control={form.control} name="dob" render={({ field }) => {
+           <FormField control={form.control} name="dob" render={({ field }) => {
                 const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
                 return (
                   <FormItem className="flex flex-col">
                     <FormLabel>Date of Birth</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
-                          id={formItemId}
-                          aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
-                          aria-invalid={!!error}
-                        >
-                          {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
+                          <Button
+                            variant={"outline"}
+                            className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}
+                            id={formItemId}
+                            aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                            aria-invalid={!!error}
+                          > {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                           </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
@@ -361,7 +360,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
                 return (
                   <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 shadow-sm h-fit mt-7">
-                     <Checkbox
+                      <Checkbox
                         id={formItemId}
                         checked={field.value}
                         onCheckedChange={field.onChange}
@@ -372,7 +371,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       <FormLabel htmlFor={formItemId} className="cursor-pointer">Track Patient</FormLabel>
                       <FormDescription id={formDescriptionId}>Enable special monitoring for this patient.</FormDescription>
                     </div>
-                    <FormMessage />
+                     <FormMessage id={formMessageId} />
                   </FormItem>
                 );
               }}
@@ -444,33 +443,36 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormField control={form.control} name="clinicalProfile.disability" render={({ field }) => (
                 <FormItem> <FormLabel><Accessibility className="inline h-4 w-4 mr-1"/>Disability Profile</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select disability profile" /></SelectTrigger></FormControl> <SelectContent>{DISABILITY_PROFILES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
+              
               <FormField
                 control={form.control}
                 name="clinicalProfile.compliance"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value} // Use defaultValue as per ShadCN docs example for RadioGroup with Form
-                        className="flex space-x-2"
-                      >
-                        {YES_NO_UNKNOWN_OPTIONS.map(option => (
-                          <FormItem key={option} className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} />
-                            </FormControl>
-                            <FormLabel htmlFor={`compliance-${option.toLowerCase()}`} className="font-normal cursor-pointer">
-                              {option}
-                            </FormLabel>
-                          </FormItem>
-                        ))}
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
+                  return (
+                    <FormItem className="space-y-3">
+                      <FormLabel htmlFor={formItemId}><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          className="flex space-x-2"
+                          id={formItemId}
+                          aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                          aria-invalid={!!error}
+                        >
+                          {YES_NO_UNKNOWN_OPTIONS.map(option => (
+                            <FormItem key={option} className="flex items-center space-x-3 space-y-0">
+                                <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} />
+                              <FormLabel htmlFor={`compliance-${option.toLowerCase()}`} className="font-normal cursor-pointer">
+                                {option}
+                              </FormLabel>
+                            </FormItem>
+                          ))}
+                        </RadioGroup>
+                      <FormMessage id={formMessageId} />
+                    </FormItem>
+                  );
+                }}
               />
             </div>
 
@@ -538,15 +540,15 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 <FormField
                   control={form.control}
                   name={`clinicalProfile.vaccinations.${index}.administered` as any}
-                  render={({ field }) => {
+                  render={({ field: checkboxField }) => { // Renamed to avoid conflict
                     const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
                     return(
                       <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
                         <Checkbox
                           id={formItemId}
-                          checked={field.value}
+                          checked={checkboxField.value}
                           onCheckedChange={(checked) => {
-                            field.onChange(checked);
+                            checkboxField.onChange(checked);
                             if (!checked) {
                               form.setValue(`clinicalProfile.vaccinations.${index}.date` as any, "");
                               form.setValue(`clinicalProfile.vaccinations.${index}.nextDoseDate` as any, "");
@@ -556,7 +558,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                           aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
                         />
                         <FormLabel htmlFor={formItemId} className="font-medium text-sm cursor-pointer">{vaccField.name}</FormLabel>
-                         <FormMessage />
+                         <FormMessage id={formMessageId}/>
                       </FormItem>
                     );
                   }}
@@ -566,7 +568,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <FormField
                       control={form.control}
                       name={`clinicalProfile.vaccinations.${index}.date` as any}
-                      render={({ field }) => (
+                      render={({ field }) => ( // field here is fine as it's a different scope
                         <FormItem>
                           <FormLabel className="text-xs">Date Administered</FormLabel>
                           <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
@@ -577,7 +579,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <FormField
                       control={form.control}
                       name={`clinicalProfile.vaccinations.${index}.nextDoseDate` as any}
-                      render={({ field }) => (
+                      render={({ field }) => ( // field here is fine
                         <FormItem>
                           <FormLabel className="text-xs">Next Dose Date (Optional)</FormLabel>
                           <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
@@ -600,4 +602,3 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
-
