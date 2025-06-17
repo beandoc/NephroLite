@@ -12,8 +12,9 @@ import {
   MessageCircle, 
   FileText, 
   Settings2,
-  LucideIcon,
-  FileSignature // Added for Templates
+  FileSignature, // Added for Templates
+  SearchCheck, // Added for Advanced Search
+  LucideIcon
 } from "lucide-react";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
@@ -30,10 +31,11 @@ const navItems: NavItem[] = [
   { href: "/analytics", label: "Analytics", icon: BarChartBig },
   { href: "/patients", label: "Patient Management", icon: Users, matchStartsWith: true },
   { href: "/appointments", label: "Appointments", icon: CalendarDays, matchStartsWith: true },
+  { href: "/search", label: "Advanced Search", icon: SearchCheck }, // New search page
   { href: "/clinical-tools", label: "Clinical Tools", icon: Stethoscope },
   { href: "/communication", label: "Communication", icon: MessageCircle },
   { href: "/documents", label: "Documents", icon: FileText },
-  { href: "/templates", label: "Templates", icon: FileSignature }, // Added Templates
+  { href: "/templates", label: "Templates", icon: FileSignature }, 
   { href: "/system", label: "System", icon: Settings2 },
 ];
 
@@ -66,4 +68,3 @@ export function SidebarNav() {
     </SidebarMenu>
   );
 }
-
