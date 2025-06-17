@@ -5,28 +5,69 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAppointmentData } from '@/hooks/use-appointment-data';
+import { usePatientData } from '@/hooks/use-patient-data'; // Import usePatientData
 import { format, isToday, parseISO } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '../ui/skeleton';
-import { CalendarDays, User, Clock, Stethoscope, Eye } from 'lucide-react';
+import { CalendarDays, User, Clock, Stethoscope, Eye, CheckCircle, XCircle, Loader2, Hospital, CalendarX, CalendarCheck } from 'lucide-react'; // Added new icons
 import { Badge } from '@/components/ui/badge';
+import type { Appointment } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
+
 
 export function TodaysAppointments() {
-  const { appointments, isLoading } = useAppointmentData();
+  const { appointments, isLoading, updateAppointmentStatus } = useAppointmentData();
+  const { admitPatient, getPatientById } = usePatientData(); // Get admitPatient function
+  const { toast } = useToast();
   
   const today = new Date();
   const todaysAppointments = appointments
     .filter(app => {
         try {
             const appDate = parseISO(app.date); 
-            return isToday(appDate) && app.status === 'Scheduled'; // Only show scheduled for today
+            // Show scheduled, waiting, or admitted appointments for today
+            return isToday(appDate) && (app.status === 'Scheduled' || app.status === 'Waiting' || app.status === 'Admitted');
         } catch (e) {
             console.error("Error parsing appointment date:", app.date, e);
             return false;
         }
     })
     .sort((a, b) => a.time.localeCompare(b.time))
-    .slice(0, 5); // Show max 5 appointments
+    .slice(0, 5); 
+
+  const handleUpdateStatus = (appointmentId: string, newStatus: Appointment['status'], patientName: string, patientId?: string) => {
+    updateAppointmentStatus(appointmentId, newStatus);
+    toast({
+      title: "Appointment Updated",
+      description: `${patientName}'s appointment marked as ${newStatus}.`
+    });
+
+    if (newStatus === 'Admitted' && patientId) {
+      const patient = getPatientById(patientId);
+      if (patient && patient.patientStatus !== 'IPD') {
+        admitPatient(patientId);
+        toast({
+          title: "Patient Admitted",
+          description: `${patientName} has been admitted.`
+        });
+      } else if (patient && patient.patientStatus === 'IPD') {
+         toast({
+          title: "Patient Already Admitted",
+          description: `${patientName} is already marked as IPD.`
+        });
+      }
+    }
+  };
+
 
   if (isLoading) {
     return (
@@ -54,6 +95,19 @@ export function TodaysAppointments() {
     );
   }
 
+  const getStatusBadgeVariant = (status: Appointment['status']) => {
+    switch (status) {
+      case 'Scheduled': return 'default';
+      case 'Completed': return 'secondary'; // Consider a 'success' variant if available or green
+      case 'Cancelled': return 'destructive';
+      case 'Waiting': return 'outline'; // Consider a 'warning' variant or yellow
+      case 'Not Showed': return 'destructive';
+      case 'Admitted': return 'default'; // Consider a specific IPD color
+      default: return 'default';
+    }
+  };
+
+
   return (
     <Card className="shadow-md h-full flex flex-col">
       <CardHeader>
@@ -61,7 +115,7 @@ export function TodaysAppointments() {
           <CardTitle className="font-headline">Today's Appointments</CardTitle>
           <div className="text-sm text-muted-foreground">{format(today, 'MMM d, yyyy')}</div>
         </div>
-         <CardDescription>Upcoming scheduled appointments for today.</CardDescription>
+         <CardDescription>Upcoming appointments and their statuses for today.</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow flex flex-col p-0 sm:p-4 pt-0">
         {todaysAppointments.length > 0 ? (
@@ -72,20 +126,45 @@ export function TodaysAppointments() {
                 key={appointment.id} 
                 className="flex flex-col p-3 rounded-md border bg-card hover:bg-muted/50 transition-colors shadow-sm"
               >
-                <div className="flex items-center justify-between mb-2">
-                  <Link href={`/patients/${appointment.patientId}`} className="font-semibold text-sm text-primary hover:underline flex items-center">
-                    <User className="w-3.5 h-3.5 mr-1.5" /> {appointment.patientName}
-                  </Link>
-                  <Badge 
-                    variant={
-                      appointment.status === 'Scheduled' ? 'default' : 
-                      appointment.status === 'Completed' ? 'secondary' : 
-                      'destructive'
-                    }
-                    className="text-xs"
-                  >
-                    {appointment.status}
-                  </Badge>
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-grow">
+                    <Link href={`/patients/${appointment.patientId}`} className="font-semibold text-sm text-primary hover:underline flex items-center">
+                      <User className="w-3.5 h-3.5 mr-1.5" /> {appointment.patientName}
+                    </Link>
+                    <Badge 
+                      variant={getStatusBadgeVariant(appointment.status)}
+                      className="text-xs mt-1"
+                    >
+                      {appointment.status}
+                    </Badge>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-7 w-7 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Completed', appointment.patientName)}>
+                        <CalendarCheck className="mr-2 h-4 w-4" /> Mark Completed
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Waiting', appointment.patientName)}>
+                        <Clock className="mr-2 h-4 w-4" /> Mark Waiting
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Not Showed', appointment.patientName)}>
+                        <CalendarX className="mr-2 h-4 w-4" /> Mark Not Showed
+                      </DropdownMenuItem>
+                       <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Cancelled', appointment.patientName)}>
+                        <XCircle className="mr-2 h-4 w-4" /> Mark Cancelled
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Admitted', appointment.patientName, appointment.patientId)}>
+                        <Hospital className="mr-2 h-4 w-4" /> Admit Patient
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
                 <div className="text-xs text-muted-foreground space-y-1">
                   <p className="flex items-center"><Clock className="w-3.5 h-3.5 mr-1.5" /> {appointment.time}</p>

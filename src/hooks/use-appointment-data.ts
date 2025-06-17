@@ -4,7 +4,7 @@
 import type { Appointment, Patient } from '@/lib/types';
 import { useState, useEffect, useCallback } from 'react';
 import { format, addDays, subDays, setHours, setMinutes } from 'date-fns';
-import { MOCK_DOCTORS, APPOINTMENT_TYPES } from '@/lib/constants';
+import { MOCK_DOCTORS, APPOINTMENT_TYPES, APPOINTMENT_STATUSES } from '@/lib/constants'; // Added APPOINTMENT_STATUSES
 
 const APPOINTMENTS_STORAGE_KEY = 'nephrolite_appointments';
 
@@ -13,16 +13,15 @@ const getInitialAppointments = (): Appointment[] => {
   const storedAppointments = localStorage.getItem(APPOINTMENTS_STORAGE_KEY);
   if (storedAppointments) {
     try {
-      // Ensure dates are correctly parsed, especially if stored as strings
       const parsedAppointments = JSON.parse(storedAppointments).map((app: any) => ({
         ...app,
-        date: format(new Date(app.date), 'yyyy-MM-dd') // Re-format to ensure consistency
+        date: format(new Date(app.date), 'yyyy-MM-dd'),
+        status: APPOINTMENT_STATUSES.includes(app.status) ? app.status : 'Scheduled', // Ensure status is valid
       }));
       return parsedAppointments;
     } catch (e) {
       console.error("Error parsing appointments from localStorage", e);
-      localStorage.removeItem(APPOINTMENTS_STORAGE_KEY); // Clear corrupted data
-      // Fall through to generate mock data
+      localStorage.removeItem(APPOINTMENTS_STORAGE_KEY); 
     }
   }
 
@@ -34,7 +33,7 @@ const getInitialAppointments = (): Appointment[] => {
       patientName: 'Rajesh Kumar', 
       date: format(setMinutes(setHours(today, 9), 0), 'yyyy-MM-dd'), 
       time: '09:00',
-      type: APPOINTMENT_TYPES[2], // Dialysis Follow-up
+      type: APPOINTMENT_TYPES[2], 
       doctorName: MOCK_DOCTORS[0],
       status: 'Scheduled',
       notes: 'Scheduled dialysis session.'
@@ -45,14 +44,14 @@ const getInitialAppointments = (): Appointment[] => {
       patientName: 'Priya Sharma', 
       date: format(setMinutes(setHours(today, 10), 30), 'yyyy-MM-dd'), 
       time: '10:30',
-      type: APPOINTMENT_TYPES[3], // Initial Consultation
+      type: APPOINTMENT_TYPES[3], 
       doctorName: MOCK_DOCTORS[1],
-      status: 'Scheduled',
+      status: 'Waiting', // Example of new status
       notes: 'First consultation for kidney health assessment.'
     },
     {
       id: crypto.randomUUID(),
-      patientId: 'mock-patient-id-3', // Assume a third mock patient ID
+      patientId: 'mock-patient-id-3', 
       patientName: 'Amit Singh', 
       date: format(setMinutes(setHours(today, 13), 15), 'yyyy-MM-dd'), 
       time: '13:15',
@@ -104,7 +103,18 @@ const getInitialAppointments = (): Appointment[] => {
       doctorName: MOCK_DOCTORS[2],
       status: 'Completed',
       notes: 'Completed routine checkup.'
-    }
+    },
+    {
+      id: crypto.randomUUID(),
+      patientId: 'mock-patient-id-4',
+      patientName: 'Sunita Devi',
+      date: format(subDays(today, 1), 'yyyy-MM-dd'),
+      time: '16:00',
+      type: 'Emergency',
+      doctorName: MOCK_DOCTORS[3],
+      status: 'Not Showed', // Example of new status
+      notes: 'Patient did not arrive for emergency follow-up.',
+    },
   ];
   localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(mockAppointments));
   return mockAppointments;
@@ -144,7 +154,7 @@ export function useAppointmentData() {
     return newAppointment;
   }, [appointments, saveData]);
 
-  const updateAppointmentStatus = useCallback((id: string, status: 'Completed' | 'Cancelled'): Appointment | undefined => {
+  const updateAppointmentStatus = useCallback((id: string, status: Appointment['status']): Appointment | undefined => {
     const appointmentIndex = appointments.findIndex(a => a.id === id);
     if (appointmentIndex === -1) return undefined;
 
@@ -161,7 +171,7 @@ export function useAppointmentData() {
     const updatedAppointments = [...appointments];
     updatedAppointments[appointmentIndex] = {
         ...updatedAppointmentData,
-        date: format(new Date(updatedAppointmentData.date), 'yyyy-MM-dd') // Ensure date is stored correctly
+        date: format(new Date(updatedAppointmentData.date), 'yyyy-MM-dd') 
     };
     saveData(updatedAppointments);
     return updatedAppointments[appointmentIndex];

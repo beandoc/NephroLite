@@ -3,6 +3,8 @@ import type { DiagnosisEntry, MedicationEntry } from '@/lib/types';
 
 export const GENDERS: string[] = ['Male', 'Female', 'Other', 'Prefer not to say'];
 
+export const BLOOD_GROUPS: string[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'];
+
 export const INDIAN_STATES: string[] = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
   'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
@@ -24,8 +26,8 @@ export const FEMALE_IMPLYING_RELATIONS = ['W/O', 'M/O', 'D/O'];
 export const PRIMARY_DIAGNOSIS_OPTIONS: string[] = [
   'Chronic Kidney Disease (CKD)',
   'Acute Kidney Injury (AKI)',
-  'Glomerulonephritis', // Already present, can be used for patient group
-  'Diabetic Nephropathy', // Already present, can be used for patient group
+  'Glomerulonephritis', 
+  'Diabetic Nephropathy', 
   'Polycystic Kidney Disease (PKD)',
   'Hypertensive Nephropathy',
   'Kidney Stones',
@@ -96,7 +98,8 @@ export const APPOINTMENT_TYPES: string[] = [
 ];
 
 
-export const APPOINTMENT_STATUSES: Array<'Scheduled' | 'Completed' | 'Cancelled'> = ['Scheduled', 'Completed', 'Cancelled'];
+export const APPOINTMENT_STATUSES: Array<'Scheduled' | 'Completed' | 'Cancelled' | 'Waiting' | 'Not Showed' | 'Admitted'> = 
+  ['Scheduled', 'Completed', 'Cancelled', 'Waiting', 'Not Showed', 'Admitted'];
 
 export const MOCK_DOCTORS: string[] = [
   'Dr. Anya Sharma',
@@ -116,6 +119,8 @@ export const SUBSPECIALITY_FOLLOWUP_OPTIONS: string[] = [
 ];
 
 export const YES_NO_NIL_OPTIONS: string[] = ['Yes', 'No', 'NIL'];
+export const YES_NO_UNKNOWN_OPTIONS: Array<'Yes' | 'No' | 'Unknown'> = ['Yes', 'No', 'Unknown'];
+
 
 export const VACCINATION_NAMES: string[] = [
   'Hepatitis B', 'Pneumococcal', 'Influenza', 'Covid', 'Varicella'

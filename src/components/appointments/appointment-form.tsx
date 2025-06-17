@@ -28,11 +28,13 @@ import type { Patient, Appointment } from "@/lib/types";
 import { APPOINTMENT_TYPES, MOCK_DOCTORS, TIME_SLOTS } from "@/lib/constants";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, parse } from "date-fns";
+import { format, parse, addDays } from "date-fns";
 import { CalendarIcon, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePatientData } from "@/hooks/use-patient-data";
 import { Skeleton } from "../ui/skeleton";
+import Link from "next/link";
+
 
 const appointmentFormSchema = z.object({
   patientId: z.string().min(1, "Patient selection is required"),
@@ -46,7 +48,7 @@ const appointmentFormSchema = z.object({
 export type AppointmentFormData = z.infer<typeof appointmentFormSchema>;
 
 interface AppointmentFormProps {
-  appointment?: Appointment; // For editing, not fully implemented in this step
+  appointment?: Appointment; 
   onSubmit: (data: AppointmentFormData, patient: Patient) => void;
   isSubmitting?: boolean;
 }
@@ -61,7 +63,7 @@ export function AppointmentForm({ appointment, onSubmit, isSubmitting }: Appoint
       date: appointment.date ? format(new Date(appointment.date), "yyyy-MM-dd") : "",
     } : {
       patientId: "",
-      date: "",
+      date: format(addDays(new Date(), 14), "yyyy-MM-dd"), // Default to 2 weeks from today
       time: "",
       type: "",
       doctorName: "",
@@ -74,7 +76,6 @@ export function AppointmentForm({ appointment, onSubmit, isSubmitting }: Appoint
     if (selectedPatient) {
       onSubmit(data, selectedPatient);
     } else {
-      // This should ideally not happen if patientId is validated against the list
       form.setError("patientId", { type: "manual", message: "Selected patient not found." });
     }
   };
@@ -149,7 +150,7 @@ export function AppointmentForm({ appointment, onSubmit, isSubmitting }: Appoint
                         mode="single"
                         selected={field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined}
                         onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
-                        disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) } // Disable past dates
+                        disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) } 
                         initialFocus
                       />
                     </PopoverContent>

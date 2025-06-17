@@ -1,57 +1,65 @@
 
 "use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Activity, FlaskConical, AlertTriangle, TrendingUp, CalendarClock, FileText } from "lucide-react"; // Using Activity for Dialysis Sessions
+import { Users, Activity, FlaskConical, AlertTriangle, TrendingUp, CalendarClock, FileText, Hospital, Building } from "lucide-react"; 
 import { useState, useEffect } from "react";
 import { usePatientData } from "@/hooks/use-patient-data";
-import { Skeleton } from "@/components/ui/skeleton"; // Added Skeleton for subtitle loading
+import { Skeleton } from "@/components/ui/skeleton"; 
 
-// Define a type for individual metric for clarity
 type MetricDetail = {
   title: string;
   value: string | number;
   subtitle?: string;
   icon: React.ElementType;
-  iconColorClass: string; // Tailwind class for icon color
-  borderColorClass: string; // Tailwind class for left border color
+  iconColorClass: string; 
+  borderColorClass: string; 
   loading?: boolean;
 };
 
 export function OverviewMetrics() {
   const { patients, isLoading: patientsLoading } = usePatientData();
-  const [totalPatients, setTotalPatients] = useState(0);
+  const [opdPatients, setOpdPatients] = useState(0);
+  const [ipdPatients, setIpdPatients] = useState(0);
   const [randomIncrease, setRandomIncrease] = useState<number | null>(null);
   
-  // Mock data for other metrics as per the image
-  const [dialysisSessions] = useState(42);
-  const [labResults] = useState(18);
-  const [criticalAlerts] = useState(3);
+  const [dialysisSessions] = useState(42); // Mock
+  const [labResults] = useState(18); // Mock
+  const [criticalAlerts] = useState(3); // Mock
 
   useEffect(() => {
     if (!patientsLoading) {
-      setTotalPatients(patients.length);
-      // Generate random number only on the client, after mount
-      setRandomIncrease(Math.floor(Math.random() * 10) + 5);
+      setOpdPatients(patients.filter(p => p.patientStatus === 'OPD').length);
+      setIpdPatients(patients.filter(p => p.patientStatus === 'IPD').length);
+      if (randomIncrease === null) { // Generate only once on client mount
+        setRandomIncrease(Math.floor(Math.random() * 10) + 5);
+      }
     }
-  }, [patients, patientsLoading]);
+  }, [patients, patientsLoading, randomIncrease]);
 
   const metrics: MetricDetail[] = [
     { 
-      title: "Total Patients", 
-      value: totalPatients, 
-      // The subtitle text for "Total Patients" will be constructed dynamically in the JSX.
-      // Setting it to undefined here to avoid using a potentially server-rendered stale value.
-      subtitle: undefined, 
+      title: "Total OPD Patients", 
+      value: opdPatients, 
+      subtitle: (randomIncrease !== null && !patientsLoading) ? `+${randomIncrease} this month (OPD)` : undefined,
       icon: Users,
       iconColorClass: "text-blue-500",
       borderColorClass: "border-blue-500",
-      loading: patientsLoading || randomIncrease === null // This controls the value's skeleton
+      loading: patientsLoading || randomIncrease === null
+    },
+    { 
+      title: "Total IPD Patients", 
+      value: ipdPatients, 
+      subtitle: "Currently Admitted", 
+      icon: Hospital,
+      iconColorClass: "text-red-500",
+      borderColorClass: "border-red-500",
+      loading: patientsLoading
     },
     { 
       title: "Dialysis Sessions", 
       value: dialysisSessions, 
       subtitle: "Today's schedule", 
-      icon: Activity, // Representing dialysis machine activity
+      icon: Activity, 
       iconColorClass: "text-green-500",
       borderColorClass: "border-green-500",
       loading: false
@@ -65,15 +73,15 @@ export function OverviewMetrics() {
       borderColorClass: "border-purple-500",
       loading: false 
     },
-    { 
-      title: "Critical Alerts", 
-      value: criticalAlerts, 
-      subtitle: "Requires attention", 
-      icon: AlertTriangle,
-      iconColorClass: "text-yellow-500",
-      borderColorClass: "border-yellow-500",
-      loading: false
-    },
+    // { // This was critical alerts, can be re-added if needed.
+    //   title: "Critical Alerts", 
+    //   value: criticalAlerts, 
+    //   subtitle: "Requires attention", 
+    //   icon: AlertTriangle,
+    //   iconColorClass: "text-yellow-500",
+    //   borderColorClass: "border-yellow-500",
+    //   loading: false
+    // },
   ];
 
   return (
@@ -90,26 +98,17 @@ export function OverviewMetrics() {
             <metric.icon className={`h-5 w-5 ${metric.iconColorClass}`} />
           </CardHeader>
           <CardContent>
-            {/* Value rendering: Show skeleton for "Total Patients" if its specific loading condition is met */}
-            {(metric.title === "Total Patients" && metric.loading) ? (
+            {metric.loading ? (
                  <Skeleton className="h-8 w-1/2 rounded-md my-1" />
             ) : (
               <div className="text-3xl font-bold">{metric.value}</div>
             )}
             
-            {/* Subtitle handling */}
-            {metric.title === "Total Patients" ? (
-              // Specific subtitle logic for "Total Patients"
-              (patientsLoading || randomIncrease === null) ? (
-                  <Skeleton className="h-3 w-3/4 mt-1 rounded-md" />
-              ) : (
-                  <p className="text-xs text-muted-foreground">+{randomIncrease} this month</p>
-              )
+            {metric.loading && metric.title === "Total OPD Patients" ? (
+                <Skeleton className="h-3 w-3/4 mt-1 rounded-md" />
             ) : metric.subtitle ? (
-              // Logic for other metrics with static subtitles
               <p className="text-xs text-muted-foreground">{metric.subtitle}</p>
             ) : (
-              // Placeholder to maintain layout if no subtitle for other metrics
               <div className="h-3 mt-1"></div> 
             )}
           </CardContent>

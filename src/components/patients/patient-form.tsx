@@ -22,15 +22,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import type { Patient, Vaccination, ClinicalProfile } from "@/lib/types";
-import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, VACCINATION_NAMES, SUBSPECIALITY_FOLLOWUP_OPTIONS, YES_NO_NIL_OPTIONS, MALE_IMPLYING_RELATIONS, FEMALE_IMPLYING_RELATIONS } from "@/lib/constants";
+import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, VACCINATION_NAMES, SUBSPECIALITY_FOLLOWUP_OPTIONS, YES_NO_NIL_OPTIONS, MALE_IMPLYING_RELATIONS, FEMALE_IMPLYING_RELATIONS, BLOOD_GROUPS, YES_NO_UNKNOWN_OPTIONS } from "@/lib/constants";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, parseISO } from "date-fns";
-import { CalendarIcon, Briefcase, HeartPulse, Activity, Leaf, Accessibility, Syringe, PencilLine, TagsIcon } from "lucide-react";
+import { format, parseISO, addDays } from "date-fns";
+import { CalendarIcon, Briefcase, HeartPulse, Activity, Leaf, Accessibility, Syringe, PencilLine, TagsIcon, UserCircle, Droplet, ShieldAlert, GripVertical, MessageCircle, Phone, Search, LinkIcon, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 import { AiTagSuggester } from "./ai-tag-suggester";
@@ -59,8 +60,8 @@ const vaccinationSchema = z.object({
 
 const clinicalProfileSchema = z.object({
   primaryDiagnosis: z.string().optional(),
-  labels: z.array(z.string()).default([]), // Stored as array
-  tags: z.array(z.string()).default([]),   // Stored as array
+  labels: z.array(z.string()).default([]), 
+  tags: z.array(z.string()).default([]),   
   nutritionalStatus: z.string().optional(),
   disability: z.string().optional(),
   subspecialityFollowUp: z.string().optional().default('NIL'),
@@ -68,6 +69,11 @@ const clinicalProfileSchema = z.object({
   alcoholConsumption: z.string().optional().default('NIL'),
   pomr: z.string().optional(),
   vaccinations: z.array(vaccinationSchema).optional().default(() => getDefaultVaccinations()),
+  aabhaNumber: z.string().optional(),
+  bloodGroup: z.string().optional(),
+  drugAllergies: z.string().optional(),
+  compliance: z.enum(['Yes', 'No', 'Unknown']).optional().default('Unknown'),
+  whatsappNumber: z.string().optional().regex(/^$|^\d{10}$/, "Invalid WhatsApp (must be 10 digits if provided)"),
 });
 
 const patientFormSchema = z.object({
@@ -78,14 +84,14 @@ const patientFormSchema = z.object({
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
   address: addressSchema,
   guardian: guardianSchema,
-  // Clinical profile is now fully optional at the top level for initial registration,
-  // but its internal fields become relevant when editing.
   clinicalProfile: clinicalProfileSchema.optional(), 
   serviceName: z.string().optional(),
   serviceNumber: z.string().optional(),
   rank: z.string().optional(),
   unitName: z.string().optional(),
   formation: z.string().optional(),
+  nextAppointmentDate: z.string().optional(),
+  isTracked: z.boolean().optional().default(false),
 });
 
 export type PatientFormData = z.infer<typeof patientFormSchema>;
@@ -111,6 +117,11 @@ const getInitialClinicalProfile = (): ClinicalProfile => ({
   alcoholConsumption: 'NIL',
   pomr: "",
   vaccinations: getDefaultVaccinations(),
+  aabhaNumber: "",
+  bloodGroup: BLOOD_GROUPS.includes('Unknown') ? 'Unknown' : BLOOD_GROUPS[0] || "",
+  drugAllergies: "",
+  compliance: 'Unknown',
+  whatsappNumber: "",
 });
 
 
@@ -123,16 +134,19 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     defaultValues: patient ? {
       ...patient,
       dob: patient.dob ? format(parseISO(patient.dob), "yyyy-MM-dd") : "",
+      nextAppointmentDate: patient.nextAppointmentDate ? format(parseISO(patient.nextAppointmentDate), "yyyy-MM-dd") : undefined,
+      isTracked: patient.isTracked || false,
       address: {
         ...patient.address,
         country: patient.address.country || "India",
       },
       clinicalProfile: {
-        ...(getInitialClinicalProfile()), // Start with defaults
-        ...(patient.clinicalProfile || {}), // Spread existing patient clinical profile
-        // Ensure arrays are handled correctly for existing patients
+        ...(getInitialClinicalProfile()), 
+        ...(patient.clinicalProfile || {}), 
         labels: Array.isArray(patient.clinicalProfile?.labels) ? patient.clinicalProfile.labels : [],
         tags: Array.isArray(patient.clinicalProfile?.tags) ? patient.clinicalProfile.tags : [],
+        compliance: patient.clinicalProfile?.compliance || 'Unknown',
+        whatsappNumber: patient.clinicalProfile?.whatsappNumber || "",
         vaccinations: patient.clinicalProfile?.vaccinations && patient.clinicalProfile.vaccinations.length > 0
                       ? VACCINATION_NAMES.map(vaccineName => {
                           const existingVaccine = patient.clinicalProfile.vaccinations?.find(v => v.name === vaccineName);
@@ -158,21 +172,22 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
       email: "",
       address: { street: "", city: "", state: "", pincode: "", country: "India" },
       guardian: { name: "", relation: "", contact: "" },
-      clinicalProfile: getInitialClinicalProfile(), // Initialize with defaults for new patient
+      clinicalProfile: getInitialClinicalProfile(), 
       serviceName: "",
       serviceNumber: "",
       rank: "",
       unitName: "",
       formation: "",
+      nextAppointmentDate: undefined,
+      isTracked: false,
     },
   });
 
   const { fields: vaccinationFields, replace: replaceVaccinations } = useFieldArray({
     control: form.control,
-    name: "clinicalProfile.vaccinations" as any, // Use 'as any' if TS has trouble with optional clinicalProfile path
+    name: "clinicalProfile.vaccinations" as any, 
   });
 
-  // Ensure vaccinationFields are populated correctly on mount/patient change
    useEffect(() => {
     const currentClinicalProfile = patient?.clinicalProfile || getInitialClinicalProfile();
     const currentVaccinations = currentClinicalProfile.vaccinations;
@@ -207,7 +222,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     }
   }, [guardianRelation, currentGender, form]);
 
-  // Handlers for Labels
   const handleAddLabel = () => {
     if (currentLabelsInput.trim() !== "") {
       const currentLabels = form.getValues("clinicalProfile.labels") || [];
@@ -223,7 +237,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     form.setValue("clinicalProfile.labels", currentLabels.filter(label => label !== labelToRemove), { shouldValidate: true });
   };
 
-  // Handlers for Tags
   const handleAddTagManually = () => {
      if (currentTagsInput.trim() !== "") {
       const currentTags = form.getValues("clinicalProfile.tags") || [];
@@ -255,102 +268,49 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <Card>
-          <CardHeader><CardTitle className="font-headline">Personal Details</CardTitle></CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <CardHeader><CardTitle className="font-headline flex items-center"><UserCircle className="mr-2 h-5 w-5 text-primary" />Personal Details</CardTitle></CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <FormField control={form.control} name="name" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Patient Full Name</FormLabel>
-                <FormControl><Input placeholder="Enter full name" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
+              <FormItem> <FormLabel>Patient Full Name</FormLabel> <FormControl><Input placeholder="Enter full name" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="dob" render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Date of Birth</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(parseISO(field.value), "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value ? parseISO(field.value) : undefined}
-                        onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
-                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                        initialFocus
-                        captionLayout="dropdown-buttons"
-                        fromYear={1900}
-                        toYear={new Date().getFullYear()}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
+                <FormItem className="flex flex-col"> <FormLabel>Date of Birth</FormLabel> <Popover> <PopoverTrigger asChild> <FormControl> <Button variant={"outline"} className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}> {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>} <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> </Button> </FormControl> </PopoverTrigger> <PopoverContent className="w-auto p-0" align="start"> <Calendar mode="single" selected={field.value ? parseISO(field.value) : undefined} onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")} disabled={(date) => date > new Date() || date < new Date("1900-01-01")} initialFocus captionLayout="dropdown-buttons" fromYear={1900} toYear={new Date().getFullYear()} /> </PopoverContent> </Popover> <FormMessage /> </FormItem>
               )}
             />
             <FormField control={form.control} name="gender" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Gender</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
-                  <FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl>
-                  <SelectContent>{GENDERS.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
+              <FormItem> <FormLabel>Gender</FormLabel> <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl> <SelectContent>{GENDERS.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="contact" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Patient Contact Number</FormLabel>
-                <FormControl><Input type="tel" placeholder="Enter 10-digit mobile" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
+              <FormItem> <FormLabel>Patient Contact Number</FormLabel> <FormControl><Input type="tel" placeholder="Enter 10-digit mobile" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="email" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Patient Email Address (Optional)</FormLabel>
-                <FormControl><Input type="email" placeholder="Enter email address" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
+              <FormItem> <FormLabel>Patient Email Address (Optional)</FormLabel> <FormControl><Input type="email" placeholder="Enter email address" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
              <FormField control={form.control} name="guardian.name" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Guardian Name</FormLabel>
-                <FormControl><Input placeholder="Enter guardian's name" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
+              <FormItem> <FormLabel>Guardian Name</FormLabel> <FormControl><Input placeholder="Enter guardian's name" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="guardian.relation" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Guardian Relation to Patient</FormLabel>
-                 <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl><SelectTrigger><SelectValue placeholder="Select relation" /></SelectTrigger></FormControl>
-                  <SelectContent>{RELATIONSHIPS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
+              <FormItem> <FormLabel>Guardian Relation to Patient</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select relation" /></SelectTrigger></FormControl> <SelectContent>{RELATIONSHIPS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="guardian.contact" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Guardian Contact Number</FormLabel>
-                <FormControl><Input type="tel" placeholder="Enter 10-digit mobile" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
+              <FormItem> <FormLabel>Guardian Contact Number</FormLabel> <FormControl><Input type="tel" placeholder="Enter 10-digit mobile" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
+             <FormField control={form.control} name="nextAppointmentDate" render={({ field }) => (
+                <FormItem className="flex flex-col"> <FormLabel>Next Appointment Date (Optional)</FormLabel> <Popover> <PopoverTrigger asChild> <FormControl> <Button variant={"outline"} className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}> {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>} <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> </Button> </FormControl> </PopoverTrigger> <PopoverContent className="w-auto p-0" align="start"> <Calendar mode="single" selected={field.value ? parseISO(field.value) : undefined} onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")} initialFocus /> </PopoverContent> </Popover> <FormMessage /> </FormItem>
+              )}
+            />
+            <FormField control={form.control} name="isTracked" render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 shadow-sm h-fit mt-7">
+                  <FormControl>
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} id="isTracked" />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel htmlFor="isTracked" className="cursor-pointer">Track Patient</FormLabel>
+                    <FormDescription>Enable special monitoring for this patient.</FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
           </CardContent>
         </Card>
 
@@ -358,44 +318,19 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
           <CardHeader><CardTitle className="font-headline">Address Information</CardTitle></CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField control={form.control} name="address.street" render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Street Address</FormLabel>
-                <FormControl><Input placeholder="Enter street address" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
+              <FormItem className="md:col-span-2"> <FormLabel>Street Address</FormLabel> <FormControl><Input placeholder="Enter street address" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="address.city" render={({ field }) => (
-              <FormItem>
-                <FormLabel>City</FormLabel>
-                <FormControl><Input placeholder="Enter city" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
+              <FormItem> <FormLabel>City</FormLabel> <FormControl><Input placeholder="Enter city" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="address.state" render={({ field }) => (
-              <FormItem>
-                <FormLabel>State</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl>
-                  <SelectContent>{INDIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
+              <FormItem> <FormLabel>State</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl> <SelectContent>{INDIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="address.pincode" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Pincode</FormLabel>
-                <FormControl><Input placeholder="Enter 6-digit pincode" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
+              <FormItem> <FormLabel>Pincode</FormLabel> <FormControl><Input placeholder="Enter 6-digit pincode" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="address.country" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Country</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter country" {...field} disabled />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+                <FormItem> <FormLabel>Country</FormLabel> <FormControl> <Input placeholder="Enter country" {...field} disabled /> </FormControl> <FormMessage /> </FormItem>
               )}
             />
           </CardContent>
@@ -412,11 +347,19 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
           </CardContent>
         </Card>
         
-        {/* Clinical Profile Section */}
         <Card>
           <CardHeader><CardTitle className="font-headline flex items-center"><HeartPulse className="mr-2 h-5 w-5 text-primary" />Clinical Profile</CardTitle></CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <FormField control={form.control} name="clinicalProfile.aabhaNumber" render={({ field }) => (
+                <FormItem> <FormLabel><Info className="inline h-4 w-4 mr-1"/>Aabha Number (Optional)</FormLabel> <FormControl><Input placeholder="Enter Aabha number" {...field} /></FormControl> <FormMessage /> </FormItem>
+              )} />
+              <FormField control={form.control} name="clinicalProfile.bloodGroup" render={({ field }) => (
+                <FormItem> <FormLabel><Droplet className="inline h-4 w-4 mr-1"/>Blood Group</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select blood group" /></SelectTrigger></FormControl> <SelectContent>{BLOOD_GROUPS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+              )} />
+               <FormField control={form.control} name="clinicalProfile.whatsappNumber" render={({ field }) => (
+                <FormItem> <FormLabel><MessageCircle className="inline h-4 w-4 mr-1"/>WhatsApp Number (Optional)</FormLabel> <FormControl><Input type="tel" placeholder="Enter 10-digit WhatsApp" {...field} /></FormControl> <FormMessage /> </FormItem>
+              )} />
               <FormField control={form.control} name="clinicalProfile.primaryDiagnosis" render={({ field }) => (
                 <FormItem> <FormLabel>Primary Diagnosis</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select primary diagnosis" /></SelectTrigger></FormControl> <SelectContent>{PRIMARY_DIAGNOSIS_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
@@ -435,8 +378,27 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormField control={form.control} name="clinicalProfile.disability" render={({ field }) => (
                 <FormItem> <FormLabel><Accessibility className="inline h-4 w-4 mr-1"/>Disability Profile</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select disability profile" /></SelectTrigger></FormControl> <SelectContent>{DISABILITY_PROFILES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
+                <FormField control={form.control} name="clinicalProfile.compliance" render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
+                  <FormControl>
+                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-2">
+                      {YES_NO_UNKNOWN_OPTIONS.map(option => (
+                        <FormItem key={option} className="flex items-center space-x-2 space-y-0">
+                          <FormControl><RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} /></FormControl>
+                          <FormLabel htmlFor={`compliance-${option.toLowerCase()}`} className="font-normal cursor-pointer">{option}</FormLabel>
+                        </FormItem>
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
             </div>
 
+            <FormField control={form.control} name="clinicalProfile.drugAllergies" render={({ field }) => (
+              <FormItem> <FormLabel><ShieldAlert className="inline h-4 w-4 mr-1"/>Drug Allergies (Optional)</FormLabel> <FormControl><Textarea placeholder="List any known drug allergies, comma separated..." {...field} rows={2} /></FormControl> <FormMessage /> </FormItem>
+            )} />
             <FormField control={form.control} name="clinicalProfile.pomr" render={({ field }) => (
               <FormItem> <FormLabel><PencilLine className="inline h-4 w-4 mr-1"/>Problem Oriented Medical Record (POMR)</FormLabel> <FormControl><Textarea placeholder="Enter POMR details..." {...field} rows={4} /></FormControl> <FormMessage /> </FormItem>
             )} />
@@ -449,6 +411,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                   onChange={(e) => setCurrentLabelsInput(e.target.value)} 
                   placeholder="Type a label and add" 
                   className="flex-grow"
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddLabel();}}}
                 />
                 <Button type="button" onClick={handleAddLabel} variant="outline">Add Label</Button>
               </div>
@@ -471,6 +434,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                   onChange={(e) => setCurrentTagsInput(e.target.value)} 
                   placeholder="Type a tag and add" 
                   className="flex-grow"
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTagManually();}}}
                 />
                 <Button type="button" onClick={handleAddTagManually} variant="outline">Add Tag</Button>
               </div>
@@ -503,7 +467,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                           checked={field.value}
                           onCheckedChange={(checked) => {
                             field.onChange(checked);
-                            if (!checked) { // If unchecked, clear dates
+                            if (!checked) { 
                               form.setValue(`clinicalProfile.vaccinations.${index}.date` as any, "");
                               form.setValue(`clinicalProfile.vaccinations.${index}.nextDoseDate` as any, "");
                             }

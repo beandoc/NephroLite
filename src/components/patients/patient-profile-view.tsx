@@ -5,9 +5,9 @@ import type { Patient, Vaccination, InvestigationRecord, InvestigationTest } fro
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, MapPin, ShieldCheck, Stethoscope, FileText, Microscope, Pill, MessageSquare, CalendarDays, FlaskConical, Trash2, Eye, Edit, Copy, PlusCircle, ShieldQuestion, Cigarette, Wine, CheckSquare, TrendingUp, Link as LinkIcon, Briefcase, Notebook, Leaf, Accessibility, PencilLine, TagsIcon, Syringe } from 'lucide-react';
+import { User, MapPin, ShieldCheck, Stethoscope, FileText, Microscope, Pill, MessageSquare, CalendarDays, FlaskConical, Trash2, Eye, Edit, Copy, PlusCircle, ShieldQuestion, Cigarette, Wine, CheckSquare, TrendingUp, Link as LinkIcon, Briefcase, Notebook, Leaf, Accessibility, PencilLine, TagsIcon, Syringe, UserCircleIcon, Building, LogOut, CheckCircle, XCircle, Clock, AlertCircle, CircleSlash, Hospital, Info, Droplet } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'; // Correct import
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'; 
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
@@ -23,6 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { usePatientData } from '@/hooks/use-patient-data';
 
 
 interface PatientProfileViewProps {
@@ -48,7 +49,6 @@ const DetailItem = ({ label, value, icon: Icon, className }: { label: string; va
 const POMRDisplay = ({ pomrText }: { pomrText?: string }) => {
   if (!pomrText) return <p className="text-base text-muted-foreground italic">No POMR recorded.</p>;
   
-  // Split by newlines to render as paragraphs for better readability
   const paragraphs = pomrText.split('\n').map((para, index) => (
     <p key={index} className="mb-1 last:mb-0">{para}</p>
   ));
@@ -141,7 +141,6 @@ const PatientInvestigationsTabContent = ({ patientId }: { patientId: string }) =
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  // Mock data for Investigation Records
   const mockInvestigationRecords: InvestigationRecord[] = [
     {
       id: 'ir001',
@@ -186,8 +185,6 @@ const PatientInvestigationsTabContent = ({ patientId }: { patientId: string }) =
       title: "Feature Under Development",
       description: "Saving investigation records is not yet implemented. Data logged to console.",
     });
-    // Here you would typically add the new record to your state/backend
-    // For now, just close the dialog and reset form
     setIsAddDialogOpen(false);
     form.reset();
   };
@@ -291,7 +288,6 @@ const PatientInvestigationsTabContent = ({ patientId }: { patientId: string }) =
               <CardHeader className="bg-muted/30">
                 <CardTitle className="font-headline text-lg flex items-center justify-between">
                   <span>Investigations on: {format(parseISO(record.date), 'PPP')}</span>
-                   {/* Placeholder for actions on the record itself */}
                   <Button variant="ghost" size="sm" onClick={() => toast({title: "Edit/Delete Record (WIP)"})} className="text-xs">
                     <Edit className="h-3 w-3 mr-1"/> Edit/Delete Record
                   </Button>
@@ -376,8 +372,38 @@ const MockDiagnosisRx = ({ patientId }: { patientId: string }) => {
 };
 
 
-export function PatientProfileView({ patient }: PatientProfileViewProps) {
+export function PatientProfileView({ patient: initialPatient }: PatientProfileViewProps) {
+  const { toast } = useToast();
+  const { getPatientById, admitPatient, dischargePatient, updatePatient } = usePatientData();
+  const [patient, setPatient] = useState(initialPatient);
+
+  // Refresh patient data if the initialPatient prop changes (e.g., after an update)
+  React.useEffect(() => {
+    const freshPatient = getPatientById(initialPatient.id);
+    if (freshPatient) {
+      setPatient(freshPatient);
+    }
+  }, [initialPatient, getPatientById]);
+
+
+  const handleAdmitPatient = () => {
+    const updatedPatient = admitPatient(patient.id);
+    if (updatedPatient) {
+      setPatient(updatedPatient);
+      toast({ title: "Patient Admitted", description: `${patient.name} is now marked as IPD.` });
+    }
+  };
+
+  const handleDischargePatient = () => {
+    const updatedPatient = dischargePatient(patient.id);
+    if (updatedPatient) {
+      setPatient(updatedPatient);
+      toast({ title: "Patient Discharged", description: `${patient.name} has been discharged.` });
+    }
+  };
+  
   const { clinicalProfile } = patient;
+
   return (
     <Tabs defaultValue="overview" className="w-full">
       <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6">
@@ -391,18 +417,43 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
       <TabsContent value="overview">
         <div className="space-y-6">
           <Card className="shadow-md">
-            <CardHeader className="bg-muted/30">
-              <CardTitle className="font-headline text-xl flex items-center"><User className="w-6 h-6 mr-3 text-primary"/>Demographic Information</CardTitle>
+             <CardHeader className="bg-muted/30 flex flex-row items-center justify-between">
+              <CardTitle className="font-headline text-xl flex items-center">
+                <UserCircleIcon className="w-6 h-6 mr-3 text-primary"/>Demographic Information
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                {patient.patientStatus === 'OPD' || patient.patientStatus === 'Discharged' ? (
+                  <Button onClick={handleAdmitPatient} size="sm" variant="outline">
+                    <Hospital className="mr-2 h-4 w-4" /> Admit Patient
+                  </Button>
+                ) : null}
+                {patient.patientStatus === 'IPD' ? (
+                  <Button onClick={handleDischargePatient} size="sm" variant="outline">
+                    <LogOut className="mr-2 h-4 w-4" /> Discharge Patient
+                  </Button>
+                ) : null}
+              </div>
             </CardHeader>
             <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <DetailItem label="Full Name" value={patient.name} />
               <DetailItem label="Nephro ID" value={patient.nephroId} />
+               <div className="flex items-center">
+                <DetailItem label="Patient Status" value={patient.patientStatus} className="mr-2"/>
+                {patient.patientStatus === 'IPD' && <Badge variant="destructive">IPD</Badge>}
+                {patient.patientStatus === 'OPD' && <Badge variant="secondary">OPD</Badge>}
+                {patient.patientStatus === 'Discharged' && <Badge variant="outline">Discharged</Badge>}
+              </div>
               <DetailItem label="Date of Birth" value={patient.dob ? format(parseISO(patient.dob), 'PPP') : 'N/A'} />
               <DetailItem label="Age" value={patient.dob ? `${new Date().getFullYear() - parseISO(patient.dob).getFullYear()} years` : 'N/A'} />
               <DetailItem label="Gender" value={patient.gender} />
               <DetailItem label="Contact Number" value={patient.contact} />
               <DetailItem label="Email Address" value={patient.email} />
+              <DetailItem label="WhatsApp Number" value={clinicalProfile.whatsappNumber} icon={MessageSquare}/>
+              <DetailItem label="Aabha Number" value={clinicalProfile.aabhaNumber} icon={Info}/>
+              <DetailItem label="Blood Group" value={clinicalProfile.bloodGroup} icon={Droplet}/>
               <DetailItem label="Registration Date" value={patient.registrationDate ? format(parseISO(patient.registrationDate), 'PPP') : 'N/A'} />
+              <DetailItem label="Next Appointment" value={patient.nextAppointmentDate ? format(parseISO(patient.nextAppointmentDate), 'PPP') : 'N/A'} icon={CalendarDays}/>
+               <DetailItem label="Tracked Patient" value={patient.isTracked ? 'Yes' : 'No'} icon={patient.isTracked ? CheckCircle : XCircle} />
             </CardContent>
           </Card>
           
@@ -458,6 +509,9 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
                 <DetailItem label="Disability Profile" icon={Accessibility} value={clinicalProfile.disability} />
                 <DetailItem label="Smoking Status" icon={Cigarette} value={clinicalProfile.smokingStatus || 'NIL'} />
                 <DetailItem label="Alcohol Consumption" icon={Wine} value={clinicalProfile.alcoholConsumption || 'NIL'} />
+                <DetailItem label="Compliance" value={clinicalProfile.compliance} icon={clinicalProfile.compliance === 'Yes' ? CheckSquare : clinicalProfile.compliance === 'No' ? XCircle : AlertCircle }/>
+                <DetailItem label="Drug Allergies" value={clinicalProfile.drugAllergies || "None reported"} icon={ShieldAlert} className="md:col-span-2 lg:col-span-1"/>
+
               </div>
               
               <div>

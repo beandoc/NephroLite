@@ -22,8 +22,8 @@ export type Vaccination = {
 
 export type ClinicalProfile = {
   primaryDiagnosis?: string;
-  labels: string[]; // Stored as an array, but might be input as comma-separated string
-  tags: string[];   // Stored as an array, but might be input as comma-separated string
+  labels: string[]; 
+  tags: string[];   
   nutritionalStatus?: string;
   disability?: string;
   subspecialityFollowUp?: string;
@@ -31,6 +31,11 @@ export type ClinicalProfile = {
   alcoholConsumption?: string; // 'Yes', 'No', 'NIL'
   vaccinations?: Vaccination[];
   pomr?: string; // Problem Oriented Medical Record
+  aabhaNumber?: string;
+  bloodGroup?: string;
+  drugAllergies?: string;
+  compliance?: 'Yes' | 'No' | 'Unknown';
+  whatsappNumber?: string;
 };
 
 export type Patient = {
@@ -51,6 +56,10 @@ export type Patient = {
   rank?: string;
   unitName?: string;
   formation?: string;
+  // New top-level fields
+  patientStatus: 'OPD' | 'IPD' | 'Discharged'; // Default 'OPD'
+  nextAppointmentDate?: string; // YYYY-MM-DD
+  isTracked?: boolean; // Default false
 };
 
 export type Appointment = {
@@ -62,7 +71,7 @@ export type Appointment = {
   type: string;
   doctorName: string;
   notes?: string;
-  status: 'Scheduled' | 'Completed' | 'Cancelled';
+  status: 'Scheduled' | 'Completed' | 'Cancelled' | 'Waiting' | 'Not Showed' | 'Admitted';
 };
 
 // For Diagnosis and Medication Database Management
