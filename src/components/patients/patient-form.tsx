@@ -364,6 +364,9 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                         id={formItemId}
                         checked={field.value}
                         onCheckedChange={field.onChange}
+                        ref={field.ref}
+                        name={field.name}
+                        onBlur={field.onBlur}
                         aria-invalid={!!error}
                         aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
                       />
@@ -447,18 +450,25 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormField
                 control={form.control}
                 name="clinicalProfile.compliance"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
-                    <FormControl>
+                render={({ field }) => {
+                  const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
+                  return (
+                    <FormItem className="space-y-3">
+                      <FormLabel htmlFor={formItemId} className={cn(error && "text-destructive")}>
+                        <GripVertical className="inline h-4 w-4 mr-1"/>Compliance
+                      </FormLabel>
                       <RadioGroup
+                        ref={field.ref}
+                        name={field.name}
                         onValueChange={field.onChange}
                         value={field.value}
                         className="flex flex-row space-x-4"
+                        id={formItemId}
+                        aria-invalid={!!error}
+                        aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
                       >
                         {YES_NO_UNKNOWN_OPTIONS.map(option => (
                           <FormItem key={option} className="flex items-center space-x-2 space-y-0">
-                            {/* Removed FormControl from around RadioGroupItem */}
                             <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} />
                             <FormLabel htmlFor={`compliance-${option.toLowerCase()}`} className="font-normal cursor-pointer">
                               {option}
@@ -466,10 +476,11 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                           </FormItem>
                         ))}
                       </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                      {/* <FormDescription id={formDescriptionId}> Select patient's compliance status. </FormDescription> */}
+                      <FormMessage id={formMessageId} />
+                    </FormItem>
+                  );
+                }}
               />
             </div>
 
@@ -543,7 +554,10 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
                         <Checkbox
                           id={formItemId}
+                          ref={checkboxField.ref}
+                          name={checkboxField.name}
                           checked={checkboxField.value}
+                          onBlur={checkboxField.onBlur}
                           onCheckedChange={(checked) => {
                             checkboxField.onChange(checked);
                             if (!checked) {
@@ -599,3 +613,4 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
+
