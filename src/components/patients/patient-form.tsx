@@ -186,7 +186,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
 
   const { fields: vaccinationFields, replace: replaceVaccinations } = useFieldArray({
     control: form.control,
-    name: "clinicalProfile.vaccinations" as any, // Type assertion to avoid overly complex type literal
+    name: "clinicalProfile.vaccinations" as any, 
   });
 
    useEffect(() => {
@@ -447,32 +447,30 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormField
                 control={form.control}
                 name="clinicalProfile.compliance"
-                render={({ field }) => {
-                  const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
-                  return (
-                    <FormItem className="space-y-3">
-                      <FormLabel htmlFor={formItemId}><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="flex space-x-2"
-                          id={formItemId}
-                          aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
-                          aria-invalid={!!error}
-                        >
-                          {YES_NO_UNKNOWN_OPTIONS.map(option => (
-                            <FormItem key={option} className="flex items-center space-x-3 space-y-0">
-                                <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} />
-                              <FormLabel htmlFor={`compliance-${option.toLowerCase()}`} className="font-normal cursor-pointer">
-                                {option}
-                              </FormLabel>
-                            </FormItem>
-                          ))}
-                        </RadioGroup>
-                      <FormMessage id={formMessageId} />
-                    </FormItem>
-                  );
-                }}
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-row space-x-4"
+                      >
+                        {YES_NO_UNKNOWN_OPTIONS.map(option => (
+                          <FormItem key={option} className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} />
+                            </FormControl>
+                            <FormLabel htmlFor={`compliance-${option.toLowerCase()}`} className="font-normal cursor-pointer">
+                              {option}
+                            </FormLabel>
+                          </FormItem>
+                        ))}
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
 
@@ -540,7 +538,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 <FormField
                   control={form.control}
                   name={`clinicalProfile.vaccinations.${index}.administered` as any}
-                  render={({ field: checkboxField }) => { // Renamed to avoid conflict
+                  render={({ field: checkboxField }) => { 
                     const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
                     return(
                       <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
@@ -568,7 +566,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <FormField
                       control={form.control}
                       name={`clinicalProfile.vaccinations.${index}.date` as any}
-                      render={({ field }) => ( // field here is fine as it's a different scope
+                      render={({ field }) => ( 
                         <FormItem>
                           <FormLabel className="text-xs">Date Administered</FormLabel>
                           <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
@@ -579,7 +577,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <FormField
                       control={form.control}
                       name={`clinicalProfile.vaccinations.${index}.nextDoseDate` as any}
-                      render={({ field }) => ( // field here is fine
+                      render={({ field }) => ( 
                         <FormItem>
                           <FormLabel className="text-xs">Next Dose Date (Optional)</FormLabel>
                           <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
