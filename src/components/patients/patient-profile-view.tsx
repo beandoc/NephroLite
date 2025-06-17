@@ -5,11 +5,12 @@ import type { Patient, Vaccination } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, MapPin, ShieldCheck, Stethoscope, FileText, Microscope, Pill, MessageSquare, CalendarDays, FlaskConical, Trash2, Eye, Edit, Copy, PlusCircle, ShieldQuestion, Cigarette, Wine, CheckSquare } from 'lucide-react';
+import { User, MapPin, ShieldCheck, Stethoscope, FileText, Microscope, Pill, MessageSquare, CalendarDays, FlaskConical, Trash2, Eye, Edit, Copy, PlusCircle, ShieldQuestion, Cigarette, Wine, CheckSquare, TrendingUp, Link as LinkIcon } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 interface PatientProfileViewProps {
   patient: Patient;
@@ -36,8 +37,10 @@ const MockVisitHistory = ({ patientId }: { patientId: string }) => {
   const { toast } = useToast();
   const visits = [
     { id: 'v1', date: '2024-05-10', doctor: 'Dr. Anya Sharma', type: 'Routine Checkup', notes: 'BP stable, advised diet modification. Patient reports feeling well. Next follow-up in 3 months.' },
-    { id: 'v2', date: '2024-02-15', doctor: 'Dr. Vikram Singh', type: 'Follow-up', notes: 'Reviewed lab reports, adjusted medication (Telmisartan increased to 80mg). Creatinine slightly elevated.' },
-    { id: 'v3', date: '2023-11-20', doctor: 'Dr. Anya Sharma', type: 'Consultation', notes: 'Discussed new symptoms (ankle swelling), ordered UACR and KFT. Advised low salt diet.' },
+    { id: 'v2', date: '2024-02-15', doctor: 'Dr. Vikram Singh', type: 'RELAPSE', notes: 'Increased proteinuria, starting immunosuppressants.' },
+    { id: 'v3', date: '2023-11-20', doctor: 'Dr. Anya Sharma', type: 'REMISSION', notes: 'Proteinuria significantly reduced, continuing current treatment.' },
+    { id: 'v4', date: '2023-08-01', doctor: 'Dr. Priya Patel', type: 'CHANGED Rx', notes: 'Switched from ACEi to ARB due to cough.' },
+    { id: 'v5', date: '2023-05-05', doctor: 'Dr. Rohan Gupta', type: 'LOW DRUG LEVEL', notes: 'Tacrolimus level below target, dose adjusted.' },
   ];
 
   const handleAddNewVisit = () => {
@@ -60,7 +63,7 @@ const MockVisitHistory = ({ patientId }: { patientId: string }) => {
               <div className="flex items-center gap-4 w-full">
                 <CalendarDays className="w-5 h-5 text-primary flex-shrink-0"/>
                 <div className="flex-grow">
-                  <p className="font-medium">{format(new Date(visit.date), 'PPP')} - {visit.type}</p>
+                  <p className="font-medium">{format(new Date(visit.date), 'PPP')} - <span className="font-semibold">{visit.type}</span></p>
                   <p className="text-sm text-muted-foreground">With {visit.doctor}</p>
                 </div>
               </div>
@@ -189,11 +192,12 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
   const { clinicalProfile } = patient;
   return (
     <Tabs defaultValue="overview" className="w-full">
-      <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6">
+      <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6">
         <TabsTrigger value="overview"><User className="w-4 h-4 mr-2 sm:hidden md:inline-block"/>Overview</TabsTrigger>
         <TabsTrigger value="visits"><FileText className="w-4 h-4 mr-2 sm:hidden md:inline-block"/>Visit History</TabsTrigger>
         <TabsTrigger value="investigations"><Microscope className="w-4 h-4 mr-2 sm:hidden md:inline-block"/>Investigations</TabsTrigger>
         <TabsTrigger value="diagnosis"><Pill className="w-4 h-4 mr-2 sm:hidden md:inline-block"/>Diagnosis/Rx</TabsTrigger>
+        <TabsTrigger value="healthTrends"><TrendingUp className="w-4 h-4 mr-2 sm:hidden md:inline-block"/>Health Trends</TabsTrigger>
       </TabsList>
 
       <TabsContent value="overview">
@@ -316,6 +320,31 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
           </CardHeader>
           <CardContent>
             <MockDiagnosisRx patientId={patient.id} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+      
+      <TabsContent value="healthTrends">
+        <Card className="shadow-md">
+          <CardHeader>
+            <CardTitle className="font-headline text-xl flex items-center">
+              <TrendingUp className="w-6 h-6 mr-3 text-primary"/>
+              Patient Health Trends & Predictions
+            </CardTitle>
+            <CardDescription>
+              View detailed analytics, risk predictions, and trends for this patient.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center py-10">
+            <TrendingUp className="w-16 h-16 text-primary mb-4" />
+            <p className="text-lg text-center mb-4">
+              Access comprehensive health trends, medication timelines, event logs, and risk predictions.
+            </p>
+            <Button asChild size="lg">
+              <Link href={`/patients/${patient.id}/health-trends`}>
+                <LinkIcon className="mr-2 h-5 w-5" /> View Detailed Health Trends
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </TabsContent>

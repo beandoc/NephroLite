@@ -16,26 +16,26 @@ export const RELATIONSHIPS: string[] = ['Parent', 'Spouse', 'Sibling', 'Child', 
 export const PRIMARY_DIAGNOSIS_OPTIONS: string[] = [
   'Chronic Kidney Disease (CKD)',
   'Acute Kidney Injury (AKI)',
-  'Glomerulonephritis',
+  'Glomerulonephritis', // Generic GN
   'Polycystic Kidney Disease (PKD)',
   'Diabetic Nephropathy',
   'Hypertensive Nephropathy',
   'Kidney Stones',
   'Urinary Tract Infection (UTI) - Complicated',
   'End-Stage Renal Disease (ESRD)',
-  'IgA Nephropathy (IgAN)',
-  'Focal Segmental Glomerulosclerosis (FSGS)',
-  'Systemic Lupus Erythematosus (SLE)',
-  'Lupus Nephritis (LN)',
-  'Nephrotic Syndrome (NS)',
-  'Membranous Glomerulonephritis (MGN)',
-  'Minimal Change Disease (MCD)',
-  'Proteinuria (PRT)',
-  'Congenital Anomalies of the Kidney and Urinary Tract (CAKUT)',
-  'Renal Artery Stenosis (RAS)',
-  'Glomerulonephritis (GN) - General',
-  'Transplant Prospect',
-  'Potential Kidney Donor',
+  'IgA Nephropathy (IgAN)', // Specific GN tag
+  'Focal Segmental Glomerulosclerosis (FSGS)', // Specific GN tag
+  'Systemic Lupus Erythematosus (SLE)', // Often related to LN
+  'Lupus Nephritis (LN)', // Specific GN tag
+  'Nephrotic Syndrome (NS)', // Specific GN tag
+  'Membranous Glomerulonephritis (MGN)', // Specific GN tag
+  'Minimal Change Disease (MCD)', // Specific GN tag
+  'Proteinuria (PRT)', // Symptom/finding, can be tag
+  'Congenital Anomalies of the Kidney and Urinary Tract (CAKUT)', // Can be tag
+  'Renal Artery Stenosis (RAS)', // Can be tag
+  'Glomerulonephritis (GN) - Unspecified', // Another way to put generic GN
+  'Transplant Prospect', // Tag
+  'Potential Kidney Donor', // Tag
   'Other',
 ];
 
@@ -58,13 +58,35 @@ export const DISABILITY_PROFILES: string[] = [
   'Other',
 ];
 
-export const APPOINTMENT_TYPES: string[] = [
+// These can be used for Visit Remarks or specific event types in a GN module
+export const VISIT_REMARK_OPTIONS_GN: string[] = [
+  'Routine Checkup',
+  'Follow-up',
+  'RELAPSE',
+  'REMISSION',
+  'LOW DRUG LEVEL',
+  'HIGH DRUG LEVELS',
+  'CHANGED Rx',
+  'Initial Consultation',
+  'Lab Results Review',
+  'Dialysis Session',
+  'Transplant Evaluation',
+  'Emergency',
+];
+
+
+export const APPOINTMENT_TYPES: string[] = [ // General appointment types
   'Routine Checkup',
   'Follow-up',
   'Dialysis Session',
   'Consultation',
   'Emergency',
+  'Lab Results Review',
+  'Transplant Evaluation',
+  // Consider adding GN specific types if needed, or use remarks
+  'GN Monitoring Visit',
 ];
+
 
 export const APPOINTMENT_STATUSES: Array<'Scheduled' | 'Completed' | 'Cancelled'> = ['Scheduled', 'Completed', 'Cancelled'];
 
