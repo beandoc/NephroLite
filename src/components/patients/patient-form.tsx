@@ -361,18 +361,18 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
                 return (
                   <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 shadow-sm h-fit mt-7">
-                    <Checkbox
-                      id={formItemId}
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      aria-invalid={!!error}
-                      aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
-                    />
+                     <Checkbox
+                        id={formItemId}
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        aria-invalid={!!error}
+                        aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                      />
                     <div className="space-y-1 leading-none">
                       <FormLabel htmlFor={formItemId} className="cursor-pointer">Track Patient</FormLabel>
                       <FormDescription id={formDescriptionId}>Enable special monitoring for this patient.</FormDescription>
                     </div>
-                    <FormMessage /> {/* Removed id={formMessageId} as FormMessage handles it internally */}
+                    <FormMessage />
                   </FormItem>
                 );
               }}
@@ -447,30 +447,30 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormField
                 control={form.control}
                 name="clinicalProfile.compliance"
-                render={({ field }) => {
-                  const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
-                  return (
-                      <FormItem className="space-y-3">
-                      <FormLabel><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
+                    <FormControl>
                       <RadioGroup
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="flex space-x-2"
-                          id={formItemId}
-                          aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
-                          aria-invalid={!!error}
+                        onValueChange={field.onChange}
+                        defaultValue={field.value} // Use defaultValue as per ShadCN docs example for RadioGroup with Form
+                        className="flex space-x-2"
                       >
-                          {YES_NO_UNKNOWN_OPTIONS.map(option => (
-                          <FormItem key={option} className="flex items-center space-x-2 space-y-0">
+                        {YES_NO_UNKNOWN_OPTIONS.map(option => (
+                          <FormItem key={option} className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
                               <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} />
-                              <FormLabel htmlFor={`compliance-${option.toLowerCase()}`} className="font-normal cursor-pointer">{option}</FormLabel>
+                            </FormControl>
+                            <FormLabel htmlFor={`compliance-${option.toLowerCase()}`} className="font-normal cursor-pointer">
+                              {option}
+                            </FormLabel>
                           </FormItem>
-                          ))}
+                        ))}
                       </RadioGroup>
-                      <FormMessage />
-                      </FormItem>
-                  );
-                }}
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
 
@@ -540,7 +540,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                   name={`clinicalProfile.vaccinations.${index}.administered` as any}
                   render={({ field }) => {
                     const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
-                    return (
+                    return(
                       <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
                         <Checkbox
                           id={formItemId}
@@ -556,7 +556,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                           aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
                         />
                         <FormLabel htmlFor={formItemId} className="font-medium text-sm cursor-pointer">{vaccField.name}</FormLabel>
-                         <FormMessage /> {/* Removed id={formMessageId} as FormMessage handles it internally */}
+                         <FormMessage />
                       </FormItem>
                     );
                   }}
