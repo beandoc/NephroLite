@@ -13,7 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  useFormField, // Import useFormField
+  useFormField, 
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -437,7 +437,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 <FormItem className="space-y-3">
                   <FormLabel><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
                   <FormControl>
-                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-2">
+                    <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-2">
                       {YES_NO_UNKNOWN_OPTIONS.map(option => (
                         <FormItem key={option} className="flex items-center space-x-2 space-y-0">
                           <FormControl><RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} /></FormControl>
