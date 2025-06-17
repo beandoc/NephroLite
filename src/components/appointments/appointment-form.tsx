@@ -13,6 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  useFormField, // Import useFormField
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -123,41 +124,45 @@ export function AppointmentForm({ appointment, onSubmit, isSubmitting }: Appoint
               </FormItem>
             )} />
             
-            <FormField control={form.control} name="date" render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(parse(field.value, "yyyy-MM-dd", new Date()), "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined}
-                        onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
-                        disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) } 
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
+            <FormField control={form.control} name="date" render={({ field }) => {
+                const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
+                return (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                            id={formItemId}
+                            aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                            aria-invalid={!!error}
+                          >
+                            {field.value ? (
+                              format(parse(field.value, "yyyy-MM-dd", new Date()), "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined}
+                          onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                          disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) } 
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             <FormField control={form.control} name="time" render={({ field }) => (
