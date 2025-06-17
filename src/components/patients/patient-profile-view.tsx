@@ -75,16 +75,16 @@ const MockVisitHistory = ({ patientId }: { patientId: string }) => {
                   <span>{visit.notes || "No specific notes for this visit."}</span>
               </p>
               <div className="mt-3 pt-3 border-t flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => handleVisitAction('View Details', visit.id)} disabled title="View Details (Under Development)">
+                  <Button variant="ghost" size="sm" onClick={() => handleVisitAction('View Details', visit.id)} title="View Details (Under Development)">
                     <Eye className="w-4 h-4 mr-1"/> View
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleVisitAction('Edit Visit', visit.id)} disabled title="Edit Visit (Under Development)">
+                  <Button variant="ghost" size="sm" onClick={() => handleVisitAction('Edit Visit', visit.id)} title="Edit Visit (Under Development)">
                     <Edit className="w-4 h-4 mr-1"/> Edit
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleVisitAction('Copy Visit', visit.id)} disabled title="Copy Visit (Under Development)">
+                  <Button variant="ghost" size="sm" onClick={() => handleVisitAction('Copy Visit', visit.id)} title="Copy Visit (Under Development)">
                     <Copy className="w-4 h-4 mr-1"/> Copy
                   </Button>
-                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive/90" onClick={() => handleVisitAction('Delete Visit', visit.id)} disabled title="Delete visit (Under Development)">
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive/90" onClick={() => handleVisitAction('Delete Visit', visit.id)} title="Delete visit (Under Development)">
                     <Trash2 className="w-4 h-4 mr-1" /> Delete
                   </Button>
               </div>
@@ -365,3 +365,4 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
   );
 }
 
+    
