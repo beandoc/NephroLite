@@ -5,7 +5,7 @@ import type { Patient, Vaccination } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, MapPin, ShieldCheck, Stethoscope, FileText, Microscope, Pill, MessageSquare, CalendarDays, FlaskConical, Trash2, Eye, Edit, Copy, PlusCircle, ShieldQuestion, Cigarette, Wine, CheckSquare, TrendingUp, Link as LinkIcon } from 'lucide-react';
+import { User, MapPin, ShieldCheck, Stethoscope, FileText, Microscope, Pill, MessageSquare, CalendarDays, FlaskConical, Trash2, Eye, Edit, Copy, PlusCircle, ShieldQuestion, Cigarette, Wine, CheckSquare, TrendingUp, Link as LinkIcon, Briefcase } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
@@ -217,6 +217,19 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
               <DetailItem label="Registration Date" value={patient.registrationDate ? format(parseISO(patient.registrationDate), 'PPP') : 'N/A'} />
             </CardContent>
           </Card>
+          
+          <Card className="shadow-md">
+            <CardHeader className="bg-muted/30">
+              <CardTitle className="font-headline text-xl flex items-center"><Briefcase className="w-6 h-6 mr-3 text-primary"/>Service Details</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <DetailItem label="Service Name" value={patient.serviceName} />
+              <DetailItem label="Service Number" value={patient.serviceNumber} />
+              <DetailItem label="Rank" value={patient.rank} />
+              <DetailItem label="Unit Name" value={patient.unitName} />
+              <DetailItem label="Formation" value={patient.formation} />
+            </CardContent>
+          </Card>
 
           <Card className="shadow-md">
             <CardHeader className="bg-muted/30">
@@ -351,3 +364,4 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
     </Tabs>
   );
 }
+

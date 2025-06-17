@@ -23,19 +23,19 @@ export const PRIMARY_DIAGNOSIS_OPTIONS: string[] = [
   'Kidney Stones',
   'Urinary Tract Infection (UTI) - Complicated',
   'End-Stage Renal Disease (ESRD)',
-  'IgA Nephropathy (IgAN)', // Specific GN tag
-  'Focal Segmental Glomerulosclerosis (FSGS)', // Specific GN tag
-  'Systemic Lupus Erythematosus (SLE)', // Often related to LN
-  'Lupus Nephritis (LN)', // Specific GN tag
-  'Nephrotic Syndrome (NS)', // Specific GN tag
-  'Membranous Glomerulonephritis (MGN)', // Specific GN tag
-  'Minimal Change Disease (MCD)', // Specific GN tag
-  'Proteinuria (PRT)', // Symptom/finding, can be tag
-  'Congenital Anomalies of the Kidney and Urinary Tract (CAKUT)', // Can be tag
-  'Renal Artery Stenosis (RAS)', // Can be tag
-  'Glomerulonephritis (GN) - Unspecified', // Another way to put generic GN
-  'Transplant Prospect', // Tag
-  'Potential Kidney Donor', // Tag
+  'IgA Nephropathy (IgAN)', 
+  'Focal Segmental Glomerulosclerosis (FSGS)', 
+  'Systemic Lupus Erythematosus (SLE)', 
+  'Lupus Nephritis (LN)', 
+  'Nephrotic Syndrome (NS)', 
+  'Membranous Glomerulonephritis (MGN)', 
+  'Minimal Change Disease (MCD)', 
+  'Proteinuria (PRT)', 
+  'Congenital Anomalies of the Kidney and Urinary Tract (CAKUT)', 
+  'Renal Artery Stenosis (RAS)', 
+  'Glomerulonephritis (GN) - Unspecified', 
+  'Transplant Prospect', 
+  'Potential Kidney Donor', 
   'Other',
 ];
 
@@ -58,7 +58,6 @@ export const DISABILITY_PROFILES: string[] = [
   'Other',
 ];
 
-// These can be used for Visit Remarks or specific event types in a GN module
 export const VISIT_REMARK_OPTIONS_GN: string[] = [
   'Routine Checkup',
   'Follow-up',
@@ -75,7 +74,7 @@ export const VISIT_REMARK_OPTIONS_GN: string[] = [
 ];
 
 
-export const APPOINTMENT_TYPES: string[] = [ // General appointment types
+export const APPOINTMENT_TYPES: string[] = [ 
   'Routine Checkup',
   'Follow-up',
   'Dialysis Session',
@@ -83,7 +82,6 @@ export const APPOINTMENT_TYPES: string[] = [ // General appointment types
   'Emergency',
   'Lab Results Review',
   'Transplant Evaluation',
-  // Consider adding GN specific types if needed, or use remarks
   'GN Monitoring Visit',
 ];
 
@@ -111,4 +109,13 @@ export const YES_NO_NIL_OPTIONS: string[] = ['Yes', 'No', 'NIL'];
 
 export const VACCINATION_NAMES: string[] = [
   'Hepatitis B', 'Pneumococcal', 'Influenza', 'Covid', 'Varicella'
+];
+
+export const VISIT_TYPES: string[] = [
+  "Data Entry Visit", "Emergency Visit", "Routine Visit", "Missed Visit", "Unscheduled Visit"
+];
+
+export const PATIENT_GROUP_NAMES: string[] = [
+  "Peritoneal Dialysis", "Chronic Kidney disease", "Hemodialysis", 
+  "Glomerulonephritis", "Kidney transplant", "ADPKD", "Infection", "Misc"
 ];

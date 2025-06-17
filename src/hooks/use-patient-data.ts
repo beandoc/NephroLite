@@ -26,11 +26,17 @@ const getInitialPatients = (): Patient[] => {
         ...p.clinicalProfile,
         vaccinations: p.clinicalProfile.vaccinations && p.clinicalProfile.vaccinations.length > 0 
                       ? p.clinicalProfile.vaccinations 
-                      : getDefaultVaccinations(), // Ensure vaccinations array exists
+                      : getDefaultVaccinations(),
         subspecialityFollowUp: p.clinicalProfile.subspecialityFollowUp || 'NIL',
         smokingStatus: p.clinicalProfile.smokingStatus || 'NIL',
         alcoholConsumption: p.clinicalProfile.alcoholConsumption || 'NIL',
-      }
+      },
+      // Initialize new service fields if they don't exist
+      serviceName: p.serviceName || undefined,
+      serviceNumber: p.serviceNumber || undefined,
+      rank: p.rank || undefined,
+      unitName: p.unitName || undefined,
+      formation: p.formation || undefined,
     }));
     
     if (patients.length > 0) {
@@ -74,6 +80,11 @@ const getInitialPatients = (): Patient[] => {
         ],
       },
       registrationDate: new Date().toISOString().split('T')[0],
+      serviceName: "Indian Army",
+      serviceNumber: "AR12345X",
+      rank: "Colonel",
+      unitName: "1st Medical Battalion",
+      formation: "Mountain Brigade"
     },
     {
       id: crypto.randomUUID(),
@@ -141,6 +152,11 @@ export function usePatientData() {
         smokingStatus: patientData.clinicalProfile.smokingStatus || 'NIL',
         alcoholConsumption: patientData.clinicalProfile.alcoholConsumption || 'NIL',
       },
+      serviceName: patientData.serviceName || undefined,
+      serviceNumber: patientData.serviceNumber || undefined,
+      rank: patientData.rank || undefined,
+      unitName: patientData.unitName || undefined,
+      formation: patientData.formation || undefined,
     };
     const updatedPatients = [...patients, newPatient];
     saveData(updatedPatients);
@@ -156,7 +172,6 @@ export function usePatientData() {
       ...updatedPatientData,
       clinicalProfile: {
         ...updatedPatientData.clinicalProfile,
-        // Ensure vaccinations are an array, even if empty, to prevent issues
         vaccinations: Array.isArray(updatedPatientData.clinicalProfile.vaccinations) 
                       ? updatedPatientData.clinicalProfile.vaccinations 
                       : getDefaultVaccinations(),
@@ -183,3 +198,4 @@ export function usePatientData() {
     deletePatient,
   };
 }
+

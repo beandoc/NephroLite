@@ -28,7 +28,7 @@ import type { Patient, Vaccination } from "@/lib/types";
 import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, SUBSPECIALITY_FOLLOWUP_OPTIONS, YES_NO_NIL_OPTIONS, VACCINATION_NAMES } from "@/lib/constants";
 import { AiTagSuggester } from "./ai-tag-suggester";
 import { Badge } from "@/components/ui/badge";
-import { XIcon, Tag, ShieldQuestion, Cigarette, Wine, CheckSquare } from "lucide-react";
+import { XIcon, Tag, ShieldQuestion, Cigarette, Wine, CheckSquare, Briefcase } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
@@ -54,7 +54,7 @@ const guardianSchema = z.object({
 const vaccinationSchema = z.object({
   name: z.string(),
   administered: z.boolean(),
-  date: z.string().optional().nullable(), // Allow empty string or null
+  date: z.string().optional().nullable(), 
 });
 
 const clinicalProfileSchema = z.object({
@@ -78,6 +78,12 @@ const patientFormSchema = z.object({
   address: addressSchema,
   guardian: guardianSchema,
   clinicalProfile: clinicalProfileSchema,
+  // Service-related details
+  serviceName: z.string().optional(),
+  serviceNumber: z.string().optional(),
+  rank: z.string().optional(),
+  unitName: z.string().optional(),
+  formation: z.string().optional(),
 });
 
 export type PatientFormData = z.infer<typeof patientFormSchema>;
@@ -98,7 +104,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     resolver: zodResolver(patientFormSchema),
     defaultValues: patient ? {
       ...patient,
-      dob: patient.dob ? format(parseISO(patient.dob), "yyyy-MM-dd") : "", // Use parseISO for safety
+      dob: patient.dob ? format(parseISO(patient.dob), "yyyy-MM-dd") : "",
       address: {
         ...patient.address,
         country: patient.address.country || "India",
@@ -114,7 +120,12 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                           return existingVaccine || { name: vaccineName, administered: false, date: '' };
                         })
                       : getDefaultVaccinations(),
-      }
+      },
+      serviceName: patient.serviceName || "",
+      serviceNumber: patient.serviceNumber || "",
+      rank: patient.rank || "",
+      unitName: patient.unitName || "",
+      formation: patient.formation || "",
     } : {
       name: "",
       dob: "",
@@ -134,6 +145,11 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
         alcoholConsumption: 'NIL',
         vaccinations: getDefaultVaccinations(),
       },
+      serviceName: "",
+      serviceNumber: "",
+      rank: "",
+      unitName: "",
+      formation: "",
     },
   });
 
@@ -143,7 +159,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
   });
 
   useEffect(() => {
-    // Ensure vaccinationFields are initialized/updated when patient data changes
     if (patient && patient.clinicalProfile.vaccinations) {
       const currentVaccinations = patient.clinicalProfile.vaccinations;
       const fullVaccinationList = VACCINATION_NAMES.map(vaccineName => {
@@ -342,6 +357,48 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
         </Card>
 
         <Card>
+          <CardHeader><CardTitle className="font-headline flex items-center"><Briefcase className="mr-2 h-5 w-5 text-primary" />Service Details (Optional)</CardTitle></CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField control={form.control} name="serviceName" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Service Name</FormLabel>
+                <FormControl><Input placeholder="e.g., Indian Army" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="serviceNumber" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Service Number</FormLabel>
+                <FormControl><Input placeholder="Enter service number" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="rank" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Rank</FormLabel>
+                <FormControl><Input placeholder="e.g., Major" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="unitName" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Unit Name</FormLabel>
+                <FormControl><Input placeholder="Enter unit name" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="formation" render={({ field }) => (
+              <FormItem className="md:col-span-2">
+                <FormLabel>Formation</FormLabel>
+                <FormControl><Input placeholder="Enter formation" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </CardContent>
+        </Card>
+
+
+        <Card>
           <CardHeader><CardTitle className="font-headline">Clinical Profile</CardTitle></CardHeader>
           <CardContent className="space-y-6">
             <FormField control={form.control} name="clinicalProfile.primaryDiagnosis" render={({ field }) => (
@@ -462,7 +519,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                         <Checkbox
                           checked={administeredField.value}
                           onCheckedChange={(checked) => {
-                            administeredField.onChange(Boolean(checked)); // Ensure boolean
+                            administeredField.onChange(Boolean(checked)); 
                             if (!checked) {
                                form.setValue(`clinicalProfile.vaccinations.${index}.date`, "");
                             }

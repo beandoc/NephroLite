@@ -43,6 +43,12 @@ export type Patient = {
   guardian: Guardian;
   clinicalProfile: ClinicalProfile;
   registrationDate: string; 
+  // Service-related details
+  serviceName?: string;
+  serviceNumber?: string;
+  rank?: string;
+  unitName?: string;
+  formation?: string;
 };
 
 export type Appointment = {
@@ -56,3 +62,4 @@ export type Appointment = {
   notes?: string;
   status: 'Scheduled' | 'Completed' | 'Cancelled';
 };
+
