@@ -20,11 +20,11 @@ export type Vaccination = {
 };
 
 export type ClinicalProfile = {
-  primaryDiagnosis: string; // Remains string, default "" if not set initially
+  primaryDiagnosis?: string;
   labels: string[];
   tags: string[];
-  nutritionalStatus: string; // Remains string, default "" if not set initially
-  disability: string; // Remains string, default "" if not set initially
+  nutritionalStatus?: string;
+  disability?: string;
   subspecialityFollowUp?: string;
   smokingStatus?: string; // 'Yes', 'No', 'NIL'
   alcoholConsumption?: string; // 'Yes', 'No', 'NIL'
@@ -78,3 +78,21 @@ export type MedicationEntry = {
   defaultFrequency?: string;
   commonInstructions?: string;
 };
+
+// For Patient Investigations
+export type InvestigationTest = {
+  id: string; // Unique ID for the test entry within a record
+  group: string; // e.g., 'Hematological', 'Biochemistry'
+  name: string; // e.g., 'Hemoglobin', 'Serum Creatinine'
+  result: string;
+  unit?: string;
+  normalRange?: string;
+};
+
+export type InvestigationRecord = {
+  id: string; // Unique ID for the entire record/set of tests for a date
+  date: string; // YYYY-MM-DD, date of investigation
+  tests: InvestigationTest[];
+  notes?: string; // Optional overall notes for this set of investigations
+};
+

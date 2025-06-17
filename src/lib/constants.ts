@@ -24,7 +24,7 @@ export const FEMALE_IMPLYING_RELATIONS = ['W/O', 'M/O', 'D/O'];
 export const PRIMARY_DIAGNOSIS_OPTIONS: string[] = [
   'Chronic Kidney Disease (CKD)',
   'Acute Kidney Injury (AKI)',
-  'Glomerulonephritis', // Generic GN
+  'Glomerulonephritis',
   'Polycystic Kidney Disease (PKD)',
   'Diabetic Nephropathy',
   'Hypertensive Nephropathy',
@@ -41,9 +41,8 @@ export const PRIMARY_DIAGNOSIS_OPTIONS: string[] = [
   'Proteinuria (PRT)',
   'Congenital Anomalies of the Kidney and Urinary Tract (CAKUT)',
   'Renal Artery Stenosis (RAS)',
-  'Glomerulonephritis (GN) - Unspecified', // Duplicate 'GN' to ensure it's there
   'Transplant Prospect',
-  'Potential Kidney Donor', // Changed from "Donor" for clarity
+  'Potential Kidney Donor',
   'Other',
   'Not Set',
 ];
@@ -147,3 +146,6 @@ export const MOCK_MEDICATIONS: MedicationEntry[] = [
   { id: 'm004', name: 'Prednisolone', defaultDosage: '10mg', defaultFrequency: 'Once Daily', commonInstructions: 'Take in the morning with food.' },
 ];
 
+export const INVESTIGATION_GROUPS: string[] = [
+  'Hematological', 'Biochemistry', 'Radiology', 'Pathology', 'Special Investigations', 'Urine Analysis', 'Serology'
+];
