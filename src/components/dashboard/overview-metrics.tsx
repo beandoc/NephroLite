@@ -39,11 +39,13 @@ export function OverviewMetrics() {
     { 
       title: "Total Patients", 
       value: totalPatients, 
-      subtitle: randomIncrease !== null ? `+${randomIncrease} this month` : undefined, 
+      // The subtitle text for "Total Patients" will be constructed dynamically in the JSX.
+      // Setting it to undefined here to avoid using a potentially server-rendered stale value.
+      subtitle: undefined, 
       icon: Users,
       iconColorClass: "text-blue-500",
       borderColorClass: "border-blue-500",
-      loading: patientsLoading || randomIncrease === null
+      loading: patientsLoading || randomIncrease === null // This controls the value's skeleton
     },
     { 
       title: "Dialysis Sessions", 
@@ -52,7 +54,7 @@ export function OverviewMetrics() {
       icon: Activity, // Representing dialysis machine activity
       iconColorClass: "text-green-500",
       borderColorClass: "border-green-500",
-      loading: false // Assuming this data is static or loaded differently
+      loading: false
     },
     { 
       title: "Lab Results", 
@@ -88,19 +90,27 @@ export function OverviewMetrics() {
             <metric.icon className={`h-5 w-5 ${metric.iconColorClass}`} />
           </CardHeader>
           <CardContent>
-            {metric.loading && metric.title === "Total Patients" ? ( // Show skeleton only for value if metric is loading
-                 <Skeleton className="h-8 w-1/2 rounded-md my-1" /> // Adjusted skeleton for value
+            {/* Value rendering: Show skeleton for "Total Patients" if its specific loading condition is met */}
+            {(metric.title === "Total Patients" && metric.loading) ? (
+                 <Skeleton className="h-8 w-1/2 rounded-md my-1" />
             ) : (
               <div className="text-3xl font-bold">{metric.value}</div>
             )}
             
             {/* Subtitle handling */}
-            {metric.title === "Total Patients" && (patientsLoading || randomIncrease === null) ? (
-                <Skeleton className="h-3 w-3/4 mt-1 rounded-md" /> // Skeleton for subtitle
+            {metric.title === "Total Patients" ? (
+              // Specific subtitle logic for "Total Patients"
+              (patientsLoading || randomIncrease === null) ? (
+                  <Skeleton className="h-3 w-3/4 mt-1 rounded-md" />
+              ) : (
+                  <p className="text-xs text-muted-foreground">+{randomIncrease} this month</p>
+              )
             ) : metric.subtitle ? (
-                <p className="text-xs text-muted-foreground">{metric.subtitle}</p>
+              // Logic for other metrics with static subtitles
+              <p className="text-xs text-muted-foreground">{metric.subtitle}</p>
             ) : (
-                 <div className="h-3 mt-1"></div> // Placeholder to maintain layout if no subtitle
+              // Placeholder to maintain layout if no subtitle for other metrics
+              <div className="h-3 mt-1"></div> 
             )}
           </CardContent>
         </Card>
