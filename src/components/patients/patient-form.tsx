@@ -450,37 +450,33 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormField
                 control={form.control}
                 name="clinicalProfile.compliance"
-                render={({ field }) => {
-                  const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
-                  return (
-                    <FormItem className="space-y-3">
-                      <FormLabel htmlFor={formItemId} className={cn(error && "text-destructive")}>
-                        <GripVertical className="inline h-4 w-4 mr-1"/>Compliance
-                      </FormLabel>
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
+                    <FormControl>
                       <RadioGroup
-                        ref={field.ref}
-                        name={field.name}
                         onValueChange={field.onChange}
-                        value={field.value}
+                        defaultValue={field.value}
                         className="flex flex-row space-x-4"
-                        id={formItemId}
-                        aria-invalid={!!error}
-                        aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                        ref={field.ref} // ref added here
+                        name={field.name} // name added here
                       >
                         {YES_NO_UNKNOWN_OPTIONS.map(option => (
                           <FormItem key={option} className="flex items-center space-x-2 space-y-0">
-                            <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} />
+                            <FormControl>
+                              <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} />
+                            </FormControl>
                             <FormLabel htmlFor={`compliance-${option.toLowerCase()}`} className="font-normal cursor-pointer">
                               {option}
                             </FormLabel>
                           </FormItem>
                         ))}
                       </RadioGroup>
-                      {/* <FormDescription id={formDescriptionId}> Select patient's compliance status. </FormDescription> */}
-                      <FormMessage id={formMessageId} />
-                    </FormItem>
-                  );
-                }}
+                    </FormControl>
+                    {/* <FormDescription> Select patient's compliance status. </FormDescription> */}
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
 
@@ -613,4 +609,3 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
-
