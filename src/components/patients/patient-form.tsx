@@ -362,10 +362,10 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                   <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 shadow-sm h-fit mt-7">
                       <Checkbox
                         id={formItemId}
+                        ref={field.ref} // Important for react-hook-form
+                        name={field.name}
                         checked={field.value}
                         onCheckedChange={field.onChange}
-                        ref={field.ref}
-                        name={field.name}
                         onBlur={field.onBlur}
                         aria-invalid={!!error}
                         aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
@@ -455,15 +455,16 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <FormLabel className="flex items-center"><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
                     <FormControl>
                       <RadioGroup
-                        ref={field.ref}
-                        name={field.name}
                         onValueChange={field.onChange}
-                        value={field.value}
+                        defaultValue={field.value} // As per ShadCN docs for controlled RadioGroup in form
                         className="flex flex-row space-x-4"
+                        name={field.name} // Important for react-hook-form
                       >
                         {YES_NO_UNKNOWN_OPTIONS.map((option) => (
                           <FormItem key={option} className="flex items-center space-x-2 space-y-0">
-                            <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} />
+                            <FormControl>
+                              <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} />
+                            </FormControl>
                             <FormLabel htmlFor={`compliance-${option.toLowerCase()}`} className="font-normal cursor-pointer">
                               {option}
                             </FormLabel>
@@ -546,11 +547,10 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     return(
                       <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
                         <Checkbox
-                          id={formItemId}
+                          id={formItemId} // Unique ID for checkbox
                           ref={checkboxField.ref}
                           name={checkboxField.name}
                           checked={checkboxField.value}
-                          onBlur={checkboxField.onBlur}
                           onCheckedChange={(checked) => {
                             checkboxField.onChange(checked);
                             if (!checked) {
@@ -558,6 +558,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                               form.setValue(`clinicalProfile.vaccinations.${index}.nextDoseDate` as any, "");
                             }
                           }}
+                          onBlur={checkboxField.onBlur}
                           aria-invalid={!!error}
                           aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
                         />
@@ -607,5 +608,3 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
   );
 }
 
-
-    
