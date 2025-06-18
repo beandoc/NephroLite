@@ -36,6 +36,7 @@ import { CalendarIcon, Briefcase, HeartPulse, Activity, Leaf, Accessibility, Syr
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 import { AiTagSuggester } from "./ai-tag-suggester";
+import { Badge } from "@/components/ui/badge";
 
 
 const addressSchema = z.object({
@@ -455,25 +456,25 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                   return (
                     <FormItem className="space-y-3">
                       <FormLabel htmlFor={formItemId} className="flex items-center"><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
-                      <RadioGroup
-                        ref={field.ref}
-                        name={field.name}
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        className="flex flex-row space-x-4"
-                        id={formItemId}
-                        aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
-                        aria-invalid={!!error}
-                      >
-                        {YES_NO_UNKNOWN_OPTIONS.map((option) => (
-                          <FormItem key={option} className="flex items-center space-x-2 space-y-0">
-                            <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}-item`} />
-                            <FormLabel htmlFor={`compliance-${option.toLowerCase()}-item`} className="font-normal cursor-pointer">
-                              {option}
-                            </FormLabel>
-                          </FormItem>
-                        ))}
-                      </RadioGroup>
+                        <RadioGroup
+                          ref={field.ref}
+                          name={field.name}
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          className="flex flex-row space-x-4"
+                          id={formItemId}
+                          aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                          aria-invalid={!!error}
+                        >
+                          {YES_NO_UNKNOWN_OPTIONS.map((option) => (
+                            <FormItem key={option} className="flex items-center space-x-2 space-y-0">
+                                <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}-item`} />
+                              <FormLabel htmlFor={`compliance-${option.toLowerCase()}-item`} className="font-normal cursor-pointer">
+                                {option}
+                              </FormLabel>
+                            </FormItem>
+                          ))}
+                        </RadioGroup>
                       <FormMessage />
                     </FormItem>
                   );
@@ -613,4 +614,3 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
-
