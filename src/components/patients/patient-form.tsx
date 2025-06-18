@@ -281,15 +281,17 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <FormLabel>Date of Birth</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}
-                            id={formItemId}
-                            aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
-                            aria-invalid={!!error}
-                          > {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                           </Button>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}
+                              id={formItemId}
+                              aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                              aria-invalid={!!error}
+                            > {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
@@ -334,6 +336,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       <FormLabel>Next Appointment Date (Optional)</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
+                            <FormControl>
                               <Button
                                 variant={"outline"}
                                 className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}
@@ -343,6 +346,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                                 > {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                </Button>
+                            </FormControl>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
                             <Calendar mode="single" selected={field.value ? parseISO(field.value) : undefined} onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")} initialFocus />
@@ -455,14 +459,16 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <FormLabel><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
                     <FormControl>
                       <RadioGroup
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        className="flex flex-row space-x-4"
                         ref={field.ref}
+                        onValueChange={field.onChange}
+                        value={field.value} 
+                        className="flex flex-row space-x-4"
                       >
                         {YES_NO_UNKNOWN_OPTIONS.map((option) => (
                           <FormItem key={option} className="flex items-center space-x-2 space-y-0">
-                            <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}-item`} />
+                            <FormControl>
+                              <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}-item`} />
+                            </FormControl>
                             <FormLabel htmlFor={`compliance-${option.toLowerCase()}-item`} className="font-normal cursor-pointer">
                               {option}
                             </FormLabel>
@@ -605,3 +611,4 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
+
