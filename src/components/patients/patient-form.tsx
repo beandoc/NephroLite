@@ -116,8 +116,8 @@ const getInitialClinicalProfile = (): ClinicalProfile => ({
   subspecialityFollowUp: 'NIL',
   smokingStatus: 'NIL',
   alcoholConsumption: 'NIL',
-  pomr: "",
   vaccinations: getDefaultVaccinations(),
+  pomr: "",
   aabhaNumber: "",
   bloodGroup: BLOOD_GROUPS.includes('Unknown') ? 'Unknown' : BLOOD_GROUPS[0] || "",
   drugAllergies: "",
@@ -186,7 +186,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
 
   const { fields: vaccinationFields, replace: replaceVaccinations } = useFieldArray({
     control: form.control,
-    name: "clinicalProfile.vaccinations" as any, 
+    name: "clinicalProfile.vaccinations" as any,
   });
 
    useEffect(() => {
@@ -446,7 +446,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormField control={form.control} name="clinicalProfile.disability" render={({ field }) => (
                 <FormItem> <FormLabel><Accessibility className="inline h-4 w-4 mr-1"/>Disability Profile</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select disability profile" /></SelectTrigger></FormControl> <SelectContent>{DISABILITY_PROFILES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
-              
+
               <FormField
                 control={form.control}
                 name="clinicalProfile.compliance"
@@ -456,14 +456,13 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                         className="flex flex-row space-x-4"
+                        ref={field.ref}
                       >
-                        {YES_NO_UNKNOWN_OPTIONS.map(option => (
+                        {YES_NO_UNKNOWN_OPTIONS.map((option) => (
                           <FormItem key={option} className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}-item`} />
-                            </FormControl>
+                            <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}-item`} />
                             <FormLabel htmlFor={`compliance-${option.toLowerCase()}-item`} className="font-normal cursor-pointer">
                               {option}
                             </FormLabel>
@@ -541,7 +540,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 <FormField
                   control={form.control}
                   name={`clinicalProfile.vaccinations.${index}.administered` as any}
-                  render={({ field: checkboxField }) => { 
+                  render={({ field: checkboxField }) => {
                     const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
                     return(
                       <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
@@ -572,7 +571,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <FormField
                       control={form.control}
                       name={`clinicalProfile.vaccinations.${index}.date` as any}
-                      render={({ field }) => ( 
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs">Date Administered</FormLabel>
                           <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
@@ -583,7 +582,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <FormField
                       control={form.control}
                       name={`clinicalProfile.vaccinations.${index}.nextDoseDate` as any}
-                      render={({ field }) => ( 
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs">Next Dose Date (Optional)</FormLabel>
                           <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
@@ -606,7 +605,3 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
-
-    
-
-    
