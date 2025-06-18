@@ -362,7 +362,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                   <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 shadow-sm h-fit mt-7">
                       <Checkbox
                         id={formItemId}
-                        ref={field.ref} // Important for react-hook-form
+                        ref={field.ref}
                         name={field.name}
                         checked={field.value}
                         onCheckedChange={field.onChange}
@@ -450,31 +450,34 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormField
                 control={form.control}
                 name="clinicalProfile.compliance"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel className="flex items-center"><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
-                    <FormControl>
+                render={({ field }) => {
+                  const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
+                  return (
+                    <FormItem className="space-y-3">
+                      <FormLabel htmlFor={formItemId} className="flex items-center"><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
                       <RadioGroup
+                        ref={field.ref}
+                        name={field.name}
                         onValueChange={field.onChange}
-                        defaultValue={field.value} // As per ShadCN docs for controlled RadioGroup in form
+                        value={field.value}
                         className="flex flex-row space-x-4"
-                        name={field.name} // Important for react-hook-form
+                        id={formItemId}
+                        aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                        aria-invalid={!!error}
                       >
                         {YES_NO_UNKNOWN_OPTIONS.map((option) => (
                           <FormItem key={option} className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}`} />
-                            </FormControl>
-                            <FormLabel htmlFor={`compliance-${option.toLowerCase()}`} className="font-normal cursor-pointer">
+                            <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}-item`} />
+                            <FormLabel htmlFor={`compliance-${option.toLowerCase()}-item`} className="font-normal cursor-pointer">
                               {option}
                             </FormLabel>
                           </FormItem>
                         ))}
                       </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
             </div>
 
@@ -537,65 +540,68 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
         <Card>
           <CardHeader><CardTitle className="font-headline flex items-center"><Syringe className="mr-2 h-5 w-5 text-primary" />Vaccination Status</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            {vaccinationFields.map((vaccField, index) => (
-              <div key={vaccField.id} className="p-3 border rounded-md bg-muted/20">
-                <FormField
-                  control={form.control}
-                  name={`clinicalProfile.vaccinations.${index}.administered` as any}
-                  render={({ field: checkboxField }) => {
-                    const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
-                    return(
-                      <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
-                        <Checkbox
-                          id={formItemId} // Unique ID for checkbox
-                          ref={checkboxField.ref}
-                          name={checkboxField.name}
-                          checked={checkboxField.value}
-                          onCheckedChange={(checked) => {
-                            checkboxField.onChange(checked);
-                            if (!checked) {
-                              form.setValue(`clinicalProfile.vaccinations.${index}.date` as any, "");
-                              form.setValue(`clinicalProfile.vaccinations.${index}.nextDoseDate` as any, "");
-                            }
-                          }}
-                          onBlur={checkboxField.onBlur}
-                          aria-invalid={!!error}
-                          aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
-                        />
-                        <FormLabel htmlFor={formItemId} className="font-medium text-sm cursor-pointer">{vaccField.name}</FormLabel>
-                         <FormMessage id={formMessageId}/>
-                      </FormItem>
-                    );
-                  }}
-                />
-                {form.watch(`clinicalProfile.vaccinations.${index}.administered` as any) && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
-                    <FormField
-                      control={form.control}
-                      name={`clinicalProfile.vaccinations.${index}.date` as any}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Date Administered</FormLabel>
-                          <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
-                           <FormMessage />
+            {vaccinationFields.map((vaccField, index) => {
+              const fieldNamePrefix = `clinicalProfile.vaccinations.${index}` as const;
+              return (
+                <div key={vaccField.id} className="p-3 border rounded-md bg-muted/20">
+                  <FormField
+                    control={form.control}
+                    name={`${fieldNamePrefix}.administered`}
+                    render={({ field: checkboxField }) => {
+                      const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
+                      return(
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
+                          <Checkbox
+                            id={formItemId} 
+                            ref={checkboxField.ref}
+                            name={checkboxField.name}
+                            checked={checkboxField.value}
+                            onCheckedChange={(checked) => {
+                              checkboxField.onChange(checked);
+                              if (!checked) {
+                                form.setValue(`${fieldNamePrefix}.date` as any, "");
+                                form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, "");
+                              }
+                            }}
+                            onBlur={checkboxField.onBlur}
+                            aria-invalid={!!error}
+                            aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                          />
+                          <FormLabel htmlFor={formItemId} className="font-medium text-sm cursor-pointer">{vaccField.name}</FormLabel>
+                           <FormMessage id={formMessageId}/>
                         </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`clinicalProfile.vaccinations.${index}.nextDoseDate` as any}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Next Dose Date (Optional)</FormLabel>
-                          <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
-                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
+                      );
+                    }}
+                  />
+                  {form.watch(`${fieldNamePrefix}.administered` as any) && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
+                      <FormField
+                        control={form.control}
+                        name={`${fieldNamePrefix}.date`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Date Administered</FormLabel>
+                            <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
+                             <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`${fieldNamePrefix}.nextDoseDate`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Next Dose Date (Optional)</FormLabel>
+                            <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
+                             <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
 
