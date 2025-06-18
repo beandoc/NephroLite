@@ -281,17 +281,15 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <FormLabel>Date of Birth</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}
-                              id={formItemId}
-                              aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
-                              aria-invalid={!!error}
-                            > {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}
+                            id={formItemId}
+                            aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                            aria-invalid={!!error}
+                          > {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
@@ -336,7 +334,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       <FormLabel>Next Appointment Date (Optional)</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <FormControl>
                               <Button
                                 variant={"outline"}
                                 className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}
@@ -346,7 +343,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                                 > {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                </Button>
-                            </FormControl>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
                             <Calendar mode="single" selected={field.value ? parseISO(field.value) : undefined} onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")} initialFocus />
@@ -455,7 +451,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 control={form.control}
                 name="clinicalProfile.compliance"
                 render={({ field }) => {
-                  // Directly use useFormField here for the RadioGroup
                   const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
                   return (
                     <FormItem className="space-y-3">
