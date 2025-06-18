@@ -5,7 +5,7 @@ import type { Patient, Vaccination, InvestigationRecord, InvestigationTest } fro
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, MapPin, ShieldCheck, Stethoscope, FileText, Microscope, Pill, MessageSquare, CalendarDays, FlaskConical, Trash2, Eye, Edit, Copy, PlusCircle, ShieldQuestion, Cigarette, Wine, CheckSquare, TrendingUp, Link as LinkIcon, Briefcase, Notebook, Leaf, Accessibility, PencilLine, TagsIcon, Syringe, UserCircleIcon, Building, LogOut, CheckCircle, XCircle, Clock, AlertCircle, CircleSlash, Hospital, Info, Droplet, HeartPulse } from 'lucide-react';
+import { User, MapPin, ShieldCheck, Stethoscope, FileText, Microscope, Pill, MessageSquare, CalendarDays, FlaskConical, Trash2, Eye, Edit, Copy, PlusCircle, ShieldQuestion, Cigarette, Wine, CheckSquare, TrendingUp, Link as LinkIcon, Briefcase, Notebook, Leaf, Accessibility, PencilLine, TagsIcon, Syringe, UserCircleIcon, Building, LogOut, CheckCircle, XCircle, Clock, AlertCircle, CircleSlash, Hospital, Info, Droplet, HeartPulse, ShieldAlert } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'; 
 import { Button } from '@/components/ui/button';
@@ -649,5 +649,7 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
   );
 }
 
+
+    
 
     
