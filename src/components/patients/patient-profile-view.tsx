@@ -182,11 +182,19 @@ const PatientInvestigationsTabContent = ({ patientId }: { patientId: string }) =
   const handleSaveInvestigationRecord = (data: InvestigationRecordFormData) => {
     console.log("Form data (to be saved):", data);
     toast({
-      title: "Feature Under Development",
-      description: "Saving investigation records is not yet implemented. Data logged to console.",
+      title: "Investigation Added (Mock)",
+      description: `Test "${data.testName}" on ${data.date} logged. Full saving functionality is under development.`,
     });
     setIsAddDialogOpen(false);
-    form.reset();
+    form.reset({ 
+        date: new Date().toISOString().split('T')[0], // Reset date to today
+        notes: "", 
+        testGroup: "", 
+        testName: "", 
+        testResult: "", 
+        testUnit: "", 
+        testNormalRange: "" 
+    });
   };
 
   return (
@@ -269,7 +277,7 @@ const PatientInvestigationsTabContent = ({ patientId }: { patientId: string }) =
                 </CardContent>
               </Card>
               <DialogFooter className="pt-4">
-                <Button type="button" variant="outline" onClick={() => { setIsAddDialogOpen(false); form.reset(); }}>Cancel</Button>
+                <Button type="button" variant="outline" onClick={() => { setIsAddDialogOpen(false); form.reset({ date: new Date().toISOString().split('T')[0], notes: "", testGroup: "", testName: "", testResult: "", testUnit: "", testNormalRange: "" }); }}>Cancel</Button>
                 <Button type="submit">Save Record (Mock)</Button>
               </DialogFooter>
             </form>
@@ -648,8 +656,3 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
     </Tabs>
   );
 }
-
-
-    
-
-    
