@@ -187,7 +187,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
 
   const { fields: vaccinationFields, replace: replaceVaccinations } = useFieldArray({
     control: form.control,
-    name: "clinicalProfile.vaccinations" as any,
+    name: "clinicalProfile.vaccinations" as any, // Type assertion to avoid excessive type complexity
   });
 
    useEffect(() => {
@@ -276,21 +276,23 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormItem> <FormLabel>Patient Full Name</FormLabel> <FormControl><Input placeholder="Enter full name" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
            <FormField control={form.control} name="dob" render={({ field }) => {
-                const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
+                const { error, formItemId, formDescriptionId, formMessageId } = useFormField(); // useFormField for Popover trigger
                 return (
                   <FormItem className="flex flex-col">
                     <FormLabel>Date of Birth</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
+                        <FormControl>
                           <Button
                             variant={"outline"}
                             className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}
-                            id={formItemId}
+                            id={formItemId} // Use formItemId for Popover trigger if needed, though Calendar itself is the control
                             aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
                             aria-invalid={!!error}
                           > {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
+                        </FormControl>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
@@ -335,6 +337,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       <FormLabel>Next Appointment Date (Optional)</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
+                            <FormControl>
                               <Button
                                 variant={"outline"}
                                 className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}
@@ -344,6 +347,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                                 > {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                </Button>
+                            </FormControl>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
                             <Calendar mode="single" selected={field.value ? parseISO(field.value) : undefined} onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")} initialFocus />
@@ -365,10 +369,11 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       checked={field.value}
                       onCheckedChange={field.onChange}
                       onBlur={field.onBlur}
+                      id={`${field.name}-isTracked-checkbox`}
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel className="cursor-pointer">Track Patient</FormLabel>
+                    <FormLabel htmlFor={`${field.name}-isTracked-checkbox`} className="cursor-pointer">Track Patient</FormLabel>
                     <FormDescription>Enable special monitoring for this patient.</FormDescription>
                   </div>
                   <FormMessage />
@@ -454,13 +459,15 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                         ref={field.ref}
                         name={field.name}
                         onValueChange={field.onChange}
-                        value={field.value}
+                        defaultValue={field.value}
                         className="flex flex-row space-x-4"
                       >
                         {YES_NO_UNKNOWN_OPTIONS.map((option) => (
                           <FormItem key={option} className="flex items-center space-x-2 space-y-0">
-                            <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}-item-${form.control._options.name || crypto.randomUUID()}`} />
-                            <FormLabel htmlFor={`compliance-${option.toLowerCase()}-item-${form.control._options.name || crypto.randomUUID()}`} className="font-normal cursor-pointer">
+                            <FormControl>
+                               <RadioGroupItem value={option} id={`${field.name}-${option.toLowerCase()}-item`} />
+                            </FormControl>
+                            <FormLabel htmlFor={`${field.name}-${option.toLowerCase()}-item`} className="font-normal cursor-pointer">
                               {option}
                             </FormLabel>
                           </FormItem>
@@ -542,15 +549,15 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       name={`${fieldNamePrefix}.administered`}
                       render={({ field: checkboxField }) => (
                         <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
-                          <FormControl>
+                           <FormControl>
                             <Checkbox
                               ref={checkboxField.ref}
                               checked={checkboxField.value}
                               onCheckedChange={(checked) => {
                                 checkboxField.onChange(checked);
                                 if (!checked) {
-                                    form.setValue(`${fieldNamePrefix}.date` as any, "");
-                                    form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, "");
+                                    form.setValue(`${fieldNamePrefix}.date` as any, ""); // Type assertion for dynamic name
+                                    form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, ""); // Type assertion
                                 }
                               }}
                               onBlur={checkboxField.onBlur}
@@ -562,11 +569,11 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                         </FormItem>
                       )}
                     />
-                  {form.watch(`${fieldNamePrefix}.administered` as any) && (
+                  {form.watch(`${fieldNamePrefix}.administered` as any) && ( // Type assertion for dynamic name
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
                       <FormField
                         control={form.control}
-                        name={`${fieldNamePrefix}.date`}
+                        name={`${fieldNamePrefix}.date` as `clinicalProfile.vaccinations.${number}.date`} // More specific type
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs">Date Administered</FormLabel>
@@ -577,7 +584,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       />
                       <FormField
                         control={form.control}
-                        name={`${fieldNamePrefix}.nextDoseDate`}
+                        name={`${fieldNamePrefix}.nextDoseDate` as `clinicalProfile.vaccinations.${number}.nextDoseDate`} // More specific type
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs">Next Dose Date (Optional)</FormLabel>
@@ -602,3 +609,4 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
+
