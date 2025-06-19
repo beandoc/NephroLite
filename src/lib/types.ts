@@ -60,6 +60,7 @@ export type Patient = {
   patientStatus: 'OPD' | 'IPD' | 'Discharged'; // Default 'OPD'
   nextAppointmentDate?: string; // YYYY-MM-DD
   isTracked?: boolean; // Default false
+  residenceType?: 'Rural' | 'Urban' | 'Semi-Urban' | 'Other' | 'Not Set';
 };
 
 export type Appointment = {

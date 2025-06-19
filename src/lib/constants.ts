@@ -157,3 +157,5 @@ export const INVESTIGATION_GROUPS: string[] = [
 export const SGLT2_INHIBITORS: string[] = ['Empagliflozin', 'Dapagliflozin', 'Canagliflozin'];
 export const ARBS: string[] = ['Telmisartan', 'Losartan', 'Valsartan'];
 export const ACE_INHIBITORS: string[] = ['Ramipril', 'Enalapril'];
+
+export const RESIDENCE_TYPES: string[] = ['Rural', 'Urban', 'Semi-Urban', 'Other', 'Not Set'];

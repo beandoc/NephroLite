@@ -3,76 +3,146 @@
 
 import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Users, Droplets, Activity, ShieldAlert, Users2, HeartPulse, Waves, Stethoscope, BarChart3, NotebookText, LinkIcon, FileText } from 'lucide-react'; // Added more icons
+import { Users, Droplets, Activity, ShieldAlert, Users2, HeartPulse, Waves, Stethoscope, BarChart3, NotebookText, LinkIcon as LinkIconLucide, FileText, UserCheck, UserX, Tag, Filter, Home, PieChart as PieChartIcon, List, Search } from 'lucide-react';
+import Link from 'next/link';
+import { usePatientData } from '@/hooks/use-patient-data';
+import { Skeleton } from '@/components/ui/skeleton';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import React, { useMemo, useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import type { Patient } from '@/lib/types';
 
 interface MetricCardProps {
   title: string;
   value?: string | number;
   description?: string;
-  colorClass?: string; 
+  colorClass?: string;
   icon?: React.ElementType;
   link?: string;
 }
 
 const MetricCard: React.FC<MetricCardProps> = ({ title, value, description, colorClass, icon: Icon, link }) => {
   const content = (
-    <Card className={`shadow-lg relative overflow-hidden ${colorClass ? `border-t-4 ${colorClass}` : ''}`}>
+    <Card className={`shadow-lg relative overflow-hidden ${colorClass ? `border-t-4 ${colorClass}` : 'border-t-4 border-transparent'}`}>
       <CardHeader className="pb-2 pt-4">
         {Icon && <Icon className="h-7 w-7 text-muted-foreground mb-2" />}
-        {value && <CardTitle className="text-3xl font-bold text-center">{value}</CardTitle>}
+        {value !== undefined && <CardTitle className="text-3xl font-bold text-center">{value}</CardTitle>}
       </CardHeader>
       <CardContent className="pb-4">
-        <p className={`text-sm ${value ? 'text-muted-foreground' : 'font-semibold'} text-center ${value ? 'font-medium' : ''}`}>{title}</p>
+        <p className={`text-sm ${value !== undefined ? 'text-muted-foreground' : 'font-semibold'} text-center ${value !== undefined ? 'font-medium' : ''}`}>{title}</p>
         {description && <p className="text-xs text-muted-foreground text-center mt-1">{description}</p>}
       </CardContent>
     </Card>
   );
-  
+
   if (link) {
-    return <a href={link} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">{content}</a>;
+    return <Link href={link} className="hover:opacity-80 transition-opacity block">{content}</Link>;
   }
   return content;
 };
 
 
+const COLORS_GENDER = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))'];
+const COLORS_RESIDENCE = ['hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--chart-1))', 'hsl(var(--chart-2))'];
+
+
 export default function AnalyticsPage() {
+  const { patients, isLoading: patientsLoading } = usePatientData();
+  const [tagInput, setTagInput] = useState('');
+  const [selectedFilterTags, setSelectedFilterTags] = useState<string[]>([]);
+
   const patientGroupMetrics: MetricCardProps[] = [
-    { title: "Peritoneal dialysis", value: 22, colorClass: "border-orange-500", icon: Waves },
-    { title: "Hemodialysis", value: 10, colorClass: "border-blue-500", icon: Droplets },
-    { title: "Glomerulonephritis", value: 11, colorClass: "border-green-500", icon: Stethoscope },
-    { title: "Kidney transplant", value: 0, colorClass: "border-green-600", icon: HeartPulse }, 
-    { title: "Chronic Kidney disease", value: 33, colorClass: "border-cyan-500", icon: Activity },
+    { title: "Peritoneal dialysis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'End-Stage Renal Disease (ESRD)' && p.clinicalProfile.tags.includes('PD')).length, colorClass: "border-orange-500", icon: Waves },
+    { title: "Hemodialysis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'End-Stage Renal Disease (ESRD)' && p.clinicalProfile.tags.includes('HD')).length, colorClass: "border-blue-500", icon: Droplets },
+    { title: "Glomerulonephritis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Glomerulonephritis').length, colorClass: "border-green-500", icon: Stethoscope },
+    { title: "Kidney transplant", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Transplant Prospect').length, colorClass: "border-green-600", icon: HeartPulse },
+    { title: "Chronic Kidney disease", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis?.startsWith('Chronic Kidney Disease')).length, colorClass: "border-cyan-500", icon: Activity },
   ];
 
   const gnModuleAnalytics: MetricCardProps[] = [
     { title: "24hr Urine Protein Graph", icon: BarChart3, description: "Track proteinuria over time.", colorClass: "border-purple-500" },
     { title: "Diet Management Module", icon: NotebookText, description: "Access dietary planning tools.", colorClass: "border-teal-500" },
     { title: "Key Event Log Summary", icon: FileText, description: "View significant patient events.", colorClass: "border-indigo-500" },
-    { title: "Disease Progression Models", icon: LinkIcon, description: "External prediction model links.", colorClass: "border-pink-500", link: "#" }
+    { title: "Disease Progression Models", icon: LinkIconLucide, description: "External prediction model links.", colorClass: "border-pink-500", link: "#" }
   ];
+
+  const genderData = useMemo(() => {
+    if (patientsLoading) return [];
+    const counts = { Male: 0, Female: 0, Other: 0 };
+    patients.forEach(p => {
+      if (p.gender === 'Male') counts.Male++;
+      else if (p.gender === 'Female') counts.Female++;
+      else counts.Other++;
+    });
+    return [
+      { name: 'Male', value: counts.Male },
+      { name: 'Female', value: counts.Female },
+      { name: 'Other/Not Specified', value: counts.Other },
+    ].filter(d => d.value > 0);
+  }, [patients, patientsLoading]);
+
+  const residenceData = useMemo(() => {
+    if (patientsLoading) return [];
+    const counts: { [key: string]: number } = { Rural: 0, Urban: 0, 'Semi-Urban': 0, Other: 0, 'Not Set': 0 };
+    patients.forEach(p => {
+      const type = p.residenceType || 'Not Set';
+      counts[type] = (counts[type] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, value]) => ({ name, value })).filter(d => d.value > 0);
+  }, [patients, patientsLoading]);
+
+  const trackedPatients = useMemo(() => {
+    if (patientsLoading) return [];
+    return patients.filter(p => p.isTracked);
+  }, [patients, patientsLoading]);
+
+  const handleAddFilterTag = () => {
+    const newTag = tagInput.trim();
+    if (newTag && !selectedFilterTags.includes(newTag)) {
+      setSelectedFilterTags([...selectedFilterTags, newTag]);
+    }
+    setTagInput('');
+  };
+
+  const handleRemoveFilterTag = (tagToRemove: string) => {
+    setSelectedFilterTags(selectedFilterTags.filter(tag => tag !== tagToRemove));
+  };
+
+  const filteredByTagsPatients = useMemo(() => {
+    if (patientsLoading || selectedFilterTags.length === 0) return patients; // Show all if no tags selected for filtering
+    return patients.filter(patient => {
+      const patientTags = patient.clinicalProfile.tags || [];
+      return selectedFilterTags.every(filterTag => patientTags.includes(filterTag));
+    });
+  }, [patients, patientsLoading, selectedFilterTags]);
 
 
   return (
     <div className="container mx-auto py-2">
       <PageHeader title="Nephrology Analytics Dashboard" description="Overview of patient data, trends, and clinical insights." />
-      
+
       <Card className="mb-8 mt-6">
         <CardHeader>
           <CardTitle className="font-headline">Patient Group Distribution</CardTitle>
           <CardDescription>Overview of patient distribution by specific groups and conditions.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-            {patientGroupMetrics.map(metric => (
-              <MetricCard 
-                key={metric.title}
-                {...metric}
-              />
-            ))}
-          </div>
+          {patientsLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-36 w-full" />)}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+              {patientGroupMetrics.map(metric => <MetricCard key={metric.title} {...metric} />)}
+            </div>
+          )}
         </CardContent>
       </Card>
-      
+
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="font-headline">Glomerulonephritis (GN) Module Analytics</CardTitle>
@@ -80,24 +150,150 @@ export default function AnalyticsPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {gnModuleAnalytics.map(metric => (
-              <MetricCard 
-                key={metric.title}
-                {...metric}
-              />
-            ))}
+            {gnModuleAnalytics.map(metric => <MetricCard key={metric.title} {...metric} />)}
           </div>
         </CardContent>
       </Card>
 
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="font-headline flex items-center"><PieChartIcon className="mr-2 h-5 w-5 text-primary" />Overall Patient Demographics</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h3 className="text-lg font-semibold mb-2 text-center">Gender Distribution</h3>
+            {patientsLoading ? <Skeleton className="h-64 w-full" /> : genderData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie data={genderData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                    {genderData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS_GENDER[index % COLORS_GENDER.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : <p className="text-muted-foreground text-center py-10">No gender data available.</p>}
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold mb-2 text-center">Residence Type Distribution</h3>
+            {patientsLoading ? <Skeleton className="h-64 w-full" /> : residenceData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie data={residenceData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                    {residenceData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS_RESIDENCE[index % COLORS_RESIDENCE.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : <p className="text-muted-foreground text-center py-10">No residence data available.</p>}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="font-headline flex items-center"><UserCheck className="mr-2 h-5 w-5 text-primary" />Patients Under Health Tracking</CardTitle>
+          <CardDescription>List of patients with active health tracking enabled.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {patientsLoading ? <Skeleton className="h-40 w-full" /> : trackedPatients.length > 0 ? (
+            <ScrollArea className="h-40">
+              <ul className="space-y-1">
+                {trackedPatients.map(p => (
+                  <li key={p.id} className="text-sm p-1 hover:bg-muted rounded-md">
+                     <Link href={`/patients/${p.id}`} className="text-primary hover:underline">{p.name}</Link> ({p.nephroId})
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
+          ) : (
+            <p className="text-muted-foreground text-center py-10">No patients are currently under special health tracking.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="font-headline flex items-center"><Filter className="mr-2 h-5 w-5 text-primary" />Tagged Patient Analysis</CardTitle>
+          <CardDescription>Filter patients based on clinical tags (matches all selected tags).</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2 mb-4">
+            <Input
+              type="text"
+              placeholder="Enter tag to filter..."
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAddFilterTag()}
+              className="flex-grow"
+            />
+            <Button onClick={handleAddFilterTag} variant="outline"><Tag className="mr-2 h-4 w-4"/>Add Tag Filter</Button>
+          </div>
+          {selectedFilterTags.length > 0 && (
+            <div className="mb-4 flex flex-wrap gap-2">
+              <span className="text-sm font-medium mr-1">Filtering by:</span>
+              {selectedFilterTags.map(tag => (
+                <Badge key={tag} variant="secondary" className="text-sm">
+                  {tag}
+                  <button onClick={() => handleRemoveFilterTag(tag)} className="ml-1.5 text-muted-foreground hover:text-foreground">&times;</button>
+                </Badge>
+              ))}
+            </div>
+          )}
+          {patientsLoading ? (
+            <Skeleton className="h-60 w-full" />
+          ) : (
+            <div>
+              <h4 className="text-md font-semibold mb-2">
+                {selectedFilterTags.length > 0 ? `Matching Patients (${filteredByTagsPatients.length})` : `All Patients (${patients.length}) - Add tags to filter`}
+              </h4>
+              {filteredByTagsPatients.length > 0 ? (
+                 <ScrollArea className="h-60 border rounded-md">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Nephro ID</TableHead>
+                                <TableHead>Tags</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredByTagsPatients.map(p => (
+                                <TableRow key={p.id}>
+                                    <TableCell>
+                                        <Link href={`/patients/${p.id}`} className="text-primary hover:underline">{p.name}</Link>
+                                    </TableCell>
+                                    <TableCell>{p.nephroId}</TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-wrap gap-1">
+                                            {(p.clinicalProfile.tags || []).map(tag => <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>)}
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                 </ScrollArea>
+              ) : selectedFilterTags.length > 0 ? (
+                <p className="text-muted-foreground text-center py-10">No patients match all selected tags.</p>
+              ) : <p className="text-muted-foreground text-center py-10">No tags selected for filtering.</p>}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="mt-10">
         <CardHeader>
-          <CardTitle className="font-headline">Additional Analytics & Tools</CardTitle>
+          <CardTitle className="font-headline">Further Analytics & Tools</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            Further sections for "Overall Patient Demographics", "Tagged Patient Analysis", and "Health Outcome Tracking" are planned for future updates.
+            Additional sections for "Health Outcome Tracking" and advanced boolean tag search (AND, OR, NOT) are planned for future updates.
             This area will provide more in-depth data visualizations and reporting capabilities.
           </p>
           <div className="mt-6 flex items-center justify-center h-40 border-2 border-dashed rounded-lg">
@@ -109,4 +305,3 @@ export default function AnalyticsPage() {
     </div>
   );
 }
-

@@ -28,11 +28,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import type { Patient, Vaccination, ClinicalProfile } from '@/lib/types';
-import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, VACCINATION_NAMES, SUBSPECIALITY_FOLLOWUP_OPTIONS, YES_NO_NIL_OPTIONS, MALE_IMPLYING_RELATIONS, FEMALE_IMPLYING_RELATIONS, BLOOD_GROUPS, YES_NO_UNKNOWN_OPTIONS } from "@/lib/constants";
+import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, VACCINATION_NAMES, SUBSPECIALITY_FOLLOWUP_OPTIONS, YES_NO_NIL_OPTIONS, MALE_IMPLYING_RELATIONS, FEMALE_IMPLYING_RELATIONS, BLOOD_GROUPS, YES_NO_UNKNOWN_OPTIONS, RESIDENCE_TYPES } from "@/lib/constants";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO, addDays } from "date-fns";
-import { CalendarIcon, Briefcase, HeartPulse, Activity, Leaf, Accessibility, Syringe, PencilLine, TagsIcon, UserCircle, Droplet, ShieldAlert, GripVertical, MessageCircle, Phone, Search, LinkIcon, Info, Edit } from "lucide-react";
+import { CalendarIcon, Briefcase, HeartPulse, Activity, Leaf, Accessibility, Syringe, PencilLine, TagsIcon, UserCircle, Droplet, ShieldAlert, GripVertical, MessageCircle, Phone, Search, LinkIcon, Info, Edit, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 import { AiTagSuggester } from "./ai-tag-suggester";
@@ -95,6 +95,7 @@ const patientFormSchema = z.object({
   formation: z.string().optional(),
   nextAppointmentDate: z.string().optional(),
   isTracked: z.boolean().optional().default(false),
+  residenceType: z.string().optional(),
 });
 
 export type PatientFormData = z.infer<typeof patientFormSchema>;
@@ -140,6 +141,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
       dob: patient.dob ? format(parseISO(patient.dob), "yyyy-MM-dd") : "",
       nextAppointmentDate: patient.nextAppointmentDate ? format(parseISO(patient.nextAppointmentDate), "yyyy-MM-dd") : undefined,
       isTracked: patient.isTracked || false,
+      residenceType: patient.residenceType || 'Not Set',
       address: {
         ...patient.address,
         country: patient.address.country || "India",
@@ -185,6 +187,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
       formation: "",
       nextAppointmentDate: undefined,
       isTracked: false,
+      residenceType: 'Not Set',
     },
   });
 
@@ -342,6 +345,16 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
             <FormField control={form.control} name="guardian.contact" render={({ field }) => (
               <FormItem> <FormLabel>Guardian Contact Number</FormLabel> <FormControl><Input type="tel" placeholder="Enter 10-digit mobile" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
+            <FormField control={form.control} name="residenceType" render={({ field }) => (
+                <FormItem>
+                  <FormLabel><Home className="inline h-4 w-4 mr-1"/>Residence Type</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || 'Not Set'}>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Select residence type" /></SelectTrigger></FormControl>
+                    <SelectContent>{RESIDENCE_TYPES.map(rt => <SelectItem key={rt} value={rt}>{rt}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
              <FormField control={form.control} name="nextAppointmentDate" render={({ field }) => {
                 const { error } = useFormField();
                 return (
@@ -466,14 +479,15 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                         className="flex flex-row space-x-4"
-                        ref={field.ref} 
+                        ref={field.ref}
                       >
                         {YES_NO_UNKNOWN_OPTIONS.map((option) => (
                           <FormItem key={`${field.name}-${option}-item-${patient?.id || 'new'}`} className="flex items-center space-x-2 space-y-0">
-                             {/* Removed nested FormControl here as per ShadCN docs pattern for RadioGroup in Form */}
+                            <FormControl>
                               <RadioGroupItem value={option} id={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-radio-item-${patient?.id || 'new'}`} />
+                            </FormControl>
                             <FormLabel htmlFor={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-radio-item-${patient?.id || 'new'}`} className="font-normal cursor-pointer">
                               {option}
                             </FormLabel>
@@ -617,6 +631,4 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
-    
-
     
