@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UserPlus, Search, Users, ListChecks, Eye } from 'lucide-react';
+import { UserPlus, Search, Users, ListChecks, Edit3, ListPlusIcon } from 'lucide-react'; // Changed Eye to Edit3 or similar for "Create Visit"
 import { useToast } from "@/hooks/use-toast";
 import { usePatientData } from '@/hooks/use-patient-data';
 import type { Patient } from '@/lib/types';
@@ -62,14 +62,13 @@ export default function RegistrationPage() {
     let foundPatients: Patient[] = [];
 
     if (termNephroId) {
-      // Search for exact match for Nephro ID, case-insensitive for prefix part
       foundPatients = patients.filter(p => {
         const [prefix, dateSuffix] = p.nephroId.split('/');
         const [searchPrefix, searchDateSuffix] = termNephroId.split('/');
         
-        if (searchDateSuffix) { // Full ID with date provided
+        if (searchDateSuffix) { 
             return p.nephroId.toLowerCase() === termNephroId;
-        } else { // Only prefix provided
+        } else { 
             return prefix.toLowerCase() === searchPrefix;
         }
       });
@@ -77,23 +76,17 @@ export default function RegistrationPage() {
       foundPatients = patients.filter(p => p.name.toLowerCase().includes(termName));
     }
 
-    if (foundPatients.length === 1 && !searchNephroId.includes('/')) { // if single match by prefix only, still show list
-         setSearchResults(foundPatients);
-         toast({
-           title: "Patient Found",
-           description: "Displaying matching patient(s).",
-         });
-    } else if (foundPatients.length === 1) {
+    if (foundPatients.length === 1) {
       toast({
         title: "Patient Found",
-        description: `Redirecting to ${foundPatients[0].name}'s profile.`,
+        description: `Proceeding to create visit for ${foundPatients[0].name}.`,
       });
-      router.push(`/patients/${foundPatients[0].id}`);
+      router.push(`/patients/${foundPatients[0].id}/create-visit`); // Updated redirect
     } else if (foundPatients.length > 1) {
       setSearchResults(foundPatients);
       toast({
         title: "Multiple Patients Found",
-        description: "Please select from the list below.",
+        description: "Please select a patient to proceed with visit creation.",
       });
     } else {
       setSearchResults([]); 
@@ -109,7 +102,7 @@ export default function RegistrationPage() {
     <div className="container mx-auto py-2">
       <PageHeader
         title="Patient Registration & Search"
-        description="Register a new patient or find an existing patient record."
+        description="Register a new patient or find an existing patient to create a visit."
       />
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -142,7 +135,7 @@ export default function RegistrationPage() {
               Search Existing Patient
             </CardTitle>
             <CardDescription>
-              Find an existing patient by their Nephro ID (prefix or full ID) or full name to view or update their records.
+              Find an existing patient to create a new visit or update their records.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -198,8 +191,8 @@ export default function RegistrationPage() {
                       <p className="text-sm text-muted-foreground">Nephro ID: {patient.nephroId} &bull; DOB: {patient.dob}</p>
                     </div>
                     <Button asChild variant="outline" size="sm">
-                      <Link href={`/patients/${patient.id}`}>
-                        <Eye className="mr-2 h-4 w-4" /> View Profile
+                      <Link href={`/patients/${patient.id}/create-visit`}>
+                        <ListPlusIcon className="mr-2 h-4 w-4" /> Select & Create Visit
                       </Link>
                     </Button>
                   </li>
@@ -257,3 +250,5 @@ export default function RegistrationPage() {
     </div>
   );
 }
+
+    
