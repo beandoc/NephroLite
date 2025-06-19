@@ -3,27 +3,72 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UserPlus, Search, Users } from 'lucide-react';
+import { UserPlus, Search, Users, ListChecks, Eye } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { usePatientData } from '@/hooks/use-patient-data';
+import type { Patient } from '@/lib/types';
 
 export default function RegistrationPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const { patients, isLoading: patientsLoading } = usePatientData();
+
   const [searchNephroId, setSearchNephroId] = useState('');
   const [searchPatientName, setSearchPatientName] = useState('');
-  const { toast } = useToast();
+  const [searchResults, setSearchResults] = useState<Patient[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
 
   const handleSearch = () => {
-    // Placeholder for actual search logic
-    console.log("Searching for Nephro ID:", searchNephroId, "or Name:", searchPatientName);
-    toast({
-      title: "Search Under Development",
-      description: "Patient search functionality will be implemented soon.",
-    });
-    // In a real app, you'd fetch patient data and display results or navigate.
+    setIsSearching(true);
+    setSearchResults(null);
+
+    const termNephroId = searchNephroId.trim().toLowerCase();
+    const termName = searchPatientName.trim().toLowerCase();
+
+    if (!termNephroId && !termName) {
+      toast({
+        title: "Search Criteria Needed",
+        description: "Please enter a Nephro ID or Patient Name to search.",
+        variant: "destructive",
+      });
+      setIsSearching(false);
+      return;
+    }
+
+    let foundPatients: Patient[] = [];
+
+    if (termNephroId) {
+      foundPatients = patients.filter(p => p.nephroId.toLowerCase() === termNephroId);
+    } else if (termName) {
+      foundPatients = patients.filter(p => p.name.toLowerCase().includes(termName));
+    }
+
+    if (foundPatients.length === 1) {
+      toast({
+        title: "Patient Found",
+        description: `Redirecting to ${foundPatients[0].name}'s profile.`,
+      });
+      router.push(`/patients/${foundPatients[0].id}`);
+    } else if (foundPatients.length > 1) {
+      setSearchResults(foundPatients);
+      toast({
+        title: "Multiple Patients Found",
+        description: "Please select from the list below.",
+      });
+    } else {
+      setSearchResults([]); // Empty array indicates search was performed but no results
+      toast({
+        title: "No Patient Found",
+        description: "No patient record matches your search criteria.",
+      });
+    }
+    setIsSearching(false);
   };
 
   return (
@@ -74,6 +119,7 @@ export default function RegistrationPage() {
                 placeholder="e.g., NL-0001"
                 value={searchNephroId}
                 onChange={(e) => setSearchNephroId(e.target.value)}
+                disabled={isSearching || patientsLoading}
               />
             </div>
             <div className="space-y-2">
@@ -83,14 +129,53 @@ export default function RegistrationPage() {
                 placeholder="Enter patient's full name"
                 value={searchPatientName}
                 onChange={(e) => setSearchPatientName(e.target.value)}
+                disabled={isSearching || patientsLoading}
               />
             </div>
-            <Button onClick={handleSearch} className="w-full" disabled> {/* Search button is disabled for now */}
-              <Search className="mr-2 h-5 w-5" /> Search Patient (Under Development)
+            <Button onClick={handleSearch} className="w-full" disabled={isSearching || patientsLoading}>
+              <Search className="mr-2 h-5 w-5" /> {isSearching ? "Searching..." : "Search Patient"}
             </Button>
           </CardContent>
         </Card>
       </div>
+
+      {searchResults !== null && (
+        <Card className="mt-8 shadow-lg">
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center">
+              <ListChecks className="mr-2 h-6 w-6 text-primary" />
+              Search Results
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {searchResults.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">
+                No patient found matching your criteria. You can{' '}
+                <Link href="/patients/new" className="text-primary hover:underline">
+                  register a new patient
+                </Link>.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {searchResults.map(patient => (
+                  <li key={patient.id} className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50">
+                    <div>
+                      <p className="font-semibold">{patient.name}</p>
+                      <p className="text-sm text-muted-foreground">Nephro ID: {patient.nephroId} &bull; DOB: {patient.dob}</p>
+                    </div>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/patients/${patient.id}`}>
+                        <Eye className="mr-2 h-4 w-4" /> View Profile
+                      </Link>
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
        <Card className="mt-8 shadow-lg">
         <CardHeader>
           <CardTitle className="font-headline flex items-center">
