@@ -189,7 +189,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
 
   const { fields: vaccinationFields, replace: replaceVaccinations } = useFieldArray({
     control: form.control,
-    name: "clinicalProfile.vaccinations" as any,
+    name: "clinicalProfile.vaccinations" as any, // Type assertion for nested array
   });
 
    useEffect(() => {
@@ -371,6 +371,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       checked={field.value}
                       onCheckedChange={field.onChange}
                       onBlur={field.onBlur}
+                      name={field.name}
                       id={`${field.name}-isTracked-checkbox`}
                     />
                   </FormControl>
@@ -466,6 +467,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       >
                         {YES_NO_UNKNOWN_OPTIONS.map((option) => (
                           <FormItem key={`${field.name}-${option}`} className="flex items-center space-x-2 space-y-0">
+                             {/* No FormControl around RadioGroupItem */}
                             <RadioGroupItem value={option} id={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-item`} />
                             <FormLabel htmlFor={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-item`} className="font-normal cursor-pointer">
                               {option}
@@ -556,11 +558,12 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                               onCheckedChange={(checked) => {
                                 checkboxField.onChange(checked);
                                 if (!checked) {
-                                    form.setValue(`${fieldNamePrefix}.date` as any, ""); 
-                                    form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, ""); 
+                                    form.setValue(`${fieldNamePrefix}.date` as any, ""); // Type assertion
+                                    form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, ""); // Type assertion
                                 }
                               }}
                               onBlur={checkboxField.onBlur}
+                              name={checkboxField.name}
                               id={checkboxId}
                             />
                           </FormControl>
@@ -569,7 +572,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                         </FormItem>
                       )}
                     />
-                  {form.watch(`${fieldNamePrefix}.administered` as any) && ( 
+                  {form.watch(`${fieldNamePrefix}.administered` as any) && ( // Type assertion
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
                       <FormField
                         control={form.control}
@@ -610,3 +613,5 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
   );
 }
 
+
+    
