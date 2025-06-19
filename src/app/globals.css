@@ -91,3 +91,22 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom style for calendar days with events */
+.day-with-event > .rdp-button:not([aria-selected="true"]):not(.rdp-day_today) {
+  position: relative;
+  font-weight: bold; /* Makes the day number bold if it has an event */
+}
+
+.day-with-event > .rdp-button:not([aria-selected="true"]):not(.rdp-day_today)::after {
+  content: "";
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: hsl(var(--accent)); /* Dot color */
+  position: absolute;
+  bottom: 5px; /* Adjust position as needed */
+  left: 50%;
+  transform: translateX(-50%);
+}
