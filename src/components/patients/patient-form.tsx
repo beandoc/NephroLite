@@ -357,28 +357,23 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
             <FormField
               control={form.control}
               name="isTracked"
-              render={({ field }) => {
-                const { formItemId, formDescriptionId, error } = useFormField();
-                return (
-                  <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 shadow-sm h-fit mt-7">
-                     <FormControl>
-                        <Checkbox
-                        ref={field.ref}
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        id={formItemId} // Use unique ID from useFormField
-                        aria-describedby={formDescriptionId}
-                        aria-invalid={!!error}
-                        />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel htmlFor={formItemId} className="cursor-pointer">Track Patient</FormLabel>
-                      <FormDescription id={formDescriptionId}>Enable special monitoring for this patient.</FormDescription>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                );
-              }}
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 shadow-sm h-fit mt-7">
+                  <FormControl>
+                    <Checkbox
+                      ref={field.ref}
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      onBlur={field.onBlur}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="cursor-pointer">Track Patient</FormLabel>
+                    <FormDescription>Enable special monitoring for this patient.</FormDescription>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </CardContent>
         </Card>
@@ -455,18 +450,16 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                   <FormItem className="space-y-3">
                     <FormLabel><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
                     <FormControl>
-                       <RadioGroup
+                      <RadioGroup
                         ref={field.ref}
                         name={field.name}
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                         className="flex flex-row space-x-4"
                       >
                         {YES_NO_UNKNOWN_OPTIONS.map((option) => (
                           <FormItem key={option} className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}-item-${form.control._options.name}`} />
-                            </FormControl>
+                            <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}-item-${form.control._options.name}`} />
                             <FormLabel htmlFor={`compliance-${option.toLowerCase()}-item-${form.control._options.name}`} className="font-normal cursor-pointer">
                               {option}
                             </FormLabel>
@@ -546,31 +539,26 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                    <FormField
                       control={form.control}
                       name={`${fieldNamePrefix}.administered`}
-                      render={({ field: checkboxField }) => {
-                        const { formItemId, formDescriptionId, error } = useFormField();
-                        return (
-                          <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
-                             <FormControl>
-                                <Checkbox
-                                    ref={checkboxField.ref}
-                                    checked={checkboxField.value}
-                                    onCheckedChange={(checked) => {
-                                      checkboxField.onChange(checked);
-                                      if (!checked) {
-                                          form.setValue(`${fieldNamePrefix}.date` as any, "");
-                                          form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, "");
-                                      }
-                                    }}
-                                    id={`${formItemId}-vacc-${index}`}
-                                    aria-describedby={formDescriptionId}
-                                    aria-invalid={!!error}
-                                />
-                            </FormControl>
-                            <FormLabel htmlFor={`${formItemId}-vacc-${index}`} className="font-medium text-sm cursor-pointer">{vaccField.name}</FormLabel>
-                            <FormMessage/>
-                          </FormItem>
-                        );
-                      }}
+                      render={({ field: checkboxField }) => (
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
+                          <FormControl>
+                            <Checkbox
+                              ref={checkboxField.ref}
+                              checked={checkboxField.value}
+                              onCheckedChange={(checked) => {
+                                checkboxField.onChange(checked);
+                                if (!checked) {
+                                    form.setValue(`${fieldNamePrefix}.date` as any, "");
+                                    form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, "");
+                                }
+                              }}
+                              onBlur={checkboxField.onBlur}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-medium text-sm cursor-pointer">{vaccField.name}</FormLabel>
+                          <FormMessage/>
+                        </FormItem>
+                      )}
                     />
                   {form.watch(`${fieldNamePrefix}.administered` as any) && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
@@ -612,3 +600,4 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
+
