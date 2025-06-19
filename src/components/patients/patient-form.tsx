@@ -13,7 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  useFormField, 
+  useFormField,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -190,7 +190,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
 
   const { fields: vaccinationFields, replace: replaceVaccinations } = useFieldArray({
     control: form.control,
-    name: "clinicalProfile.vaccinations" as any, 
+    name: "clinicalProfile.vaccinations" as any,
   });
 
    useEffect(() => {
@@ -291,7 +291,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormItem> <FormLabel>Patient Full Name</FormLabel> <FormControl><Input placeholder="Enter full name" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
            <FormField control={form.control} name="dob" render={({ field }) => {
-                const { error } = useFormField(); 
+                const { error } = useFormField();
                 return (
                 <FormItem className="flex flex-col">
                   <FormLabel>Date of Birth</FormLabel>
@@ -457,7 +457,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormField control={form.control} name="clinicalProfile.disability" render={({ field }) => (
                 <FormItem> <FormLabel><Accessibility className="inline h-4 w-4 mr-1"/>Disability Profile</FormLabel> <Select onValueChange={field.onChange} value={field.value || ""}> <FormControl><SelectTrigger><SelectValue placeholder="Select disability profile" /></SelectTrigger></FormControl> <SelectContent>{DISABILITY_PROFILES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
-              
               <FormField
                 control={form.control}
                 name="clinicalProfile.compliance"
@@ -465,17 +464,17 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                   <FormItem className="space-y-3">
                     <FormLabel><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
                     <FormControl>
-                       <RadioGroup
-                        ref={field.ref}
-                        name={field.name}
+                      <RadioGroup
                         onValueChange={field.onChange}
-                        value={field.value}
+                        defaultValue={field.value}
                         className="flex flex-row space-x-4"
+                        ref={field.ref} 
                       >
                         {YES_NO_UNKNOWN_OPTIONS.map((option) => (
-                          <FormItem key={`${field.name}-${option}`} className="flex items-center space-x-2 space-y-0">
-                            <RadioGroupItem value={option} id={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-item`} />
-                            <FormLabel htmlFor={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-item`} className="font-normal cursor-pointer">
+                          <FormItem key={`${field.name}-${option}-item-${patient?.id || 'new'}`} className="flex items-center space-x-2 space-y-0">
+                             {/* Removed nested FormControl here as per ShadCN docs pattern for RadioGroup in Form */}
+                              <RadioGroupItem value={option} id={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-radio-item-${patient?.id || 'new'}`} />
+                            <FormLabel htmlFor={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-radio-item-${patient?.id || 'new'}`} className="font-normal cursor-pointer">
                               {option}
                             </FormLabel>
                           </FormItem>
@@ -564,8 +563,8 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                               onCheckedChange={(checked) => {
                                 checkboxField.onChange(checked);
                                 if (!checked) {
-                                    form.setValue(`${fieldNamePrefix}.date` as any, ""); 
-                                    form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, ""); 
+                                    form.setValue(`${fieldNamePrefix}.date` as any, "");
+                                    form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, "");
                                 }
                               }}
                               onBlur={checkboxField.onBlur}
@@ -578,11 +577,11 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                         </FormItem>
                       )}
                     />
-                  {form.watch(`${fieldNamePrefix}.administered` as any) && ( 
+                  {form.watch(`${fieldNamePrefix}.administered` as any) && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
                       <FormField
                         control={form.control}
-                        name={`${fieldNamePrefix}.date` as `clinicalProfile.vaccinations.${number}.date`} 
+                        name={`${fieldNamePrefix}.date` as `clinicalProfile.vaccinations.${number}.date`}
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs">Date Administered</FormLabel>
@@ -593,7 +592,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       />
                       <FormField
                         control={form.control}
-                        name={`${fieldNamePrefix}.nextDoseDate` as `clinicalProfile.vaccinations.${number}.nextDoseDate`} 
+                        name={`${fieldNamePrefix}.nextDoseDate` as `clinicalProfile.vaccinations.${number}.nextDoseDate`}
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs">Next Dose Date (Optional)</FormLabel>
