@@ -41,7 +41,8 @@ const getInitialPatients = (): Patient[] => {
   if (storedPatients) {
     const patients: Patient[] = JSON.parse(storedPatients).map((p: any) => ({
       ...p,
-      nephroId: p.nephroId || `MOCK-${p.id.substring(0,4)}`,
+      id: p.id || crypto.randomUUID(), // Ensure ID exists
+      nephroId: p.nephroId || `MOCK-${(p.id || crypto.randomUUID()).substring(0,4)}`,
       patientStatus: p.patientStatus || 'OPD',
       nextAppointmentDate: p.nextAppointmentDate || undefined,
       isTracked: p.isTracked || false,
@@ -86,7 +87,7 @@ const getInitialPatients = (): Patient[] => {
 
   const mockPatients: Patient[] = [
     {
-      id: crypto.randomUUID(),
+      id: "fixed-pd-patient-id-1", // Fixed ID for Rajesh Kumar
       nephroId: 'MOCK-0001',
       name: 'Rajesh Kumar',
       dob: '1975-08-15',
@@ -103,7 +104,7 @@ const getInitialPatients = (): Patient[] => {
         ...getInitialClinicalProfile(),
         primaryDiagnosis: 'Chronic Kidney Disease (CKD)',
         labels: ['Hypertension', 'Diabetes'],
-        tags: ['Stage 3 CKD', 'Anemia', 'Diabetes'],
+        tags: ['Stage 3 CKD', 'Anemia', 'Diabetes', 'PD'], // Added PD tag
       },
       registrationDate: new Date().toISOString().split('T')[0],
       serviceName: "Indian Army",
@@ -113,7 +114,7 @@ const getInitialPatients = (): Patient[] => {
       formation: "Mountain Brigade"
     },
     {
-      id: crypto.randomUUID(),
+      id: "fixed-pd-patient-id-2", // Fixed ID for Priya Sharma
       nephroId: 'MOCK-0002',
       name: 'Priya Sharma',
       dob: '1982-04-22',
@@ -128,10 +129,30 @@ const getInitialPatients = (): Patient[] => {
       clinicalProfile: {
         ...getInitialClinicalProfile(),
         primaryDiagnosis: 'Diabetic Nephropathy',
-        tags: ['Diabetes', 'Proteinuria'],
+        tags: ['Diabetes', 'Proteinuria', 'PD'], // Added PD tag
       },
       registrationDate: new Date(Date.now() - 86400000 * 10).toISOString().split('T')[0],
     },
+    { // Third patient, not necessarily PD, can remain dynamic or also be fixed if needed later
+      id: crypto.randomUUID(),
+      nephroId: 'MOCK-0003',
+      name: 'Amit Singh',
+      dob: '1990-11-05',
+      gender: 'Male',
+      contact: '9988776655',
+      email: 'amit.singh@example.com',
+      address: { street: '789 Ganges Road', city: 'Varanasi', state: 'Uttar Pradesh', pincode: '221001', country: 'India' },
+      guardian: { name: 'Rekha Singh', relation: 'Mother', contact: '9988776650' },
+      patientStatus: 'OPD',
+      isTracked: true,
+      residenceType: 'Urban',
+      clinicalProfile: {
+        ...getInitialClinicalProfile(),
+        primaryDiagnosis: 'Glomerulonephritis',
+        tags: ['GN', 'Hematuria'],
+      },
+      registrationDate: new Date(Date.now() - 86400000 * 30).toISOString().split('T')[0],
+    }
   ];
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mockPatients));
   return mockPatients;

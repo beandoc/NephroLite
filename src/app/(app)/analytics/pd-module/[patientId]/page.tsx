@@ -15,7 +15,6 @@ import { format, parseISO } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Mock data structure for a single PD patient's detailed data
-// In a real app, this would be fetched or come from a more complex state management
 interface PdExchange {
   id: string;
   exchangeNo: number;
@@ -48,9 +47,10 @@ interface MockPdPatientDetail {
 }
 
 // Sample data for one patient for demonstration
+// Keys should match actual patient IDs from usePatientData
 const samplePdDataForPatient: Record<string, MockPdPatientDetail> = {
-    "pd-patient-1": {
-        id: "pd-patient-1",
+    "fixed-pd-patient-id-1": { // Matches Rajesh Kumar's fixed ID
+        id: "fixed-pd-patient-id-1",
         pdStartDate: "2025-06-03",
         transferSetDate: "2025-06-19",
         transporterStatus: "Average",
@@ -70,8 +70,8 @@ const samplePdDataForPatient: Record<string, MockPdPatientDetail> = {
              { id: 'p1', date: '2025-07-15', organism: 'Staphylococcus aureus', outcome: 'Cured' },
         ],
     },
-    "pd-patient-2": { // Example data for another patient
-        id: "pd-patient-2",
+    "fixed-pd-patient-id-2": { // Matches Priya Sharma's fixed ID
+        id: "fixed-pd-patient-id-2",
         pdStartDate: "2024-11-10",
         transferSetDate: "2024-11-25",
         transporterStatus: "High-Average",
@@ -88,7 +88,6 @@ const samplePdDataForPatient: Record<string, MockPdPatientDetail> = {
         ],
         peritonitisHistory: [],
     }
-    // Add more mock patient data objects as needed, matching their IDs from the roster
 };
 
 
@@ -116,7 +115,6 @@ export default function IndividualPDPage() {
     if (patientId && !patientDataLoading) {
       const generalPatientData = getPatientById(patientId);
       setPatient(generalPatientData || null);
-      // For now, fetch mock PD data based on patientId
       setPdData(samplePdDataForPatient[patientId] || null);
     }
   }, [patientId, getPatientById, patientDataLoading]);

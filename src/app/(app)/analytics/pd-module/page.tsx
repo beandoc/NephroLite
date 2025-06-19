@@ -5,15 +5,19 @@ import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, ListChecks, FileBarChart, Edit, Zap, TrendingUp } from 'lucide-react';
-import Link from 'next/link'; // Import Link
+import Link from 'next/link';
+import { usePatientData } from '@/hooks/use-patient-data';
+import { useMemo } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function PDModulePage() {
-  // Mock data for patient list - in a real app, this would come from a data source
-  const mockPdPatients = [
-    { id: "pd-patient-1", name: "Aarav Sharma" },
-    { id: "pd-patient-2", name: "Bhavna Patel" },
-    { id: "pd-patient-3", name: "Chetan Reddy" },
-  ];
+  const { patients, isLoading: patientsLoading } = usePatientData();
+
+  const pdPatients = useMemo(() => {
+    if (patientsLoading) return [];
+    return patients.filter(p => p.clinicalProfile.tags.includes('PD'));
+  }, [patients, patientsLoading]);
 
   return (
     <div className="container mx-auto py-2">
@@ -34,17 +38,23 @@ export default function PDModulePage() {
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-md font-semibold mb-2">PD Patient List (Top 3)</h3>
-              {mockPdPatients.length > 0 ? (
-                <ul className="space-y-2">
-                  {mockPdPatients.map(patient => (
-                    <li key={patient.id} className="p-2 border rounded-md hover:bg-muted/50">
-                      <Link href={`/analytics/pd-module/${patient.id}`} className="text-primary hover:underline">
-                        {patient.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+              <h3 className="text-md font-semibold mb-2">PD Patient List ({pdPatients.length})</h3>
+              {patientsLoading ? (
+                <div className="space-y-2">
+                  {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+                </div>
+              ) : pdPatients.length > 0 ? (
+                <ScrollArea className="h-40 border rounded-md p-2">
+                  <ul className="space-y-2">
+                    {pdPatients.map(patient => (
+                      <li key={patient.id} className="p-2 border rounded-md hover:bg-muted/50 text-sm">
+                        <Link href={`/analytics/pd-module/${patient.id}`} className="text-primary hover:underline">
+                          {patient.name} ({patient.nephroId})
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </ScrollArea>
               ) : (
                 <div className="h-32 flex items-center justify-center border-2 border-dashed rounded-lg">
                   <p className="text-muted-foreground">No PD patients found.</p>
@@ -59,7 +69,7 @@ export default function PDModulePage() {
               <div className="space-y-2 text-sm p-3 border rounded-md bg-card">
                 <div className="flex justify-between">
                   <span className="font-medium">Total Active PD Patients:</span>
-                  <span className="text-muted-foreground">(Placeholder: {mockPdPatients.length})</span>
+                  {patientsLoading ? <Skeleton className="h-4 w-10 inline-block" /> : <span className="text-muted-foreground">{pdPatients.length}</span>}
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Average Duration on PD:</span>
