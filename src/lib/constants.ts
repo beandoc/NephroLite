@@ -154,8 +154,11 @@ export const INVESTIGATION_GROUPS: string[] = [
 ];
 
 // Medications for Analysis
-export const SGLT2_INHIBITORS: string[] = ['Empagliflozin', 'Dapagliflozin', 'Canagliflozin'];
-export const ARBS: string[] = ['Telmisartan', 'Losartan', 'Valsartan'];
-export const ACE_INHIBITORS: string[] = ['Ramipril', 'Enalapril'];
+export const SGLT2_INHIBITORS: string[] = ['Empagliflozin', 'Dapagliflozin', 'Canagliflozin', 'Ertugliflozin'];
+export const ARBS: string[] = ['Telmisartan', 'Losartan', 'Valsartan', 'Olmesartan', 'Candesartan', 'Irbesartan'];
+export const ACE_INHIBITORS: string[] = ['Ramipril', 'Enalapril', 'Lisinopril', 'Perindopril'];
+export const FINERENONE: string = 'Finerenone'; // Specific drug
 
 export const RESIDENCE_TYPES: string[] = ['Rural', 'Urban', 'Semi-Urban', 'Other', 'Not Set'];
+
+export const PATIENT_GROUPS_FOR_ANALYSIS = ["Glomerulonephritis", "Diabetic Kidney Disease", "Hypertensive Nephropathy", "Chronic Kidney Disease (CKD) - General"];
