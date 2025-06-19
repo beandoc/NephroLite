@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, ListChecks, FileBarChart, Edit, Zap, TrendingUp } from 'lucide-react';
-// Note: The detailed data (pdExchangeData) previously here is removed as it's patient-specific.
+import Link from 'next/link'; // Import Link
 
 export default function PDModulePage() {
   // Mock data for patient list - in a real app, this would come from a data source
@@ -39,8 +39,9 @@ export default function PDModulePage() {
                 <ul className="space-y-2">
                   {mockPdPatients.map(patient => (
                     <li key={patient.id} className="p-2 border rounded-md hover:bg-muted/50">
-                      {/* This link will be made functional later to point to /analytics/pd-module/[patientId] */}
-                      <a href="#" className="text-primary hover:underline">{patient.name}</a>
+                      <Link href={`/analytics/pd-module/${patient.id}`} className="text-primary hover:underline">
+                        {patient.name}
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -79,9 +80,6 @@ export default function PDModulePage() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Placeholder for general PD actions, if any, that are not patient-specific */}
-        {/* For now, main actions are linked to individual patient views or overall reports */}
 
         <Card className="lg:col-span-3">
           <CardHeader>
@@ -140,5 +138,3 @@ export default function PDModulePage() {
     </div>
   );
 }
-
-    
