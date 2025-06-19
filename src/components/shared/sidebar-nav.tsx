@@ -32,7 +32,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, matchStartsWith: true },
   { href: "/my-schedule", label: "My Schedule", icon: CalendarRange },
-  { href: "/registration", label: "New Registration", icon: UserPlus, matchStartsWith: true }, // Added New Registration link
+  { href: "/registration", label: "New Registration", icon: UserPlus, matchStartsWith: true },
   { href: "/analytics", label: "Analytics Dashboard", icon: BarChartBig, matchStartsWith: false },
   { href: "/analytics/medication-impact", label: "Medication Impact", icon: LineChart },
   { href: "/patients", label: "Patient Management", icon: Users, matchStartsWith: true },
@@ -53,12 +53,16 @@ export function SidebarNav() {
       {navItems.map((item) => {
         // Ensure patients/new and patients/[id]/edit are active when patients is active
         let isActive = item.matchStartsWith ? pathname.startsWith(item.href) : pathname === item.href;
-        if (item.href === "/patients" && (pathname.startsWith("/patients/new") || pathname.match(/^\/patients\/[^/]+\/edit$/))) {
-          isActive = true;
+        
+        // Special handling for /patients to include its sub-routes like /patients/new or /patients/[id]/edit
+        if (item.href === "/patients") {
+            isActive = pathname.startsWith("/patients");
         }
+
         // Ensure /registration and /patients/new are active when New Registration is active
-        if (item.href === "/registration" && pathname.startsWith("/patients/new")) {
-          isActive = true;
+        // This makes "New Registration" active if on /registration OR /patients/new
+        if (item.href === "/registration") {
+            isActive = pathname === "/registration" || pathname === "/patients/new";
         }
 
 
