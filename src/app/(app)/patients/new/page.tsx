@@ -17,12 +17,10 @@ export default function NewPatientPage() {
   const handleSubmit = async (data: PatientFormData) => {
     setIsSubmitting(true);
     try {
-      // Here, you would typically send data to your backend API
-      // For now, we use the local storage hook
       const newPatient = addPatient(data);
       toast({
         title: "Patient Registered",
-        description: `${newPatient.name} (ID: ${newPatient.nephroId}) has been successfully registered.`,
+        description: `${newPatient.name} (ID: ${newPatient.nephroId}) has been successfully registered. You can now view their profile or manage their visits.`,
       });
       router.push(`/patients/${newPatient.id}`); // Redirect to patient profile page
     } catch (error) {
@@ -39,7 +37,7 @@ export default function NewPatientPage() {
 
   return (
     <div className="container mx-auto py-2">
-      <PageHeader title="Register New Patient" description="Fill in the details below to add a new patient." />
+      <PageHeader title="Register New Patient" description="Fill in the details below to add a new patient. This form is part of the 'New Registration' flow." />
       <PatientForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
     </div>
   );

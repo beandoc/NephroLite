@@ -5,9 +5,7 @@ import { TodaysAppointments } from '@/components/dashboard/todays-appointments';
 import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { PlusCircle, Activity, Link2 } from 'lucide-react';
+import { Activity, Link2 } from 'lucide-react';
 
 export default function DashboardPage() {
   return (
@@ -15,13 +13,7 @@ export default function DashboardPage() {
       <PageHeader 
         title="Nephrology Dashboard" 
         description="Welcome back, Dr. Sarah Johnson. Here's your overview for today."
-        actions={
-          <Button asChild>
-            <Link href="/patients/new">
-              <PlusCircle className="mr-2 h-4 w-4" /> Add New Patient
-            </Link>
-          </Button>
-        }
+        // Removed actions prop which contained the "Add New Patient" button
       />
       <OverviewMetrics />
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">

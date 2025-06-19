@@ -15,7 +15,8 @@ import {
   FileSignature, 
   SearchCheck, 
   LineChart, 
-  CalendarRange, // Added CalendarRange
+  CalendarRange,
+  UserPlus, // Added UserPlus
   LucideIcon
 } from "lucide-react";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
@@ -31,6 +32,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, matchStartsWith: true },
   { href: "/my-schedule", label: "My Schedule", icon: CalendarRange },
+  { href: "/registration", label: "New Registration", icon: UserPlus, matchStartsWith: true }, // Added New Registration link
   { href: "/analytics", label: "Analytics Dashboard", icon: BarChartBig, matchStartsWith: false },
   { href: "/analytics/medication-impact", label: "Medication Impact", icon: LineChart },
   { href: "/patients", label: "Patient Management", icon: Users, matchStartsWith: true },
@@ -49,8 +51,17 @@ export function SidebarNav() {
   return (
     <SidebarMenu>
       {navItems.map((item) => {
-        const isActive = item.matchStartsWith ? pathname.startsWith(item.href) : pathname === item.href;
-        
+        // Ensure patients/new and patients/[id]/edit are active when patients is active
+        let isActive = item.matchStartsWith ? pathname.startsWith(item.href) : pathname === item.href;
+        if (item.href === "/patients" && (pathname.startsWith("/patients/new") || pathname.match(/^\/patients\/[^/]+\/edit$/))) {
+          isActive = true;
+        }
+        // Ensure /registration and /patients/new are active when New Registration is active
+        if (item.href === "/registration" && pathname.startsWith("/patients/new")) {
+          isActive = true;
+        }
+
+
         return (
           <SidebarMenuItem key={item.label}>
             <Link href={item.href}>
