@@ -17,13 +17,12 @@ export default function NewPatientPage() {
   const handleSubmit = async (data: PatientFormData) => {
     setIsSubmitting(true);
     try {
-      // The addPatient hook now expects customIdPrefix directly from PatientFormData
-      const newPatient = addPatient(data); 
+      const newPatient = addPatient(data);
       toast({
         title: "Patient Registered",
-        description: `${newPatient.name} (ID: ${newPatient.nephroId}) has been successfully registered. You can now view their profile or manage their visits. Next step is to create a visit.`,
+        description: `${newPatient.name} (ID: ${newPatient.nephroId}) has been successfully registered. Next, create their first visit.`,
       });
-      router.push(`/patients/${newPatient.id}`); 
+      router.push(`/patients/${newPatient.id}/create-visit`); // Redirect to create visit page
     } catch (error) {
       console.error("Failed to register patient:", error);
       toast({

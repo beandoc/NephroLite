@@ -26,8 +26,8 @@ export const FEMALE_IMPLYING_RELATIONS = ['W/O', 'M/O', 'D/O'];
 export const PRIMARY_DIAGNOSIS_OPTIONS: string[] = [
   'Chronic Kidney Disease (CKD)',
   'Acute Kidney Injury (AKI)',
-  'Glomerulonephritis', 
-  'Diabetic Nephropathy', 
+  'Glomerulonephritis',
+  'Diabetic Nephropathy',
   'Polycystic Kidney Disease (PKD)',
   'Hypertensive Nephropathy',
   'Kidney Stones',
@@ -98,7 +98,7 @@ export const APPOINTMENT_TYPES: string[] = [
 ];
 
 
-export const APPOINTMENT_STATUSES: Array<'Scheduled' | 'Completed' | 'Cancelled' | 'Waiting' | 'Not Showed' | 'Admitted'> = 
+export const APPOINTMENT_STATUSES: Array<'Scheduled' | 'Completed' | 'Cancelled' | 'Waiting' | 'Not Showed' | 'Admitted'> =
   ['Scheduled', 'Completed', 'Cancelled', 'Waiting', 'Not Showed', 'Admitted'];
 
 export const MOCK_DOCTORS: string[] = [
@@ -127,12 +127,12 @@ export const VACCINATION_NAMES: string[] = [
 ];
 
 export const VISIT_TYPES: string[] = [
-  "Data Entry Visit", "Emergency Visit", "Routine Visit", "Missed Visit", "Unscheduled Visit"
+  "Data Entry Visit", "Emergency Visit", "Routine Visit", "Follow-up Visit", "Missed Visit", "Unscheduled Visit", "Initial Assessment"
 ];
 
 export const PATIENT_GROUP_NAMES: string[] = [
   "Peritoneal Dialysis", "Chronic Kidney disease", "Hemodialysis",
-  "Glomerulonephritis", "Kidney transplant", "ADPKD", "Infection", "Misc"
+  "Glomerulonephritis", "Kidney transplant", "ADPKD", "Infection", "Misc", "Not Assigned"
 ];
 
 export const MOCK_DIAGNOSES: DiagnosisEntry[] = [

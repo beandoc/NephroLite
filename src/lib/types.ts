@@ -22,8 +22,8 @@ export type Vaccination = {
 
 export type ClinicalProfile = {
   primaryDiagnosis?: string;
-  labels: string[]; 
-  tags: string[];   
+  labels: string[];
+  tags: string[];
   nutritionalStatus?: string;
   disability?: string;
   subspecialityFollowUp?: string;
@@ -107,3 +107,12 @@ export type InvestigationRecord = {
   notes?: string; // Optional overall notes for this set of investigations
 };
 
+// For "Create Visit" flow
+export type VisitData = {
+  patientId: string;
+  visitDate: string; // YYYY-MM-DD
+  visitType: string;
+  visitRemark?: string;
+  groupName?: string; // Patient group
+  // Other visit-specific fields can be added later
+};
