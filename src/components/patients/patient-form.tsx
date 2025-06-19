@@ -13,7 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  useFormField,
+  // useFormField, // Not needed if FormControl wraps primitive directly
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -32,7 +32,7 @@ import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRI
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO, addDays } from "date-fns";
-import { CalendarIcon, Briefcase, HeartPulse, Activity, Leaf, Accessibility, Syringe, PencilLine, TagsIcon, UserCircle, Droplet, ShieldAlert, GripVertical, MessageCircle, Phone, Search, LinkIcon, Info } from "lucide-react";
+import { CalendarIcon, Briefcase, HeartPulse, Activity, Leaf, Accessibility, Syringe, PencilLine, TagsIcon, UserCircle, Droplet, ShieldAlert, GripVertical, MessageCircle, Phone, Search, LinkIcon, Info, Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 import { AiTagSuggester } from "./ai-tag-suggester";
@@ -79,6 +79,7 @@ const clinicalProfileSchema = z.object({
 });
 
 const patientFormSchema = z.object({
+  customIdPrefix: z.string().min(1, "Custom ID Prefix is required (e.g., SS123)"),
   name: z.string().min(2, "Name must be at least 2 characters"),
   dob: z.string().min(1, "Date of birth is required"),
   gender: z.string().min(1, "Gender is required"),
@@ -135,6 +136,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     resolver: zodResolver(patientFormSchema),
     defaultValues: patient ? {
       ...patient,
+      customIdPrefix: patient.nephroId.includes('/') ? patient.nephroId.split('/')[0] : patient.nephroId,
       dob: patient.dob ? format(parseISO(patient.dob), "yyyy-MM-dd") : "",
       nextAppointmentDate: patient.nextAppointmentDate ? format(parseISO(patient.nextAppointmentDate), "yyyy-MM-dd") : undefined,
       isTracked: patient.isTracked || false,
@@ -167,6 +169,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
       unitName: patient.unitName || "",
       formation: patient.formation || "",
     } : {
+      customIdPrefix: "",
       name: "",
       dob: "",
       gender: "",
@@ -187,7 +190,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
 
   const { fields: vaccinationFields, replace: replaceVaccinations } = useFieldArray({
     control: form.control,
-    name: "clinicalProfile.vaccinations" as any, // Type assertion to avoid excessive type complexity
+    name: "clinicalProfile.vaccinations" as any,
   });
 
    useEffect(() => {
@@ -272,11 +275,23 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
         <Card>
           <CardHeader><CardTitle className="font-headline flex items-center"><UserCircle className="mr-2 h-5 w-5 text-primary" />Personal Details</CardTitle></CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <FormField
+              control={form.control}
+              name="customIdPrefix"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Custom ID Prefix</FormLabel>
+                  <FormControl><Input placeholder="e.g., SS123" {...field} /></FormControl>
+                  <FormDescription>Used for Nephro ID (e.g., SS123/MMYY).</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem> <FormLabel>Patient Full Name</FormLabel> <FormControl><Input placeholder="Enter full name" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
            <FormField control={form.control} name="dob" render={({ field }) => {
-                const { error, formItemId, formDescriptionId, formMessageId } = useFormField(); // useFormField for Popover trigger
+                // const { error, formItemId, formDescriptionId, formMessageId } = useFormField(); // Not needed with direct FormControl wrapping
                 return (
                   <FormItem className="flex flex-col">
                     <FormLabel>Date of Birth</FormLabel>
@@ -286,9 +301,9 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                           <Button
                             variant={"outline"}
                             className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}
-                            id={formItemId} // Use formItemId for Popover trigger if needed, though Calendar itself is the control
-                            aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
-                            aria-invalid={!!error}
+                            // id={formItemId} // Not needed if FormControl wraps Button
+                            // aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
+                            // aria-invalid={!!error}
                           > {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
@@ -331,7 +346,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormItem> <FormLabel>Guardian Contact Number</FormLabel> <FormControl><Input type="tel" placeholder="Enter 10-digit mobile" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
              <FormField control={form.control} name="nextAppointmentDate" render={({ field }) => {
-                  const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
+                  // const { error, formItemId, formDescriptionId, formMessageId } = useFormField(); // Not needed
                  return(
                     <FormItem className="flex flex-col">
                       <FormLabel>Next Appointment Date (Optional)</FormLabel>
@@ -341,9 +356,9 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                               <Button
                                 variant={"outline"}
                                 className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}
-                                id={formItemId}
-                                aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
-                                aria-invalid={!!error}
+                                // id={formItemId}
+                                // aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
+                                // aria-invalid={!!error}
                                 > {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                </Button>
@@ -369,7 +384,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       checked={field.value}
                       onCheckedChange={field.onChange}
                       onBlur={field.onBlur}
-                      id={`${field.name}-isTracked-checkbox`}
+                      id={`${field.name}-isTracked-checkbox`} // Ensure ID is unique for label association
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
@@ -459,15 +474,14 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                         ref={field.ref}
                         name={field.name}
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                         className="flex flex-row space-x-4"
                       >
                         {YES_NO_UNKNOWN_OPTIONS.map((option) => (
-                          <FormItem key={option} className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                               <RadioGroupItem value={option} id={`${field.name}-${option.toLowerCase()}-item`} />
-                            </FormControl>
-                            <FormLabel htmlFor={`${field.name}-${option.toLowerCase()}-item`} className="font-normal cursor-pointer">
+                          <FormItem key={`${field.name}-${option}`} className="flex items-center space-x-2 space-y-0">
+                            {/* No FormControl around RadioGroupItem */}
+                            <RadioGroupItem value={option} id={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-item`} />
+                            <FormLabel htmlFor={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-item`} className="font-normal cursor-pointer">
                               {option}
                             </FormLabel>
                           </FormItem>
@@ -556,8 +570,8 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                               onCheckedChange={(checked) => {
                                 checkboxField.onChange(checked);
                                 if (!checked) {
-                                    form.setValue(`${fieldNamePrefix}.date` as any, ""); // Type assertion for dynamic name
-                                    form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, ""); // Type assertion
+                                    form.setValue(`${fieldNamePrefix}.date` as any, ""); 
+                                    form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, ""); 
                                 }
                               }}
                               onBlur={checkboxField.onBlur}
@@ -569,11 +583,11 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                         </FormItem>
                       )}
                     />
-                  {form.watch(`${fieldNamePrefix}.administered` as any) && ( // Type assertion for dynamic name
+                  {form.watch(`${fieldNamePrefix}.administered` as any) && ( 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
                       <FormField
                         control={form.control}
-                        name={`${fieldNamePrefix}.date` as `clinicalProfile.vaccinations.${number}.date`} // More specific type
+                        name={`${fieldNamePrefix}.date` as `clinicalProfile.vaccinations.${number}.date`} 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs">Date Administered</FormLabel>
@@ -584,7 +598,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       />
                       <FormField
                         control={form.control}
-                        name={`${fieldNamePrefix}.nextDoseDate` as `clinicalProfile.vaccinations.${number}.nextDoseDate`} // More specific type
+                        name={`${fieldNamePrefix}.nextDoseDate` as `clinicalProfile.vaccinations.${number}.nextDoseDate`} 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs">Next Dose Date (Optional)</FormLabel>
@@ -609,4 +623,3 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
-

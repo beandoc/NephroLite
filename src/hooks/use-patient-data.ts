@@ -6,11 +6,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { VACCINATION_NAMES, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS, YES_NO_UNKNOWN_OPTIONS } from '@/lib/constants';
 
 const LOCAL_STORAGE_KEY = 'nephrolite_patients';
-let nextNephroIdCounter = 1;
 
-const generateNephroId = (currentMaxId: number): string => {
-  return `NL-${String(currentMaxId).padStart(4, '0')}`;
-};
+// Removed: let nextNephroIdCounter = 1;
+// Removed: const generateNephroId (old version)
 
 const getDefaultVaccinations = (): Vaccination[] => {
   return VACCINATION_NAMES.map(name => ({ 
@@ -46,6 +44,8 @@ const getInitialPatients = (): Patient[] => {
   if (storedPatients) {
     const patients: Patient[] = JSON.parse(storedPatients).map((p: any) => ({
       ...p,
+      // Ensure existing mock patients retain their IDs or have a fallback if the structure was different
+      nephroId: p.nephroId || `MOCK-${p.id.substring(0,4)}`, 
       patientStatus: p.patientStatus || 'OPD',
       nextAppointmentDate: p.nextAppointmentDate || undefined,
       isTracked: p.isTracked || false,
@@ -84,23 +84,15 @@ const getInitialPatients = (): Patient[] => {
       unitName: p.unitName || undefined,
       formation: p.formation || undefined,
     }));
-
-    if (patients.length > 0) {
-      const maxIdNum = patients.reduce((max, p) => {
-        const num = parseInt(p.nephroId.replace('NL-', ''), 10);
-        return num > max ? num : max;
-      }, 0);
-      nextNephroIdCounter = maxIdNum + 1;
-    } else {
-      nextNephroIdCounter = 1;
-    }
     return patients;
   }
 
+  // Mock patients will retain their simple Nephro IDs for now or use the new format if desired.
+  // For this example, I'll simplify mock Nephro IDs, as the counter logic is removed.
   const mockPatients: Patient[] = [
     {
       id: crypto.randomUUID(),
-      nephroId: generateNephroId(nextNephroIdCounter++),
+      nephroId: 'MOCK-0001', // Simplified mock ID
       name: 'Rajesh Kumar',
       dob: '1975-08-15',
       gender: 'Male',
@@ -109,31 +101,13 @@ const getInitialPatients = (): Patient[] => {
       address: { street: '123 MG Road', city: 'Bangalore', state: 'Karnataka', pincode: '560001', country: 'India' },
       guardian: { name: 'Sunita Kumar', relation: 'Spouse', contact: '9876543211' },
       patientStatus: 'OPD',
-      nextAppointmentDate: new Date(Date.now() + 86400000 * 14).toISOString().split('T')[0], // Approx 2 weeks
+      nextAppointmentDate: new Date(Date.now() + 86400000 * 14).toISOString().split('T')[0], 
       isTracked: true,
       clinicalProfile: {
         ...getInitialClinicalProfile(),
         primaryDiagnosis: 'Chronic Kidney Disease (CKD)',
         labels: ['Hypertension', 'Diabetes'],
         tags: ['Stage 3 CKD', 'Anemia'],
-        nutritionalStatus: 'Mild malnutrition',
-        disability: 'None',
-        subspecialityFollowUp: 'Cardiology',
-        smokingStatus: 'No',
-        alcoholConsumption: 'No',
-        vaccinations: [
-          { name: 'Hepatitis B', administered: true, date: '2023-01-10', nextDoseDate: '2023-07-10' },
-          { name: 'Pneumococcal', administered: true, date: '2023-02-15' },
-          { name: 'Influenza', administered: false, date: '' },
-          { name: 'Covid', administered: true, date: '2021-06-01', nextDoseDate: '2021-12-01'},
-          { name: 'Varicella', administered: false, date: '' },
-        ],
-        pomr: 'Patient has a history of hypertension and type 2 diabetes. Compliant with medications. Advised regular follow-ups.',
-        aabhaNumber: '12-3456-7890-1234',
-        bloodGroup: 'O+',
-        drugAllergies: 'Penicillin',
-        compliance: 'Yes',
-        whatsappNumber: '9876543210',
       },
       registrationDate: new Date().toISOString().split('T')[0],
       serviceName: "Indian Army",
@@ -144,7 +118,7 @@ const getInitialPatients = (): Patient[] => {
     },
     {
       id: crypto.randomUUID(),
-      nephroId: generateNephroId(nextNephroIdCounter++),
+      nephroId: 'MOCK-0002', // Simplified mock ID
       name: 'Priya Sharma',
       dob: '1982-04-22',
       gender: 'Female',
@@ -157,13 +131,6 @@ const getInitialPatients = (): Patient[] => {
       clinicalProfile: {
         ...getInitialClinicalProfile(), 
         primaryDiagnosis: 'Diabetic Nephropathy',
-        labels: ['Type 2 Diabetes'],
-        tags: ['Proteinuria', 'Controlled BP'],
-        nutritionalStatus: 'Well-nourished',
-        disability: 'Mild visual impairment',
-        pomr: 'Recent onset of proteinuria. Blood pressure well controlled with medication. Needs regular monitoring of kidney function.',
-        bloodGroup: 'A+',
-        compliance: 'Yes',
       },
       registrationDate: new Date(Date.now() - 86400000 * 10).toISOString().split('T')[0],
     },
@@ -195,10 +162,15 @@ export function usePatientData() {
     return patients.find(p => p.id === id);
   }, [patients]);
 
-  const addPatient = useCallback((patientData: Omit<Patient, 'id' | 'nephroId' | 'registrationDate' | 'clinicalProfile' | 'patientStatus' | 'isTracked'> & { clinicalProfile?: Partial<ClinicalProfile>, nextAppointmentDate?:string, isTracked?: boolean }): Patient => {
+  const addPatient = useCallback((patientData: Omit<Patient, 'id' | 'nephroId' | 'registrationDate' | 'clinicalProfile' | 'patientStatus'> & { clinicalProfile?: Partial<ClinicalProfile>, nextAppointmentDate?:string, isTracked?: boolean, customIdPrefix: string }): Patient => {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // MM
+    const year = String(now.getFullYear()).slice(-2); // YY
+    const constructedNephroId = `${patientData.customIdPrefix}/${month}${year}`;
+    
     const newPatient: Patient = {
       id: crypto.randomUUID(),
-      nephroId: generateNephroId(nextNephroIdCounter++),
+      nephroId: constructedNephroId,
       name: patientData.name,
       dob: patientData.dob,
       gender: patientData.gender,
@@ -206,7 +178,7 @@ export function usePatientData() {
       email: patientData.email,
       address: patientData.address,
       guardian: patientData.guardian,
-      registrationDate: new Date().toISOString().split('T')[0],
+      registrationDate: now.toISOString().split('T')[0],
       patientStatus: 'OPD',
       isTracked: patientData.isTracked || false,
       nextAppointmentDate: patientData.nextAppointmentDate || undefined,
@@ -235,11 +207,31 @@ export function usePatientData() {
     if (patientIndex === -1) return undefined;
 
     const updatedPatients = [...patients];
+    // Ensure Nephro ID is not accidentally changed for existing patients if customIdPrefix logic is only for new ones
+    // Or, if it's allowed to be edited, the logic from `addPatient` for constructing it would be needed here too.
+    // For simplicity, this example assumes Nephro ID is set at creation and not changed during update.
+    // If customIdPrefix is part of updatedPatientData, it means the form for edit also includes it.
+    let finalNephroId = updatedPatientData.nephroId;
+    if ((updatedPatientData as any).customIdPrefix) {
+        const prefix = (updatedPatientData as any).customIdPrefix;
+        const existingSuffix = updatedPatientData.nephroId.includes('/') ? updatedPatientData.nephroId.split('/')[1] : null;
+        if (existingSuffix) { // If ID has suffix, update prefix only
+            finalNephroId = `${prefix}/${existingSuffix}`;
+        } else { // If no suffix (old ID format or prefix only was saved), create new suffix if needed
+            const now = new Date();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = String(now.getFullYear()).slice(-2);
+            finalNephroId = `${prefix}/${month}${year}`;
+        }
+    }
+
+
     updatedPatients[patientIndex] = {
-      ...updatedPatientData, // Spread existing data first
-      patientStatus: updatedPatientData.patientStatus || 'OPD', // Ensure patientStatus has a default
+      ...updatedPatientData, 
+      nephroId: finalNephroId, // Use potentially reconstructed Nephro ID
+      patientStatus: updatedPatientData.patientStatus || 'OPD', 
       isTracked: updatedPatientData.isTracked === undefined ? (patients[patientIndex]?.isTracked || false) : updatedPatientData.isTracked,
-      nextAppointmentDate: updatedPatientData.nextAppointmentDate, // Can be undefined
+      nextAppointmentDate: updatedPatientData.nextAppointmentDate, 
       clinicalProfile: {
         ...getInitialClinicalProfile(), 
         ...(updatedPatientData.clinicalProfile || {}), 
