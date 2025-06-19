@@ -56,7 +56,7 @@ export default function AnalyticsPage() {
   const [selectedFilterTags, setSelectedFilterTags] = useState<string[]>([]);
 
   const patientGroupMetrics: MetricCardProps[] = [
-    { title: "Peritoneal dialysis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'End-Stage Renal Disease (ESRD)' && p.clinicalProfile.tags.includes('PD')).length, colorClass: "border-orange-500", icon: Waves, link: "/analytics/pd-module" },
+    { title: "Peritoneal dialysis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'End-Stage Renal Disease (ESRD)' && p.clinicalProfile.tags.includes('PD')).length, colorClass: "border-orange-500", icon: Waves /* Link removed */ },
     { title: "Hemodialysis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'End-Stage Renal Disease (ESRD)' && p.clinicalProfile.tags.includes('HD')).length, colorClass: "border-blue-500", icon: Droplets },
     { title: "Glomerulonephritis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Glomerulonephritis').length, colorClass: "border-green-500", icon: Stethoscope },
     { title: "Kidney transplant", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Transplant Prospect').length, colorClass: "border-green-600", icon: HeartPulse },

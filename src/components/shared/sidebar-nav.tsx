@@ -16,7 +16,10 @@ import {
   SearchCheck,
   LineChart,
   CalendarRange,
-  UserPlus, // Added UserPlus
+  UserPlus,
+  Waves, // Added for PD Module
+  Droplets, // Added for HD Module
+  HeartPulse, // Added for Transplant Module
   LucideIcon
 } from "lucide-react";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
@@ -32,9 +35,12 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, matchStartsWith: true },
   { href: "/my-schedule", label: "My Schedule", icon: CalendarRange },
-  { href: "/registration", label: "New Registration", icon: UserPlus, matchStartsWith: false }, // matchStartsWith specific for registration & new patient
-  { href: "/analytics", label: "Analytics Dashboard", icon: BarChartBig, matchStartsWith: false },
+  { href: "/registration", label: "New Registration", icon: UserPlus, matchStartsWith: false },
+  { href: "/analytics", label: "Analytics Dashboard", icon: BarChartBig, matchStartsWith: false }, // Keep matchStartsWith: false for parent if children have more specific matches
   { href: "/analytics/medication-impact", label: "Medication Impact", icon: LineChart },
+  { href: "/analytics/pd-module", label: "PD Module", icon: Waves }, // New PD Module link
+  { href: "#", label: "HD Module (WIP)", icon: Droplets }, // Placeholder HD Module
+  { href: "#", label: "Transplant Module (WIP)", icon: HeartPulse }, // Placeholder Transplant Module
   { href: "/patients", label: "Patient Management", icon: Users, matchStartsWith: true },
   { href: "/appointments", label: "Appointments", icon: CalendarDays, matchStartsWith: true },
   { href: "/search", label: "Advanced Search", icon: SearchCheck },
@@ -53,22 +59,24 @@ export function SidebarNav() {
       {navItems.map((item) => {
         let isActive = item.matchStartsWith ? pathname.startsWith(item.href) : pathname === item.href;
 
-        // Special handling for /patients to include its sub-routes like /patients/new or /patients/[id]/edit
-        // but not /patients/[id]/create-visit unless explicitly handled by another item
+        // Ensure "/analytics" itself is active only when it's the exact path,
+        // and not when its children like "/analytics/medication-impact" are active.
+        if (item.href === "/analytics" && item.matchStartsWith === false) {
+          isActive = pathname === item.href;
+        }
+        // Ensure "/analytics/pd-module" is active when it's the exact path
+        if (item.href === "/analytics/pd-module") {
+            isActive = pathname === item.href;
+        }
+
+
         if (item.href === "/patients") {
             isActive = pathname.startsWith("/patients") && !pathname.includes("/create-visit");
         }
 
-        // Ensure "New Registration" is active if on /registration OR /patients/new
         if (item.href === "/registration") {
             isActive = pathname === "/registration" || pathname === "/patients/new";
         }
-
-        // Example of how you might handle patient-specific sub-routes if you add a "Patient Dashboard" link
-        // if (item.href.startsWith("/patients/") && item.href.includes("[id]")) {
-        //   const basePatientPath = item.href.split("/[id]")[0];
-        //   isActive = pathname.startsWith(basePatientPath + "/") && pathname.split("/").length === item.href.split("/").length;
-        // }
 
 
         return (
