@@ -113,13 +113,13 @@ export default function IndividualPDPage() {
   const patientId = typeof params.id === 'string' ? params.id : undefined;
 
   useEffect(() => {
-    if (patientId) {
+    if (patientId && !patientDataLoading) {
       const generalPatientData = getPatientById(patientId);
       setPatient(generalPatientData || null);
       // For now, fetch mock PD data based on patientId
       setPdData(samplePdDataForPatient[patientId] || null);
     }
-  }, [patientId, getPatientById]);
+  }, [patientId, getPatientById, patientDataLoading]);
 
   if (patientDataLoading || !patientId) {
     return (
@@ -298,3 +298,5 @@ export default function IndividualPDPage() {
     </div>
   );
 }
+
+    
