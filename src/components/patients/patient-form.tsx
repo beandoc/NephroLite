@@ -13,6 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  useFormField, 
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -189,7 +190,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
 
   const { fields: vaccinationFields, replace: replaceVaccinations } = useFieldArray({
     control: form.control,
-    name: "clinicalProfile.vaccinations" as any, // Type assertion for nested array
+    name: "clinicalProfile.vaccinations" as any, 
   });
 
    useEffect(() => {
@@ -289,7 +290,9 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
             <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem> <FormLabel>Patient Full Name</FormLabel> <FormControl><Input placeholder="Enter full name" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
-           <FormField control={form.control} name="dob" render={({ field }) => (
+           <FormField control={form.control} name="dob" render={({ field }) => {
+                const { error } = useFormField(); 
+                return (
                 <FormItem className="flex flex-col">
                   <FormLabel>Date of Birth</FormLabel>
                   <Popover>
@@ -318,10 +321,11 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                   </Popover>
                   <FormMessage />
                 </FormItem>
-              )}
+                );
+              }}
             />
             <FormField control={form.control} name="gender" render={({ field }) => (
-              <FormItem> <FormLabel>Gender</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl> <SelectContent>{GENDERS.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+              <FormItem> <FormLabel>Gender</FormLabel> <Select onValueChange={field.onChange} value={field.value || ""}> <FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl> <SelectContent>{GENDERS.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="contact" render={({ field }) => (
               <FormItem> <FormLabel>Patient Contact Number</FormLabel> <FormControl><Input type="tel" placeholder="Enter 10-digit mobile" {...field} /></FormControl> <FormMessage /> </FormItem>
@@ -333,12 +337,14 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormItem> <FormLabel>Guardian Name</FormLabel> <FormControl><Input placeholder="Enter guardian's name" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="guardian.relation" render={({ field }) => (
-              <FormItem> <FormLabel>Guardian Relation to Patient</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select relation" /></SelectTrigger></FormControl> <SelectContent>{RELATIONSHIPS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+              <FormItem> <FormLabel>Guardian Relation to Patient</FormLabel> <Select onValueChange={field.onChange} value={field.value || ""}> <FormControl><SelectTrigger><SelectValue placeholder="Select relation" /></SelectTrigger></FormControl> <SelectContent>{RELATIONSHIPS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="guardian.contact" render={({ field }) => (
               <FormItem> <FormLabel>Guardian Contact Number</FormLabel> <FormControl><Input type="tel" placeholder="Enter 10-digit mobile" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
-             <FormField control={form.control} name="nextAppointmentDate" render={({ field }) => (
+             <FormField control={form.control} name="nextAppointmentDate" render={({ field }) => {
+                const { error } = useFormField();
+                return (
                   <FormItem className="flex flex-col">
                     <FormLabel>Next Appointment Date (Optional)</FormLabel>
                       <Popover>
@@ -358,7 +364,8 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       </Popover>
                       <FormMessage />
                   </FormItem>
-                )}
+                );
+                }}
             />
             <FormField
               control={form.control}
@@ -396,7 +403,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormItem> <FormLabel>City</FormLabel> <FormControl><Input placeholder="Enter city" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="address.state" render={({ field }) => (
-              <FormItem> <FormLabel>State</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl> <SelectContent>{INDIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+              <FormItem> <FormLabel>State</FormLabel> <Select onValueChange={field.onChange} value={field.value || ""}> <FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl> <SelectContent>{INDIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
             )} />
             <FormField control={form.control} name="address.pincode" render={({ field }) => (
               <FormItem> <FormLabel>Pincode</FormLabel> <FormControl><Input placeholder="Enter 6-digit pincode" {...field} /></FormControl> <FormMessage /> </FormItem>
@@ -427,28 +434,28 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 <FormItem> <FormLabel><Info className="inline h-4 w-4 mr-1"/>Aabha Number (Optional)</FormLabel> <FormControl><Input placeholder="Enter Aabha number" {...field} /></FormControl> <FormMessage /> </FormItem>
               )} />
               <FormField control={form.control} name="clinicalProfile.bloodGroup" render={({ field }) => (
-                <FormItem> <FormLabel><Droplet className="inline h-4 w-4 mr-1"/>Blood Group</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select blood group" /></SelectTrigger></FormControl> <SelectContent>{BLOOD_GROUPS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+                <FormItem> <FormLabel><Droplet className="inline h-4 w-4 mr-1"/>Blood Group</FormLabel> <Select onValueChange={field.onChange} value={field.value || ""}> <FormControl><SelectTrigger><SelectValue placeholder="Select blood group" /></SelectTrigger></FormControl> <SelectContent>{BLOOD_GROUPS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
                <FormField control={form.control} name="clinicalProfile.whatsappNumber" render={({ field }) => (
                 <FormItem> <FormLabel><MessageCircle className="inline h-4 w-4 mr-1"/>WhatsApp Number (Optional)</FormLabel> <FormControl><Input type="tel" placeholder="Enter 10-digit WhatsApp" {...field} /></FormControl> <FormMessage /> </FormItem>
               )} />
               <FormField control={form.control} name="clinicalProfile.primaryDiagnosis" render={({ field }) => (
-                <FormItem> <FormLabel>Primary Diagnosis</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select primary diagnosis" /></SelectTrigger></FormControl> <SelectContent>{PRIMARY_DIAGNOSIS_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+                <FormItem> <FormLabel>Primary Diagnosis</FormLabel> <Select onValueChange={field.onChange} value={field.value || ""}> <FormControl><SelectTrigger><SelectValue placeholder="Select primary diagnosis" /></SelectTrigger></FormControl> <SelectContent>{PRIMARY_DIAGNOSIS_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
               <FormField control={form.control} name="clinicalProfile.subspecialityFollowUp" render={({ field }) => (
-                <FormItem> <FormLabel>Subspeciality Follow-up</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select follow-up type" /></SelectTrigger></FormControl> <SelectContent>{SUBSPECIALITY_FOLLOWUP_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+                <FormItem> <FormLabel>Subspeciality Follow-up</FormLabel> <Select onValueChange={field.onChange} value={field.value || "NIL"}> <FormControl><SelectTrigger><SelectValue placeholder="Select follow-up type" /></SelectTrigger></FormControl> <SelectContent>{SUBSPECIALITY_FOLLOWUP_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
               <FormField control={form.control} name="clinicalProfile.smokingStatus" render={({ field }) => (
-                <FormItem> <FormLabel>Smoking Status</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl> <SelectContent>{YES_NO_NIL_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+                <FormItem> <FormLabel>Smoking Status</FormLabel> <Select onValueChange={field.onChange} value={field.value || "NIL"}> <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl> <SelectContent>{YES_NO_NIL_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
               <FormField control={form.control} name="clinicalProfile.alcoholConsumption" render={({ field }) => (
-                <FormItem> <FormLabel>Alcohol Consumption</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl> <SelectContent>{YES_NO_NIL_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+                <FormItem> <FormLabel>Alcohol Consumption</FormLabel> <Select onValueChange={field.onChange} value={field.value || "NIL"}> <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl> <SelectContent>{YES_NO_NIL_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
               <FormField control={form.control} name="clinicalProfile.nutritionalStatus" render={({ field }) => (
-                <FormItem> <FormLabel><Leaf className="inline h-4 w-4 mr-1"/>Nutritional Status</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select nutritional status" /></SelectTrigger></FormControl> <SelectContent>{NUTRITIONAL_STATUSES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+                <FormItem> <FormLabel><Leaf className="inline h-4 w-4 mr-1"/>Nutritional Status</FormLabel> <Select onValueChange={field.onChange} value={field.value || ""}> <FormControl><SelectTrigger><SelectValue placeholder="Select nutritional status" /></SelectTrigger></FormControl> <SelectContent>{NUTRITIONAL_STATUSES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
               <FormField control={form.control} name="clinicalProfile.disability" render={({ field }) => (
-                <FormItem> <FormLabel><Accessibility className="inline h-4 w-4 mr-1"/>Disability Profile</FormLabel> <Select onValueChange={field.onChange} value={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select disability profile" /></SelectTrigger></FormControl> <SelectContent>{DISABILITY_PROFILES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
+                <FormItem> <FormLabel><Accessibility className="inline h-4 w-4 mr-1"/>Disability Profile</FormLabel> <Select onValueChange={field.onChange} value={field.value || ""}> <FormControl><SelectTrigger><SelectValue placeholder="Select disability profile" /></SelectTrigger></FormControl> <SelectContent>{DISABILITY_PROFILES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
               
               <FormField
@@ -458,7 +465,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                   <FormItem className="space-y-3">
                     <FormLabel><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
                     <FormControl>
-                      <RadioGroup
+                       <RadioGroup
                         ref={field.ref}
                         name={field.name}
                         onValueChange={field.onChange}
@@ -467,7 +474,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       >
                         {YES_NO_UNKNOWN_OPTIONS.map((option) => (
                           <FormItem key={`${field.name}-${option}`} className="flex items-center space-x-2 space-y-0">
-                             {/* No FormControl around RadioGroupItem */}
                             <RadioGroupItem value={option} id={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-item`} />
                             <FormLabel htmlFor={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-item`} className="font-normal cursor-pointer">
                               {option}
@@ -558,8 +564,8 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                               onCheckedChange={(checked) => {
                                 checkboxField.onChange(checked);
                                 if (!checked) {
-                                    form.setValue(`${fieldNamePrefix}.date` as any, ""); // Type assertion
-                                    form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, ""); // Type assertion
+                                    form.setValue(`${fieldNamePrefix}.date` as any, ""); 
+                                    form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, ""); 
                                 }
                               }}
                               onBlur={checkboxField.onBlur}
@@ -572,7 +578,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                         </FormItem>
                       )}
                     />
-                  {form.watch(`${fieldNamePrefix}.administered` as any) && ( // Type assertion
+                  {form.watch(`${fieldNamePrefix}.administered` as any) && ( 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
                       <FormField
                         control={form.control}
@@ -612,6 +618,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
-
+    
 
     
