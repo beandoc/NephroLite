@@ -110,7 +110,7 @@ export default function IndividualPDPage() {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [pdData, setPdData] = useState<MockPdPatientDetail | null>(null);
   
-  const patientId = typeof params.id === 'string' ? params.id : undefined;
+  const patientId = typeof params.patientId === 'string' ? params.patientId : undefined;
 
   useEffect(() => {
     if (patientId && !patientDataLoading) {
@@ -139,7 +139,7 @@ export default function IndividualPDPage() {
   if (!patient) {
     return (
       <div className="container mx-auto py-2">
-        <PageHeader title="Patient Not Found" description="Could not find details for the specified patient." />
+        <PageHeader title="Patient Not Found" description="Could not find details for the specified patient in the main patient roster." />
         <Button variant="outline" onClick={() => router.push('/analytics/pd-module')}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to PD Roster
         </Button>
@@ -158,7 +158,7 @@ export default function IndividualPDPage() {
             <CardContent className="p-6 text-center text-muted-foreground">
                 This patient does not have detailed PD data recorded yet.
                 <br/>
-                <Button variant="link" className="mt-2">Add PD Data (WIP)</Button>
+                <Button variant="link" className="mt-2" disabled>Add PD Data (WIP)</Button>
             </CardContent>
         </Card>
       </div>
@@ -298,5 +298,3 @@ export default function IndividualPDPage() {
     </div>
   );
 }
-
-    
