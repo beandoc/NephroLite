@@ -459,8 +459,8 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       >
                         {YES_NO_UNKNOWN_OPTIONS.map((option) => (
                           <FormItem key={option} className="flex items-center space-x-2 space-y-0">
-                            <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}-item-${form.control._options.name}`} />
-                            <FormLabel htmlFor={`compliance-${option.toLowerCase()}-item-${form.control._options.name}`} className="font-normal cursor-pointer">
+                            <RadioGroupItem value={option} id={`compliance-${option.toLowerCase()}-item-${form.control._options.name || crypto.randomUUID()}`} />
+                            <FormLabel htmlFor={`compliance-${option.toLowerCase()}-item-${form.control._options.name || crypto.randomUUID()}`} className="font-normal cursor-pointer">
                               {option}
                             </FormLabel>
                           </FormItem>
@@ -534,8 +534,9 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
           <CardContent className="space-y-4">
             {vaccinationFields.map((vaccField, index) => {
               const fieldNamePrefix = `clinicalProfile.vaccinations.${index}` as const;
+              const checkboxId = `${fieldNamePrefix}-administered-checkbox-${vaccField.id || index}`;
               return (
-                <div key={vaccField.id} className="p-3 border rounded-md bg-muted/20">
+                <div key={vaccField.id || index} className="p-3 border rounded-md bg-muted/20">
                    <FormField
                       control={form.control}
                       name={`${fieldNamePrefix}.administered`}
@@ -553,9 +554,10 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                                 }
                               }}
                               onBlur={checkboxField.onBlur}
+                              id={checkboxId}
                             />
                           </FormControl>
-                          <FormLabel className="font-medium text-sm cursor-pointer">{vaccField.name}</FormLabel>
+                          <FormLabel htmlFor={checkboxId} className="font-medium text-sm cursor-pointer">{vaccField.name}</FormLabel>
                           <FormMessage/>
                         </FormItem>
                       )}
@@ -600,4 +602,3 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
-
