@@ -13,7 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  useFormField, // Import useFormField
+  useFormField, 
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -29,7 +29,7 @@ import type { Patient, Appointment } from "@/lib/types";
 import { APPOINTMENT_TYPES, MOCK_DOCTORS, TIME_SLOTS } from "@/lib/constants";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, parse, addDays } from "date-fns";
+import { format, parse, addDays, parseISO } from "date-fns";
 import { CalendarIcon, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePatientData } from "@/hooks/use-patient-data";
@@ -39,7 +39,7 @@ import Link from "next/link";
 
 const appointmentFormSchema = z.object({
   patientId: z.string().min(1, "Patient selection is required"),
-  date: z.string().min(1, "Date is required"), // Storing as string YYYY-MM-DD
+  date: z.string().min(1, "Date is required"), 
   time: z.string().min(1, "Time is required"),
   type: z.string().min(1, "Appointment type is required"),
   doctorName: z.string().min(1, "Doctor selection is required"),
@@ -61,10 +61,10 @@ export function AppointmentForm({ appointment, onSubmit, isSubmitting }: Appoint
     resolver: zodResolver(appointmentFormSchema),
     defaultValues: appointment ? {
       ...appointment,
-      date: appointment.date ? format(new Date(appointment.date), "yyyy-MM-dd") : "",
+      date: appointment.date ? format(parseISO(appointment.date), "yyyy-MM-dd") : "",
     } : {
       patientId: "",
-      date: format(addDays(new Date(), 14), "yyyy-MM-dd"), // Default to 2 weeks from today
+      date: format(addDays(new Date(), 14), "yyyy-MM-dd"), 
       time: "",
       type: "",
       doctorName: "",
@@ -131,6 +131,7 @@ export function AppointmentForm({ appointment, onSubmit, isSubmitting }: Appoint
                     <FormLabel>Date</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
+                        <FormControl>
                           <Button
                             variant={"outline"}
                             className={cn(
@@ -148,6 +149,7 @@ export function AppointmentForm({ appointment, onSubmit, isSubmitting }: Appoint
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
+                        </FormControl>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar

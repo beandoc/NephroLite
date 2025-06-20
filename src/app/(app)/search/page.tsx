@@ -12,7 +12,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  useFormField, // Import useFormField
+  useFormField,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,9 +58,6 @@ export default function AdvancedSearchPage() {
       title: "Search Submitted",
       description: "Search functionality is under development. Criteria logged to console.",
     });
-    // In a real application, you would filter patients based on this data
-    // const results = filterPatients(data);
-    // setResults(results);
   }
 
   return (
@@ -84,23 +81,25 @@ export default function AdvancedSearchPage() {
                         <FormLabel>Date of Birth</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                              id={formItemId}
-                              aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
-                              aria-invalid={!!error}
-                            >
-                              {field.value ? (
-                                format(parseISO(field.value), "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                                id={formItemId}
+                                aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                                aria-invalid={!!error}
+                              >
+                                {field.value ? (
+                                  format(parseISO(field.value), "PPP")
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
@@ -206,11 +205,6 @@ export default function AdvancedSearchPage() {
           </Form>
         </CardContent>
       </Card>
-      {/* Placeholder for search results - to be implemented later */}
-      {/* <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Search Results</h2>
-        <p className="text-muted-foreground">Search results will appear here.</p>
-      </div> */}
     </div>
   );
 }
