@@ -485,7 +485,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value} 
                         className="flex flex-row space-x-4"
                       >
                         {YES_NO_UNKNOWN_OPTIONS.map((option) => (
