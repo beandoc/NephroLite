@@ -479,12 +479,11 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
-                        value={field.value}
+                        defaultValue={field.value}
                         className="flex flex-row space-x-4"
-                        ref={field.ref}
                       >
                         {YES_NO_UNKNOWN_OPTIONS.map((option) => (
-                          <FormItem key={`${field.name}-${option}-item-${patient?.id || 'new'}`} className="flex items-center space-x-2 space-y-0">
+                           <FormItem key={`${field.name}-${option}-item-${patient?.id || 'new'}`} className="flex items-center space-x-2 space-y-0">
                             <FormControl>
                               <RadioGroupItem value={option} id={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-radio-item-${patient?.id || 'new'}`} />
                             </FormControl>
