@@ -294,7 +294,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormItem> <FormLabel>Patient Full Name</FormLabel> <FormControl><Input placeholder="Enter full name" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
            <FormField control={form.control} name="dob" render={({ field }) => {
-                const { error } = useFormField();
+                const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
                 return (
                 <FormItem className="flex flex-col">
                   <FormLabel>Date of Birth</FormLabel>
@@ -304,6 +304,9 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                         <Button
                           variant={"outline"}
                           className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}
+                          id={formItemId}
+                          aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                          aria-invalid={!!error}
                         > {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -356,16 +359,19 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 </FormItem>
               )} />
              <FormField control={form.control} name="nextAppointmentDate" render={({ field }) => {
-                const { error } = useFormField();
+                const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
                 return (
                   <FormItem className="flex flex-col">
                     <FormLabel>Next Appointment Date (Optional)</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <FormControl>
+                           <FormControl>
                             <Button
                               variant={"outline"}
                               className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}
+                              id={formItemId}
+                              aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                              aria-invalid={!!error}
                               > {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                              </Button>
