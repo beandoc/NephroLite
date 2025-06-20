@@ -27,7 +27,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <span className="font-headline group-data-[collapsible=icon]:hidden">NephroConnect</span>
           </Link>
           <div className="ml-1 group-data-[collapsible=icon]:hidden">
-            <p className="text-sm font-medium text-sidebar-foreground">Dr. Sarah Johnson</p>
+            <p className="text-sm font-medium text-sidebar-foreground">Dr. Sachin</p>
             <p className="text-xs text-sidebar-foreground/80">Nephrology Specialist</p>
           </div>
         </SidebarHeader>

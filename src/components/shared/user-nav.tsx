@@ -18,8 +18,8 @@ import { Badge } from "@/components/ui/badge";
 export function UserNav() {
   // In a real app, user data would come from auth context or API
   const user = {
-    name: "Dr. Sarah Johnson", // Updated to match image
-    email: "dr.sjohnson@nephroconnect.com", // Updated to match image
+    name: "Dr. Sachin", 
+    email: "dr.sachin@nephroconnect.com", 
     avatarUrl: "https://placehold.co/40x40.png", 
   };
 
@@ -40,7 +40,7 @@ export function UserNav() {
           <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
             <Avatar className="h-9 w-9">
               <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint="doctor avatar" />
-              <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('').toUpperCase() || 'SJ'}</AvatarFallback>
+              <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('').toUpperCase() || 'DS'}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>

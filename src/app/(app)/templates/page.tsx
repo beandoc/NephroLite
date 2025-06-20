@@ -126,27 +126,27 @@ export default function TemplatesPage() {
 
   const consentForm = useForm<GenerateConsentFormInput>({
     resolver: zodResolver(consentFormSchema),
-    defaultValues: { patientName: "", procedureName: "", doctorName: "Dr. Sarah Johnson", patientServiceNumber: "", patientRank: "" },
+    defaultValues: { patientName: "", procedureName: "", doctorName: "Dr. Sachin", patientServiceNumber: "", patientRank: "" },
   });
 
   const prescriptionForm = useForm<MedicinePrescriptionData>({
     resolver: zodResolver(medicinePrescriptionSchema),
-    defaultValues: { patientName: "", medicationName: "", dosage: "", frequency: "", duration: "", instructions: "", doctorName: "Dr. Sarah Johnson" },
+    defaultValues: { patientName: "", medicationName: "", dosage: "", frequency: "", duration: "", instructions: "", doctorName: "Dr. Sachin" },
   });
 
   const dischargeSummaryFormHook = useForm<GenerateDischargeSummaryInput>({
     resolver: zodResolver(dischargeSummarySchema),
-    defaultValues: { patientName: "", admissionDate: "", dischargeDate: "", primaryDiagnosis: "", treatmentSummary: "", conditionAtDischarge: "", followUpInstructions: "", doctorName: "Dr. Sarah Johnson", hospitalName: "NephroConnect Clinic", patientServiceNumber: "", patientRank: "" },
+    defaultValues: { patientName: "", admissionDate: "", dischargeDate: "", primaryDiagnosis: "", treatmentSummary: "", conditionAtDischarge: "", followUpInstructions: "", doctorName: "Dr. Sachin", hospitalName: "NephroConnect Clinic", patientServiceNumber: "", patientRank: "" },
   });
 
   const opinionReportFormHook = useForm<GenerateOpinionReportInput>({
     resolver: zodResolver(opinionReportSchema),
-    defaultValues: { patientName: "", dateOfOpinion: new Date().toISOString().split('T')[0], reasonForOpinion: "", historyOfPresentIllness: "", examinationFindings: "", investigationResultsSummary: "", medicalOpinion: "", recommendations: "", providingDoctorName: "Dr. Sarah Johnson", patientServiceNumber: "", patientRank: "" },
+    defaultValues: { patientName: "", dateOfOpinion: new Date().toISOString().split('T')[0], reasonForOpinion: "", historyOfPresentIllness: "", examinationFindings: "", investigationResultsSummary: "", medicalOpinion: "", recommendations: "", providingDoctorName: "Dr. Sachin", patientServiceNumber: "", patientRank: "" },
   });
 
   const opdConsultationNoteFormHook = useForm<GenerateOpdConsultationNoteInput>({
     resolver: zodResolver(opdConsultationNoteSchema),
-    defaultValues: { patientName: "", visitDate: new Date().toISOString().split('T')[0], doctorName: "Dr. Sarah Johnson", chiefComplaints: "", examinationFindings: "", investigationsOrdered: "", medicationsPrescribed: "", assessmentAndPlan: "", followUpInstructions: "", patientServiceNumber: "", patientRank:"" },
+    defaultValues: { patientName: "", visitDate: new Date().toISOString().split('T')[0], doctorName: "Dr. Sachin", chiefComplaints: "", examinationFindings: "", investigationsOrdered: "", medicationsPrescribed: "", assessmentAndPlan: "", followUpInstructions: "", patientServiceNumber: "", patientRank:"" },
   });
 
 
@@ -345,7 +345,7 @@ export default function TemplatesPage() {
                 <FormField control={prescriptionForm.control} name="frequency" render={({ field }) => ( <FormItem><FormLabel>Frequency</FormLabel><FormControl><Input placeholder="e.g., Once daily" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 <FormField control={prescriptionForm.control} name="duration" render={({ field }) => ( <FormItem><FormLabel>Duration (Optional)</FormLabel><FormControl><Input placeholder="e.g., 7 days, As needed" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 <FormField control={prescriptionForm.control} name="instructions" render={({ field }) => ( <FormItem><FormLabel>Additional Instructions (Optional)</FormLabel><FormControl><Textarea rows={2} placeholder="e.g., Take with food" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                <FormField control={prescriptionForm.control} name="doctorName" render={({ field }) => ( <FormItem><FormLabel>Doctor Full Name</FormLabel><FormControl><Input placeholder="e.g., Dr. Sarah Johnson" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                <FormField control={prescriptionForm.control} name="doctorName" render={({ field }) => ( <FormItem><FormLabel>Doctor Full Name</FormLabel><FormControl><Input placeholder="e.g., Dr. Sachin" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 <Button type="submit" disabled={isLoadingPrescription} className="w-full"> {isLoadingPrescription ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />} Generate Prescription </Button>
               </form>
             </Form>
@@ -398,7 +398,7 @@ export default function TemplatesPage() {
                 <FormField control={dischargeSummaryFormHook.control} name="treatmentSummary" render={({ field }) => ( <FormItem><FormLabel>Brief Summary of Hospital Stay & Treatment</FormLabel><FormControl><Textarea rows={3} placeholder="Patient admitted with..." {...field} /></FormControl><FormMessage /></FormItem> )} />
                 <FormField control={dischargeSummaryFormHook.control} name="conditionAtDischarge" render={({ field }) => ( <FormItem><FormLabel>Condition at Discharge</FormLabel><FormControl><Input placeholder="e.g., Stable, Improved, Needs further outpatient care" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 <FormField control={dischargeSummaryFormHook.control} name="followUpInstructions" render={({ field }) => ( <FormItem><FormLabel>Follow-up Instructions (Medications, Appointments)</FormLabel><FormControl><Textarea rows={3} placeholder="e.g., Continue Metformin 500mg BID. Follow up in 2 weeks." {...field} /></FormControl><FormMessage /></FormItem> )} />
-                <FormField control={dischargeSummaryFormHook.control} name="doctorName" render={({ field }) => ( <FormItem><FormLabel>Discharging Doctor Name</FormLabel><FormControl><Input placeholder="e.g., Dr. Sarah Johnson" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                <FormField control={dischargeSummaryFormHook.control} name="doctorName" render={({ field }) => ( <FormItem><FormLabel>Discharging Doctor Name</FormLabel><FormControl><Input placeholder="e.g., Dr. Sachin" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 <FormField control={dischargeSummaryFormHook.control} name="hospitalName" render={({ field }) => ( <FormItem><FormLabel>Hospital/Clinic Name (Optional)</FormLabel><FormControl><Input placeholder="e.g., City General Hospital" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField control={dischargeSummaryFormHook.control} name="patientServiceNumber" render={({ field }) => ( <FormItem><FormLabel>Service No. (Optional)</FormLabel><FormControl><Input placeholder="If applicable" {...field} /></FormControl><FormMessage /></FormItem> )} />
@@ -507,7 +507,7 @@ export default function TemplatesPage() {
                 <FormField control={opdConsultationNoteFormHook.control} name="patientName" render={({ field }) => ( <FormItem><FormLabel>Patient Full Name</FormLabel><FormControl><Input placeholder="e.g., Sita Devi" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField control={opdConsultationNoteFormHook.control} name="visitDate" render={({ field }) => ( <FormItem><FormLabel>Visit Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={opdConsultationNoteFormHook.control} name="doctorName" render={({ field }) => ( <FormItem><FormLabel>Doctor Name</FormLabel><FormControl><Input placeholder="e.g., Dr. Sarah Johnson" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField control={opdConsultationNoteFormHook.control} name="doctorName" render={({ field }) => ( <FormItem><FormLabel>Doctor Name</FormLabel><FormControl><Input placeholder="e.g., Dr. Sachin" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 </div>
                 <FormField control={opdConsultationNoteFormHook.control} name="chiefComplaints" render={({ field }) => ( <FormItem><FormLabel>Chief Complaints</FormLabel><FormControl><Textarea rows={2} placeholder="Patient complains of..." {...field} /></FormControl><FormMessage /></FormItem> )} />
                 <FormField control={opdConsultationNoteFormHook.control} name="examinationFindings" render={({ field }) => ( <FormItem><FormLabel>Key Examination Findings</FormLabel><FormControl><Textarea rows={3} placeholder="On examination..." {...field} /></FormControl><FormMessage /></FormItem> )} />

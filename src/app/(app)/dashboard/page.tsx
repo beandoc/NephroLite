@@ -12,7 +12,7 @@ export default function DashboardPage() {
     <div className="container mx-auto py-2">
       <PageHeader 
         title="Nephrology Dashboard" 
-        description="Welcome back, Dr. Sarah Johnson. Here's your overview for today."
+        description="Welcome back, Dr. Sachin. Here's your overview for today."
         // Removed actions prop which contained the "Add New Patient" button
       />
       <OverviewMetrics />
