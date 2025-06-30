@@ -448,7 +448,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
         <Card>
           <CardHeader><CardTitle className="font-headline flex items-center"><HeartPulse className="mr-2 h-5 w-5 text-primary" />Clinical Profile</CardTitle></CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-6">
               <FormField control={form.control} name="clinicalProfile.aabhaNumber" render={({ field }) => (
                 <FormItem> <FormLabel><Info className="inline h-4 w-4 mr-1"/>Aabha Number (Optional)</FormLabel> <FormControl><Input placeholder="Enter Aabha number" {...field} /></FormControl> <FormMessage /> </FormItem>
               )} />
@@ -482,24 +482,22 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 render={({ field }) => (
                   <FormItem className="space-y-3">
                     <FormLabel><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        className="flex flex-row space-x-4"
-                      >
-                        {YES_NO_UNKNOWN_OPTIONS.map((option) => (
-                          <FormItem key={`${field.name}-${option}-item-${patient?.id || 'new'}`} className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value={option} id={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-radio-item-${patient?.id || 'new'}`} />
-                            </FormControl>
-                            <FormLabel htmlFor={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-radio-item-${patient?.id || 'new'}`} className="font-normal cursor-pointer">
-                              {option}
-                            </FormLabel>
-                          </FormItem>
-                        ))}
-                      </RadioGroup>
-                    </FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="flex flex-row space-x-4"
+                    >
+                      {YES_NO_UNKNOWN_OPTIONS.map((option) => (
+                        <FormItem key={`${field.name}-${option}-item-${patient?.id || 'new'}`} className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value={option} id={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-radio-item-${patient?.id || 'new'}`} />
+                          </FormControl>
+                          <FormLabel htmlFor={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-radio-item-${patient?.id || 'new'}`} className="font-normal cursor-pointer">
+                            {option}
+                          </FormLabel>
+                        </FormItem>
+                      ))}
+                    </RadioGroup>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -636,4 +634,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
+    
+
     
