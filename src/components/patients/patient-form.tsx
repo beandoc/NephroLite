@@ -535,41 +535,41 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                         <GripVertical className="inline h-4 w-4 mr-1" />
                         Compliance
                       </FormLabel>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="flex flex-row space-x-4"
-                        >
-                          {YES_NO_UNKNOWN_OPTIONS.map((option) => (
-                            <FormItem
-                              key={`${field.name}-${option}-item-${
-                                patient?.id || 'new'
-                              }`}
-                              className="flex items-center space-x-2 space-y-0"
-                            >
-                              <FormControl>
-                                <RadioGroupItem
-                                  value={option}
-                                  id={`${field.name}-${option
-                                    .toLowerCase()
-                                    .replace(/\s+/g, '-')}-radio-item-${
-                                    patient?.id || 'new'
-                                  }`}
-                                />
-                              </FormControl>
-                              <FormLabel
-                                htmlFor={`${field.name}-${option
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        className="flex flex-row space-x-4"
+                      >
+                        {YES_NO_UNKNOWN_OPTIONS.map((option) => (
+                          <FormItem
+                            key={`${field.name}-${option}-item-${
+                              patient?.id || 'new'
+                            }`}
+                            className="flex items-center space-x-2 space-y-0"
+                          >
+                            <FormControl>
+                              <RadioGroupItem
+                                value={option}
+                                id={`${field.name}-${option
                                   .toLowerCase()
                                   .replace(/\s+/g, '-')}-radio-item-${
                                   patient?.id || 'new'
                                 }`}
-                                className="font-normal cursor-pointer"
-                              >
-                                {option}
-                              </FormLabel>
-                            </FormItem>
-                          ))}
-                        </RadioGroup>
+                              />
+                            </FormControl>
+                            <FormLabel
+                              htmlFor={`${field.name}-${option
+                                .toLowerCase()
+                                .replace(/\s+/g, '-')}-radio-item-${
+                                patient?.id || 'new'
+                              }`}
+                              className="font-normal cursor-pointer"
+                            >
+                              {option}
+                            </FormLabel>
+                          </FormItem>
+                        ))}
+                      </RadioGroup>
                       <FormMessage />
                     </FormItem>
                   )}
