@@ -517,7 +517,6 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
                 <DetailItem label="Disability Profile" icon={Accessibility} value={clinicalProfile.disability} />
                 <DetailItem label="Smoking Status" icon={Cigarette} value={clinicalProfile.smokingStatus || 'NIL'} />
                 <DetailItem label="Alcohol Consumption" icon={Wine} value={clinicalProfile.alcoholConsumption || 'NIL'} />
-                <DetailItem label="Compliance" value={clinicalProfile.compliance} icon={clinicalProfile.compliance === 'Yes' ? CheckSquare : clinicalProfile.compliance === 'No' ? XCircle : AlertCircle }/>
                 <DetailItem label="Drug Allergies" value={clinicalProfile.drugAllergies || "None reported"} icon={ShieldAlert} className="md:col-span-2 lg:col-span-1"/>
 
               </div>

@@ -30,7 +30,6 @@ const getInitialClinicalProfile = (): ClinicalProfile => ({
   aabhaNumber: "",
   bloodGroup: BLOOD_GROUPS.includes('Unknown') ? 'Unknown' : BLOOD_GROUPS[0] || "",
   drugAllergies: "",
-  compliance: 'Unknown',
   whatsappNumber: "",
 });
 
@@ -73,7 +72,6 @@ const getInitialPatients = (): Patient[] => {
         aabhaNumber: p.clinicalProfile?.aabhaNumber || "",
         bloodGroup: p.clinicalProfile?.bloodGroup || (BLOOD_GROUPS.includes('Unknown') ? 'Unknown' : BLOOD_GROUPS[0] || ""),
         drugAllergies: p.clinicalProfile?.drugAllergies || "",
-        compliance: p.clinicalProfile?.compliance || 'Unknown',
         whatsappNumber: p.clinicalProfile?.whatsappNumber || "",
       },
       serviceName: p.serviceName || undefined,

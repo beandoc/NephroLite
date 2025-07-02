@@ -34,7 +34,6 @@ export type ClinicalProfile = {
   aabhaNumber?: string;
   bloodGroup?: string;
   drugAllergies?: string;
-  compliance?: 'Yes' | 'No' | 'Unknown';
   whatsappNumber?: string;
 };
 
