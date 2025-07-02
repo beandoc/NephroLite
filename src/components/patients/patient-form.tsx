@@ -526,54 +526,54 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormField control={form.control} name="clinicalProfile.disability" render={({ field }) => (
                 <FormItem> <FormLabel><Accessibility className="inline h-4 w-4 mr-1"/>Disability Profile</FormLabel> <Select onValueChange={field.onChange} value={field.value || ""}> <FormControl><SelectTrigger><SelectValue placeholder="Select disability profile" /></SelectTrigger></FormControl> <SelectContent>{DISABILITY_PROFILES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent> </Select> <FormMessage /> </FormItem>
               )} />
-              <FormField
-                control={form.control}
-                name="clinicalProfile.compliance"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>
-                      <GripVertical className="inline h-4 w-4 mr-1" />
-                      Compliance
-                    </FormLabel>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      className="flex flex-row space-x-4"
-                    >
-                      {YES_NO_UNKNOWN_OPTIONS.map((option) => (
-                        <FormItem
-                          key={`${field.name}-${option}-item-${
-                            patient?.id || 'new'
-                          }`}
-                          className="flex items-center space-x-2 space-y-0"
-                        >
-                          <FormControl>
-                            <RadioGroupItem
-                              value={option}
-                              id={`${field.name}-${option
+               <FormField
+                  control={form.control}
+                  name="clinicalProfile.compliance"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>
+                        <GripVertical className="inline h-4 w-4 mr-1" />
+                        Compliance
+                      </FormLabel>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        className="flex flex-row space-x-4"
+                      >
+                        {YES_NO_UNKNOWN_OPTIONS.map((option) => (
+                          <FormItem
+                            key={`${field.name}-${option}-item-${
+                              patient?.id || 'new'
+                            }`}
+                            className="flex items-center space-x-2 space-y-0"
+                          >
+                            <FormControl>
+                              <RadioGroupItem
+                                value={option}
+                                id={`${field.name}-${option
+                                  .toLowerCase()
+                                  .replace(/\s+/g, '-')}-radio-item-${
+                                  patient?.id || 'new'
+                                }`}
+                              />
+                            </FormControl>
+                            <FormLabel
+                              htmlFor={`${field.name}-${option
                                 .toLowerCase()
                                 .replace(/\s+/g, '-')}-radio-item-${
                                 patient?.id || 'new'
                               }`}
-                            />
-                          </FormControl>
-                          <FormLabel
-                            htmlFor={`${field.name}-${option
-                              .toLowerCase()
-                              .replace(/\s+/g, '-')}-radio-item-${
-                              patient?.id || 'new'
-                            }`}
-                            className="font-normal cursor-pointer"
-                          >
-                            {option}
-                          </FormLabel>
-                        </FormItem>
-                      ))}
-                    </RadioGroup>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                              className="font-normal cursor-pointer"
+                            >
+                              {option}
+                            </FormLabel>
+                          </FormItem>
+                        ))}
+                      </RadioGroup>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
             </div>
 
             <FormField control={form.control} name="clinicalProfile.drugAllergies" render={({ field }) => (
