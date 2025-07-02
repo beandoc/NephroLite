@@ -293,40 +293,63 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
             <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem> <FormLabel>Patient Full Name</FormLabel> <FormControl><Input placeholder="Enter full name" {...field} /></FormControl> <FormMessage /> </FormItem>
             )} />
-           <FormField control={form.control} name="dob" render={({ field }) => {
+            <FormField
+              control={form.control}
+              name="dob"
+              render={({ field }) => {
                 const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
                 return (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Date of Birth</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}
-                          id={formItemId}
-                          aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
-                          aria-invalid={!!error}
-                        > {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value ? parseISO(field.value) : undefined}
-                        onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
-                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                        initialFocus
-                        captionLayout="dropdown-buttons"
-                        fromYear={1900}
-                        toYear={new Date().getFullYear()}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Date of Birth</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                            id={formItemId}
+                            aria-describedby={
+                              !error
+                                ? formDescriptionId
+                                : `${formDescriptionId} ${formMessageId}`
+                            }
+                            aria-invalid={!!error}
+                          >
+                            {field.value ? (
+                              format(parseISO(field.value), "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={
+                            field.value ? parseISO(field.value) : undefined
+                          }
+                          onSelect={(date) =>
+                            field.onChange(
+                              date ? format(date, "yyyy-MM-dd") : ""
+                            )
+                          }
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("1900-01-01")
+                          }
+                          initialFocus
+                          captionLayout="dropdown-buttons"
+                          fromYear={1900}
+                          toYear={new Date().getFullYear()}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
                 );
               }}
             />
@@ -358,33 +381,60 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                   <FormMessage />
                 </FormItem>
               )} />
-             <FormField control={form.control} name="nextAppointmentDate" render={({ field }) => {
-                const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
+            <FormField
+              control={form.control}
+              name="nextAppointmentDate"
+              render={({ field }) => {
+                const { formItemId, formDescriptionId, formMessageId, error } =
+                  useFormField();
                 return (
                   <FormItem className="flex flex-col">
                     <FormLabel>Next Appointment Date (Optional)</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                           <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}
-                              id={formItemId}
-                              aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
-                              aria-invalid={!!error}
-                              > {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                             </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar mode="single" selected={field.value ? parseISO(field.value) : undefined} onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")} initialFocus />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                            id={formItemId}
+                            aria-describedby={
+                              !error
+                                ? formDescriptionId
+                                : `${formDescriptionId} ${formMessageId}`
+                            }
+                            aria-invalid={!!error}
+                          >
+                            {field.value ? (
+                              format(parseISO(field.value), "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={
+                            field.value ? parseISO(field.value) : undefined
+                          }
+                          onSelect={(date) =>
+                            field.onChange(
+                              date ? format(date, "yyyy-MM-dd") : ""
+                            )
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
                   </FormItem>
                 );
-                }}
+              }}
             />
             <FormField
               control={form.control}
@@ -481,18 +531,40 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 name="clinicalProfile.compliance"
                 render={({ field }) => (
                   <FormItem className="space-y-3">
-                    <FormLabel><GripVertical className="inline h-4 w-4 mr-1"/>Compliance</FormLabel>
+                    <FormLabel>
+                      <GripVertical className="inline h-4 w-4 mr-1" />
+                      Compliance
+                    </FormLabel>
                     <RadioGroup
                       onValueChange={field.onChange}
                       value={field.value}
                       className="flex flex-row space-x-4"
                     >
                       {YES_NO_UNKNOWN_OPTIONS.map((option) => (
-                        <FormItem key={`${field.name}-${option}-item-${patient?.id || 'new'}`} className="flex items-center space-x-2 space-y-0">
+                        <FormItem
+                          key={`${field.name}-${option}-item-${
+                            patient?.id || 'new'
+                          }`}
+                          className="flex items-center space-x-2 space-y-0"
+                        >
                           <FormControl>
-                            <RadioGroupItem value={option} id={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-radio-item-${patient?.id || 'new'}`} />
+                            <RadioGroupItem
+                              value={option}
+                              id={`${field.name}-${option
+                                .toLowerCase()
+                                .replace(/\s+/g, '-')}-radio-item-${
+                                patient?.id || 'new'
+                              }`}
+                            />
                           </FormControl>
-                          <FormLabel htmlFor={`${field.name}-${option.toLowerCase().replace(/\s+/g, '-')}-radio-item-${patient?.id || 'new'}`} className="font-normal cursor-pointer">
+                          <FormLabel
+                            htmlFor={`${field.name}-${option
+                              .toLowerCase()
+                              .replace(/\s+/g, '-')}-radio-item-${
+                              patient?.id || 'new'
+                            }`}
+                            className="font-normal cursor-pointer"
+                          >
                             {option}
                           </FormLabel>
                         </FormItem>
