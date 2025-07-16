@@ -98,8 +98,8 @@ export const APPOINTMENT_TYPES: string[] = [
 ];
 
 
-export const APPOINTMENT_STATUSES: Array<'Scheduled' | 'Completed' | 'Cancelled' | 'Waiting' | 'Not Showed' | 'Admitted'> =
-  ['Scheduled', 'Completed', 'Cancelled', 'Waiting', 'Not Showed', 'Admitted'];
+export const APPOINTMENT_STATUSES: Array<'Scheduled' | 'Completed' | 'Cancelled' | 'Waiting' | 'Not Showed' | 'Admitted' | 'Now Serving'> =
+  ['Scheduled', 'Completed', 'Cancelled', 'Waiting', 'Not Showed', 'Admitted', 'Now Serving'];
 
 export const MOCK_DOCTORS: string[] = [
   'Dr. Anya Sharma',

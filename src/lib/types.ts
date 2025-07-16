@@ -71,7 +71,7 @@ export type Appointment = {
   type: string;
   doctorName: string;
   notes?: string;
-  status: 'Scheduled' | 'Completed' | 'Cancelled' | 'Waiting' | 'Not Showed' | 'Admitted';
+  status: 'Scheduled' | 'Completed' | 'Cancelled' | 'Waiting' | 'Not Showed' | 'Admitted' | 'Now Serving';
 };
 
 // For Diagnosis and Medication Database Management

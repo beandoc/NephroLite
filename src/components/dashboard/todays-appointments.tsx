@@ -9,7 +9,7 @@ import { usePatientData } from '@/hooks/use-patient-data'; // Import usePatientD
 import { format, isToday, parseISO } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '../ui/skeleton';
-import { CalendarDays, User, Clock, Stethoscope, Eye, CheckCircle, XCircle, Loader2, Hospital, CalendarX, CalendarCheck } from 'lucide-react'; // Added new icons
+import { CalendarDays, User, Clock, Stethoscope, Eye, CheckCircle, XCircle, Loader2, Hospital, CalendarX, CalendarCheck, Hourglass } from 'lucide-react'; // Added new icons
 import { Badge } from '@/components/ui/badge';
 import type { Appointment } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -34,15 +34,14 @@ export function TodaysAppointments() {
     .filter(app => {
         try {
             const appDate = parseISO(app.date); 
-            // Show scheduled, waiting, or admitted appointments for today
-            return isToday(appDate) && (app.status === 'Scheduled' || app.status === 'Waiting' || app.status === 'Admitted');
+            // Show scheduled appointments for today
+            return isToday(appDate) && app.status === 'Scheduled';
         } catch (e) {
             console.error("Error parsing appointment date:", app.date, e);
             return false;
         }
     })
-    .sort((a, b) => a.time.localeCompare(b.time))
-    .slice(0, 5); 
+    .sort((a, b) => a.time.localeCompare(b.time));
 
   const handleUpdateStatus = (appointmentId: string, newStatus: Appointment['status'], patientName: string, patientId?: string) => {
     updateAppointmentStatus(appointmentId, newStatus);
@@ -103,6 +102,7 @@ export function TodaysAppointments() {
       case 'Waiting': return 'outline'; // Consider a 'warning' variant or yellow
       case 'Not Showed': return 'destructive';
       case 'Admitted': return 'default'; // Consider a specific IPD color
+      case 'Now Serving': return 'default';
       default: return 'default';
     }
   };
@@ -112,10 +112,10 @@ export function TodaysAppointments() {
     <Card className="shadow-md h-full flex flex-col">
       <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle className="font-headline">Today's Appointments</CardTitle>
+          <CardTitle className="font-headline">Today's Check-In</CardTitle>
           <div className="text-sm text-muted-foreground">{format(today, 'MMM d, yyyy')}</div>
         </div>
-         <CardDescription>Upcoming appointments and their statuses for today.</CardDescription>
+         <CardDescription>Move scheduled patients to the OPD queue.</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow flex flex-col p-0 sm:p-4 pt-0">
         {todaysAppointments.length > 0 ? (
@@ -147,17 +147,14 @@ export function TodaysAppointments() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Completed', appointment.patientName)}>
-                        <CalendarCheck className="mr-2 h-4 w-4" /> Mark Completed
-                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Waiting', appointment.patientName)}>
-                        <Clock className="mr-2 h-4 w-4" /> Mark Waiting
+                        <Hourglass className="mr-2 h-4 w-4 text-amber-600" /> Mark as Waiting
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Not Showed', appointment.patientName)}>
-                        <CalendarX className="mr-2 h-4 w-4" /> Mark Not Showed
+                      <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Completed', appointment.patientName)}>
+                        <CalendarCheck className="mr-2 h-4 w-4 text-green-600" /> Mark Completed
                       </DropdownMenuItem>
-                       <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Cancelled', appointment.patientName)}>
-                        <XCircle className="mr-2 h-4 w-4" /> Mark Cancelled
+                       <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Not Showed', appointment.patientName)}>
+                        <CalendarX className="mr-2 h-4 w-4 text-red-600" /> Mark Not Showed
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Admitted', appointment.patientName, appointment.patientId)}>
@@ -181,7 +178,7 @@ export function TodaysAppointments() {
         ) : (
           <div className="flex-grow flex flex-col items-center justify-center text-center text-muted-foreground p-6">
             <CalendarDays className="w-12 h-12 mb-3" />
-            <p>No appointments scheduled for today.</p>
+            <p>No more patients scheduled for today.</p>
           </div>
         )}
       </CardContent>

@@ -20,7 +20,8 @@ import {
   Waves, // Added for PD Module
   Droplets, // Added for HD Module
   HeartPulse, // Added for Transplant Module
-  LucideIcon
+  LucideIcon,
+  ListOrdered,
 } from "lucide-react";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ const navItems: NavItem[] = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, matchStartsWith: true },
   { href: "/my-schedule", label: "My Schedule", icon: CalendarRange },
   { href: "/registration", label: "New Registration", icon: UserPlus, matchStartsWith: false },
+  { href: "/opd-queue", label: "OPD Queue", icon: ListOrdered },
   { href: "/analytics", label: "Analytics Dashboard", icon: BarChartBig, matchStartsWith: false }, // Keep matchStartsWith: false for parent if children have more specific matches
   { href: "/analytics/medication-impact", label: "Medication Impact", icon: LineChart },
   { href: "/analytics/pd-module", label: "PD Module", icon: Waves }, // New PD Module link

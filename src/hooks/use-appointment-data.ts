@@ -164,6 +164,18 @@ export function useAppointmentData() {
     return updatedAppointments[appointmentIndex];
   }, [appointments, saveData]);
   
+  const updateMultipleAppointmentStatuses = useCallback((updates: { id: string, status: Appointment['status'] }[]): void => {
+    const updatedAppointments = appointments.map(app => {
+        const update = updates.find(u => u.id === app.id);
+        if (update) {
+            return { ...app, status: update.status };
+        }
+        return app;
+    });
+    saveData(updatedAppointments);
+  }, [appointments, saveData]);
+
+
   const updateAppointment = useCallback((updatedAppointmentData: Appointment): Appointment | undefined => {
     const appointmentIndex = appointments.findIndex(a => a.id === updatedAppointmentData.id);
     if (appointmentIndex === -1) return undefined;
@@ -186,5 +198,6 @@ export function useAppointmentData() {
     addAppointment,
     updateAppointmentStatus,
     updateAppointment,
+    updateMultipleAppointmentStatuses,
   };
 }
