@@ -344,20 +344,20 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Gender</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
-                    <FormControl>
+                  <FormControl>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {GENDERS.map((g) => (
-                        <SelectItem key={g} value={g}>
-                          {g}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                      <SelectContent>
+                        {GENDERS.map((g) => (
+                          <SelectItem key={g} value={g}>
+                            {g}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -377,20 +377,20 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Guardian Relation to Patient</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
-                    <FormControl>
+                  <FormControl>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select relation" />
                       </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {RELATIONSHIPS.map((r) => (
-                        <SelectItem key={r} value={r}>
-                          {r}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                      <SelectContent>
+                        {RELATIONSHIPS.map((r) => (
+                          <SelectItem key={r} value={r}>
+                            {r}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -407,20 +407,20 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <Home className="inline h-4 w-4 mr-1" />
                     Residence Type
                   </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || "Not Set"}>
-                    <FormControl>
+                  <FormControl>
+                    <Select onValueChange={field.onChange} value={field.value || "Not Set"}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select residence type" />
                       </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {RESIDENCE_TYPES.map((rt) => (
-                        <SelectItem key={rt} value={rt}>
-                          {rt}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                      <SelectContent>
+                        {RESIDENCE_TYPES.map((rt) => (
+                          <SelectItem key={rt} value={rt}>
+                            {rt}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -476,16 +476,12 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 shadow-sm h-fit mt-7">
                   <FormControl>
                     <Checkbox
-                      ref={field.ref}
                       checked={field.value}
                       onCheckedChange={field.onChange}
-                      onBlur={field.onBlur}
-                      name={field.name}
-                      id={`${field.name}-isTracked-checkbox`}
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel htmlFor={`${field.name}-isTracked-checkbox`} className="cursor-pointer">Track Patient</FormLabel>
+                    <FormLabel>Track Patient</FormLabel>
                     <FormDescription>Enable special monitoring for this patient.</FormDescription>
                   </div>
                   <FormMessage />
@@ -510,20 +506,20 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>State</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
-                    <FormControl>
+                  <FormControl>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select state" />
                       </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {INDIAN_STATES.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {s}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                      <SelectContent>
+                        {INDIAN_STATES.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -565,20 +561,20 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       <Droplet className="inline h-4 w-4 mr-1" />
                       Blood Group
                     </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
-                      <FormControl>
+                    <FormControl>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select blood group" />
                         </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {BLOOD_GROUPS.map((o) => (
-                          <SelectItem key={o} value={o}>
-                            {o}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <SelectContent>
+                          {BLOOD_GROUPS.map((o) => (
+                            <SelectItem key={o} value={o}>
+                              {o}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -592,20 +588,20 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Primary Diagnosis</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
-                      <FormControl>
+                    <FormControl>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select primary diagnosis" />
                         </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {PRIMARY_DIAGNOSIS_OPTIONS.map((o) => (
-                          <SelectItem key={o} value={o}>
-                            {o}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <SelectContent>
+                          {PRIMARY_DIAGNOSIS_OPTIONS.map((o) => (
+                            <SelectItem key={o} value={o}>
+                              {o}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -616,20 +612,20 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Subspeciality Follow-up</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || "NIL"}>
-                      <FormControl>
+                    <FormControl>
+                      <Select onValueChange={field.onChange} value={field.value || "NIL"}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select follow-up type" />
                         </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {SUBSPECIALITY_FOLLOWUP_OPTIONS.map((o) => (
-                          <SelectItem key={o} value={o}>
-                            {o}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <SelectContent>
+                          {SUBSPECIALITY_FOLLOWUP_OPTIONS.map((o) => (
+                            <SelectItem key={o} value={o}>
+                              {o}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -640,20 +636,20 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Smoking Status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || "NIL"}>
-                      <FormControl>
+                    <FormControl>
+                      <Select onValueChange={field.onChange} value={field.value || "NIL"}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {YES_NO_NIL_OPTIONS.map((o) => (
-                          <SelectItem key={o} value={o}>
-                            {o}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <SelectContent>
+                          {YES_NO_NIL_OPTIONS.map((o) => (
+                            <SelectItem key={o} value={o}>
+                              {o}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -664,20 +660,20 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Alcohol Consumption</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || "NIL"}>
-                      <FormControl>
+                    <FormControl>
+                      <Select onValueChange={field.onChange} value={field.value || "NIL"}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {YES_NO_NIL_OPTIONS.map((o) => (
-                          <SelectItem key={o} value={o}>
-                            {o}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <SelectContent>
+                          {YES_NO_NIL_OPTIONS.map((o) => (
+                            <SelectItem key={o} value={o}>
+                              {o}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -691,20 +687,20 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       <Leaf className="inline h-4 w-4 mr-1" />
                       Nutritional Status
                     </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
-                      <FormControl>
+                    <FormControl>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select nutritional status" />
                         </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {NUTRITIONAL_STATUSES.map((o) => (
-                          <SelectItem key={o} value={o}>
-                            {o}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <SelectContent>
+                          {NUTRITIONAL_STATUSES.map((o) => (
+                            <SelectItem key={o} value={o}>
+                              {o}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -718,20 +714,20 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       <Accessibility className="inline h-4 w-4 mr-1" />
                       Disability Profile
                     </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
-                      <FormControl>
+                    <FormControl>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select disability profile" />
                         </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {DISABILITY_PROFILES.map((o) => (
-                          <SelectItem key={o} value={o}>
-                            {o}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <SelectContent>
+                          {DISABILITY_PROFILES.map((o) => (
+                            <SelectItem key={o} value={o}>
+                              {o}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -799,17 +795,15 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
           <CardContent className="space-y-4">
             {vaccinationFields.map((vaccField, index) => {
               const fieldNamePrefix = `clinicalProfile.vaccinations.${index}` as const;
-              const checkboxId = `${fieldNamePrefix}-administered-checkbox-${vaccField.id || index}`;
               return (
                 <div key={vaccField.id || index} className="p-3 border rounded-md bg-muted/20">
                    <FormField
                       control={form.control}
                       name={`${fieldNamePrefix}.administered`}
                       render={({ field: checkboxField }) => (
-                        <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
-                           <FormControl>
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 mb-3">
+                          <FormControl>
                             <Checkbox
-                              ref={checkboxField.ref}
                               checked={checkboxField.value}
                               onCheckedChange={(checked) => {
                                 checkboxField.onChange(checked);
@@ -818,13 +812,11 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                                     form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, "");
                                 }
                               }}
-                              onBlur={checkboxField.onBlur}
-                              name={checkboxField.name}
-                              id={checkboxId}
                             />
                           </FormControl>
-                          <FormLabel htmlFor={checkboxId} className="font-medium text-sm cursor-pointer">{vaccField.name}</FormLabel>
-                          <FormMessage/>
+                           <div className="space-y-1 leading-none">
+                              <FormLabel className="font-medium text-sm cursor-pointer">{vaccField.name}</FormLabel>
+                           </div>
                         </FormItem>
                       )}
                     />
