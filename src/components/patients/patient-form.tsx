@@ -797,30 +797,29 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               const fieldNamePrefix = `clinicalProfile.vaccinations.${index}` as const;
               return (
                 <div key={vaccField.id || index} className="p-3 border rounded-md bg-muted/20">
-                   <FormField
-                      control={form.control}
-                      name={`${fieldNamePrefix}.administered`}
-                      render={({ field: checkboxField }) => (
-                        <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
-                            <FormControl>
-                                <Checkbox
-                                    checked={checkboxField.value}
-                                    onCheckedChange={(checked) => {
-                                        checkboxField.onChange(checked);
-                                        if (!checked) {
-                                            form.setValue(`${fieldNamePrefix}.date` as any, "");
-                                            form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, "");
-                                        }
-                                    }}
-                                    id={`${fieldNamePrefix}.administered`}
-                                />
-                            </FormControl>
-                            <FormLabel htmlFor={`${fieldNamePrefix}.administered`} className="font-medium text-sm cursor-pointer">
-                                {vaccField.name}
-                            </FormLabel>
-                        </FormItem>
-                      )}
-                    />
+                  <FormField
+                    control={form.control}
+                    name={`${fieldNamePrefix}.administered`}
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={(checked) => {
+                              field.onChange(checked);
+                              if (!checked) {
+                                form.setValue(`${fieldNamePrefix}.date` as any, "");
+                                form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, "");
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <FormLabel className="font-medium text-sm">
+                          {vaccField.name}
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
                   {form.watch(`${fieldNamePrefix}.administered` as any) && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
                       <FormField
@@ -864,3 +863,4 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     
 
     
+
