@@ -801,22 +801,23 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       control={form.control}
                       name={`${fieldNamePrefix}.administered`}
                       render={({ field: checkboxField }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 mb-3">
-                          <FormControl>
-                            <Checkbox
-                              checked={checkboxField.value}
-                              onCheckedChange={(checked) => {
-                                checkboxField.onChange(checked);
-                                if (!checked) {
-                                    form.setValue(`${fieldNamePrefix}.date` as any, "");
-                                    form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, "");
-                                }
-                              }}
-                            />
-                          </FormControl>
-                           <div className="space-y-1 leading-none">
-                              <FormLabel className="font-medium text-sm cursor-pointer">{vaccField.name}</FormLabel>
-                           </div>
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
+                            <FormControl>
+                                <Checkbox
+                                    checked={checkboxField.value}
+                                    onCheckedChange={(checked) => {
+                                        checkboxField.onChange(checked);
+                                        if (!checked) {
+                                            form.setValue(`${fieldNamePrefix}.date` as any, "");
+                                            form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, "");
+                                        }
+                                    }}
+                                    id={`${fieldNamePrefix}.administered`}
+                                />
+                            </FormControl>
+                            <FormLabel htmlFor={`${fieldNamePrefix}.administered`} className="font-medium text-sm cursor-pointer">
+                                {vaccField.name}
+                            </FormLabel>
                         </FormItem>
                       )}
                     />
