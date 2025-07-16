@@ -2,7 +2,7 @@
 "use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Activity, FlaskConical, AlertTriangle, TrendingUp, CalendarClock, FileText, Hospital, Building } from "lucide-react"; 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { usePatientData } from "@/hooks/use-patient-data";
 import { Skeleton } from "@/components/ui/skeleton"; 
 
@@ -18,8 +18,6 @@ type MetricDetail = {
 
 export function OverviewMetrics() {
   const { patients, isLoading: patientsLoading } = usePatientData();
-  const [opdPatients, setOpdPatients] = useState(0);
-  const [ipdPatients, setIpdPatients] = useState(0);
   const [randomIncrease, setRandomIncrease] = useState<number | null>(null);
   
   const [dialysisSessions] = useState(42); // Mock
@@ -27,14 +25,21 @@ export function OverviewMetrics() {
   const [criticalAlerts] = useState(3); // Mock
 
   useEffect(() => {
-    if (!patientsLoading) {
-      setOpdPatients(patients.filter(p => p.patientStatus === 'OPD').length);
-      setIpdPatients(patients.filter(p => p.patientStatus === 'IPD').length);
-      if (randomIncrease === null) { // Generate only once on client mount
-        setRandomIncrease(Math.floor(Math.random() * 10) + 5);
-      }
+    // This effect now only runs once on the client to generate a random number.
+    if (randomIncrease === null) {
+      setRandomIncrease(Math.floor(Math.random() * 10) + 5);
     }
-  }, [patients, patientsLoading, randomIncrease]);
+  }, [randomIncrease]);
+
+  const { opdPatients, ipdPatients } = useMemo(() => {
+    if (patientsLoading) {
+      return { opdPatients: 0, ipdPatients: 0 };
+    }
+    const opd = patients.filter(p => p.patientStatus === 'OPD').length;
+    const ipd = patients.filter(p => p.patientStatus === 'IPD').length;
+    return { opdPatients: opd, ipdPatients: ipd };
+  }, [patients, patientsLoading]);
+
 
   const metrics: MetricDetail[] = [
     { 
@@ -73,15 +78,6 @@ export function OverviewMetrics() {
       borderColorClass: "border-purple-500",
       loading: false 
     },
-    // { // This was critical alerts, can be re-added if needed.
-    //   title: "Critical Alerts", 
-    //   value: criticalAlerts, 
-    //   subtitle: "Requires attention", 
-    //   icon: AlertTriangle,
-    //   iconColorClass: "text-yellow-500",
-    //   borderColorClass: "border-yellow-500",
-    //   loading: false
-    // },
   ];
 
   return (
