@@ -1,118 +1,106 @@
 
 "use client";
 
-import { useMemo, useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAppointmentData } from '@/hooks/use-appointment-data';
 import { isToday, parseISO } from 'date-fns';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { User, Users, Clock, PlayCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, LogIn } from 'lucide-react';
+import { usePatientData } from '@/hooks/use-patient-data';
 
-export default function OpdDisplayPage() {
-    const { appointments, isLoading } = useAppointmentData();
-    const [currentTime, setCurrentTime] = useState(new Date());
+export default function OpdLoginPage() {
+  const [mobileNumber, setMobileNumber] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
+  const { appointments, isLoading: appointmentsLoading } = useAppointmentData();
+  const { patients, isLoading: patientsLoading } = usePatientData();
 
-    useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 5000); // Update time every 5 seconds
-        return () => clearInterval(timer);
-    }, []);
-
-    const { nowServing, waitingList } = useMemo(() => {
-        const todaysAppointments = appointments.filter(app => {
-            try {
-                return isToday(parseISO(app.date));
-            } catch {
-                return false;
-            }
-        });
-
-        const nowServing = todaysAppointments.find(app => app.status === 'Now Serving') || null;
-        const waitingList = todaysAppointments
-            .filter(app => app.status === 'Waiting')
-            .sort((a, b) => a.time.localeCompare(b.time));
-
-        return { nowServing, waitingList };
-    }, [appointments]);
-
-    if (isLoading) {
-        return (
-            <div className="space-y-8">
-                <Skeleton className="h-48 w-full" />
-                <Skeleton className="h-96 w-full" />
-            </div>
-        );
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mobileNumber || mobileNumber.length !== 10) {
+      toast({
+        title: "Invalid Mobile Number",
+        description: "Please enter a valid 10-digit mobile number.",
+        variant: "destructive",
+      });
+      return;
     }
 
-    return (
-        <div className="max-w-7xl mx-auto">
-            <header className="mb-8 p-4 bg-background rounded-lg shadow-md flex justify-between items-center">
-                <h1 className="text-3xl md:text-4xl font-bold text-primary">OPD Status</h1>
-                <div className="text-xl md:text-2xl font-semibold text-right">
-                    <p>{currentTime.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    <p className="text-muted-foreground">{currentTime.toLocaleTimeString()}</p>
-                </div>
-            </header>
+    setIsLoading(true);
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Now Serving Card */}
-                <div className="lg:col-span-1">
-                    <Card className="shadow-2xl border-4 border-green-500 bg-green-50">
-                        <CardHeader>
-                            <CardTitle className="text-3xl font-bold text-green-800 flex items-center">
-                                <PlayCircle className="mr-3 h-10 w-10" />
-                                Now Serving
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-center py-8">
-                            {nowServing ? (
-                                <div className="space-y-4">
-                                    <p className="text-5xl font-extrabold text-green-700 break-words">{nowServing.patientName}</p>
-                                    <p className="text-2xl text-muted-foreground font-medium">Token: <span className="font-bold text-slate-600">{nowServing.nephroId}</span></p>
-                                </div>
-                            ) : (
-                                <p className="text-4xl font-bold text-muted-foreground">No one is being served</p>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
+    // Find the patient and their appointment for today
+    const patientWithMobile = patients.find(p => p.contact === mobileNumber);
+    if (!patientWithMobile) {
+      toast({
+        title: "Patient Not Found",
+        description: "No patient record found with this mobile number.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
 
-                {/* Waiting List Card */}
-                <div className="lg:col-span-2">
-                    <Card className="shadow-xl bg-background">
-                        <CardHeader>
-                            <CardTitle className="text-3xl font-bold text-primary flex items-center">
-                                <Users className="mr-3 h-8 w-8" />
-                                Waiting List
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {waitingList.length > 0 ? (
-                                <ul className="space-y-4">
-                                    {waitingList.map((app, index) => (
-                                        <li key={app.id} className="flex items-center justify-between p-4 border-b-2 rounded-lg bg-blue-50/50 text-2xl">
-                                            <div className="flex items-center">
-                                                <span className="text-4xl font-bold text-primary mr-6">{index + 1}</span>
-                                                <p className="font-semibold text-slate-800 break-words">{app.patientName}</p>
-                                            </div>
-                                            <div className="text-right flex-shrink-0 ml-4">
-                                                <p className="font-bold text-primary flex items-center justify-end">
-                                                    <Clock className="mr-2 h-6 w-6" />
-                                                    Est. { (index + 1) * 10 } mins
-                                                </p>
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <div className="text-center py-24 text-muted-foreground">
-                                    <p className="text-3xl font-semibold">The waiting list is currently empty.</p>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
-        </div>
+    const todaysAppointment = appointments.find(app => 
+        app.patientId === patientWithMobile.id && isToday(parseISO(app.date))
     );
-}
 
+    if (!todaysAppointment) {
+      toast({
+        title: "No Appointment Today",
+        description: "No appointment found for you today. Please check at the reception.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    toast({
+      title: "Login Successful",
+      description: `Welcome, ${patientWithMobile.name}. Redirecting to your status...`,
+    });
+
+    // Redirect to a new dynamic page showing their specific status
+    router.push(`/opd-display/status/${todaysAppointment.id}`);
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-slate-100">
+      <Card className="w-full max-w-md shadow-2xl">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold text-primary">Patient Queue Status</CardTitle>
+          <CardDescription>Enter your mobile number to view your queue details.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="mobile">10-Digit Mobile Number</Label>
+              <Input
+                id="mobile"
+                type="tel"
+                placeholder="e.g., 9876543210"
+                value={mobileNumber}
+                onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                required
+                className="text-lg"
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={isLoading || appointmentsLoading || patientsLoading}>
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <LogIn className="mr-2 h-4 w-4" />
+              )}
+              View My Queue Status
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
