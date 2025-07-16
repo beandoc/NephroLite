@@ -18,6 +18,8 @@ import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  // This layout is for authenticated app routes.
+  // The OPD display will have its own layout.
   return (
     <SidebarProvider defaultOpen>
       <Sidebar variant="sidebar" collapsible="icon" className="border-r">

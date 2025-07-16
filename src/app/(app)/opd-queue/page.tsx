@@ -11,10 +11,13 @@ import { isToday, parseISO } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { User, Clock, ChevronRight, PlayCircle, Users, CheckCircle, Ban, Forward, Tv2 } from 'lucide-react';
 import Link from 'next/link';
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from 'next/navigation';
 
 export default function OpdQueuePage() {
   const { appointments, isLoading, updateAppointmentStatus, updateMultipleAppointmentStatuses } = useAppointmentData();
   const { toast } = useToast();
+  const router = useRouter();
 
   const { nowServing, waitingList } = useMemo(() => {
     const todaysAppointments = appointments.filter(app => {
@@ -39,7 +42,7 @@ export default function OpdQueuePage() {
       return;
     }
 
-    const updates: { id: string; status: 'Completed' | 'Now Serving' }[] = [];
+    const updates: { id: string; status: Appointment['status'] }[] = [];
     const nextPatient = waitingList[0];
 
     // Mark current patient as completed, if there is one
@@ -75,7 +78,7 @@ export default function OpdQueuePage() {
       <PageHeader
         title="OPD Queue Management"
         description="Manage the live patient queue for today's outpatient department."
-        actions={<Button onClick={() => {}} variant="outline"><Tv2 className="mr-2 h-4 w-4" />Open Patient Display (WIP)</Button>}
+        actions={<Button onClick={() => router.push('/opd-display')} variant="outline"><Tv2 className="mr-2 h-4 w-4" />Open Patient Display</Button>}
       />
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-8">
