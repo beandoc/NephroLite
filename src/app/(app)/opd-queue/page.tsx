@@ -9,7 +9,7 @@ import { useAppointmentData } from '@/hooks/use-appointment-data';
 import { usePatientData } from '@/hooks/use-patient-data';
 import { isToday, parseISO } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
-import { User, Clock, ChevronRight, PlayCircle, Users, CheckCircle, Ban, Forward, Tv2 } from 'lucide-react';
+import { User, Clock, ChevronRight, PlayCircle, Users, CheckCircle, Ban, Forward, Tv2, Copy } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
@@ -60,6 +60,15 @@ export default function OpdQueuePage() {
       description: `${nextPatient.patientName} is now being served.`,
     });
   };
+  
+  const handleCopyDisplayLink = () => {
+    const url = new URL('/opd-display', window.location.origin);
+    navigator.clipboard.writeText(url.href);
+    toast({
+        title: "Link Copied",
+        description: "The patient display link has been copied to your clipboard.",
+    });
+  };
 
   if (isLoading) {
     return (
@@ -78,7 +87,16 @@ export default function OpdQueuePage() {
       <PageHeader
         title="OPD Queue Management"
         description="Manage the live patient queue for today's outpatient department."
-        actions={<Button onClick={() => router.push('/opd-display')} variant="outline"><Tv2 className="mr-2 h-4 w-4" />Open Patient Display</Button>}
+        actions={
+          <div className="flex gap-2">
+            <Button onClick={handleCopyDisplayLink} variant="secondary">
+              <Copy className="mr-2 h-4 w-4" /> Copy Display Link
+            </Button>
+            <Button onClick={() => router.push('/opd-display')} variant="outline">
+              <Tv2 className="mr-2 h-4 w-4" /> Open Patient Display
+            </Button>
+          </div>
+        }
       />
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-8">
