@@ -83,7 +83,7 @@ const patientFormSchema = z.object({
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
   address: addressSchema,
   guardian: guardianSchema,
-  clinicalProfile: clinicalProfileSchema.optional(),
+  clinicalProfile: clinicalProfileSchema,
   serviceName: z.string().optional(),
   serviceNumber: z.string().optional(),
   rank: z.string().optional(),
@@ -187,7 +187,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
 
   const { fields: vaccinationFields, replace: replaceVaccinations } = useFieldArray({
     control: form.control,
-    name: "clinicalProfile.vaccinations" as any,
+    name: "clinicalProfile.vaccinations",
   });
 
    useEffect(() => {
@@ -286,8 +286,9 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Date of Birth</FormLabel>
-                   <Popover>
-                      <PopoverTrigger asChild>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
                         <Button
                           variant={"outline"}
                           className={cn(
@@ -302,22 +303,21 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                         <FormControl>
-                            <Calendar
-                              mode="single"
-                              selected={field.value ? parseISO(field.value) : undefined}
-                              onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
-                              disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                              initialFocus
-                              captionLayout="dropdown-buttons"
-                              fromYear={1900}
-                              toYear={new Date().getFullYear()}
-                            />
-                        </FormControl>
-                      </PopoverContent>
-                    </Popover>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value ? parseISO(field.value) : undefined}
+                        onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                        initialFocus
+                        captionLayout="dropdown-buttons"
+                        fromYear={1900}
+                        toYear={new Date().getFullYear()}
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
@@ -328,18 +328,18 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Gender</FormLabel>
-                  <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select gender" />
-                        </SelectTrigger>
-                      <SelectContent>
-                        {GENDERS.map((g) => (
-                          <SelectItem key={g} value={g}>{g}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <FormControl>
+                      <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {GENDERS.map((g) => (
+                        <SelectItem key={g} value={g}>{g}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -359,18 +359,18 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Guardian Relation to Patient</FormLabel>
-                  <FormControl>
                    <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select relation" />
-                        </SelectTrigger>
-                      <SelectContent>
-                        {RELATIONSHIPS.map((r) => (
-                          <SelectItem key={r} value={r}>{r}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
+                    <FormControl>
+                      <SelectTrigger>
+                          <SelectValue placeholder="Select relation" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {RELATIONSHIPS.map((r) => (
+                        <SelectItem key={r} value={r}>{r}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -387,18 +387,18 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <Home className="inline h-4 w-4 mr-1" />
                     Residence Type
                   </FormLabel>
-                  <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value || "Not Set"}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select residence type" />
-                        </SelectTrigger>
-                      <SelectContent>
-                        {RESIDENCE_TYPES.map((rt) => (
-                          <SelectItem key={rt} value={rt}>{rt}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value || "Not Set"}>
+                    <FormControl>
+                      <SelectTrigger>
+                          <SelectValue placeholder="Select residence type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {RESIDENCE_TYPES.map((rt) => (
+                        <SelectItem key={rt} value={rt}>{rt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -409,34 +409,34 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Next Appointment Date (Optional)</FormLabel>
-                   <Popover>
-                      <PopoverTrigger asChild>
-                         <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(parseISO(field.value), "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <FormControl>
-                          <Calendar
-                            mode="single"
-                            selected={field.value ? parseISO(field.value) : undefined}
-                            onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
-                            initialFocus
-                          />
-                        </FormControl>
-                      </PopoverContent>
-                    </Popover>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(parseISO(field.value), "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value ? parseISO(field.value) : undefined}
+                        onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
@@ -456,7 +456,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <FormLabel>Track Patient</FormLabel>
                     <FormDescription>Enable special monitoring for this patient.</FormDescription>
                   </div>
-                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -478,18 +477,18 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>State</FormLabel>
-                   <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select state" />
-                        </SelectTrigger>
-                      <SelectContent>
-                        {INDIAN_STATES.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                   </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <FormControl>
+                      <SelectTrigger>
+                          <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {INDIAN_STATES.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -528,16 +527,16 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel><Droplet className="inline h-4 w-4 mr-1" />Blood Group</FormLabel>
-                    <FormControl>
                     <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
                         <SelectTrigger><SelectValue placeholder="Select blood group" /></SelectTrigger>
+                      </FormControl>
                       <SelectContent>
                           {BLOOD_GROUPS.map((o) => (
                             <SelectItem key={o} value={o}>{o}</SelectItem>
                           ))}
                       </SelectContent>
                     </Select>
-                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -551,16 +550,16 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Primary Diagnosis</FormLabel>
-                     <FormControl>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                          <SelectTrigger><SelectValue placeholder="Select primary diagnosis" /></SelectTrigger>
-                        <SelectContent>
-                            {PRIMARY_DIAGNOSIS_OPTIONS.map((o) => (
-                              <SelectItem key={o} value={o}>{o}</SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                     </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select primary diagnosis" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                          {PRIMARY_DIAGNOSIS_OPTIONS.map((o) => (
+                            <SelectItem key={o} value={o}>{o}</SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -571,16 +570,16 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Subspeciality Follow-up</FormLabel>
-                    <FormControl>
                     <Select onValueChange={field.onChange} value={field.value || "NIL"}>
+                      <FormControl>
                         <SelectTrigger><SelectValue placeholder="Select follow-up type" /></SelectTrigger>
+                      </FormControl>
                       <SelectContent>
                           {SUBSPECIALITY_FOLLOWUP_OPTIONS.map((o) => (
                             <SelectItem key={o} value={o}>{o}</SelectItem>
                           ))}
                       </SelectContent>
                     </Select>
-                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -591,16 +590,16 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Smoking Status</FormLabel>
-                     <FormControl>
-                      <Select onValueChange={field.onChange} value={field.value || "NIL"}>
-                          <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
-                        <SelectContent>
-                            {YES_NO_NIL_OPTIONS.map((o) => (
-                              <SelectItem key={o} value={o}>{o}</SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                     </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value || "NIL"}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                          {YES_NO_NIL_OPTIONS.map((o) => (
+                            <SelectItem key={o} value={o}>{o}</SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -611,16 +610,16 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Alcohol Consumption</FormLabel>
-                    <FormControl>
-                      <Select onValueChange={field.onChange} value={field.value || "NIL"}>
-                          <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
-                        <SelectContent>
-                            {YES_NO_NIL_OPTIONS.map((o) => (
-                              <SelectItem key={o} value={o}>{o}</SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value || "NIL"}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                          {YES_NO_NIL_OPTIONS.map((o) => (
+                            <SelectItem key={o} value={o}>{o}</SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -631,16 +630,16 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel><Leaf className="inline h-4 w-4 mr-1" />Nutritional Status</FormLabel>
-                    <FormControl>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                          <SelectTrigger><SelectValue placeholder="Select nutritional status" /></SelectTrigger>
-                        <SelectContent>
-                            {NUTRITIONAL_STATUSES.map((o) => (
-                              <SelectItem key={o} value={o}>{o}</SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select nutritional status" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                          {NUTRITIONAL_STATUSES.map((o) => (
+                            <SelectItem key={o} value={o}>{o}</SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -651,16 +650,16 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel><Accessibility className="inline h-4 w-4 mr-1" />Disability Profile</FormLabel>
-                     <FormControl>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                          <SelectTrigger><SelectValue placeholder="Select disability profile" /></SelectTrigger>
-                        <SelectContent>
-                            {DISABILITY_PROFILES.map((o) => (
-                              <SelectItem key={o} value={o}>{o}</SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                     </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select disability profile" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                          {DISABILITY_PROFILES.map((o) => (
+                            <SelectItem key={o} value={o}>{o}</SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -675,49 +674,65 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
             )} />
 
             <div>
-              <FormLabel className="flex items-center"><TagsIcon className="inline h-4 w-4 mr-1"/>Clinical Labels</FormLabel>
-              <div className="flex items-center gap-2 mt-1">
-                <Input
-                  value={currentLabelsInput}
-                  onChange={(e) => setCurrentLabelsInput(e.target.value)}
-                  placeholder="Type a label and add"
-                  className="flex-grow"
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddLabel();}}}
-                />
-                <Button type="button" onClick={handleAddLabel} variant="outline">Add Label</Button>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {watchedLabels.map(label => (
-                  <Badge key={label} variant="secondary" className="flex items-center gap-1">
-                    {label}
-                    <button type="button" onClick={() => handleRemoveLabel(label)} className="ml-1 text-xs text-muted-foreground hover:text-destructive">&times;</button>
-                  </Badge>
-                ))}
-              </div>
-              <FormMessage>{form.formState.errors.clinicalProfile?.labels?.message}</FormMessage>
+              <FormField
+                control={form.control}
+                name="clinicalProfile.labels"
+                render={() => (
+                  <FormItem>
+                    <FormLabel className="flex items-center"><TagsIcon className="inline h-4 w-4 mr-1"/>Clinical Labels</FormLabel>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Input
+                        value={currentLabelsInput}
+                        onChange={(e) => setCurrentLabelsInput(e.target.value)}
+                        placeholder="Type a label and add"
+                        className="flex-grow"
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddLabel();}}}
+                      />
+                      <Button type="button" onClick={handleAddLabel} variant="outline">Add Label</Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2 min-h-[24px]">
+                      {watchedLabels.map(label => (
+                        <Badge key={label} variant="secondary" className="flex items-center gap-1">
+                          {label}
+                          <button type="button" onClick={() => handleRemoveLabel(label)} className="ml-1 text-xs text-muted-foreground hover:text-destructive">&times;</button>
+                        </Badge>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-
+            
             <div>
-              <FormLabel className="flex items-center"><TagsIcon className="inline h-4 w-4 mr-1"/>Clinical Tags</FormLabel>
-               <div className="flex items-center gap-2 mt-1">
-                <Input
-                  value={currentTagsInput}
-                  onChange={(e) => setCurrentTagsInput(e.target.value)}
-                  placeholder="Type a tag and add"
-                  className="flex-grow"
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTagManually();}}}
+              <FormField
+                  control={form.control}
+                  name="clinicalProfile.tags"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel className="flex items-center"><TagsIcon className="inline h-4 w-4 mr-1"/>Clinical Tags</FormLabel>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Input
+                          value={currentTagsInput}
+                          onChange={(e) => setCurrentTagsInput(e.target.value)}
+                          placeholder="Type a tag and add"
+                          className="flex-grow"
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTagManually();}}}
+                        />
+                        <Button type="button" onClick={handleAddTagManually} variant="outline">Add Tag</Button>
+                      </div>
+                      <div className="flex flex-wrap gap-2 mt-2 min-h-[24px]">
+                        {watchedTags.map(tag => (
+                          <Badge key={tag} variant="outline" className="flex items-center gap-1">
+                            {tag}
+                            <button type="button" onClick={() => handleRemoveTag(tag)} className="ml-1 text-xs text-muted-foreground hover:text-destructive">&times;</button>
+                          </Badge>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                <Button type="button" onClick={handleAddTagManually} variant="outline">Add Tag</Button>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-2 mb-4">
-                {watchedTags.map(tag => (
-                  <Badge key={tag} variant="outline" className="flex items-center gap-1">
-                    {tag}
-                    <button type="button" onClick={() => handleRemoveTag(tag)} className="ml-1 text-xs text-muted-foreground hover:text-destructive">&times;</button>
-                  </Badge>
-                ))}
-              </div>
-               <FormMessage>{form.formState.errors.clinicalProfile?.tags?.message}</FormMessage>
               <AiTagSuggester onTagsSuggested={handleAiSuggestedTags} currentTags={watchedTags} />
             </div>
           </CardContent>
@@ -726,65 +741,71 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
         <Card>
           <CardHeader><CardTitle className="font-headline flex items-center"><Syringe className="mr-2 h-5 w-5 text-primary" />Vaccination Status</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            {vaccinationFields.map((vaccField, index) => {
-              const fieldNamePrefix = `clinicalProfile.vaccinations.${index}` as const;
-              return (
-                <div key={vaccField.id || index} className="p-3 border rounded-md bg-muted/20">
-                    <FormField
-                      control={form.control}
-                      name={`${fieldNamePrefix}.administered`}
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={(checked) => {
-                                field.onChange(checked);
-                                if (!checked) {
-                                  form.setValue(`${fieldNamePrefix}.date` as any, "");
-                                  form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, "");
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel className="font-medium text-sm">
-                            {vaccField.name}
-                          </FormLabel>
-                        </FormItem>
+            {vaccinationFields.map((vaccField, index) => (
+              <FormField
+                key={vaccField.id}
+                control={form.control}
+                name={`clinicalProfile.vaccinations.${index}`}
+                render={({ field }) => {
+                  const currentVaccination = field.value;
+                  return (
+                    <FormItem className="p-3 border rounded-md bg-muted/20">
+                      <div className="flex flex-row items-center space-x-3">
+                        <FormControl>
+                          <Checkbox
+                            checked={currentVaccination.administered}
+                            onCheckedChange={(checked) => {
+                              const newAdministered = !!checked;
+                              field.onChange({
+                                ...currentVaccination,
+                                administered: newAdministered,
+                                date: newAdministered ? (currentVaccination.date || new Date().toISOString().split('T')[0]) : "",
+                                nextDoseDate: newAdministered ? currentVaccination.nextDoseDate : ""
+                              });
+                            }}
+                          />
+                        </FormControl>
+                        <FormLabel className="font-medium text-sm">
+                          {currentVaccination.name}
+                        </FormLabel>
+                      </div>
+                      {currentVaccination.administered && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7 mt-3">
+                           <FormField
+                            control={form.control}
+                            name={`clinicalProfile.vaccinations.${index}.date`}
+                            render={({ field: dateField }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs">Date Administered</FormLabel>
+                                <FormControl>
+                                  <Input type="date" {...dateField} value={dateField.value || ""} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`clinicalProfile.vaccinations.${index}.nextDoseDate`}
+                            render={({ field: nextDoseField }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs">Next Dose Date (Optional)</FormLabel>
+                                <FormControl>
+                                  <Input type="date" {...nextDoseField} value={nextDoseField.value || ""} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       )}
-                    />
-                  {form.watch(`${fieldNamePrefix}.administered` as any) && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
-                      <FormField
-                        control={form.control}
-                        name={`${fieldNamePrefix}.date`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-xs">Date Administered</FormLabel>
-                            <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
-                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`${fieldNamePrefix}.nextDoseDate`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-xs">Next Dose Date (Optional)</FormLabel>
-                            <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
-                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                    </FormItem>
+                  );
+                }}
+              />
+            ))}
           </CardContent>
         </Card>
-
 
         <Button type="submit" className="w-full md:w-auto" disabled={isSubmitting}>
           {isSubmitting ? (patient ? "Updating Patient..." : "Registering Patient...") : (patient ? "Update Patient" : "Register Patient")}
