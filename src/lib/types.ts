@@ -62,6 +62,28 @@ export type Patient = {
   residenceType?: 'Rural' | 'Urban' | 'Semi-Urban' | 'Other' | 'Not Set';
 };
 
+// This type mirrors the Zod schema in patient-form.tsx
+export type PatientFormData = {
+  customIdPrefix: string;
+  name: string;
+  dob: string;
+  gender: string;
+  contact: string;
+  email?: string | undefined;
+  address: Address;
+  guardian: Guardian;
+  clinicalProfile?: Partial<ClinicalProfile> | undefined;
+  serviceName?: string | undefined;
+  serviceNumber?: string | undefined;
+  rank?: string | undefined;
+  unitName?: string | undefined;
+  formation?: string | undefined;
+  nextAppointmentDate?: string | undefined;
+  isTracked?: boolean | undefined;
+  residenceType?: string | undefined;
+};
+
+
 export type Appointment = {
   id: string;
   patientId: string;
@@ -116,3 +138,5 @@ export type VisitData = {
   groupName?: string; // Patient group
   // Other visit-specific fields can be added later
 };
+
+    

@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { Patient, Vaccination, ClinicalProfile } from '@/lib/types';
+import type { Patient, Vaccination, ClinicalProfile, PatientFormData } from '@/lib/types';
 import { useState, useEffect, useCallback } from 'react';
 import { VACCINATION_NAMES, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS, RESIDENCE_TYPES } from '@/lib/constants';
 
@@ -167,29 +167,43 @@ export function usePatientData() {
     return patients.find(p => p.id === id);
   }, [patients]);
 
-  const addPatient = useCallback((patientData: Omit<Patient, 'id' | 'nephroId' | 'registrationDate' | 'patientStatus'> & { customIdPrefix: string }): Patient => {
+  const addPatient = useCallback((patientData: PatientFormData): Patient => {
     const now = new Date();
     const month = String(now.getMonth() + 1).padStart(2, '0'); // MM
     const year = String(now.getFullYear()).slice(-2); // YY
     const constructedNephroId = `${patientData.customIdPrefix}/${month}${year}`;
 
     const newPatient: Patient = {
-      ...patientData,
       id: crypto.randomUUID(),
       nephroId: constructedNephroId,
       registrationDate: now.toISOString().split('T')[0],
       patientStatus: 'OPD',
+      name: patientData.name,
+      dob: patientData.dob,
+      gender: patientData.gender,
+      contact: patientData.contact,
+      email: patientData.email,
+      address: patientData.address,
+      guardian: patientData.guardian,
       clinicalProfile: {
         ...getInitialClinicalProfile(),
         ...(patientData.clinicalProfile || {}),
       },
+      serviceName: patientData.serviceName,
+      serviceNumber: patientData.serviceNumber,
+      rank: patientData.rank,
+      unitName: patientData.unitName,
+      formation: patientData.formation,
+      nextAppointmentDate: patientData.nextAppointmentDate,
+      isTracked: patientData.isTracked || false,
+      residenceType: patientData.residenceType,
     };
     const updatedPatients = [...patients, newPatient];
     saveData(updatedPatients);
     return newPatient;
   }, [patients, saveData]);
 
-  const updatePatient = useCallback((updatedPatientData: Patient & { customIdPrefix: string }): Patient | undefined => {
+  const updatePatient = useCallback((updatedPatientData: PatientFormData & { id: string }): Patient | undefined => {
     const patientIndex = patients.findIndex(p => p.id === updatedPatientData.id);
     if (patientIndex === -1) return undefined;
 
@@ -198,7 +212,7 @@ export function usePatientData() {
 
     const prefix = updatedPatientData.customIdPrefix;
     const existingSuffix = originalPatient.nephroId.includes('/') ? originalPatient.nephroId.split('/')[1] : null;
-    const finalNephroId = existingSuffix ? `${prefix}/${existingSuffix}` : `${prefix}/${new Date().toISOString().slice(5,7)}${new Date().toISOString().slice(2,4)}`;
+    const finalNephroId = existingSuffix ? `${prefix}/${existingSuffix}` : `${new Date().toISOString().slice(5,7)}${new Date().toISOString().slice(2,4)}`;
     
     updatedPatients[patientIndex] = {
       ...originalPatient,
@@ -251,3 +265,5 @@ export function usePatientData() {
     dischargePatient,
   };
 }
+
+    
