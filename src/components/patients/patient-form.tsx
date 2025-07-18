@@ -403,27 +403,28 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               )}
             />
             <FormField
-              control={form.control}
-              name="isTracked"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center space-x-3 rounded-md border p-4 h-fit mt-7">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Track Patient
-                    </FormLabel>
-                    <FormDescription>
-                      Enable special monitoring for this patient.
-                    </FormDescription>
-                  </div>
-                </FormItem>
-              )}
-            />
+                control={form.control}
+                name="isTracked"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-start space-x-3 space-y-0 rounded-md border p-4 h-fit mt-7">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        id="isTracked-checkbox"
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel htmlFor="isTracked-checkbox">
+                        Track Patient
+                      </FormLabel>
+                      <FormDescription>
+                        Enable special monitoring for this patient.
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
           </CardContent>
         </Card>
 
