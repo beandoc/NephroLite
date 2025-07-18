@@ -677,7 +677,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                             control={control}
                             name={`clinicalProfile.vaccinations.${index}.administered`}
                             render={({ field }) => (
-                                <FormItem className="flex flex-row items-center space-x-3">
+                                <FormItem className="flex flex-row items-center space-x-3 space-y-0">
                                     <FormControl>
                                         <Checkbox
                                             checked={field.value}
