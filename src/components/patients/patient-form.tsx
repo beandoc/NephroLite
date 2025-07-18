@@ -684,58 +684,61 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <CardTitle className="font-headline flex items-center"><Syringe className="mr-2 h-5 w-5 text-primary" />Vaccination Status</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-              {vaccinationFields.map((vaccField, index) => (
-                  <div key={vaccField.id} className="p-3 border rounded-md bg-muted/20">
-                      <FormField
-                          control={form.control}
-                          name={`clinicalProfile.vaccinations.${index}.administered`}
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center space-x-3">
-                              <FormControl>
-                                  <Checkbox
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
+              {vaccinationFields.map((vaccField, index) => {
+                  const isChecked = form.watch(`clinicalProfile.vaccinations.${index}.administered`);
+                  return (
+                      <div key={vaccField.id} className="p-3 border rounded-md bg-muted/20 space-y-3">
+                          <FormField
+                              control={form.control}
+                              name={`clinicalProfile.vaccinations.${index}.administered`}
+                              render={({ field }) => (
+                                  <FormItem className="flex flex-row items-center space-x-3">
+                                      <FormControl>
+                                          <Checkbox
+                                              checked={field.value}
+                                              onCheckedChange={field.onChange}
+                                          />
+                                      </FormControl>
+                                      <FormLabel className="font-medium text-sm cursor-pointer">
+                                          {vaccField.name}
+                                      </FormLabel>
+                                  </FormItem>
+                              )}
+                          />
+
+                          {isChecked && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
+                                  <FormField
+                                      control={form.control}
+                                      name={`clinicalProfile.vaccinations.${index}.date`}
+                                      render={({ field }) => (
+                                          <FormItem>
+                                              <FormLabel className="text-xs">Date Administered</FormLabel>
+                                              <FormControl>
+                                                  <Input type="date" {...field} value={field.value || ""} />
+                                              </FormControl>
+                                              <FormMessage />
+                                          </FormItem>
+                                      )}
                                   />
-                              </FormControl>
-                              <FormLabel className="font-medium text-sm cursor-pointer">
-                                  {vaccField.name}
-                              </FormLabel>
-                            </FormItem>
+                                  <FormField
+                                      control={form.control}
+                                      name={`clinicalProfile.vaccinations.${index}.nextDoseDate`}
+                                      render={({ field }) => (
+                                          <FormItem>
+                                              <FormLabel className="text-xs">Next Dose Date (Optional)</FormLabel>
+                                              <FormControl>
+                                                  <Input type="date" {...field} value={field.value || ""} />
+                                              </FormControl>
+                                              <FormMessage />
+                                          </FormItem>
+                                      )}
+                                  />
+                              </div>
                           )}
-                      />
-                      
-                      {form.watch(`clinicalProfile.vaccinations.${index}.administered`) && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7 mt-3">
-                              <FormField
-                                  control={form.control}
-                                  name={`clinicalProfile.vaccinations.${index}.date`}
-                                  render={({ field }) => (
-                                      <FormItem>
-                                          <FormLabel className="text-xs">Date Administered</FormLabel>
-                                          <FormControl>
-                                              <Input type="date" {...field} value={field.value || ""} />
-                                          </FormControl>
-                                          <FormMessage />
-                                      </FormItem>
-                                  )}
-                              />
-                              <FormField
-                                  control={form.control}
-                                  name={`clinicalProfile.vaccinations.${index}.nextDoseDate`}
-                                  render={({ field }) => (
-                                      <FormItem>
-                                          <FormLabel className="text-xs">Next Dose Date (Optional)</FormLabel>
-                                          <FormControl>
-                                              <Input type="date" {...field} value={field.value || ""} />
-                                          </FormControl>
-                                          <FormMessage />
-                                      </FormItem>
-                                  )}
-                              />
-                          </div>
-                      )}
-                  </div>
-              ))}
+                      </div>
+                  );
+              })}
           </CardContent>
         </Card>
 
