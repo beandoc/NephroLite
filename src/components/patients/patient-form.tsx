@@ -646,37 +646,30 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormItem> <FormLabel><PencilLine className="inline h-4 w-4 mr-1"/>Problem Oriented Medical Record (POMR)</FormLabel> <FormControl><Textarea placeholder="Enter POMR details..." {...field} rows={4} /></FormControl> <FormMessage /> </FormItem>
             )} />
             
-            {/* START: Clinical Tags */}
             <div>
-              <FormItem>
-                <FormLabel className="flex items-center"><TagsIcon className="inline h-4 w-4 mr-1"/>Clinical Tags</FormLabel>
-                <div className="flex items-center gap-2">
-                  <Input
-                    value={currentTagsInput}
-                    onChange={(e) => setCurrentTagsInput(e.target.value)}
-                    placeholder="Type a tag and add"
-                    className="flex-grow"
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTagManually();}}}
-                  />
-                  <Button type="button" onClick={handleAddTagManually} variant="outline">Add Tag</Button>
-                </div>
-                 <FormDescription> Add relevant tags like 'Diabetes', 'Hypertension', 'PD', 'HD', 'Biopsy-proven', etc. </FormDescription>
-                <div className="flex flex-wrap gap-2 mt-2 min-h-[24px]">
-                  {watchedTags.map(tag => (
-                    <Badge key={tag} variant="outline" className="flex items-center gap-1">
-                      {tag}
-                      <button type="button" onClick={() => handleRemoveTag(tag)} className="ml-1 text-xs text-muted-foreground hover:text-destructive">&times;</button>
-                    </Badge>
-                  ))}
-                </div>
-                <FormMessage />
-              </FormItem>
-              <div className="mt-4">
-                 <AiTagSuggester onTagsSuggested={handleAiSuggestedTags} currentTags={watchedTags} />
+              <FormLabel className="flex items-center"><TagsIcon className="inline h-4 w-4 mr-1"/>Clinical Tags</FormLabel>
+              <div className="flex items-center gap-2 mt-2">
+                <Input
+                  value={currentTagsInput}
+                  onChange={(e) => setCurrentTagsInput(e.target.value)}
+                  placeholder="Type a tag and add"
+                  className="flex-grow"
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTagManually();}}}
+                />
+                <Button type="button" onClick={handleAddTagManually} variant="outline">Add Tag</Button>
+              </div>
+              <FormDescription className="mt-2"> Add relevant tags like 'Diabetes', 'Hypertension', 'PD', 'HD', 'Biopsy-proven', etc. </FormDescription>
+              <div className="flex flex-wrap gap-2 mt-2 min-h-[24px]">
+                {watchedTags.map(tag => (
+                  <Badge key={tag} variant="outline" className="flex items-center gap-1">
+                    {tag}
+                    <button type="button" onClick={() => handleRemoveTag(tag)} className="ml-1 text-xs text-muted-foreground hover:text-destructive">&times;</button>
+                  </Badge>
+                ))}
               </div>
             </div>
-            {/* END: Clinical Tags */}
-
+            
+            <AiTagSuggester onTagsSuggested={handleAiSuggestedTags} currentTags={watchedTags} />
           </CardContent>
         </Card>
 
@@ -686,7 +679,6 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
             </CardHeader>
             <CardContent className="space-y-4">
                 {vaccinationFields.map((vaccField, index) => {
-                    const currentVaccination = form.watch(`clinicalProfile.vaccinations.${index}`);
                     return (
                         <div key={vaccField.id} className="p-3 border rounded-md bg-muted/20">
                             <FormField
@@ -698,16 +690,15 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                                             <Checkbox
                                                 checked={field.value}
                                                 onCheckedChange={field.onChange}
-                                                id={`vacc-${index}`}
                                             />
                                         </FormControl>
-                                        <FormLabel htmlFor={`vacc-${index}`} className="font-medium text-sm cursor-pointer">
+                                        <FormLabel className="font-medium text-sm cursor-pointer">
                                             {vaccField.name}
                                         </FormLabel>
                                     </FormItem>
                                 )}
                             />
-                            {currentVaccination.administered && (
+                            {form.watch(`clinicalProfile.vaccinations.${index}.administered`) && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7 mt-3">
                                     <FormField
                                         control={form.control}
@@ -750,3 +741,5 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
+
+    
