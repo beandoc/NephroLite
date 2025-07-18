@@ -13,7 +13,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  useFormField,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -266,22 +265,20 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                   <FormLabel>Date of Birth</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(parseISO(field.value), "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {field.value ? (
+                          format(parseISO(field.value), "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                      </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
@@ -389,22 +386,20 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                   <FormLabel>Next Appointment Date (Optional)</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(parseISO(field.value), "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {field.value ? (
+                          format(parseISO(field.value), "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                      </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
@@ -653,35 +648,29 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
             
             {/* START: Clinical Tags */}
             <div>
-              <FormField
-                control={form.control}
-                name="clinicalProfile.tags"
-                render={() => (
-                  <FormItem>
-                    <FormLabel className="flex items-center"><TagsIcon className="inline h-4 w-4 mr-1"/>Clinical Tags</FormLabel>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={currentTagsInput}
-                        onChange={(e) => setCurrentTagsInput(e.target.value)}
-                        placeholder="Type a tag and add"
-                        className="flex-grow"
-                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTagManually();}}}
-                      />
-                      <Button type="button" onClick={handleAddTagManually} variant="outline">Add Tag</Button>
-                    </div>
-                     <FormDescription> Add relevant tags like 'Diabetes', 'Hypertension', 'PD', 'HD', 'Biopsy-proven', etc. </FormDescription>
-                    <div className="flex flex-wrap gap-2 mt-2 min-h-[24px]">
-                      {watchedTags.map(tag => (
-                        <Badge key={tag} variant="outline" className="flex items-center gap-1">
-                          {tag}
-                          <button type="button" onClick={() => handleRemoveTag(tag)} className="ml-1 text-xs text-muted-foreground hover:text-destructive">&times;</button>
-                        </Badge>
-                      ))}
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <FormItem>
+                <FormLabel className="flex items-center"><TagsIcon className="inline h-4 w-4 mr-1"/>Clinical Tags</FormLabel>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={currentTagsInput}
+                    onChange={(e) => setCurrentTagsInput(e.target.value)}
+                    placeholder="Type a tag and add"
+                    className="flex-grow"
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTagManually();}}}
+                  />
+                  <Button type="button" onClick={handleAddTagManually} variant="outline">Add Tag</Button>
+                </div>
+                 <FormDescription> Add relevant tags like 'Diabetes', 'Hypertension', 'PD', 'HD', 'Biopsy-proven', etc. </FormDescription>
+                <div className="flex flex-wrap gap-2 mt-2 min-h-[24px]">
+                  {watchedTags.map(tag => (
+                    <Badge key={tag} variant="outline" className="flex items-center gap-1">
+                      {tag}
+                      <button type="button" onClick={() => handleRemoveTag(tag)} className="ml-1 text-xs text-muted-foreground hover:text-destructive">&times;</button>
+                    </Badge>
+                  ))}
+                </div>
+                <FormMessage />
+              </FormItem>
               <div className="mt-4">
                  <AiTagSuggester onTagsSuggested={handleAiSuggestedTags} currentTags={watchedTags} />
               </div>
@@ -692,63 +681,66 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="font-headline flex items-center"><Syringe className="mr-2 h-5 w-5 text-primary" />Vaccination Status</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            {vaccinationFields.map((vaccField, index) => {
-              const currentVaccination = form.watch(`clinicalProfile.vaccinations.${index}`);
-              return (
-                <div key={vaccField.id} className="p-3 border rounded-md bg-muted/20">
-                  <FormField
-                    control={form.control}
-                    name={`clinicalProfile.vaccinations.${index}.administered`}
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-3">
-                        <FormControl>
-                           <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-medium text-sm">
-                          {vaccField.name}
-                        </FormLabel>
-                      </FormItem>
-                    )}
-                  />
-                  {currentVaccination.administered && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7 mt-3">
-                       <FormField
-                        control={form.control}
-                        name={`clinicalProfile.vaccinations.${index}.date`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-xs">Date Administered</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} value={field.value || ""} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`clinicalProfile.vaccinations.${index}.nextDoseDate`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-xs">Next Dose Date (Optional)</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} value={field.value || ""} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </CardContent>
+            <CardHeader>
+                <CardTitle className="font-headline flex items-center"><Syringe className="mr-2 h-5 w-5 text-primary" />Vaccination Status</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                {vaccinationFields.map((vaccField, index) => {
+                    const currentVaccination = form.watch(`clinicalProfile.vaccinations.${index}`);
+                    return (
+                        <div key={vaccField.id} className="p-3 border rounded-md bg-muted/20">
+                            <FormField
+                                control={form.control}
+                                name={`clinicalProfile.vaccinations.${index}.administered`}
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-center space-x-3">
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                                id={`vacc-${index}`}
+                                            />
+                                        </FormControl>
+                                        <FormLabel htmlFor={`vacc-${index}`} className="font-medium text-sm cursor-pointer">
+                                            {vaccField.name}
+                                        </FormLabel>
+                                    </FormItem>
+                                )}
+                            />
+                            {currentVaccination.administered && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7 mt-3">
+                                    <FormField
+                                        control={form.control}
+                                        name={`clinicalProfile.vaccinations.${index}.date`}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-xs">Date Administered</FormLabel>
+                                                <FormControl>
+                                                    <Input type="date" {...field} value={field.value || ""} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name={`clinicalProfile.vaccinations.${index}.nextDoseDate`}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-xs">Next Dose Date (Optional)</FormLabel>
+                                                <FormControl>
+                                                    <Input type="date" {...field} value={field.value || ""} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </CardContent>
         </Card>
 
         <Button type="submit" className="w-full md:w-auto" disabled={isSubmitting}>
