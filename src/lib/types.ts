@@ -16,8 +16,8 @@ export type Guardian = {
 export type Vaccination = {
   name: string;
   administered: boolean;
-  date?: string; // YYYY-MM-DD
-  nextDoseDate?: string; // YYYY-MM-DD
+  date?: string | null; // YYYY-MM-DD
+  nextDoseDate?: string | null; // YYYY-MM-DD
 };
 
 export type ClinicalProfile = {
@@ -29,7 +29,7 @@ export type ClinicalProfile = {
   subspecialityFollowUp?: string;
   smokingStatus?: string; // 'Yes', 'No', 'NIL'
   alcoholConsumption?: string; // 'Yes', 'No', 'NIL'
-  vaccinations?: Vaccination[];
+  vaccinations: Vaccination[];
   pomr?: string; // Problem Oriented Medical Record
   aabhaNumber?: string;
   bloodGroup?: string;
@@ -41,14 +41,14 @@ export type Patient = {
   id: string;
   nephroId: string;
   name: string;
-  dob: string;
+  dob: string; // YYYY-MM-DD
   gender: string;
   contact: string;
   email?: string;
   address: Address;
   guardian: Guardian;
   clinicalProfile: ClinicalProfile;
-  registrationDate: string;
+  registrationDate: string; // YYYY-MM-DD
   // Service-related details
   serviceName?: string;
   serviceNumber?: string;
@@ -56,9 +56,9 @@ export type Patient = {
   unitName?: string;
   formation?: string;
   // New top-level fields
-  patientStatus: 'OPD' | 'IPD' | 'Discharged'; // Default 'OPD'
+  patientStatus: 'OPD' | 'IPD' | 'Discharged';
   nextAppointmentDate?: string; // YYYY-MM-DD
-  isTracked?: boolean; // Default false
+  isTracked: boolean;
   residenceType?: 'Rural' | 'Urban' | 'Semi-Urban' | 'Other' | 'Not Set';
 };
 

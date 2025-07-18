@@ -13,6 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  useFormField,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,7 +31,7 @@ import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRI
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO, addDays } from "date-fns";
-import { CalendarIcon, Briefcase, HeartPulse, Activity, Leaf, Accessibility, Syringe, PencilLine, TagsIcon, UserCircle, Droplet, ShieldAlert, GripVertical, MessageCircle, Phone, Search, LinkIcon, Info, Edit, Home } from "lucide-react";
+import { CalendarIcon, Briefcase, HeartPulse, Leaf, Accessibility, Syringe, PencilLine, TagsIcon, UserCircle, Droplet, ShieldAlert, MessageCircle, Phone, Home, CheckCircle, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 import { AiTagSuggester } from "./ai-tag-suggester";
@@ -68,7 +69,7 @@ const clinicalProfileSchema = z.object({
   smokingStatus: z.string().optional().default('NIL'),
   alcoholConsumption: z.string().optional().default('NIL'),
   pomr: z.string().optional(),
-  vaccinations: z.array(vaccinationSchema).optional().default(() => getDefaultVaccinations()),
+  vaccinations: z.array(vaccinationSchema).optional(),
   aabhaNumber: z.string().optional(),
   bloodGroup: z.string().optional(),
   drugAllergies: z.string().optional(),
@@ -192,23 +193,16 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
   });
 
    useEffect(() => {
-    const currentClinicalProfile = patient?.clinicalProfile || getInitialClinicalProfile();
-    const currentVaccinations = currentClinicalProfile.vaccinations;
+    const defaultVaccs = getDefaultVaccinations();
+    const patientVaccs = patient?.clinicalProfile?.vaccinations;
 
-    if (currentVaccinations && currentVaccinations.length > 0) {
-      const fullVaccinationList = VACCINATION_NAMES.map(vaccineName => {
-        const existing = currentVaccinations.find(v => v.name === vaccineName);
-        return {
-          name: vaccineName,
-          administered: existing?.administered || false,
-          date: existing?.date || '',
-          nextDoseDate: existing?.nextDoseDate || '',
-        };
-      });
-      replaceVaccinations(fullVaccinationList);
-    } else {
-      replaceVaccinations(getDefaultVaccinations());
-    }
+    const vaccinationData = VACCINATION_NAMES.map(name => {
+      const existing = patientVaccs?.find(v => v.name === name);
+      return existing || defaultVaccs.find(v => v.name === name)!;
+    });
+
+    replaceVaccinations(vaccinationData);
+
   }, [patient, replaceVaccinations]);
 
 
@@ -294,46 +288,38 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Date of Birth</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(parseISO(field.value), "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={
-                          field.value ? parseISO(field.value) : undefined
-                        }
-                        onSelect={(date) =>
-                          field.onChange(
-                            date ? format(date, "yyyy-MM-dd") : ""
-                          )
-                        }
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                        captionLayout="dropdown-buttons"
-                        fromYear={1900}
-                        toYear={new Date().getFullYear()}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                   <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(parseISO(field.value), "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ? parseISO(field.value) : undefined}
+                          onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                          disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                          initialFocus
+                          captionLayout="dropdown-buttons"
+                          fromYear={1900}
+                          toYear={new Date().getFullYear()}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   <FormMessage />
                 </FormItem>
               )}
@@ -344,20 +330,18 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Gender</FormLabel>
-                  <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent>
                         {GENDERS.map((g) => (
-                          <SelectItem key={g} value={g}>
-                            {g}
-                          </SelectItem>
+                          <SelectItem key={g} value={g}>{g}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -377,20 +361,18 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Guardian Relation to Patient</FormLabel>
-                  <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select relation" />
-                      </SelectTrigger>
+                   <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select relation" />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent>
                         {RELATIONSHIPS.map((r) => (
-                          <SelectItem key={r} value={r}>
-                            {r}
-                          </SelectItem>
+                          <SelectItem key={r} value={r}>{r}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -407,20 +389,18 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                     <Home className="inline h-4 w-4 mr-1" />
                     Residence Type
                   </FormLabel>
-                  <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value || "Not Set"}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select residence type" />
-                      </SelectTrigger>
+                  <Select onValueChange={field.onChange} value={field.value || "Not Set"}>
+                      <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select residence type" />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent>
                         {RESIDENCE_TYPES.map((rt) => (
-                          <SelectItem key={rt} value={rt}>
-                            {rt}
-                          </SelectItem>
+                          <SelectItem key={rt} value={rt}>{rt}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -431,40 +411,34 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Next Appointment Date (Optional)</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(parseISO(field.value), "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={
-                          field.value ? parseISO(field.value) : undefined
-                        }
-                        onSelect={(date) =>
-                          field.onChange(
-                            date ? format(date, "yyyy-MM-dd") : ""
-                          )
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                   <Popover>
+                      <PopoverTrigger asChild>
+                         <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(parseISO(field.value), "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ? parseISO(field.value) : undefined}
+                          onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                   <FormMessage />
                 </FormItem>
               )}
@@ -506,20 +480,18 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>State</FormLabel>
-                  <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select state" />
-                      </SelectTrigger>
+                   <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select state" />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent>
                         {INDIAN_STATES.map((s) => (
-                          <SelectItem key={s} value={s}>
-                            {s}
-                          </SelectItem>
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -550,31 +522,24 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-6">
               <FormField control={form.control} name="clinicalProfile.aabhaNumber" render={({ field }) => (
-                <FormItem> <FormLabel><Info className="inline h-4 w-4 mr-1"/>Aabha Number (Optional)</FormLabel> <FormControl><Input placeholder="Enter Aabha number" {...field} /></FormControl> <FormMessage /> </FormItem>
+                <FormItem> <FormLabel><UserCircle className="inline h-4 w-4 mr-1"/>Aabha Number (Optional)</FormLabel> <FormControl><Input placeholder="Enter Aabha number" {...field} /></FormControl> <FormMessage /> </FormItem>
               )} />
               <FormField
                 control={form.control}
                 name="clinicalProfile.bloodGroup"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      <Droplet className="inline h-4 w-4 mr-1" />
-                      Blood Group
-                    </FormLabel>
-                    <FormControl>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select blood group" />
-                        </SelectTrigger>
-                        <SelectContent>
+                    <FormLabel><Droplet className="inline h-4 w-4 mr-1" />Blood Group</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select blood group" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
                           {BLOOD_GROUPS.map((o) => (
-                            <SelectItem key={o} value={o}>
-                              {o}
-                            </SelectItem>
+                            <SelectItem key={o} value={o}>{o}</SelectItem>
                           ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -588,20 +553,16 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Primary Diagnosis</FormLabel>
-                    <FormControl>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select primary diagnosis" />
-                        </SelectTrigger>
-                        <SelectContent>
+                     <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select primary diagnosis" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
                           {PRIMARY_DIAGNOSIS_OPTIONS.map((o) => (
-                            <SelectItem key={o} value={o}>
-                              {o}
-                            </SelectItem>
+                            <SelectItem key={o} value={o}>{o}</SelectItem>
                           ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -612,20 +573,16 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Subspeciality Follow-up</FormLabel>
-                    <FormControl>
-                      <Select onValueChange={field.onChange} value={field.value || "NIL"}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select follow-up type" />
-                        </SelectTrigger>
-                        <SelectContent>
+                    <Select onValueChange={field.onChange} value={field.value || "NIL"}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select follow-up type" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
                           {SUBSPECIALITY_FOLLOWUP_OPTIONS.map((o) => (
-                            <SelectItem key={o} value={o}>
-                              {o}
-                            </SelectItem>
+                            <SelectItem key={o} value={o}>{o}</SelectItem>
                           ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -636,20 +593,16 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Smoking Status</FormLabel>
-                    <FormControl>
-                      <Select onValueChange={field.onChange} value={field.value || "NIL"}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                        <SelectContent>
+                     <Select onValueChange={field.onChange} value={field.value || "NIL"}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
                           {YES_NO_NIL_OPTIONS.map((o) => (
-                            <SelectItem key={o} value={o}>
-                              {o}
-                            </SelectItem>
+                            <SelectItem key={o} value={o}>{o}</SelectItem>
                           ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -660,20 +613,16 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Alcohol Consumption</FormLabel>
-                    <FormControl>
-                      <Select onValueChange={field.onChange} value={field.value || "NIL"}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                        <SelectContent>
+                    <Select onValueChange={field.onChange} value={field.value || "NIL"}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
                           {YES_NO_NIL_OPTIONS.map((o) => (
-                            <SelectItem key={o} value={o}>
-                              {o}
-                            </SelectItem>
+                            <SelectItem key={o} value={o}>{o}</SelectItem>
                           ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -683,24 +632,17 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 name="clinicalProfile.nutritionalStatus"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      <Leaf className="inline h-4 w-4 mr-1" />
-                      Nutritional Status
-                    </FormLabel>
-                    <FormControl>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select nutritional status" />
-                        </SelectTrigger>
-                        <SelectContent>
+                    <FormLabel><Leaf className="inline h-4 w-4 mr-1" />Nutritional Status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select nutritional status" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
                           {NUTRITIONAL_STATUSES.map((o) => (
-                            <SelectItem key={o} value={o}>
-                              {o}
-                            </SelectItem>
+                            <SelectItem key={o} value={o}>{o}</SelectItem>
                           ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -710,24 +652,17 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 name="clinicalProfile.disability"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      <Accessibility className="inline h-4 w-4 mr-1" />
-                      Disability Profile
-                    </FormLabel>
-                    <FormControl>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select disability profile" />
-                        </SelectTrigger>
-                        <SelectContent>
+                    <FormLabel><Accessibility className="inline h-4 w-4 mr-1" />Disability Profile</FormLabel>
+                     <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select disability profile" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
                           {DISABILITY_PROFILES.map((o) => (
-                            <SelectItem key={o} value={o}>
-                              {o}
-                            </SelectItem>
+                            <SelectItem key={o} value={o}>{o}</SelectItem>
                           ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -797,34 +732,34 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               const fieldNamePrefix = `clinicalProfile.vaccinations.${index}` as const;
               return (
                 <div key={vaccField.id || index} className="p-3 border rounded-md bg-muted/20">
-                  <FormField
-                    control={form.control}
-                    name={`${fieldNamePrefix}.administered`}
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={(checked) => {
-                              field.onChange(checked);
-                              if (!checked) {
-                                form.setValue(`${fieldNamePrefix}.date` as any, "");
-                                form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, "");
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-medium text-sm">
-                          {vaccField.name}
-                        </FormLabel>
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name={`${fieldNamePrefix}.administered`}
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0 mb-3">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked);
+                                if (!checked) {
+                                  form.setValue(`${fieldNamePrefix}.date` as any, "");
+                                  form.setValue(`${fieldNamePrefix}.nextDoseDate` as any, "");
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-medium text-sm">
+                            {vaccField.name}
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
                   {form.watch(`${fieldNamePrefix}.administered` as any) && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
                       <FormField
                         control={form.control}
-                        name={`${fieldNamePrefix}.date` as `clinicalProfile.vaccinations.${number}.date`}
+                        name={`${fieldNamePrefix}.date`}
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs">Date Administered</FormLabel>
@@ -835,7 +770,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                       />
                       <FormField
                         control={form.control}
-                        name={`${fieldNamePrefix}.nextDoseDate` as `clinicalProfile.vaccinations.${number}.nextDoseDate`}
+                        name={`${fieldNamePrefix}.nextDoseDate`}
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs">Next Dose Date (Optional)</FormLabel>
@@ -860,7 +795,3 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
-    
-
-    
-
