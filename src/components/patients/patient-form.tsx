@@ -328,7 +328,7 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Gender</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                   <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
                       <SelectTrigger>
                           <SelectValue placeholder="Select gender" />
@@ -673,28 +673,60 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
               <FormItem> <FormLabel><PencilLine className="inline h-4 w-4 mr-1"/>Problem Oriented Medical Record (POMR)</FormLabel> <FormControl><Textarea placeholder="Enter POMR details..." {...field} rows={4} /></FormControl> <FormMessage /> </FormItem>
             )} />
 
+            {/* START: Clinical Labels */}
+            <FormField
+              control={form.control}
+              name="clinicalProfile.labels"
+              render={() => (
+                <FormItem>
+                  <FormLabel className="flex items-center"><TagsIcon className="inline h-4 w-4 mr-1"/>Clinical Labels</FormLabel>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={currentLabelsInput}
+                      onChange={(e) => setCurrentLabelsInput(e.target.value)}
+                      placeholder="Type a label and add"
+                      className="flex-grow"
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddLabel();}}}
+                    />
+                    <Button type="button" onClick={handleAddLabel} variant="outline">Add Label</Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2 min-h-[24px]">
+                    {watchedLabels.map(label => (
+                      <Badge key={label} variant="secondary" className="flex items-center gap-1">
+                        {label}
+                        <button type="button" onClick={() => handleRemoveLabel(label)} className="ml-1 text-xs text-muted-foreground hover:text-destructive">&times;</button>
+                      </Badge>
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* END: Clinical Labels */}
+            
+            {/* START: Clinical Tags */}
             <div>
               <FormField
                 control={form.control}
-                name="clinicalProfile.labels"
+                name="clinicalProfile.tags"
                 render={() => (
                   <FormItem>
-                    <FormLabel className="flex items-center"><TagsIcon className="inline h-4 w-4 mr-1"/>Clinical Labels</FormLabel>
-                    <div className="flex items-center gap-2 mt-1">
+                    <FormLabel className="flex items-center"><TagsIcon className="inline h-4 w-4 mr-1"/>Clinical Tags</FormLabel>
+                    <div className="flex items-center gap-2">
                       <Input
-                        value={currentLabelsInput}
-                        onChange={(e) => setCurrentLabelsInput(e.target.value)}
-                        placeholder="Type a label and add"
+                        value={currentTagsInput}
+                        onChange={(e) => setCurrentTagsInput(e.target.value)}
+                        placeholder="Type a tag and add"
                         className="flex-grow"
-                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddLabel();}}}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTagManually();}}}
                       />
-                      <Button type="button" onClick={handleAddLabel} variant="outline">Add Label</Button>
+                      <Button type="button" onClick={handleAddTagManually} variant="outline">Add Tag</Button>
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2 min-h-[24px]">
-                      {watchedLabels.map(label => (
-                        <Badge key={label} variant="secondary" className="flex items-center gap-1">
-                          {label}
-                          <button type="button" onClick={() => handleRemoveLabel(label)} className="ml-1 text-xs text-muted-foreground hover:text-destructive">&times;</button>
+                      {watchedTags.map(tag => (
+                        <Badge key={tag} variant="outline" className="flex items-center gap-1">
+                          {tag}
+                          <button type="button" onClick={() => handleRemoveTag(tag)} className="ml-1 text-xs text-muted-foreground hover:text-destructive">&times;</button>
                         </Badge>
                       ))}
                     </div>
@@ -702,39 +734,12 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                   </FormItem>
                 )}
               />
+              <div className="mt-4">
+                 <AiTagSuggester onTagsSuggested={handleAiSuggestedTags} currentTags={watchedTags} />
+              </div>
             </div>
-            
-            <div>
-              <FormField
-                  control={form.control}
-                  name="clinicalProfile.tags"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel className="flex items-center"><TagsIcon className="inline h-4 w-4 mr-1"/>Clinical Tags</FormLabel>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Input
-                          value={currentTagsInput}
-                          onChange={(e) => setCurrentTagsInput(e.target.value)}
-                          placeholder="Type a tag and add"
-                          className="flex-grow"
-                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTagManually();}}}
-                        />
-                        <Button type="button" onClick={handleAddTagManually} variant="outline">Add Tag</Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-2 min-h-[24px]">
-                        {watchedTags.map(tag => (
-                          <Badge key={tag} variant="outline" className="flex items-center gap-1">
-                            {tag}
-                            <button type="button" onClick={() => handleRemoveTag(tag)} className="ml-1 text-xs text-muted-foreground hover:text-destructive">&times;</button>
-                          </Badge>
-                        ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              <AiTagSuggester onTagsSuggested={handleAiSuggestedTags} currentTags={watchedTags} />
-            </div>
+            {/* END: Clinical Tags */}
+
           </CardContent>
         </Card>
 
@@ -814,5 +819,3 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
-
-    
