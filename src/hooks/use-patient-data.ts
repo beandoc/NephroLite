@@ -18,7 +18,6 @@ const getDefaultVaccinations = (): Vaccination[] => {
 
 const getInitialClinicalProfile = (): ClinicalProfile => ({
   primaryDiagnosis: PRIMARY_DIAGNOSIS_OPTIONS.includes('Not Set') ? 'Not Set' : PRIMARY_DIAGNOSIS_OPTIONS[0] || "",
-  labels: [],
   tags: [],
   nutritionalStatus: NUTRITIONAL_STATUSES.includes('Not Set') ? 'Not Set' : NUTRITIONAL_STATUSES[0] || "",
   disability: DISABILITY_PROFILES.includes('Not Set') ? 'Not Set' : DISABILITY_PROFILES[0] || "",
@@ -89,7 +88,6 @@ const getInitialPatients = (): Patient[] => {
       clinicalProfile: {
         ...getInitialClinicalProfile(),
         primaryDiagnosis: 'Chronic Kidney Disease (CKD)',
-        labels: ['Hypertension', 'Diabetes'],
         tags: ['Stage 3 CKD', 'Anemia', 'Diabetes', 'PD'], // Added PD tag
       },
       registrationDate: new Date().toISOString().split('T')[0],
@@ -212,7 +210,11 @@ export function usePatientData() {
 
     const prefix = updatedPatientData.customIdPrefix;
     const existingSuffix = originalPatient.nephroId.includes('/') ? originalPatient.nephroId.split('/')[1] : null;
-    const finalNephroId = existingSuffix ? `${prefix}/${existingSuffix}` : `${new Date().toISOString().slice(5,7)}${new Date().toISOString().slice(2,4)}`;
+    
+    // Use existing registration month/year for suffix if available
+    const suffix = existingSuffix || `${new Date(originalPatient.registrationDate).toISOString().slice(5,7)}${new Date(originalPatient.registrationDate).toISOString().slice(2,4)}`;
+    
+    const finalNephroId = `${prefix}/${suffix}`;
     
     updatedPatients[patientIndex] = {
       ...originalPatient,
@@ -265,5 +267,3 @@ export function usePatientData() {
     dischargePatient,
   };
 }
-
-    

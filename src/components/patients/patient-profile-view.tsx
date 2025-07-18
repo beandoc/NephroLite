@@ -524,18 +524,6 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground flex items-center mb-1">
                   <TagsIcon className="w-4 h-4 mr-2 text-primary" />
-                  Clinical Labels
-                </h3>
-                {clinicalProfile.labels && clinicalProfile.labels.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {clinicalProfile.labels.map((label, index) => <Badge key={index} variant="secondary">{label}</Badge>)}
-                  </div>
-                ) : <p className="text-base text-muted-foreground italic">None</p>}
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground flex items-center mb-1">
-                  <TagsIcon className="w-4 h-4 mr-2 text-primary" />
                   Clinical Tags
                 </h3>
                 {clinicalProfile.tags && clinicalProfile.tags.length > 0 ? (

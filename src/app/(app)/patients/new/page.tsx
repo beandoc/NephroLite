@@ -20,9 +20,9 @@ export default function NewPatientPage() {
       const newPatient = addPatient(data);
       toast({
         title: "Patient Registered",
-        description: `${newPatient.name} (ID: ${newPatient.nephroId}) has been successfully registered. Next, create their first visit.`,
+        description: `${newPatient.name} (ID: ${newPatient.nephroId}) has been successfully registered. You can now view their profile.`,
       });
-      router.push(`/patients/${newPatient.id}/create-visit`); // Redirect to create visit page
+      router.push(`/patients/${newPatient.id}`); // Redirect to new patient's profile
     } catch (error) {
       console.error("Failed to register patient:", error);
       toast({
@@ -36,7 +36,7 @@ export default function NewPatientPage() {
 
   return (
     <div className="container mx-auto py-2">
-      <PageHeader title="Register New Patient" description="Fill in the details below to add a new patient. This form is part of the 'New Registration' flow." />
+      <PageHeader title="Register New Patient" description="Fill in the details below to add a new patient to the system." />
       <PatientForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
     </div>
   );

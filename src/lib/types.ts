@@ -22,7 +22,6 @@ export type Vaccination = {
 
 export type ClinicalProfile = {
   primaryDiagnosis?: string;
-  labels: string[];
   tags: string[];
   nutritionalStatus?: string;
   disability?: string;
@@ -72,7 +71,10 @@ export type PatientFormData = {
   email?: string | undefined;
   address: Address;
   guardian: Guardian;
-  clinicalProfile?: Partial<ClinicalProfile> | undefined;
+  clinicalProfile: Partial<ClinicalProfile> & {
+    tags: string[];
+    vaccinations: Vaccination[];
+  };
   serviceName?: string | undefined;
   serviceNumber?: string | undefined;
   rank?: string | undefined;
@@ -138,5 +140,3 @@ export type VisitData = {
   groupName?: string; // Patient group
   // Other visit-specific fields can be added later
 };
-
-    
