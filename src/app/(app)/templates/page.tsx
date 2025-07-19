@@ -14,7 +14,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileSignature, Save, Trash2, PlusCircle, FileText, Activity, Microscope } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { DIAGNOSIS_TEMPLATES } from '@/lib/constants';
+import { DIAGNOSIS_TEMPLATES, MOCK_DIAGNOSES } from '@/lib/constants';
 import type { DiagnosisTemplate } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -40,12 +40,9 @@ const templateFormSchema = z.object({
   generalExamination: z.string().optional(),
   systemicExamination: z.string().optional(),
   medications: z.array(medicationSchema),
-  // Fields available for all
   usgReport: z.string().optional(),
   kidneyBiopsyReport: z.string().optional(),
-  // Discharge Summary specific fields
   dischargeInstructions: z.string().optional(),
-  // Opinion Report specific fields
   opinionText: z.string().optional(),
   recommendations: z.string().optional(),
 });
@@ -148,6 +145,15 @@ export default function TemplatesPage() {
         recommendations: "",
     });
   }
+  
+  const handleDiagnosisSelect = (selectedValue: string, index: number) => {
+    const selectedDiagnosis = MOCK_DIAGNOSES.find(d => d.id === selectedValue);
+    if (selectedDiagnosis) {
+        form.setValue(`diagnoses.${index}.name`, selectedDiagnosis.name);
+        form.setValue(`diagnoses.${index}.icdCode`, selectedDiagnosis.icdCode);
+        form.setValue(`diagnoses.${index}.icdName`, selectedDiagnosis.icdName);
+    }
+  };
 
   return (
     <div className="container mx-auto py-2">
@@ -207,20 +213,32 @@ export default function TemplatesPage() {
                     <CardContent className="space-y-3">
                       {diagnosisFields.map((field, index) => (
                         <div key={field.id} className="flex gap-2 items-end p-2 border rounded-md">
-                          <FormField control={form.control} name={`diagnoses.${index}.name`} render={({ field }) => (
-                            <FormItem className="flex-grow">
-                              <FormLabel className="text-xs">Diagnosis Name</FormLabel>
-                              <FormControl><Input placeholder="e.g., CKD Stage 3" {...field} /></FormControl>
-                              <FormMessage/>
-                            </FormItem>
-                          )}/>
-                          <FormField control={form.control} name={`diagnoses.${index}.icdCode`} render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs">ICD-10 Code</FormLabel>
-                              <FormControl><Input placeholder="e.g., N18.3" {...field} className="w-24"/></FormControl>
-                               <FormMessage/>
-                            </FormItem>
-                          )}/>
+                          <FormField
+                            control={form.control}
+                            name={`diagnoses.${index}.name`}
+                            render={({ field: nameField }) => (
+                                <FormItem className="flex-grow">
+                                    <FormLabel className="text-xs">Diagnosis</FormLabel>
+                                    <Select onValueChange={(value) => handleDiagnosisSelect(value, index)} defaultValue={field.id}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a diagnosis...">
+                                                    {form.getValues(`diagnoses.${index}.name`) || "Select a diagnosis..."}
+                                                </SelectValue>
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {MOCK_DIAGNOSES.map(d => (
+                                                <SelectItem key={d.id} value={d.id}>
+                                                    {d.name} ({d.icdCode})
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                          />
                           <Button type="button" variant="destructive" size="icon" onClick={() => removeDiagnosis(index)}><Trash2 className="h-4 w-4"/></Button>
                         </div>
                       ))}
