@@ -7,6 +7,7 @@ import { usePatientData } from "@/hooks/use-patient-data";
 import { Skeleton } from "@/components/ui/skeleton"; 
 
 type MetricDetail = {
+  key: string;
   title: string;
   value: string | number;
   subtitle?: string;
@@ -43,6 +44,7 @@ export function OverviewMetrics() {
 
   const metrics: MetricDetail[] = [
     { 
+      key: "total-opd",
       title: "Total OPD Patients", 
       value: opdPatients, 
       subtitle: (randomIncrease !== null && !patientsLoading) ? `+${randomIncrease} this month (OPD)` : undefined,
@@ -52,6 +54,7 @@ export function OverviewMetrics() {
       loading: patientsLoading || randomIncrease === null
     },
     { 
+      key: "total-ipd",
       title: "Total IPD Patients", 
       value: ipdPatients, 
       subtitle: "Currently Admitted", 
@@ -61,6 +64,7 @@ export function OverviewMetrics() {
       loading: patientsLoading
     },
     { 
+      key: "dialysis",
       title: "Dialysis Sessions", 
       value: dialysisSessions, 
       subtitle: "Today's schedule", 
@@ -70,6 +74,7 @@ export function OverviewMetrics() {
       loading: false
     },
     { 
+      key: "labs",
       title: "Lab Results", 
       value: labResults, 
       subtitle: "5 need review", 
@@ -84,7 +89,7 @@ export function OverviewMetrics() {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {metrics.map((metric) => (
         <Card 
-          key={metric.title} 
+          key={metric.key} 
           className={`shadow-lg hover:shadow-xl transition-shadow duration-300 border-l-4 ${metric.borderColorClass}`}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

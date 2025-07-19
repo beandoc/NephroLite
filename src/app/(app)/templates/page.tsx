@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileSignature, Save, Trash2, PlusCircle, FileText, Activity, Microscope } from 'lucide-react';
+import { Save, Trash2, PlusCircle, FileText, Activity, Microscope } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { DIAGNOSIS_TEMPLATES, MOCK_DIAGNOSES } from '@/lib/constants';
 import type { DiagnosisTemplate, Diagnosis } from '@/lib/types';
@@ -93,7 +93,7 @@ export default function TemplatesPage() {
         if (templateData) {
             form.reset({
                 ...templateData,
-                medications: templateData.medications.map(m => ({ ...m, id: crypto.randomUUID() })),
+                medications: templateData.medications.map(m => ({ ...m, id: m.id || crypto.randomUUID() })),
             });
         }
     } else {

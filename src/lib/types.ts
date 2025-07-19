@@ -192,7 +192,7 @@ export type DiagnosisTemplate = {
     history?: string;
     generalExamination?: string;
     systemicExamination?: string;
-    medications: Omit<Medication, 'id'>[];
+    medications: Medication[];
 
     // Discharge Summary specific
     dischargeInstructions?: string;

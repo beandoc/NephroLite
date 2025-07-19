@@ -160,7 +160,7 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
     form.reset({
       ...template,
       ...existingVitals,
-      medications: template.medications.map(med => ({ ...med, id: crypto.randomUUID() })),
+      medications: template.medications.map(med => ({ ...med, id: med.id || crypto.randomUUID() })),
       diagnosis: template.diagnoses?.[0] || { name: "", icdCode: "", icdName: "" }
     });
     
