@@ -4,7 +4,7 @@
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import type { Visit, Diagnosis } from "@/lib/types";
+import type { Visit, Diagnosis, Medication } from "@/lib/types";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { PlusCircle, Trash2, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
+import { DIAGNOSIS_MEDICATION_TEMPLATES } from "@/lib/constants";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 
 const diagnosisSchema = z.object({
   name: z.string().min(1, "Diagnosis name is required"),
@@ -20,8 +22,18 @@ const diagnosisSchema = z.object({
   icdCode: z.string().optional(),
 });
 
+const medicationSchema = z.object({
+  id: z.string(), // To track array fields
+  name: z.string().min(1, "Medication name is required."),
+  dosage: z.string().optional(),
+  frequency: z.string().optional(),
+  instructions: z.string().optional(),
+});
+
+
 const clinicalVisitSchema = z.object({
   diagnoses: z.array(diagnosisSchema),
+  medications: z.array(medicationSchema),
   history: z.string().optional(),
   height: z.string().optional(),
   weight: z.string().optional(),
@@ -50,6 +62,7 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
     resolver: zodResolver(clinicalVisitSchema),
     defaultValues: {
       diagnoses: visit.diagnoses?.length ? visit.diagnoses : [{ name: "", icdCode: "", icdName: "" }],
+      medications: visit.clinicalData?.medications?.map(m => ({ ...m, id: m.id || crypto.randomUUID() })) || [],
       history: visit.clinicalData?.history || "",
       height: visit.clinicalData?.height || "",
       weight: visit.clinicalData?.weight || "",
@@ -66,14 +79,20 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields: diagnosisFields, append: appendDiagnosis, remove: removeDiagnosis } = useFieldArray({
     control: form.control,
     name: "diagnoses",
+  });
+
+  const { fields: medicationFields, append: appendMedication, remove: removeMedication, replace: replaceMedications } = useFieldArray({
+    control: form.control,
+    name: "medications"
   });
   
   const height = form.watch("height");
   const weight = form.watch("weight");
-  const gender = visit.patientGender || 'Male'; // Defaulting to Male if not provided
+  const gender = visit.patientGender || 'Male'; 
+  const diagnoses = form.watch("diagnoses");
 
   useEffect(() => {
     const h = parseFloat(height || "0");
@@ -90,7 +109,7 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
       let idealWeight;
       if (gender === 'Male') {
         idealWeight = 50 + 0.91 * (h - 152.4);
-      } else { // Female
+      } else { 
         idealWeight = 45.5 + 0.91 * (h - 152.4);
       }
       form.setValue("idealBodyWeight", idealWeight > 0 ? idealWeight.toFixed(2) : "");
@@ -100,8 +119,27 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
 
   }, [height, weight, gender, form]);
 
+  useEffect(() => {
+    const currentMedications = form.getValues('medications').map(m => m.name);
+    const suggestedMeds: Medication[] = [];
+    
+    diagnoses.forEach(diag => {
+        if (diag.name && DIAGNOSIS_MEDICATION_TEMPLATES[diag.name]) {
+            const templateMeds = DIAGNOSIS_MEDICATION_TEMPLATES[diag.name];
+            templateMeds.forEach(templateMed => {
+                if (!currentMedications.includes(templateMed.name) && !suggestedMeds.some(sm => sm.name === templateMed.name)) {
+                    suggestedMeds.push({ ...templateMed, id: crypto.randomUUID() });
+                }
+            });
+        }
+    });
+
+    if(suggestedMeds.length > 0) {
+        appendMedication(suggestedMeds);
+    }
+  }, [diagnoses, form, appendMedication]);
+
   const onSubmit = (data: ClinicalVisitFormData) => {
-    // In a real app, this would save to a database.
     console.log("Saving visit data for visit ID:", visit.id, data);
     toast({
       title: "Data Saved (Mock)",
@@ -115,13 +153,13 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             
-            {/* Clinical Diagnosis Section */}
             <Card>
               <CardHeader>
                 <CardTitle>Clinical Diagnosis</CardTitle>
+                <CardDescription>Add one or more diagnoses. Medications will be suggested based on your selection.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {fields.map((field, index) => (
+                {diagnosisFields.map((field, index) => (
                   <div key={field.id} className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2 items-end p-2 border rounded-md">
                     <FormField
                       control={form.control}
@@ -145,18 +183,17 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
                         </FormItem>
                       )}
                     />
-                    <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)} disabled={fields.length <= 1}>
+                    <Button type="button" variant="destructive" size="icon" onClick={() => removeDiagnosis(index)} disabled={diagnosisFields.length <= 1}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
-                <Button type="button" variant="outline" size="sm" onClick={() => append({ name: "", icdCode: "", icdName: "" })}>
+                <Button type="button" variant="outline" size="sm" onClick={() => appendDiagnosis({ name: "", icdCode: "", icdName: "" })}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Add Diagnosis
                 </Button>
               </CardContent>
             </Card>
             
-            {/* History */}
              <FormField
               control={form.control}
               name="history"
@@ -169,7 +206,6 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
               )}
             />
 
-            {/* Examination Section */}
             <Card>
               <CardHeader><CardTitle>Examination</CardTitle></CardHeader>
               <CardContent className="space-y-4">
@@ -190,7 +226,6 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
               </CardContent>
             </Card>
 
-            {/* Course in Hospital */}
             <FormField
               control={form.control}
               name="courseInHospital"
@@ -203,15 +238,61 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
               )}
             />
             
-            {/* Medications Placeholder */}
             <Card>
-                <CardHeader><CardTitle>Medications</CardTitle></CardHeader>
+                <CardHeader>
+                    <CardTitle>Medications</CardTitle>
+                    <CardDescription>Medications are suggested from templates based on diagnosis. You can add, edit, or delete them.</CardDescription>
+                </CardHeader>
                 <CardContent>
-                    <p className="text-muted-foreground">Medication entry section (Under Development)</p>
+                    <div className="rounded-md border">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Medicine Name</TableHead>
+                                    <TableHead>Dosage</TableHead>
+                                    <TableHead>Frequency</TableHead>
+                                    <TableHead>Instructions</TableHead>
+                                    <TableHead className="w-[50px]">Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {medicationFields.map((field, index) => (
+                                    <TableRow key={field.id}>
+                                        <TableCell>
+                                            <FormField control={form.control} name={`medications.${index}.name`} render={({ field }) => <Input placeholder="Medication" {...field} />} />
+                                        </TableCell>
+                                        <TableCell>
+                                            <FormField control={form.control} name={`medications.${index}.dosage`} render={({ field }) => <Input placeholder="e.g., 40mg" {...field} />} />
+                                        </TableCell>
+                                        <TableCell>
+                                            <FormField control={form.control} name={`medications.${index}.frequency`} render={({ field }) => <Input placeholder="e.g., OD" {...field} />} />
+                                        </TableCell>
+                                         <TableCell>
+                                            <FormField control={form.control} name={`medications.${index}.instructions`} render={({ field }) => <Input placeholder="e.g., After food" {...field} />} />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button type="button" variant="destructive" size="icon" onClick={() => removeMedication(index)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                                {medicationFields.length === 0 && (
+                                     <TableRow>
+                                        <TableCell colSpan={5} className="text-center text-muted-foreground">
+                                            No medications added. Add a diagnosis to get suggestions or add manually.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => appendMedication({ id: crypto.randomUUID(), name: "", dosage: "", frequency: "", instructions: "" })}>
+                      <PlusCircle className="mr-2 h-4 w-4" /> Add Medication Manually
+                    </Button>
                 </CardContent>
             </Card>
             
-            {/* Discharge Instructions */}
             <FormField
               control={form.control}
               name="dischargeInstructions"

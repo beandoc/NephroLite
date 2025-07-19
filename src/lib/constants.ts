@@ -1,5 +1,5 @@
 
-import type { DiagnosisEntry, MedicationEntry } from '@/lib/types';
+import type { DiagnosisEntry, MedicationEntry, Medication } from '@/lib/types';
 
 export const GENDERS: string[] = ['Male', 'Female', 'Other', 'Prefer not to say'];
 
@@ -152,6 +152,27 @@ export const MOCK_MEDICATIONS: MedicationEntry[] = [
 export const INVESTIGATION_GROUPS: string[] = [
   'Hematological', 'Biochemistry', 'Radiology', 'Pathology', 'Special Investigations', 'Urine Analysis', 'Serology'
 ];
+
+export const DIAGNOSIS_MEDICATION_TEMPLATES: Record<string, Omit<Medication, 'id'>[]> = {
+  'Hypertensive Nephropathy': [
+    { name: 'Telmisartan', dosage: '40mg', frequency: 'OD', instructions: 'After food' },
+    { name: 'Amlodipine', dosage: '5mg', frequency: 'OD', instructions: 'After food' },
+  ],
+  'Diabetic Nephropathy': [
+    { name: 'Metformin', dosage: '500mg', frequency: 'BD', instructions: 'After food' },
+    { name: 'Dapagliflozin', dosage: '10mg', frequency: 'OD', instructions: 'After breakfast' },
+    { name: 'Atorvastatin', dosage: '10mg', frequency: 'HS', instructions: 'At bedtime' },
+  ],
+  'Chronic Kidney Disease (CKD)': [
+      { name: 'Calcirol Sachet', dosage: '60000 IU', frequency: 'Weekly', instructions: 'Once a week with milk' },
+      { name: 'Ferrous Ascorbate', dosage: '100mg', frequency: 'OD', instructions: 'After food' },
+  ],
+  'Glomerulonephritis': [
+      { name: 'Prednisolone', dosage: '40mg', frequency: 'OD', instructions: 'After breakfast' },
+      { name: 'Mycophenolate mofetil', dosage: '500mg', frequency: 'BD', instructions: 'After food' },
+  ],
+};
+
 
 // Medications for Analysis
 export const SGLT2_INHIBITORS: string[] = ['Empagliflozin', 'Dapagliflozin', 'Canagliflozin', 'Ertugliflozin'];

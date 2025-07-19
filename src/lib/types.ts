@@ -43,10 +43,11 @@ export type Diagnosis = {
 };
 
 export type Medication = {
+  id: string;
   name: string;
-  dosage: string;
-  frequency: string;
-  duration?: string;
+  dosage?: string;
+  frequency?: string;
+  instructions?: string;
 };
 
 export type ClinicalVisitData = {
@@ -63,7 +64,6 @@ export type ClinicalVisitData = {
   systemicExamination?: string;
   courseInHospital?: string;
   dischargeInstructions?: string;
-  // medications will be an array
   medications?: Medication[];
 };
 
