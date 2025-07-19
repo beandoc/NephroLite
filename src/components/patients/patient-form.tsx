@@ -671,58 +671,61 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
                 <CardTitle className="font-headline flex items-center"><Syringe className="mr-2 h-5 w-5 text-primary" />Vaccination Status</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-                {VACCINATION_NAMES.map((vaccineName, index) => (
-                    <div key={index} className="p-3 border rounded-md bg-muted/20 space-y-3">
-                        <FormField
-                            control={control}
-                            name={`clinicalProfile.vaccinations.${index}.administered`}
-                            render={({ field }) => (
-                                <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                                    <FormControl>
-                                        <Checkbox
-                                            checked={field.value}
-                                            onCheckedChange={field.onChange}
-                                            id={`vaccine-checkbox-${index}`}
-                                        />
-                                    </FormControl>
-                                    <FormLabel htmlFor={`vaccine-checkbox-${index}`} className="font-medium text-sm cursor-pointer">
-                                        {vaccineName}
-                                    </FormLabel>
-                                </FormItem>
+                {VACCINATION_NAMES.map((vaccineName, index) => {
+                    const isChecked = watchedVaccinations[index]?.administered || false;
+                    return (
+                        <div key={index} className="p-3 border rounded-md bg-muted/20">
+                            <FormField
+                                control={control}
+                                name={`clinicalProfile.vaccinations.${index}.administered`}
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                                id={`vaccine-checkbox-${index}`}
+                                            />
+                                        </FormControl>
+                                        <FormLabel htmlFor={`vaccine-checkbox-${index}`} className="font-medium text-sm cursor-pointer">
+                                            {vaccineName}
+                                        </FormLabel>
+                                    </FormItem>
+                                )}
+                            />
+                            {isChecked && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7 mt-3">
+                                    <FormField
+                                        control={control}
+                                        name={`clinicalProfile.vaccinations.${index}.date`}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-xs">Date Administered</FormLabel>
+                                                <FormControl>
+                                                    <Input type="date" {...field} value={field.value || ""} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={control}
+                                        name={`clinicalProfile.vaccinations.${index}.nextDoseDate`}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-xs">Next Dose Date (Optional)</FormLabel>
+                                                <FormControl>
+                                                    <Input type="date" {...field} value={field.value || ""} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
                             )}
-                        />
-                        {watchedVaccinations[index]?.administered && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
-                                <FormField
-                                    control={control}
-                                    name={`clinicalProfile.vaccinations.${index}.date`}
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-xs">Date Administered</FormLabel>
-                                            <FormControl>
-                                                <Input type="date" {...field} value={field.value || ""} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={control}
-                                    name={`clinicalProfile.vaccinations.${index}.nextDoseDate`}
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-xs">Next Dose Date (Optional)</FormLabel>
-                                            <FormControl>
-                                                <Input type="date" {...field} value={field.value || ""} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-                        )}
-                    </div>
-                ))}
+                        </div>
+                    );
+                })}
             </CardContent>
         </Card>
 
@@ -733,3 +736,5 @@ export function PatientForm({ patient, onSubmit, isSubmitting }: PatientFormProp
     </Form>
   );
 }
+
+    
