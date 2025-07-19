@@ -23,7 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -40,6 +39,8 @@ const patientFormSchema = z.object({
   gender: z.string().min(1, "Gender is required."),
   contact: z.string().min(10, "A valid contact number is required.").max(15, "Contact number is too long."),
   email: z.string().email("Invalid email address.").optional().or(z.literal('')),
+  whatsappNumber: z.string().min(10, "A valid WhatsApp number is required.").max(15, "WhatsApp number is too long.").optional().or(z.literal('')),
+  uhid: z.string().optional(),
   address: z.object({
     street: z.string().min(1, "Street address is required."),
     city: z.string().min(1, "City is required."),
@@ -67,6 +68,8 @@ export function PatientForm({ onSubmit, isSubmitting }: PatientFormProps) {
       gender: "",
       contact: "",
       email: "",
+      whatsappNumber: "",
+      uhid: "",
       address: { street: "", city: "", state: "", pincode: "" },
       guardian: { name: "", relation: "", contact: "" },
     },
@@ -151,10 +154,24 @@ export function PatientForm({ onSubmit, isSubmitting }: PatientFormProps) {
                 <FormMessage />
               </FormItem>
             )} />
-             <FormField control={form.control} name="email" render={({ field }) => (
+             <FormField control={form.control} name="whatsappNumber" render={({ field }) => (
+              <FormItem>
+                <FormLabel>WhatsApp Number (Optional)</FormLabel>
+                <FormControl><Input type="tel" placeholder="Enter WhatsApp number" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="email" render={({ field }) => (
               <FormItem>
                 <FormLabel>Email Address (Optional)</FormLabel>
                 <FormControl><Input type="email" placeholder="Enter email address" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="uhid" render={({ field }) => (
+              <FormItem>
+                <FormLabel>UHID / Aabha Number (Optional)</FormLabel>
+                <FormControl><Input placeholder="Enter Unique Health ID" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />

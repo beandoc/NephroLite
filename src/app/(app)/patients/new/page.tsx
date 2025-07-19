@@ -7,22 +7,39 @@ import { PatientForm, type PatientFormData } from '@/components/patients/patient
 import { PageHeader } from '@/components/shared/page-header';
 import { usePatientData } from '@/hooks/use-patient-data';
 import { useToast } from "@/hooks/use-toast";
+import { Button } from '@/components/ui/button';
+import { CreateVisitDialog } from '@/components/visits/create-visit-dialog';
+import type { Patient } from '@/lib/types';
 
 export default function NewPatientPage() {
   const router = useRouter();
   const { addPatient } = usePatientData();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVisitDialogOpen, setIsVisitDialogOpen] = useState(false);
+  const [newlyCreatedPatient, setNewlyCreatedPatient] = useState<Patient | null>(null);
 
   const handleSubmit = (data: PatientFormData) => {
     setIsSubmitting(true);
     try {
       const newPatient = addPatient(data);
+      setNewlyCreatedPatient(newPatient);
+
       toast({
-        title: "Patient Registered Successfully",
-        description: `Patient ${newPatient.name} (${newPatient.nephroId}) has been added to the records.`,
+        title: "Patient Registered",
+        description: `${newPatient.name} (${newPatient.nephroId}) has been added.`,
+        action: (
+          <Button onClick={() => setIsVisitDialogOpen(true)}>
+            Create Visit
+          </Button>
+        ),
+        duration: 10000, // Keep toast open longer
       });
-      router.push('/patients');
+      
+      // We don't redirect immediately. We wait for the user to create a visit.
+      // Reset form state, but keep the page open.
+      setIsSubmitting(false);
+
     } catch (error) {
       console.error("Failed to register patient:", error);
       toast({
@@ -34,6 +51,15 @@ export default function NewPatientPage() {
     }
   };
 
+  const handleVisitCreated = (patientId: string) => {
+    setIsVisitDialogOpen(false);
+    toast({
+      title: "Initial Visit Created",
+      description: "Redirecting to patient profile...",
+    });
+    router.push(`/patients/${patientId}`);
+  };
+
   return (
     <div className="container mx-auto py-2">
       <PageHeader 
@@ -43,6 +69,15 @@ export default function NewPatientPage() {
       <div className="mt-6">
         <PatientForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
       </div>
+
+      {newlyCreatedPatient && (
+        <CreateVisitDialog
+          isOpen={isVisitDialogOpen}
+          onOpenChange={setIsVisitDialogOpen}
+          patient={newlyCreatedPatient}
+          onVisitCreated={handleVisitCreated}
+        />
+      )}
     </div>
   );
 }

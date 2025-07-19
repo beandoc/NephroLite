@@ -1,9 +1,10 @@
 
 "use client";
 
-import type { Patient, Vaccination, ClinicalProfile, PatientFormData } from '@/lib/types';
+import type { Patient, Vaccination, ClinicalProfile, PatientFormData, VisitFormData } from '@/lib/types';
 import { useState, useEffect, useCallback } from 'react';
 import { VACCINATION_NAMES, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS, RESIDENCE_TYPES } from '@/lib/constants';
+import { format } from 'date-fns';
 
 const LOCAL_STORAGE_KEY = 'nephrolite_patients';
 
@@ -73,7 +74,7 @@ const getInitialPatients = (): Patient[] => {
   const mockPatients: Patient[] = [
     {
       id: "fixed-pd-patient-id-1", // Fixed ID for Rajesh Kumar
-      nephroId: 'MOCK-0001',
+      nephroId: '1001/0724',
       name: 'Rajesh Kumar',
       dob: '1975-08-15',
       gender: 'Male',
@@ -89,6 +90,8 @@ const getInitialPatients = (): Patient[] => {
         ...getInitialClinicalProfile(),
         primaryDiagnosis: 'Chronic Kidney Disease (CKD)',
         tags: ['Stage 3 CKD', 'Anemia', 'Diabetes', 'PD'], // Added PD tag
+        whatsappNumber: '9876543210',
+        aabhaNumber: '12-3456-7890-1234',
       },
       registrationDate: new Date().toISOString().split('T')[0],
       serviceName: "Indian Army",
@@ -99,7 +102,7 @@ const getInitialPatients = (): Patient[] => {
     },
     {
       id: "fixed-pd-patient-id-2", // Fixed ID for Priya Sharma
-      nephroId: 'MOCK-0002',
+      nephroId: '1002/0724',
       name: 'Priya Sharma',
       dob: '1982-04-22',
       gender: 'Female',
@@ -119,7 +122,7 @@ const getInitialPatients = (): Patient[] => {
     },
     {
       id: crypto.randomUUID(),
-      nephroId: 'MOCK-0003',
+      nephroId: '1003/0624',
       name: 'Amit Singh',
       dob: '1990-11-05',
       gender: 'Male',
@@ -158,14 +161,29 @@ export function usePatientData() {
   }, []);
   
   const addPatient = useCallback((patientData: PatientFormData): Patient => {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = String(now.getFullYear()).slice(-2);
+    const newIdNumber = (patients.length + 1001); // Simple incrementing number
+    
     const newPatient: Patient = {
-      ...patientData,
       id: crypto.randomUUID(),
-      nephroId: `MOCK-${String(patients.length + 1).padStart(4, '0')}`,
-      registrationDate: new Date().toISOString().split('T')[0],
+      nephroId: `${newIdNumber}/${month}${year}`,
+      name: patientData.name,
+      dob: patientData.dob,
+      gender: patientData.gender,
+      contact: patientData.contact,
+      email: patientData.email,
+      address: patientData.address,
+      guardian: patientData.guardian,
+      registrationDate: now.toISOString().split('T')[0],
       patientStatus: 'OPD',
       isTracked: false,
-      clinicalProfile: getInitialClinicalProfile(),
+      clinicalProfile: {
+        ...getInitialClinicalProfile(),
+        whatsappNumber: patientData.whatsappNumber || '',
+        aabhaNumber: patientData.uhid || '',
+      },
     };
 
     const updatedPatients = [...patients, newPatient];
@@ -190,6 +208,38 @@ export function usePatientData() {
 
     saveData(updatedPatients);
     return updatedPatients[patientIndex];
+  }, [patients, saveData]);
+
+  const addVisitToPatient = useCallback((patientId: string, visitData: VisitFormData) => {
+    const patientIndex = patients.findIndex(p => p.id === patientId);
+    if (patientIndex === -1) {
+      console.error("Patient not found for adding visit");
+      return;
+    };
+    
+    const updatedPatients = [...patients];
+    const patient = updatedPatients[patientIndex];
+    
+    // In a real application, you'd save this visit to a separate 'visits' table/collection.
+    // For this mock implementation, we can just update a tag or a primary diagnosis based on the group.
+    // Let's add the group name as a tag.
+    const newTags = new Set([...patient.clinicalProfile.tags, visitData.groupName]);
+    patient.clinicalProfile.tags = Array.from(newTags);
+
+    // Let's also update the primary diagnosis if it's "Not Set"
+    if (patient.clinicalProfile.primaryDiagnosis === 'Not Set' && visitData.groupName !== 'Misc') {
+        patient.clinicalProfile.primaryDiagnosis = visitData.groupName;
+    }
+    
+    // We can store the remark in the POMR for simplicity for now
+    const visitRemarkEntry = `[${format(new Date(), 'yyyy-MM-dd')}] Visit (${visitData.visitType}): ${visitData.visitRemark}`;
+    patient.clinicalProfile.pomr = patient.clinicalProfile.pomr 
+      ? `${patient.clinicalProfile.pomr}\n${visitRemarkEntry}`
+      : visitRemarkEntry;
+
+    updatedPatients[patientIndex] = patient;
+    saveData(updatedPatients);
+    console.log("Mock visit added to patient:", patient);
   }, [patients, saveData]);
 
   const deletePatient = useCallback((id: string): boolean => {
@@ -227,5 +277,6 @@ export function usePatientData() {
     deletePatient,
     admitPatient,
     dischargePatient,
+    addVisitToPatient,
   };
 }

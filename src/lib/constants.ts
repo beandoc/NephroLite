@@ -127,12 +127,12 @@ export const VACCINATION_NAMES: string[] = [
 ];
 
 export const VISIT_TYPES: string[] = [
-  "Data Entry Visit", "Emergency Visit", "Routine Visit", "Follow-up Visit", "Missed Visit", "Unscheduled Visit", "Initial Assessment"
+  "Data Entry Visit", "Emergency Visit", "Routine Visit", "Missed Visit", "Unscheduled Visit"
 ];
 
 export const PATIENT_GROUP_NAMES: string[] = [
   "Peritoneal Dialysis", "Chronic Kidney disease", "Hemodialysis",
-  "Glomerulonephritis", "Kidney transplant", "ADPKD", "Infection", "Misc", "Not Assigned"
+  "Glomerulonephritis", "Kidney transplant", "ADPKD", "Misc", "Infection"
 ];
 
 export const MOCK_DIAGNOSES: DiagnosisEntry[] = [

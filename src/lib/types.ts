@@ -68,6 +68,8 @@ export type PatientFormData = {
   gender: string;
   contact: string;
   email?: string | undefined;
+  whatsappNumber?: string | undefined;
+  uhid?: string | undefined;
   address: Address;
   guardian: Guardian;
 };
@@ -116,4 +118,10 @@ export type InvestigationRecord = {
   date: string; // YYYY-MM-DD, date of investigation
   tests: InvestigationTest[];
   notes?: string; // Optional overall notes for this set of investigations
+};
+
+export type VisitFormData = {
+    visitType: string;
+    visitRemark: string;
+    groupName: string;
 };
