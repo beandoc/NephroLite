@@ -76,7 +76,7 @@ export type Visit = {
   visitType: string;
   visitRemark: string;
   groupName: string;
-  patientGender?: 'Male' | 'Female' | 'Other';
+  patientGender?: 'Male' | 'Female' | 'Other' | 'Prefer not to say';
   patientRelation?: string; // To check for 'Self'
   diagnoses?: Diagnosis[];
   clinicalData?: ClinicalVisitData;
@@ -185,6 +185,12 @@ export type VisitFormData = {
 export type DiagnosisTemplate = {
     diagnoses: Omit<Diagnosis, 'icdName'>[];
     history: string;
+    height: string;
+    weight: string;
+    pulse: string;
+    systolicBP: string;
+    diastolicBP: string;
+    respiratoryRate: string;
     generalExamination: string;
     systemicExamination: string;
     courseInHospital: string;

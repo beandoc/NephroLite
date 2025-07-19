@@ -1,4 +1,5 @@
 
+
 import type { DiagnosisEntry, MedicationEntry, Medication, DiagnosisTemplate } from '@/lib/types';
 
 export const GENDERS: string[] = ['Male', 'Female', 'Other', 'Prefer not to say'];
@@ -190,7 +191,13 @@ export const DIAGNOSIS_TEMPLATES: Record<string, DiagnosisTemplate> = {
   "Hypertensive Nephropathy": {
     diagnoses: [{ name: "Hypertensive Nephropathy", icdCode: "I12.9" }],
     history: "Patient is a known case of hypertension for the last 5 years, presents with pedal edema and decreased urine output.",
-    generalExamination: "BP: 160/100 mmHg, Pulse: 88/min, RR: 16/min. Bilateral pitting pedal edema present.",
+    height: "170",
+    weight: "85",
+    pulse: "88",
+    systolicBP: "160",
+    diastolicBP: "100",
+    respiratoryRate: "16",
+    generalExamination: "Bilateral pitting pedal edema present. No pallor, icterus, or clubbing.",
     systemicExamination: "CVS: S1, S2 normal, no murmurs. Respiratory: Bilateral air entry equal, no added sounds. Abdomen: Soft, non-tender.",
     courseInHospital: "",
     dischargeInstructions: "Advised low salt diet. Monitor BP daily. Follow up in 2 weeks with KFT, Urine R/M reports.",
@@ -205,8 +212,14 @@ export const DIAGNOSIS_TEMPLATES: Record<string, DiagnosisTemplate> = {
   "Diabetic Nephropathy": {
     diagnoses: [{ name: "Diabetic Nephropathy", icdCode: "E11.21" }],
     history: "Patient with Type 2 Diabetes for 10 years, complains of frothy urine and progressive swelling of feet.",
-    generalExamination: "BP: 140/90 mmHg. Fundoscopy shows background diabetic retinopathy.",
-    systemicExamination: "Peripheral neuropathy present in both lower limbs.",
+    height: "165",
+    weight: "78",
+    pulse: "80",
+    systolicBP: "140",
+    diastolicBP: "90",
+    respiratoryRate: "18",
+    generalExamination: "Fundoscopy shows background diabetic retinopathy. Pedal edema present.",
+    systemicExamination: "Peripheral neuropathy present in both lower limbs. CVS and Respiratory systems are normal.",
     courseInHospital: "",
     dischargeInstructions: "Strict glycemic control. Low protein diet. Monitor blood sugar levels and report to endocrinology.",
     medications: [

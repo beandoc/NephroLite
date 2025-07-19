@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useForm, useFieldArray } from "react-hook-form";
@@ -13,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { PlusCircle, Trash2, Save, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
-import { DIAGNOSIS_MEDICATION_TEMPLATES, DIAGNOSIS_TEMPLATES } from "@/lib/constants";
+import { DIAGNOSIS_TEMPLATES } from "@/lib/constants";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -139,26 +140,10 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
         return;
     }
 
-    // Reset form with template values
+    // Reset form with all template values
     form.reset({
-        diagnoses: template.diagnoses,
-        history: template.history,
-        generalExamination: template.generalExamination,
-        systemicExamination: template.systemicExamination,
-        courseInHospital: template.courseInHospital,
-        dischargeInstructions: template.dischargeInstructions,
+        ...template,
         medications: template.medications.map(med => ({ ...med, id: crypto.randomUUID() })),
-        opinionText: template.opinionText,
-        recommendations: template.recommendations,
-        // Keep existing examination vitals if they exist
-        height: form.getValues("height"),
-        weight: form.getValues("weight"),
-        bmi: form.getValues("bmi"),
-        idealBodyWeight: form.getValues("idealBodyWeight"),
-        pulse: form.getValues("pulse"),
-        systolicBP: form.getValues("systolicBP"),
-        diastolicBP: form.getValues("diastolicBP"),
-        respiratoryRate: form.getValues("respiratoryRate"),
     });
 
     toast({ title: "Template Loaded", description: `The form has been pre-filled with the "${templateKey}" template.`});
