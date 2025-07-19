@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useForm, useFieldArray } from "react-hook-form";
@@ -162,7 +161,7 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
       ...template,
       ...existingVitals,
       medications: template.medications.map(med => ({ ...med, id: crypto.randomUUID() })),
-      diagnosis: template.diagnoses?.[0] // Select first diagnosis by default
+      diagnosis: template.diagnoses?.[0] || { name: "", icdCode: "", icdName: "" }
     });
     
     setAvailableDiagnoses(template.diagnoses || []);

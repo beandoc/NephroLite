@@ -62,7 +62,7 @@ export default function TemplatesPage() {
     defaultValues: {
       templateName: "",
       templateType: "Opinion Report",
-      diagnoses: [{ name: "", icdCode: "", icdName: "" }],
+      diagnoses: [],
       history: "",
       generalExamination: "",
       systemicExamination: "",
@@ -328,4 +328,3 @@ export default function TemplatesPage() {
     </div>
   );
 }
-
