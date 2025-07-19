@@ -29,30 +29,30 @@ import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { GENDERS, INDIAN_STATES, RELATIONSHIPS, MALE_IMPLYING_RELATIONS, FEMALE_IMPLYING_RELATIONS } from "@/lib/constants";
+import { GENDERS, INDIAN_STATES, RELATIONSHIPS } from "@/lib/constants";
 import type { PatientFormData } from "@/lib/types";
-import { useEffect } from "react";
 
 const patientFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   dob: z.string().min(1, "Date of birth is required."),
   gender: z.string().min(1, "Gender is required."),
-  contact: z.string().min(10, "A valid contact number is required.").max(15, "Contact number is too long."),
+  contact: z.string().optional(),
   email: z.string().email("Invalid email address.").optional().or(z.literal('')),
-  whatsappNumber: z.string().min(10, "A valid WhatsApp number is required.").max(15, "WhatsApp number is too long.").optional().or(z.literal('')),
+  whatsappNumber: z.string().optional(),
   uhid: z.string().optional(),
   address: z.object({
-    street: z.string().min(1, "Street address is required."),
-    city: z.string().min(1, "City is required."),
-    state: z.string().min(1, "State is required."),
-    pincode: z.string().min(6, "A valid 6-digit pincode is required.").max(6, "A valid 6-digit pincode is required."),
+    street: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    pincode: z.string().optional(),
   }),
   guardian: z.object({
-    name: z.string().min(2, "Guardian's name is required."),
-    relation: z.string().min(1, "Relation to patient is required."),
-    contact: z.string().min(10, "A valid contact number is required.").max(15, "Contact number is too long."),
+    name: z.string().optional(),
+    relation: z.string().optional(),
+    contact: z.string().optional(),
   }),
 });
+
 
 interface PatientFormProps {
   onSubmit: (data: PatientFormData) => void;
@@ -75,18 +75,10 @@ export function PatientForm({ onSubmit, isSubmitting }: PatientFormProps) {
     },
   });
 
-  const selectedRelation = form.watch("guardian.relation");
-  const selectedGender = form.watch("gender");
+  const today = new Date();
+  const twelveYearsAgo = new Date(today.getFullYear() - 12, today.getMonth(), today.getDate());
+  const oneHundredYearsAgo = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
 
-  useEffect(() => {
-    if (selectedRelation) {
-      if (MALE_IMPLYING_RELATIONS.includes(selectedRelation) && selectedGender !== 'Male') {
-        form.setValue('gender', 'Male');
-      } else if (FEMALE_IMPLYING_RELATIONS.includes(selectedRelation) && selectedGender !== 'Female') {
-        form.setValue('gender', 'Female');
-      }
-    }
-  }, [selectedRelation, selectedGender, form]);
 
   return (
     <Form {...form}>
@@ -94,7 +86,7 @@ export function PatientForm({ onSubmit, isSubmitting }: PatientFormProps) {
         <Card>
           <CardHeader>
             <CardTitle className="font-headline">Demographic Information</CardTitle>
-            <CardDescription>Enter the patient's personal and contact details.</CardDescription>
+            <CardDescription>Enter the patient's personal and contact details. Name, DOB, and Gender are required.</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
             <FormField control={form.control} name="name" render={({ field }) => (
@@ -127,9 +119,11 @@ export function PatientForm({ onSubmit, isSubmitting }: PatientFormProps) {
                         mode="single"
                         selected={field.value ? parseISO(field.value) : undefined}
                         onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
-                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                        disabled={(date) => date > twelveYearsAgo || date < oneHundredYearsAgo}
                         initialFocus
-                        captionLayout="dropdown-buttons" fromYear={1900} toYear={new Date().getFullYear()}
+                        captionLayout="dropdown-buttons" 
+                        fromYear={oneHundredYearsAgo.getFullYear()} 
+                        toYear={twelveYearsAgo.getFullYear()}
                       />
                     </PopoverContent>
                   </Popover>
@@ -149,7 +143,7 @@ export function PatientForm({ onSubmit, isSubmitting }: PatientFormProps) {
             )} />
             <FormField control={form.control} name="contact" render={({ field }) => (
               <FormItem>
-                <FormLabel>Contact Number</FormLabel>
+                <FormLabel>Contact Number (Optional)</FormLabel>
                 <FormControl><Input type="tel" placeholder="Enter 10-digit mobile number" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -180,7 +174,7 @@ export function PatientForm({ onSubmit, isSubmitting }: PatientFormProps) {
         
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline">Address Details</CardTitle>
+                <CardTitle className="font-headline">Address Details (Optional)</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
                  <FormField control={form.control} name="address.street" render={({ field }) => (
@@ -219,7 +213,7 @@ export function PatientForm({ onSubmit, isSubmitting }: PatientFormProps) {
 
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline">Guardian Details</CardTitle>
+                <CardTitle className="font-headline">Guardian Details (Optional)</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
                 <FormField control={form.control} name="guardian.name" render={({ field }) => (

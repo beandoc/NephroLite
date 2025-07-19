@@ -1,16 +1,16 @@
 
 export type Address = {
-  street: string;
-  city: string;
-  state: string;
-  pincode: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
   country?: string;
 };
 
 export type Guardian = {
-  name: string;
-  relation: string;
-  contact: string;
+  name?: string;
+  relation?: string;
+  contact?: string;
 };
 
 export type Vaccination = {
@@ -78,7 +78,7 @@ export type Patient = {
   name: string;
   dob: string; // YYYY-MM-DD
   gender: string;
-  contact: string;
+  contact?: string;
   email?: string;
   address: Address;
   guardian: Guardian;
@@ -103,12 +103,21 @@ export type PatientFormData = {
   name: string;
   dob: string;
   gender: string;
-  contact: string;
-  email?: string | undefined;
-  whatsappNumber?: string | undefined;
-  uhid?: string | undefined;
-  address: Address;
-  guardian: Guardian;
+  contact?: string;
+  email?: string;
+  whatsappNumber?: string;
+  uhid?: string;
+  address: {
+    street?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+  };
+  guardian: {
+    name?: string;
+    relation?: string;
+    contact?: string;
+  };
 };
 
 

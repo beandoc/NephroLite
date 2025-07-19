@@ -172,8 +172,9 @@ export function usePatientData() {
     // Find the highest existing number for the current month/year to avoid collisions
     const relevantPatients = patients.filter(p => p.nephroId.endsWith(`/${month}${year}`));
     const maxId = relevantPatients.reduce((max, p) => {
-        const num = parseInt(p.nephroId.split('/')[0]);
-        return num > max ? num : max;
+        const numPart = p.nephroId.split('/')[0];
+        const num = parseInt(numPart, 10);
+        return !isNaN(num) && num > max ? num : max;
     }, 1000); // Start from 1001
 
     const newIdNumber = maxId + 1;
@@ -186,8 +187,17 @@ export function usePatientData() {
       gender: patientData.gender,
       contact: patientData.contact,
       email: patientData.email,
-      address: patientData.address,
-      guardian: patientData.guardian,
+      address: {
+        street: patientData.address.street || "",
+        city: patientData.address.city || "",
+        state: patientData.address.state || "",
+        pincode: patientData.address.pincode || "",
+      },
+      guardian: {
+        name: patientData.guardian.name || "",
+        relation: patientData.guardian.relation || "",
+        contact: patientData.guardian.contact || "",
+      },
       registrationDate: now.toISOString().split('T')[0],
       patientStatus: 'OPD',
       isTracked: false,
