@@ -1,4 +1,5 @@
 
+
 export type Address = {
   street?: string;
   city?: string;
@@ -65,6 +66,8 @@ export type ClinicalVisitData = {
   courseInHospital?: string;
   dischargeInstructions?: string;
   medications?: Medication[];
+  opinionText?: string;
+  recommendations?: string;
 };
 
 export type Visit = {
@@ -74,6 +77,7 @@ export type Visit = {
   visitRemark: string;
   groupName: string;
   patientGender?: 'Male' | 'Female' | 'Other';
+  patientRelation?: string; // To check for 'Self'
   diagnoses?: Diagnosis[];
   clinicalData?: ClinicalVisitData;
 };
@@ -177,3 +181,15 @@ export type VisitFormData = {
     visitRemark: string;
     groupName: string;
 };
+
+export type DiagnosisTemplate = {
+    diagnoses: Omit<Diagnosis, 'icdName'>[];
+    history: string;
+    generalExamination: string;
+    systemicExamination: string;
+    courseInHospital: string;
+    dischargeInstructions: string;
+    medications: Omit<Medication, 'id'>[];
+    opinionText: string;
+    recommendations: string;
+}

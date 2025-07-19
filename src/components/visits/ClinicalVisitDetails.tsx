@@ -4,17 +4,19 @@
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import type { Visit, Diagnosis, Medication } from "@/lib/types";
+import type { Visit, Diagnosis, Medication, ClinicalVisitData, DiagnosisTemplate } from "@/lib/types";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { PlusCircle, Trash2, Save } from "lucide-react";
+import { PlusCircle, Trash2, Save, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
-import { DIAGNOSIS_MEDICATION_TEMPLATES } from "@/lib/constants";
+import { DIAGNOSIS_MEDICATION_TEMPLATES, DIAGNOSIS_TEMPLATES } from "@/lib/constants";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 const diagnosisSchema = z.object({
   name: z.string().min(1, "Diagnosis name is required"),
@@ -47,6 +49,8 @@ const clinicalVisitSchema = z.object({
   systemicExamination: z.string().optional(),
   courseInHospital: z.string().optional(),
   dischargeInstructions: z.string().optional(),
+  opinionText: z.string().optional(),
+  recommendations: z.string().optional(),
 });
 
 type ClinicalVisitFormData = z.infer<typeof clinicalVisitSchema>;
@@ -76,10 +80,12 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
       systemicExamination: visit.clinicalData?.systemicExamination || "",
       courseInHospital: visit.clinicalData?.courseInHospital || "",
       dischargeInstructions: visit.clinicalData?.dischargeInstructions || "",
+      opinionText: visit.clinicalData?.opinionText || "",
+      recommendations: visit.clinicalData?.recommendations || "",
     },
   });
 
-  const { fields: diagnosisFields, append: appendDiagnosis, remove: removeDiagnosis } = useFieldArray({
+  const { fields: diagnosisFields, append: appendDiagnosis, remove: removeDiagnosis, replace: replaceDiagnoses } = useFieldArray({
     control: form.control,
     name: "diagnoses",
   });
@@ -92,7 +98,6 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
   const height = form.watch("height");
   const weight = form.watch("weight");
   const gender = visit.patientGender || 'Male'; 
-  const diagnoses = form.watch("diagnoses");
 
   useEffect(() => {
     const h = parseFloat(height || "0");
@@ -105,7 +110,6 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
     }
 
     if (h > 0) {
-      const heightInMeters = h / 100;
       let idealWeight;
       if (gender === 'Male') {
         idealWeight = 50 + 0.91 * (h - 152.4);
@@ -119,25 +123,6 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
 
   }, [height, weight, gender, form]);
 
-  useEffect(() => {
-    const currentMedications = form.getValues('medications').map(m => m.name);
-    const suggestedMeds: Medication[] = [];
-    
-    diagnoses.forEach(diag => {
-        if (diag.name && DIAGNOSIS_MEDICATION_TEMPLATES[diag.name]) {
-            const templateMeds = DIAGNOSIS_MEDICATION_TEMPLATES[diag.name];
-            templateMeds.forEach(templateMed => {
-                if (!currentMedications.includes(templateMed.name) && !suggestedMeds.some(sm => sm.name === templateMed.name)) {
-                    suggestedMeds.push({ ...templateMed, id: crypto.randomUUID() });
-                }
-            });
-        }
-    });
-
-    if(suggestedMeds.length > 0) {
-        appendMedication(suggestedMeds);
-    }
-  }, [diagnoses, form, appendMedication]);
 
   const onSubmit = (data: ClinicalVisitFormData) => {
     console.log("Saving visit data for visit ID:", visit.id, data);
@@ -147,16 +132,70 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
     });
   };
 
+  const handleTemplateSelect = (templateKey: string) => {
+    const template = DIAGNOSIS_TEMPLATES[templateKey];
+    if (!template) {
+        toast({ title: "Template not found", variant: "destructive" });
+        return;
+    }
+
+    // Reset form with template values
+    form.reset({
+        diagnoses: template.diagnoses,
+        history: template.history,
+        generalExamination: template.generalExamination,
+        systemicExamination: template.systemicExamination,
+        courseInHospital: template.courseInHospital,
+        dischargeInstructions: template.dischargeInstructions,
+        medications: template.medications.map(med => ({ ...med, id: crypto.randomUUID() })),
+        opinionText: template.opinionText,
+        recommendations: template.recommendations,
+        // Keep existing examination vitals if they exist
+        height: form.getValues("height"),
+        weight: form.getValues("weight"),
+        bmi: form.getValues("bmi"),
+        idealBodyWeight: form.getValues("idealBodyWeight"),
+        pulse: form.getValues("pulse"),
+        systolicBP: form.getValues("systolicBP"),
+        diastolicBP: form.getValues("diastolicBP"),
+        respiratoryRate: form.getValues("respiratoryRate"),
+    });
+
+    toast({ title: "Template Loaded", description: `The form has been pre-filled with the "${templateKey}" template.`});
+  };
+
   return (
     <Card className="border-none shadow-none">
       <CardContent className="p-1">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Visit Data Entry</CardTitle>
+                    <CardDescription>If diagnosis is known, select a template to pre-fill the form. Otherwise, proceed with manual data entry.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex flex-col sm:flex-row gap-2 items-center">
+                        <Select onValueChange={handleTemplateSelect}>
+                            <SelectTrigger className="flex-grow">
+                                <SelectValue placeholder="Load a clinical template..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {Object.keys(DIAGNOSIS_TEMPLATES).map(key => (
+                                    <SelectItem key={key} value={key}>{key}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Button type="button" variant="outline" onClick={() => form.reset()}>Clear Form</Button>
+                    </div>
+                </CardContent>
+            </Card>
             
             <Card>
               <CardHeader>
                 <CardTitle>Clinical Diagnosis</CardTitle>
-                <CardDescription>Add one or more diagnoses. Medications will be suggested based on your selection.</CardDescription>
+                <CardDescription>Add one or more diagnoses for this visit.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {diagnosisFields.map((field, index) => (
@@ -241,7 +280,7 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
             <Card>
                 <CardHeader>
                     <CardTitle>Medications</CardTitle>
-                    <CardDescription>Medications are suggested from templates based on diagnosis. You can add, edit, or delete them.</CardDescription>
+                    <CardDescription>Medications can be loaded from a template or added manually.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="rounded-md border">
@@ -280,7 +319,7 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
                                 {medicationFields.length === 0 && (
                                      <TableRow>
                                         <TableCell colSpan={5} className="text-center text-muted-foreground">
-                                            No medications added. Add a diagnosis to get suggestions or add manually.
+                                            No medications added. Load a template or add manually.
                                         </TableCell>
                                     </TableRow>
                                 )}
@@ -292,6 +331,31 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
                     </Button>
                 </CardContent>
             </Card>
+
+            {visit.patientRelation === "Self" && (
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="font-headline flex items-center"><FileText className="mr-2 h-5 w-5 text-primary"/>Opinion Report Section</CardTitle>
+                        <CardDescription>This section is available as the patient's relation is marked as 'Self'.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <FormField control={form.control} name="opinionText" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Medical Opinion</FormLabel>
+                                <FormControl><Textarea rows={5} placeholder="Provide your detailed medical opinion..." {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                        <FormField control={form.control} name="recommendations" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Recommendations</FormLabel>
+                                <FormControl><Textarea rows={5} placeholder="Provide specific recommendations for the patient..." {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                    </CardContent>
+                 </Card>
+            )}
             
             <FormField
               control={form.control}

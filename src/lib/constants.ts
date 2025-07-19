@@ -1,5 +1,5 @@
 
-import type { DiagnosisEntry, MedicationEntry, Medication } from '@/lib/types';
+import type { DiagnosisEntry, MedicationEntry, Medication, DiagnosisTemplate } from '@/lib/types';
 
 export const GENDERS: string[] = ['Male', 'Female', 'Other', 'Prefer not to say'];
 
@@ -16,7 +16,7 @@ export const INDIAN_STATES: string[] = [
 ];
 
 export const RELATIONSHIPS: string[] = [
-  'Parent', 'Spouse', 'Sibling', 'Child', 'Guardian', 'Friend', 'Other',
+  'Self', 'Parent', 'Spouse', 'Sibling', 'Child', 'Guardian', 'Friend', 'Other',
   'F/O', 'S/O', 'W/O', 'M/O', 'D/O'
 ];
 
@@ -183,3 +183,39 @@ export const FINERENONE: string = 'Finerenone'; // Specific drug
 export const RESIDENCE_TYPES: string[] = ['Rural', 'Urban', 'Semi-Urban', 'Other', 'Not Set'];
 
 export const PATIENT_GROUPS_FOR_ANALYSIS = ["Glomerulonephritis", "Diabetic Kidney Disease", "Hypertensive Nephropathy", "Chronic Kidney Disease (CKD) - General"];
+
+
+// Comprehensive Clinical Visit Templates
+export const DIAGNOSIS_TEMPLATES: Record<string, DiagnosisTemplate> = {
+  "Hypertensive Nephropathy": {
+    diagnoses: [{ name: "Hypertensive Nephropathy", icdCode: "I12.9" }],
+    history: "Patient is a known case of hypertension for the last 5 years, presents with pedal edema and decreased urine output.",
+    generalExamination: "BP: 160/100 mmHg, Pulse: 88/min, RR: 16/min. Bilateral pitting pedal edema present.",
+    systemicExamination: "CVS: S1, S2 normal, no murmurs. Respiratory: Bilateral air entry equal, no added sounds. Abdomen: Soft, non-tender.",
+    courseInHospital: "",
+    dischargeInstructions: "Advised low salt diet. Monitor BP daily. Follow up in 2 weeks with KFT, Urine R/M reports.",
+    medications: [
+      { name: 'Telmisartan', dosage: '80mg', frequency: 'OD', instructions: 'After food' },
+      { name: 'Amlodipine', dosage: '10mg', frequency: 'OD', instructions: 'After food' },
+      { name: 'Torsemide', dosage: '20mg', frequency: 'OD', instructions: 'In the morning' },
+    ],
+    opinionText: "The patient has uncontrolled hypertension leading to hypertensive nephropathy. The current management focuses on aggressive blood pressure control to slow the progression of kidney disease.",
+    recommendations: "1. Strict BP control (target < 130/80 mmHg). \n2. Salt and fluid restriction. \n3. Regular monitoring of kidney function tests."
+  },
+  "Diabetic Nephropathy": {
+    diagnoses: [{ name: "Diabetic Nephropathy", icdCode: "E11.21" }],
+    history: "Patient with Type 2 Diabetes for 10 years, complains of frothy urine and progressive swelling of feet.",
+    generalExamination: "BP: 140/90 mmHg. Fundoscopy shows background diabetic retinopathy.",
+    systemicExamination: "Peripheral neuropathy present in both lower limbs.",
+    courseInHospital: "",
+    dischargeInstructions: "Strict glycemic control. Low protein diet. Monitor blood sugar levels and report to endocrinology.",
+    medications: [
+      { name: 'Metformin', dosage: '1g', frequency: 'BD', instructions: 'After food' },
+      { name: 'Dapagliflozin', dosage: '10mg', frequency: 'OD', instructions: 'After breakfast' },
+      { name: 'Atorvastatin', dosage: '20mg', frequency: 'HS', instructions: 'At bedtime' },
+      { name: 'Ramipril', dosage: '5mg', frequency: 'OD', instructions: '' },
+    ],
+    opinionText: "The patient's clinical presentation is consistent with diabetic nephropathy. The key to management is multifactorial: optimal glycemic and blood pressure control, and use of RAAS inhibitors and SGLT2 inhibitors.",
+    recommendations: "1. Maintain HbA1c < 7.0%. \n2. Regular screening for retinopathy and neuropathy. \n3. Urine for microalbuminuria assessment every 6 months."
+  }
+};

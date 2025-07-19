@@ -111,7 +111,7 @@ const getInitialPatients = (): Patient[] => {
       contact: '9123456789',
       email: 'priya.sharma@example.com',
       address: { street: '456 Park Street', city: 'Mumbai', state: 'Maharashtra', pincode: '400001', country: 'India' },
-      guardian: { name: 'Amit Sharma', relation: 'Spouse', contact: '9123456788' },
+      guardian: { name: 'Self', relation: 'Self', contact: '9123456789' },
       patientStatus: 'IPD',
       isTracked: false,
       residenceType: 'Rural',
@@ -194,9 +194,9 @@ export function usePatientData() {
         pincode: patientData.address.pincode || "",
       },
       guardian: {
-        name: patientData.guardian.name || "",
+        name: patientData.guardian.relation === 'Self' ? patientData.name : patientData.guardian.name || "",
         relation: patientData.guardian.relation || "",
-        contact: patientData.guardian.contact || "",
+        contact: patientData.guardian.relation === 'Self' ? patientData.contact : patientData.guardian.contact || "",
       },
       registrationDate: now.toISOString().split('T')[0],
       patientStatus: 'OPD',
@@ -250,6 +250,7 @@ export function usePatientData() {
       date: new Date().toISOString().split('T')[0],
       ...visitData,
       patientGender: patient.gender,
+      patientRelation: patient.guardian.relation,
     };
 
     if (!patient.visits) {

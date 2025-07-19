@@ -31,6 +31,7 @@ import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GENDERS, INDIAN_STATES, RELATIONSHIPS } from "@/lib/constants";
 import type { PatientFormData } from "@/lib/types";
+import { useEffect } from 'react';
 
 const patientFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -78,6 +79,14 @@ export function PatientForm({ onSubmit, isSubmitting }: PatientFormProps) {
   const today = new Date();
   const twelveYearsAgo = new Date(today.getFullYear() - 12, today.getMonth(), today.getDate());
   const oneHundredYearsAgo = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
+
+  const relation = form.watch("guardian.relation");
+  useEffect(() => {
+    if (relation === "Self") {
+      form.setValue("guardian.name", form.getValues("name"));
+      form.setValue("guardian.contact", form.getValues("contact"));
+    }
+  }, [relation, form]);
 
 
   return (
@@ -216,14 +225,7 @@ export function PatientForm({ onSubmit, isSubmitting }: PatientFormProps) {
                 <CardTitle className="font-headline">Guardian Details (Optional)</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
-                <FormField control={form.control} name="guardian.name" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Guardian's Name</FormLabel>
-                        <FormControl><Input placeholder="Enter guardian's full name" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-                <FormField control={form.control} name="guardian.relation" render={({ field }) => (
+                 <FormField control={form.control} name="guardian.relation" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Relation to Patient</FormLabel>
                          <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -233,10 +235,17 @@ export function PatientForm({ onSubmit, isSubmitting }: PatientFormProps) {
                         <FormMessage />
                     </FormItem>
                 )} />
+                <FormField control={form.control} name="guardian.name" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Guardian's Name</FormLabel>
+                        <FormControl><Input placeholder="Enter guardian's full name" {...field} disabled={relation === 'Self'} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
                 <FormField control={form.control} name="guardian.contact" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Guardian's Contact Number</FormLabel>
-                        <FormControl><Input type="tel" placeholder="Enter 10-digit mobile number" {...field} /></FormControl>
+                        <FormControl><Input type="tel" placeholder="Enter 10-digit mobile number" {...field} disabled={relation === 'Self'} /></FormControl>
                         <FormMessage />
                     </FormItem>
                 )} />
