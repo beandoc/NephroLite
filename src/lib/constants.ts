@@ -1,5 +1,4 @@
 
-
 import type { DiagnosisEntry, MedicationEntry, Medication, DiagnosisTemplate } from '@/lib/types';
 
 export const GENDERS: string[] = ['Male', 'Female', 'Other', 'Prefer not to say'];
@@ -188,7 +187,7 @@ export const DIAGNOSIS_TEMPLATES: Record<string, DiagnosisTemplate> = {
   "IgA Nephropathy": {
     templateName: "IgA Nephropathy",
     templateType: "Opinion Report",
-    diagnoses: [{ name: "IgA Nephropathy", icdCode: "N03.3" }],
+    diagnoses: [{ name: "IgA Nephropathy", icdCode: "N03.3", icdName: "Chronic nephritic syndrome, diffuse mesangial proliferative" }],
     history: "Patient was detected to have proteinuria/ hypertension/ renal dysfunction during evaluation. He denies any history of hematuria, oliguria, nocturia, swelling of face or feet at any time. There was no preceding skin rash, arthritis, oral ulcers, nephrotoxic drug use. No history of NSAID's or alternative medication use. His 24 hr urine protein excretion was _____ mg/day. He was subjected to a kidney biopsy which was reported as IgA nephropathy. He was initiated on oral steroids and ARB's. Due for Nephrologist opinion",
     generalExamination: "No pallor, pedal edema. Systemically : NAD",
     systemicExamination: "CVS: S1, S2 normal, no murmurs. Respiratory: Bilateral air entry equal, no added sounds. Abdomen: Soft, non-tender.",
@@ -200,7 +199,35 @@ export const DIAGNOSIS_TEMPLATES: Record<string, DiagnosisTemplate> = {
     recommendations: `Medical Classification recommended:\nMedical Classification: SHAPE -3 ( x )\nDisability Profile: P3 (T-24) for\nClinical Diagnosis: IgA Nephropathy \nICD-10 Diagnosis & Code: Chronic nephritic syndrome, diffuse mesangial proliferative (N03.3)\n\nMedical recommendations and employability restrictions as per Code ‘E’ (impacting functional status of the indl), if any, with justification: As per AO 3/2001\n\nAny other advice (with justification):\nSalt restricted 2100 KCal low saturated fat diet.\nAvoid nephrotoxic drugs, dehydration, and strenuous physical exercise.\nMonthly review in Medical OPD and 03 monthly review in Nephrology OPD with fresh inv reports.\nNext recat at Nephrology Centre`,
     usgReport: "( No____ dt ____ CH(SC): Normal scan",
     kidneyBiopsyReport: "Kidney Biopsy (No: Dt ______ 25): __ glomeruli, of which _ are globally sclerosed. Rest show mild to moderate mesangial proliferation in segmental distribution with segmental glomerular crescents in _ (_cellular, _ fibrocellular and _ fibrous). Patchy tubular atrophy associated with interstitial fibrosis and inflammation in __% of visualized tissue.  IF: Ig A (2+), C3 (3+), kappa (2+) and Lambda (3+). IgG, IgM and C1q are negative. Impression: IgA nephropathy with IFTA of _ %. MEST Score: (M0 E0 S0 T0-C0)",
+  },
+  "Chronic Kidney Disease": {
+    templateName: "Chronic Kidney Disease",
+    templateType: "Opinion Report",
+    diagnoses: [
+      { name: "CKD Stage 1", icdCode: "N18.1" },
+      { name: "CKD Stage 2", icdCode: "N18.2" },
+      { name: "CKD Stage 3", icdCode: "N18.3" },
+      { name: "CKD Stage 4", icdCode: "N18.4" },
+      { name: "CKD Stage 5", icdCode: "N18.5" },
+      { name: "End-stage renal disease", icdCode: "N18.6" },
+    ],
+    history: "Patient was detected to be hypertensive ( BP _______ mm Hg) during medical examination. No complains of headache, chest pain, swelling of both lower limbs. No complains of hematuria, oliguria, froth in urine. No h/o joint pain, rash, oral ulcers, alopecia. No h/o alternative medication or chronic NSAID intake. Evaluation showed azotemia ( Creatinine ___ mg/dl). USG KUB showed B/L small echogenic kidneys. He was referred for Nephrology evaluation at CHSC. Due for opinion.",
+    generalExamination: "No pallor, pedal edema. Fundus: No evidence of retinopathy. Systemic exam: NAD",
+    systemicExamination: "NAD",
+    medications: [
+      { name: 'Tab Amlodipine', dosage: '10 mg', frequency: 'OD' },
+      { name: 'Tab Met XL', dosage: '25 mg', frequency: 'BD' },
+      { name: 'Tab Sodabicarbonate', dosage: '500 mg', frequency: 'TDS' },
+      { name: 'Tab Rantac', dosage: '150 mg', frequency: 'BD' },
+      { name: 'Tab F/A', dosage: '5 mg', frequency: 'OD' },
+      { name: 'Calcirol sachet', dosage: '60,000 IU/month', frequency: 'Monthly' },
+    ],
+    opinionText: "This patient detected to have chronic kidney disease during evaluation of hypertension. His autoimmune workup was negative. His BP has been controlled with anti hypertensive drugs and he has evidence of hypertension related target organ damage. Non oliguric at present. His present eGFR is ( ______ ml/min/1.73 sqm BSA). He has been counseled about the prognosis of his disease and the precautions he needs to observe. He will require initiation of RRT once uremic symptoms appear. He has been vaccinated against HBV. He will need continued observation and periodic review.",
+    recommendations: `Medical Classification recommended:\nMedical Classification: SHAPE -3 ( x )\nDisability Profile: P3 (T-24) for\nClinical diagnosis: CHRONIC KIDNEY DISEASE Stage 5\nICD code and Diagnosis: N18.5, Chronic kidney disease, stage 5\n\nMedical recommendations and employability restrictions as per Code ‘E’ (impacting functional status of the indl), if any, with justification: As per AO 3/2001\nUnfit for HAA\nTo be posted to a place within 04 hrs travelling to a service nephrology centre\n\nAny other advice (with justification):\nSalt restricted 2100 KCal low saturated fat diet\nAvoid nephrotoxic drugs, NSAIDs\nMonthly review in Nephro OPD with CBC, RFT and electrolytes report\nNext Recat at Nephrology centre`,
+    usgReport: "Bilateral echogenic kidney. No HDN",
+    kidneyBiopsyReport: "Not applicable.",
   }
 };
 
+    
     
