@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { Patient, Vaccination, ClinicalProfile, PatientFormData, VisitFormData } from '@/lib/types';
+import type { Patient, Vaccination, ClinicalProfile, PatientFormData, VisitFormData, Visit } from '@/lib/types';
 import { useState, useEffect, useCallback } from 'react';
 import { VACCINATION_NAMES, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS, RESIDENCE_TYPES } from '@/lib/constants';
 import { format } from 'date-fns';
@@ -47,6 +47,7 @@ const getInitialPatients = (): Patient[] => {
         nextAppointmentDate: p.nextAppointmentDate || undefined,
         isTracked: p.isTracked || false,
         residenceType: p.residenceType || (RESIDENCE_TYPES.includes('Not Set') ? 'Not Set' : RESIDENCE_TYPES[0]),
+        visits: p.visits || [], // Add visits array
         clinicalProfile: {
           ...getInitialClinicalProfile(),
           ...(p.clinicalProfile || {}),
@@ -86,6 +87,7 @@ const getInitialPatients = (): Patient[] => {
       nextAppointmentDate: new Date(Date.now() + 86400000 * 14).toISOString().split('T')[0],
       isTracked: true,
       residenceType: 'Urban',
+      visits: [],
       clinicalProfile: {
         ...getInitialClinicalProfile(),
         primaryDiagnosis: 'Chronic Kidney Disease (CKD)',
@@ -113,6 +115,7 @@ const getInitialPatients = (): Patient[] => {
       patientStatus: 'IPD',
       isTracked: false,
       residenceType: 'Rural',
+      visits: [],
       clinicalProfile: {
         ...getInitialClinicalProfile(),
         primaryDiagnosis: 'Diabetic Nephropathy',
@@ -133,6 +136,7 @@ const getInitialPatients = (): Patient[] => {
       patientStatus: 'OPD',
       isTracked: true,
       residenceType: 'Urban',
+      visits: [],
       clinicalProfile: {
         ...getInitialClinicalProfile(),
         primaryDiagnosis: 'Glomerulonephritis',
@@ -164,7 +168,15 @@ export function usePatientData() {
     const now = new Date();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const year = String(now.getFullYear()).slice(-2);
-    const newIdNumber = (patients.length + 1001); // Simple incrementing number
+    
+    // Find the highest existing number for the current month/year to avoid collisions
+    const relevantPatients = patients.filter(p => p.nephroId.endsWith(`/${month}${year}`));
+    const maxId = relevantPatients.reduce((max, p) => {
+        const num = parseInt(p.nephroId.split('/')[0]);
+        return num > max ? num : max;
+    }, 1000); // Start from 1001
+
+    const newIdNumber = maxId + 1;
     
     const newPatient: Patient = {
       id: crypto.randomUUID(),
@@ -179,6 +191,8 @@ export function usePatientData() {
       registrationDate: now.toISOString().split('T')[0],
       patientStatus: 'OPD',
       isTracked: false,
+      residenceType: 'Not Set',
+      visits: [],
       clinicalProfile: {
         ...getInitialClinicalProfile(),
         whatsappNumber: patientData.whatsappNumber || '',
@@ -220,26 +234,32 @@ export function usePatientData() {
     const updatedPatients = [...patients];
     const patient = updatedPatients[patientIndex];
     
-    // In a real application, you'd save this visit to a separate 'visits' table/collection.
-    // For this mock implementation, we can just update a tag or a primary diagnosis based on the group.
-    // Let's add the group name as a tag.
+    // Create a new visit object
+    const newVisit: Visit = {
+      id: crypto.randomUUID(),
+      date: new Date().toISOString().split('T')[0],
+      ...visitData,
+    };
+
+    if (!patient.visits) {
+      patient.visits = [];
+    }
+    patient.visits.push(newVisit);
+
     const newTags = new Set([...patient.clinicalProfile.tags, visitData.groupName]);
     patient.clinicalProfile.tags = Array.from(newTags);
 
-    // Let's also update the primary diagnosis if it's "Not Set"
     if (patient.clinicalProfile.primaryDiagnosis === 'Not Set' && visitData.groupName !== 'Misc') {
         patient.clinicalProfile.primaryDiagnosis = visitData.groupName;
     }
     
-    // We can store the remark in the POMR for simplicity for now
-    const visitRemarkEntry = `[${format(new Date(), 'yyyy-MM-dd')}] Visit (${visitData.visitType}): ${visitData.visitRemark}`;
+    const visitRemarkEntry = `[${format(new Date(newVisit.date), 'yyyy-MM-dd')}] Visit (${newVisit.visitType}): ${newVisit.visitRemark}`;
     patient.clinicalProfile.pomr = patient.clinicalProfile.pomr 
       ? `${patient.clinicalProfile.pomr}\n${visitRemarkEntry}`
       : visitRemarkEntry;
 
     updatedPatients[patientIndex] = patient;
     saveData(updatedPatients);
-    console.log("Mock visit added to patient:", patient);
   }, [patients, saveData]);
 
   const deletePatient = useCallback((id: string): boolean => {

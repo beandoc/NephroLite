@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { DemographicsCard } from './cards/DemographicsCard';
 import { ClinicalProfileCard } from './cards/ClinicalProfileCard';
 import { ServiceDetailsCard } from './cards/ServiceDetailsCard';
-import { MockVisitHistory } from './profile-tabs/MockVisitHistory';
+import { PatientVisitsTabContent } from './profile-tabs/PatientVisitsTabContent';
 import { PatientInvestigationsTabContent } from './profile-tabs/PatientInvestigationsTabContent';
 import { MockDiagnosisRx } from './profile-tabs/MockDiagnosisRx';
 import { HealthTrendsTabContent } from './profile-tabs/HealthTrendsTabContent';
@@ -60,15 +60,7 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
       </TabsContent>
 
       <TabsContent value="visits">
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle className="font-headline text-xl">Visit History</CardTitle>
-            <CardDescription>Chronological record of patient consultations and visits. Click on a visit to see details.</CardDescription>
-          </CardHeader>
-          <CardContent className="px-2 sm:px-4 md:px-6">
-            <MockVisitHistory patientId={patient.id} />
-          </CardContent>
-        </Card>
+        <PatientVisitsTabContent patient={patient} />
       </TabsContent>
 
       <TabsContent value="investigations">

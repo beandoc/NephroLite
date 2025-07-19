@@ -36,6 +36,42 @@ export type ClinicalProfile = {
   whatsappNumber?: string;
 };
 
+export type Diagnosis = {
+  name: string;
+  icdName?: string;
+  icdCode?: string;
+};
+
+export type Medication = {
+  name: string;
+  dosage: string;
+  frequency: string;
+  duration?: string;
+};
+
+export type ClinicalVisitData = {
+  history?: string;
+  height?: string; // cm
+  weight?: string; // kg
+  bmi?: string; // kg/m^2
+  generalExamination?: string;
+  systemicExamination?: string;
+  courseInHospital?: string;
+  dischargeInstructions?: string;
+  // medications will be an array
+  medications?: Medication[];
+};
+
+export type Visit = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  visitType: string;
+  visitRemark: string;
+  groupName: string;
+  diagnoses?: Diagnosis[];
+  clinicalData?: ClinicalVisitData;
+};
+
 export type Patient = {
   id: string;
   nephroId: string;
@@ -59,6 +95,7 @@ export type Patient = {
   nextAppointmentDate?: string; // YYYY-MM-DD
   isTracked: boolean;
   residenceType?: 'Rural' | 'Urban' | 'Semi-Urban' | 'Other' | 'Not Set';
+  visits: Visit[];
 };
 
 // This type mirrors the Zod schema in patient-form.tsx
