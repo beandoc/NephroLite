@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PlusCircle, Trash2, Save, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { DIAGNOSIS_TEMPLATES } from "@/lib/constants";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -35,7 +35,7 @@ const medicationSchema = z.object({
 
 
 const clinicalVisitSchema = z.object({
-  diagnoses: z.array(diagnosisSchema),
+  diagnosis: diagnosisSchema.optional(), // Changed from z.array to single object
   medications: z.array(medicationSchema),
   history: z.string().optional(),
   height: z.string().optional(),
@@ -64,11 +64,12 @@ interface ClinicalVisitDetailsProps {
 
 export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
   const { toast } = useToast();
+  const [availableDiagnoses, setAvailableDiagnoses] = useState<Diagnosis[]>([]);
 
   const form = useForm<ClinicalVisitFormData>({
     resolver: zodResolver(clinicalVisitSchema),
     defaultValues: {
-      diagnoses: visit.diagnoses?.length ? visit.diagnoses : [{ name: "", icdCode: "", icdName: "" }],
+      diagnosis: visit.diagnoses?.[0] || { name: "", icdCode: "", icdName: "" },
       medications: visit.clinicalData?.medications?.map(m => ({ ...m, id: m.id || crypto.randomUUID() })) || [],
       history: visit.clinicalData?.history || "",
       height: visit.clinicalData?.height || "",
@@ -88,11 +89,6 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
       usgReport: visit.clinicalData?.usgReport || "",
       kidneyBiopsyReport: visit.clinicalData?.kidneyBiopsyReport || "",
     },
-  });
-
-  const { fields: diagnosisFields, append: appendDiagnosis, remove: removeDiagnosis, replace: replaceDiagnoses } = useFieldArray({
-    control: form.control,
-    name: "diagnoses",
   });
 
   const { fields: medicationFields, append: appendMedication, remove: removeMedication, replace: replaceMedications } = useFieldArray({
@@ -130,7 +126,12 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
 
 
   const onSubmit = (data: ClinicalVisitFormData) => {
-    console.log("Saving visit data for visit ID:", visit.id, data);
+    // Transform single diagnosis back into an array for saving if needed
+    const dataToSave = {
+        ...data,
+        diagnoses: data.diagnosis ? [data.diagnosis] : []
+    };
+    console.log("Saving visit data for visit ID:", visit.id, dataToSave);
     toast({
       title: "Data Saved (Mock)",
       description: "Clinical visit data has been logged to the console.",
@@ -161,7 +162,10 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
       ...template,
       ...existingVitals,
       medications: template.medications.map(med => ({ ...med, id: crypto.randomUUID() })),
+      diagnosis: template.diagnoses?.[0] // Select first diagnosis by default
     });
+    
+    setAvailableDiagnoses(template.diagnoses || []);
 
     toast({ title: "Template Loaded", description: `The form has been pre-filled with the "${templateKey}" template.`});
   };
@@ -196,14 +200,47 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
           <Card>
             <CardHeader>
               <CardTitle>Clinical Diagnosis</CardTitle>
-              <CardDescription>Add one or more diagnoses for this visit.</CardDescription>
+              <CardDescription>
+                {availableDiagnoses.length > 0 
+                  ? "Select the specific diagnosis for this visit from the list provided by the template." 
+                  : "Enter the diagnosis manually."}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {diagnosisFields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2 items-end p-2 border rounded-md">
+               {availableDiagnoses.length > 0 ? (
+                 <FormField
+                    control={form.control}
+                    name="diagnosis.name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Select from Template</FormLabel>
+                        <Select
+                          onValueChange={(value) => {
+                            const selectedDiag = availableDiagnoses.find(d => d.name === value);
+                            if (selectedDiag) {
+                              form.setValue('diagnosis', selectedDiag);
+                            }
+                          }}
+                          value={field.value}
+                        >
+                          <FormControl><SelectTrigger><SelectValue placeholder="Select a specific diagnosis..." /></SelectTrigger></FormControl>
+                          <SelectContent>
+                            {availableDiagnoses.map(d => (
+                              <SelectItem key={d.icdCode || d.name} value={d.name}>
+                                {d.name} ({d.icdCode})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+               ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-end">
                   <FormField
                     control={form.control}
-                    name={`diagnoses.${index}.name`}
+                    name="diagnosis.name"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Diagnosis Name</FormLabel>
@@ -214,7 +251,7 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
                   />
                     <FormField
                     control={form.control}
-                    name={`diagnoses.${index}.icdCode`}
+                    name="diagnosis.icdCode"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>ICD-10</FormLabel>
@@ -223,14 +260,8 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
                       </FormItem>
                     )}
                   />
-                  <Button type="button" variant="destructive" size="icon" onClick={() => removeDiagnosis(index)} disabled={diagnosisFields.length <= 1}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
                 </div>
-              ))}
-              <Button type="button" variant="outline" size="sm" onClick={() => appendDiagnosis({ name: "", icdCode: "", icdName: "" })}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Diagnosis
-              </Button>
+               )}
             </CardContent>
           </Card>
           
