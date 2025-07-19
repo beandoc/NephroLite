@@ -63,7 +63,6 @@ export type Patient = {
 
 // This type mirrors the Zod schema in patient-form.tsx
 export type PatientFormData = {
-  customIdPrefix: string;
   name: string;
   dob: string;
   gender: string;
@@ -71,18 +70,6 @@ export type PatientFormData = {
   email?: string | undefined;
   address: Address;
   guardian: Guardian;
-  clinicalProfile: Partial<ClinicalProfile> & {
-    tags: string[];
-    vaccinations: Vaccination[];
-  };
-  serviceName?: string | undefined;
-  serviceNumber?: string | undefined;
-  rank?: string | undefined;
-  unitName?: string | undefined;
-  formation?: string | undefined;
-  nextAppointmentDate?: string | undefined;
-  isTracked?: boolean | undefined;
-  residenceType?: string | undefined;
 };
 
 

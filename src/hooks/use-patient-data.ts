@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { Patient, Vaccination, ClinicalProfile } from '@/lib/types';
+import type { Patient, Vaccination, ClinicalProfile, PatientFormData } from '@/lib/types';
 import { useState, useEffect, useCallback } from 'react';
 import { VACCINATION_NAMES, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS, RESIDENCE_TYPES } from '@/lib/constants';
 
@@ -156,6 +156,22 @@ export function usePatientData() {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedPatients));
     setPatients(updatedPatients);
   }, []);
+  
+  const addPatient = useCallback((patientData: PatientFormData): Patient => {
+    const newPatient: Patient = {
+      ...patientData,
+      id: crypto.randomUUID(),
+      nephroId: `MOCK-${String(patients.length + 1).padStart(4, '0')}`,
+      registrationDate: new Date().toISOString().split('T')[0],
+      patientStatus: 'OPD',
+      isTracked: false,
+      clinicalProfile: getInitialClinicalProfile(),
+    };
+
+    const updatedPatients = [...patients, newPatient];
+    saveData(updatedPatients);
+    return newPatient;
+  }, [patients, saveData]);
 
   const getPatientsList = useCallback((): Patient[] => {
     return patients;
@@ -204,6 +220,7 @@ export function usePatientData() {
   return {
     patients,
     isLoading,
+    addPatient,
     getPatientsList,
     getPatientById,
     updatePatient,
