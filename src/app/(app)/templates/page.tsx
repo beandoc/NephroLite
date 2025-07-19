@@ -34,10 +34,11 @@ const templateFormSchema = z.object({
   generalExamination: z.string().optional(),
   systemicExamination: z.string().optional(),
   medications: z.array(medicationSchema),
-  // Discharge Summary specific fields
-  dischargeInstructions: z.string().optional(),
+  // Fields available for both
   usgReport: z.string().optional(),
   kidneyBiopsyReport: z.string().optional(),
+  // Discharge Summary specific fields
+  dischargeInstructions: z.string().optional(),
   // Opinion Report specific fields
   opinionText: z.string().optional(),
   recommendations: z.string().optional(),
@@ -171,6 +172,7 @@ export default function TemplatesPage() {
                         <FormItem>
                             <FormLabel className="text-base font-bold">Template / Diagnosis Name</FormLabel>
                             <FormControl><Input placeholder="e.g., IgA Nephropathy" {...field} /></FormControl>
+                            <FormDescription>This name links the template to a diagnosis.</FormDescription>
                             <FormMessage />
                         </FormItem>
                     )} />
@@ -188,7 +190,7 @@ export default function TemplatesPage() {
                         </FormItem>
                     )} />
                   </div>
-                  <FormDescription>The template name links it to a diagnosis. The type determines which fields are available.</FormDescription>
+                  
 
                   <FormField control={form.control} name="history" render={({ field }) => (<FormItem><FormLabel>History / Summary Template</FormLabel><FormControl><Textarea rows={4} placeholder="Default history text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
 
@@ -227,8 +229,6 @@ export default function TemplatesPage() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <FormField control={form.control} name="dischargeInstructions" render={({ field }) => (<FormItem><FormLabel>Discharge Instructions</FormLabel><FormControl><Textarea rows={4} placeholder="Default discharge instructions..." {...field} /></FormControl><FormMessage /></FormItem>)} />
-                            <FormField control={form.control} name="usgReport" render={({ field }) => (<FormItem><FormLabel>USG Report Template</FormLabel><FormControl><Textarea rows={4} placeholder="Default USG report text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
-                            <FormField control={form.control} name="kidneyBiopsyReport" render={({ field }) => (<FormItem><FormLabel>Kidney Biopsy Report Template</FormLabel><FormControl><Textarea rows={6} placeholder="Default kidney biopsy report text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
                         </CardContent>
                     </Card>
                   )}
@@ -244,6 +244,17 @@ export default function TemplatesPage() {
                         </CardContent>
                     </Card>
                   )}
+
+                  <Card className="bg-muted/50">
+                    <CardHeader>
+                        <CardTitle className="font-headline flex items-center"><Microscope className="mr-2 h-5 w-5 text-primary"/>Investigation Report Fields</CardTitle>
+                        <CardDescription>These fields are available for all template types.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <FormField control={form.control} name="usgReport" render={({ field }) => (<FormItem><FormLabel>USG Report Template</FormLabel><FormControl><Textarea rows={4} placeholder="Default USG report text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                      <FormField control={form.control} name="kidneyBiopsyReport" render={({ field }) => (<FormItem><FormLabel>Kidney Biopsy Report Template</FormLabel><FormControl><Textarea rows={6} placeholder="Default kidney biopsy report text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    </CardContent>
+                  </Card>
                   
                   <Button type="submit" className="w-full">
                     <Save className="mr-2 h-4 w-4" /> Save Template
@@ -257,5 +268,3 @@ export default function TemplatesPage() {
     </div>
   );
 }
-
-    
