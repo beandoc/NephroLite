@@ -12,12 +12,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Save, Trash2, PlusCircle, FileText, Activity, Microscope } from 'lucide-react';
+import { Save, Trash2, PlusCircle, FileText, Activity, Microscope, ChevronsUpDown } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { DIAGNOSIS_TEMPLATES, MOCK_DIAGNOSES } from '@/lib/constants';
-import type { DiagnosisTemplate, Diagnosis } from '@/lib/types';
+import type { DiagnosisTemplate, Diagnosis, Medication } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 
 
 const diagnosisSchema = z.object({
@@ -54,7 +57,7 @@ type TemplateFormData = z.infer<typeof templateFormSchema>;
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Record<string, DiagnosisTemplate>>(DIAGNOSIS_TEMPLATES);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [selectedDiagnosisToAdd, setSelectedDiagnosisToAdd] = useState<string>("");
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<TemplateFormData>({
@@ -134,8 +137,8 @@ export default function TemplatesPage() {
     });
   }
   
-  const handleAddDiagnosis = () => {
-    const diagnosisToAdd = MOCK_DIAGNOSES.find(d => d.id === selectedDiagnosisToAdd);
+  const handleAddDiagnosis = (diagnosisId: string) => {
+    const diagnosisToAdd = MOCK_DIAGNOSES.find(d => d.id === diagnosisId);
     if (diagnosisToAdd) {
         const isAlreadyAdded = diagnosisFields.some(field => field.icdCode === diagnosisToAdd.icdCode);
         if (isAlreadyAdded) {
@@ -147,7 +150,7 @@ export default function TemplatesPage() {
             icdCode: diagnosisToAdd.icdCode,
             icdName: diagnosisToAdd.icdName,
         });
-        setSelectedDiagnosisToAdd("");
+        setIsPopoverOpen(false); // Close popover after selection
     }
   };
 
@@ -208,26 +211,41 @@ export default function TemplatesPage() {
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-md">Mapped ICD-10 Diagnoses</CardTitle>
-                      <CardDescription>Add specific ICD-10 diagnoses that fall under this template's clinical category.</CardDescription>
+                      <CardDescription>Click below to search and add specific ICD-10 diagnoses that fall under this template's clinical category.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <div className="flex gap-2">
-                        <Select value={selectedDiagnosisToAdd} onValueChange={setSelectedDiagnosisToAdd}>
-                          <SelectTrigger className="flex-grow">
-                            <SelectValue placeholder="Select a diagnosis to add..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {MOCK_DIAGNOSES.map(d => (
-                              <SelectItem key={d.id} value={d.id}>
-                                {d.name} ({d.icdCode})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button type="button" variant="outline" onClick={handleAddDiagnosis} disabled={!selectedDiagnosisToAdd}>
-                          <PlusCircle className="mr-2 h-4 w-4" /> Add
-                        </Button>
-                      </div>
+                      <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={isPopoverOpen}
+                            className="w-full justify-between"
+                          >
+                            Click to add a diagnosis...
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                           <Command>
+                            <CommandInput placeholder="Search diagnosis..." />
+                            <CommandList>
+                                <CommandEmpty>No diagnosis found.</CommandEmpty>
+                                <CommandGroup>
+                                  {MOCK_DIAGNOSES.map((diagnosis) => (
+                                    <CommandItem
+                                      key={diagnosis.id}
+                                      value={`${diagnosis.name} ${diagnosis.icdCode}`}
+                                      onSelect={() => handleAddDiagnosis(diagnosis.id)}
+                                    >
+                                      {diagnosis.name} ({diagnosis.icdCode})
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                       
                       <div className="space-y-2 pt-2">
                         {diagnosisFields.length > 0 ? (
