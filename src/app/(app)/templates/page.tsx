@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Save, Trash2, PlusCircle, FileText, Activity, Microscope, ChevronsUpDown } from 'lucide-react';
+import { Save, Trash2, PlusCircle, FileText, Activity, Microscope, ChevronsUpDown, Pencil } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { DIAGNOSIS_TEMPLATES, MOCK_DIAGNOSES } from '@/lib/constants';
 import type { DiagnosisTemplate, Diagnosis, Medication } from '@/lib/types';
@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 const diagnosisSchema = z.object({
@@ -159,10 +160,10 @@ export default function TemplatesPage() {
     <div className="container mx-auto py-2">
       <PageHeader title="Clinical Template Management" description="Create, edit, and manage clinical templates linked to diagnoses for various report types." />
 
-      <Card className="mt-6">
+      <Card className="mt-6 mb-8">
         <CardHeader>
           <CardTitle className="font-headline">Template Editor</CardTitle>
-          <CardDescription>Select an existing template to edit, or fill out the form to create a new one. A template name (e.g., 'Chronic Kidney Disease') can be mapped to multiple specific ICD-10 diagnoses.</CardDescription>
+          <CardDescription>Select an existing template to edit, or fill out the form to create a new one. A template name (e.g., 'Chronic Kidney Disease') can be mapped to multiple specific ICD-10 diagnoses from the master list below.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-3 gap-6">
@@ -211,7 +212,7 @@ export default function TemplatesPage() {
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-md">Mapped ICD-10 Diagnoses</CardTitle>
-                      <CardDescription>Click below to search and add specific ICD-10 diagnoses that fall under this template's clinical category.</CardDescription>
+                      <CardDescription>Click a diagnosis from the popover list to add it to this template.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
@@ -340,6 +341,46 @@ export default function TemplatesPage() {
               </Form>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="font-headline">ICD-10 Diagnosis Master List</CardTitle>
+              <CardDescription>This is the central database of all available diagnoses.</CardDescription>
+            </div>
+            <Button variant="outline" disabled><PlusCircle className="mr-2 h-4 w-4"/>Add New Diagnosis (WIP)</Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-96">
+            <Table>
+              <TableHeader className="sticky top-0 bg-card">
+                <TableRow>
+                  <TableHead>ICD-10 Code</TableHead>
+                  <TableHead>Diagnosis Name</TableHead>
+                  <TableHead>Full ICD-10 Description</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {MOCK_DIAGNOSES.map(d => (
+                  <TableRow key={d.id}>
+                    <TableCell><Badge variant="secondary">{d.icdCode}</Badge></TableCell>
+                    <TableCell className="font-medium">{d.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{d.icdName}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" disabled title="Edit Diagnosis">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
         </CardContent>
       </Card>
     </div>
