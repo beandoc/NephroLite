@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -12,10 +12,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, FileSignature, Wand2, Pill, FileText, MessageCircleQuestion, BookMarked, ListPlus, Copy, Mail, MessageSquare as MessageSquareIcon, DraftingCompass, Save, Trash2, PlusCircle } from 'lucide-react';
+import { FileSignature, Save, Trash2, PlusCircle, FileText, Activity, Microscope } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { DIAGNOSIS_TEMPLATES } from '@/lib/constants';
-import type { DiagnosisTemplate, Medication } from '@/lib/types';
+import type { DiagnosisTemplate } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const medicationSchema = z.object({
@@ -28,11 +28,17 @@ const medicationSchema = z.object({
 
 const templateFormSchema = z.object({
   templateName: z.string().min(1, "Template name is required."),
+  templateType: z.enum(["Opinion Report", "Discharge Summary"]),
   diagnoses: z.array(z.object({ name: z.string().min(1), icdCode: z.string().optional() })).min(1),
   history: z.string().optional(),
   generalExamination: z.string().optional(),
   systemicExamination: z.string().optional(),
   medications: z.array(medicationSchema),
+  // Discharge Summary specific fields
+  dischargeInstructions: z.string().optional(),
+  usgReport: z.string().optional(),
+  kidneyBiopsyReport: z.string().optional(),
+  // Opinion Report specific fields
   opinionText: z.string().optional(),
   recommendations: z.string().optional(),
 });
@@ -48,11 +54,15 @@ export default function TemplatesPage() {
     resolver: zodResolver(templateFormSchema),
     defaultValues: {
       templateName: "",
+      templateType: "Opinion Report",
       diagnoses: [{ name: "" }],
       history: "",
       generalExamination: "",
       systemicExamination: "",
       medications: [],
+      dischargeInstructions: "",
+      usgReport: "",
+      kidneyBiopsyReport: "",
       opinionText: "",
       recommendations: "",
     },
@@ -63,23 +73,43 @@ export default function TemplatesPage() {
     name: "medications"
   });
 
+  const templateType = form.watch("templateType");
+
+  useEffect(() => {
+    if (selectedTemplate) {
+        const templateData = templates[selectedTemplate];
+        if (templateData) {
+            form.reset({
+                ...templateData,
+                medications: templateData.medications.map(m => ({ ...m, id: crypto.randomUUID() })),
+            });
+        }
+    } else {
+        const currentType = form.getValues("templateType");
+        form.reset({
+            templateName: "",
+            templateType: currentType,
+            diagnoses: [{ name: "" }],
+            history: "",
+            generalExamination: "",
+            systemicExamination: "",
+            medications: [],
+            dischargeInstructions: "",
+            usgReport: "",
+            kidneyBiopsyReport: "",
+            opinionText: "",
+            recommendations: "",
+        });
+    }
+  }, [selectedTemplate, templates, form]);
+
+
   const handleSelectTemplate = (templateName: string) => {
     if (templateName && templates[templateName]) {
-      const templateData = templates[templateName];
       setSelectedTemplate(templateName);
-      form.reset({
-        templateName: templateName,
-        diagnoses: templateData.diagnoses,
-        history: templateData.history,
-        generalExamination: templateData.generalExamination,
-        systemicExamination: templateData.systemicExamination,
-        medications: templateData.medications.map(m => ({ ...m, id: crypto.randomUUID() })),
-        opinionText: templateData.opinionText,
-        recommendations: templateData.recommendations,
-      });
     } else {
       setSelectedTemplate(null);
-      form.reset();
+      form.reset({ templateType: "Opinion Report" });
     }
   };
   
@@ -89,22 +119,40 @@ export default function TemplatesPage() {
     setSelectedTemplate(data.templateName);
   };
 
+  const handleCreateNew = () => {
+    setSelectedTemplate(null);
+    form.reset({
+        templateName: "",
+        templateType: "Opinion Report",
+        diagnoses: [{ name: "" }],
+        history: "",
+        generalExamination: "",
+        systemicExamination: "",
+        medications: [],
+        dischargeInstructions: "",
+        usgReport: "",
+        kidneyBiopsyReport: "",
+        opinionText: "",
+        recommendations: "",
+    });
+  }
+
   return (
     <div className="container mx-auto py-2">
-      <PageHeader title="Clinical Template Management" description="Create, edit, and manage clinical templates linked to diagnoses." />
+      <PageHeader title="Clinical Template Management" description="Create, edit, and manage clinical templates linked to diagnoses for various report types." />
 
       <Card className="mt-6">
         <CardHeader>
           <CardTitle className="font-headline">Template Editor</CardTitle>
-          <CardDescription>Select a template to edit, or fill out the form to create a new one. All templates are linked to a primary diagnosis name.</CardDescription>
+          <CardDescription>Select an existing template to edit, or fill out the form to create a new one. Templates are linked to a primary diagnosis name.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="md:col-span-1 space-y-4">
-              <h3 className="text-lg font-semibold">Existing Templates</h3>
-              <Select onValueChange={handleSelectTemplate}>
+              <h3 className="text-lg font-semibold">Load or Create</h3>
+              <Select onValueChange={handleSelectTemplate} value={selectedTemplate || ""}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Load a template to edit..." />
+                  <SelectValue placeholder="Load an existing template..." />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.keys(templates).map(name => (
@@ -112,38 +160,37 @@ export default function TemplatesPage() {
                   ))}
                 </SelectContent>
               </Select>
-               <Button onClick={() => handleSelectTemplate('')} variant="outline" className="w-full">Create New Template</Button>
+               <Button onClick={handleCreateNew} variant="outline" className="w-full">Create New Template</Button>
             </div>
             
             <div className="md:col-span-2">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSaveTemplate)} className="space-y-6 p-4 border rounded-lg">
-                  <FormField
-                    control={form.control}
-                    name="templateName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-bold">Template / Diagnosis Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., IgA Nephropathy, Hypertensive Nephropathy" {...field} />
-                        </FormControl>
-                        <FormDescription>This name links the template to a diagnosis.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <FormField control={form.control} name="templateName" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-base font-bold">Template / Diagnosis Name</FormLabel>
+                            <FormControl><Input placeholder="e.g., IgA Nephropathy" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                     <FormField control={form.control} name="templateType" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-base font-bold">Template Type</FormLabel>
+                             <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                    <SelectItem value="Opinion Report">Opinion Report</SelectItem>
+                                    <SelectItem value="Discharge Summary">Discharge Summary</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                  </div>
+                  <FormDescription>The template name links it to a diagnosis. The type determines which fields are available.</FormDescription>
 
-                  <FormField
-                    control={form.control}
-                    name="history"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>History Template</FormLabel>
-                        <FormControl><Textarea rows={4} placeholder="Default history text for this diagnosis..." {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <FormField control={form.control} name="history" render={({ field }) => (<FormItem><FormLabel>History / Summary Template</FormLabel><FormControl><Textarea rows={4} placeholder="Default history text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
 
                   <div className="space-y-4">
                     <FormField control={form.control} name="generalExamination" render={({ field }) => (<FormItem><FormLabel>General Examination</FormLabel><FormControl><Textarea rows={2} placeholder="Default general examination findings..." {...field} /></FormControl><FormMessage /></FormItem>)} />
@@ -173,10 +220,30 @@ export default function TemplatesPage() {
                     </CardContent>
                   </Card>
                   
-                  <div className="space-y-4">
-                    <FormField control={form.control} name="opinionText" render={({ field }) => (<FormItem><FormLabel>Opinion Text</FormLabel><FormControl><Textarea rows={4} placeholder="Default opinion text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="recommendations" render={({ field }) => (<FormItem><FormLabel>Recommendations</FormLabel><FormControl><Textarea rows={4} placeholder="Default recommendations..." {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  </div>
+                  {templateType === 'Discharge Summary' && (
+                    <Card className="bg-muted/50">
+                        <CardHeader>
+                            <CardTitle className="font-headline flex items-center"><Activity className="mr-2 h-5 w-5 text-primary"/>Discharge Summary Fields</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <FormField control={form.control} name="dischargeInstructions" render={({ field }) => (<FormItem><FormLabel>Discharge Instructions</FormLabel><FormControl><Textarea rows={4} placeholder="Default discharge instructions..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                            <FormField control={form.control} name="usgReport" render={({ field }) => (<FormItem><FormLabel>USG Report Template</FormLabel><FormControl><Textarea rows={4} placeholder="Default USG report text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                            <FormField control={form.control} name="kidneyBiopsyReport" render={({ field }) => (<FormItem><FormLabel>Kidney Biopsy Report Template</FormLabel><FormControl><Textarea rows={6} placeholder="Default kidney biopsy report text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                        </CardContent>
+                    </Card>
+                  )}
+
+                  {templateType === 'Opinion Report' && (
+                     <Card className="bg-muted/50">
+                        <CardHeader>
+                            <CardTitle className="font-headline flex items-center"><FileText className="mr-2 h-5 w-5 text-primary"/>Opinion Report Fields</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <FormField control={form.control} name="opinionText" render={({ field }) => (<FormItem><FormLabel>Opinion Text</FormLabel><FormControl><Textarea rows={4} placeholder="Default opinion text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                            <FormField control={form.control} name="recommendations" render={({ field }) => (<FormItem><FormLabel>Recommendations</FormLabel><FormControl><Textarea rows={4} placeholder="Default recommendations..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                        </CardContent>
+                    </Card>
+                  )}
                   
                   <Button type="submit" className="w-full">
                     <Save className="mr-2 h-4 w-4" /> Save Template
@@ -190,3 +257,5 @@ export default function TemplatesPage() {
     </div>
   );
 }
+
+    

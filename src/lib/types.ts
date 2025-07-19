@@ -68,6 +68,8 @@ export type ClinicalVisitData = {
   medications?: Medication[];
   opinionText?: string;
   recommendations?: string;
+  usgReport?: string;
+  kidneyBiopsyReport?: string;
 };
 
 export type Visit = {
@@ -184,15 +186,22 @@ export type VisitFormData = {
 
 // This is the structure for the comprehensive clinical visit templates
 export type DiagnosisTemplate = {
-    templateName: string; // e.g., "IgA Nephropathy"
+    templateName: string; 
+    templateType: "Opinion Report" | "Discharge Summary";
     diagnoses: Omit<Diagnosis, 'icdName'>[];
     history: string;
-    // Vital signs are patient-specific and omitted from the template
     generalExamination: string;
     systemicExamination: string;
-    courseInHospital: string;
-    dischargeInstructions: string;
     medications: Omit<Medication, 'id'>[];
-    opinionText: string;
-    recommendations: string;
+
+    // Discharge Summary specific
+    dischargeInstructions?: string;
+    usgReport?: string;
+    kidneyBiopsyReport?: string;
+
+    // Opinion Report specific
+    opinionText?: string;
+    recommendations?: string;
 }
+
+    
