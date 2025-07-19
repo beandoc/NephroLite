@@ -74,8 +74,8 @@ export function PatientsTable({ patients, onDeletePatient }: PatientsTableProps)
                 <Button variant="ghost" size="icon" asChild title="View Profile">
                   <Link href={`/patients/${patient.id}`}><Eye className="h-4 w-4" /></Link>
                 </Button>
-                <Button variant="ghost" size="icon" asChild title="Edit Patient">
-                  <Link href={`/patients/${patient.id}/edit`}><Edit className="h-4 w-4" /></Link>
+                <Button variant="ghost" size="icon" title="Edit Patient" disabled>
+                  <Edit className="h-4 w-4" />
                 </Button>
                  <AlertDialog>
                   <AlertDialogTrigger asChild>

@@ -38,6 +38,7 @@ const navItems: NavItem[] = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, matchStartsWith: true },
   { href: "/my-schedule", label: "My Schedule", icon: CalendarRange },
   { href: "/registration", label: "Patient Search", icon: UserPlus, matchStartsWith: false },
+  { href: "/patients/new", label: "New Patient Reg", icon: UserPlus },
   { href: "/opd-queue", label: "OPD Queue", icon: ListOrdered },
   { href: "/analytics", label: "Analytics", icon: BarChartBig, matchStartsWith: true },
   { href: "/patients", label: "Patient Management", icon: Users, matchStartsWith: true },
