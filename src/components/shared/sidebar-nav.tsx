@@ -47,7 +47,7 @@ const navItems: NavItem[] = [
   { href: "/clinical-tools", label: "Clinical Tools", icon: Stethoscope },
   { href: "/communication", label: "Communication", icon: MessageCircle },
   { href: "/documents", label: "Documents", icon: FileText, disabled: true },
-  { href: "/templates", label: "Templates", icon: FileSignature },
+  { href: "/templates", label: "Templates & Databases", icon: FileSignature },
   { href: "/system", label: "System", icon: Settings2, disabled: true },
 ];
 
@@ -84,23 +84,6 @@ export function SidebarNav() {
                         <span className="truncate">{item.label}</span>
                     </SidebarMenuButton>
                 </Link>
-                {isAnalyticsActive && (
-                    <SidebarMenuSub>
-                        {analyticsSubNavItems.map(subItem => (
-                            <SidebarMenuSubItem key={subItem.label}>
-                                <Link href={subItem.href} passHref legacyBehavior>
-                                    <SidebarMenuSubButton
-                                        isActive={pathname.startsWith(subItem.href)}
-                                        disabled={subItem.disabled}
-                                    >
-                                        <subItem.icon className="h-4 w-4" />
-                                        <span>{subItem.label}</span>
-                                    </SidebarMenuSubButton>
-                                </Link>
-                            </SidebarMenuSubItem>
-                        ))}
-                    </SidebarMenuSub>
-                )}
             </SidebarMenuItem>
           )
         }

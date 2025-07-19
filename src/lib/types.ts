@@ -44,7 +44,7 @@ export type Diagnosis = {
 };
 
 export type Medication = {
-  id: string;
+  id?: string;
   name: string;
   dosage?: string;
   frequency?: string;
@@ -184,9 +184,10 @@ export type VisitFormData = {
 
 // This is the structure for the comprehensive clinical visit templates
 export type DiagnosisTemplate = {
+    templateName: string; // e.g., "IgA Nephropathy"
     diagnoses: Omit<Diagnosis, 'icdName'>[];
     history: string;
-    // Vital signs are patient-specific, so they are not in the template.
+    // Vital signs are patient-specific and omitted from the template
     generalExamination: string;
     systemicExamination: string;
     courseInHospital: string;

@@ -139,20 +139,24 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
         toast({ title: "Template not found", variant: "destructive" });
         return;
     }
-
-    // Reset only the fields present in the template
-    // Vitals are intentionally left out as they are patient-specific
+    
+    // Keep existing vitals
+    const existingVitals = {
+        height: form.getValues('height'),
+        weight: form.getValues('weight'),
+        bmi: form.getValues('bmi'),
+        idealBodyWeight: form.getValues('idealBodyWeight'),
+        pulse: form.getValues('pulse'),
+        systolicBP: form.getValues('systolicBP'),
+        diastolicBP: form.getValues('diastolicBP'),
+        respiratoryRate: form.getValues('respiratoryRate'),
+    };
+    
+    // Reset the form with template data, but preserve vitals
     form.reset({
-        ...form.getValues(), // Keep existing values like vitals
-        diagnoses: template.diagnoses,
-        history: template.history,
-        generalExamination: template.generalExamination,
-        systemicExamination: template.systemicExamination,
-        courseInHospital: template.courseInHospital,
-        dischargeInstructions: template.dischargeInstructions,
+        ...template,
+        ...existingVitals,
         medications: template.medications.map(med => ({ ...med, id: crypto.randomUUID() })),
-        opinionText: template.opinionText,
-        recommendations: template.recommendations,
     });
 
     toast({ title: "Template Loaded", description: `The form has been pre-filled with the "${templateKey}" template.`});
