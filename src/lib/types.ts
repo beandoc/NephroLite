@@ -54,6 +54,11 @@ export type ClinicalVisitData = {
   height?: string; // cm
   weight?: string; // kg
   bmi?: string; // kg/m^2
+  idealBodyWeight?: string; // kg
+  pulse?: string; // per minute
+  systolicBP?: string; // mmHg
+  diastolicBP?: string; // mmHg
+  respiratoryRate?: string; // per minute
   generalExamination?: string;
   systemicExamination?: string;
   courseInHospital?: string;
@@ -68,6 +73,7 @@ export type Visit = {
   visitType: string;
   visitRemark: string;
   groupName: string;
+  patientGender?: 'Male' | 'Female' | 'Other';
   diagnoses?: Diagnosis[];
   clinicalData?: ClinicalVisitData;
 };
@@ -77,7 +83,7 @@ export type Patient = {
   nephroId: string;
   name: string;
   dob: string; // YYYY-MM-DD
-  gender: string;
+  gender: 'Male' | 'Female' | 'Other' | 'Prefer not to say';
   contact?: string;
   email?: string;
   address: Address;
@@ -102,7 +108,7 @@ export type Patient = {
 export type PatientFormData = {
   name: string;
   dob: string;
-  gender: string;
+  gender: 'Male' | 'Female' | 'Other' | 'Prefer not to say';
   contact?: string;
   email?: string;
   whatsappNumber?: string;

@@ -249,6 +249,7 @@ export function usePatientData() {
       id: crypto.randomUUID(),
       date: new Date().toISOString().split('T')[0],
       ...visitData,
+      patientGender: patient.gender,
     };
 
     if (!patient.visits) {

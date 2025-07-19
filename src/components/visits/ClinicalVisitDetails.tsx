@@ -26,6 +26,11 @@ const clinicalVisitSchema = z.object({
   height: z.string().optional(),
   weight: z.string().optional(),
   bmi: z.string().optional(),
+  idealBodyWeight: z.string().optional(),
+  pulse: z.string().optional(),
+  systolicBP: z.string().optional(),
+  diastolicBP: z.string().optional(),
+  respiratoryRate: z.string().optional(),
   generalExamination: z.string().optional(),
   systemicExamination: z.string().optional(),
   courseInHospital: z.string().optional(),
@@ -49,6 +54,11 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
       height: visit.clinicalData?.height || "",
       weight: visit.clinicalData?.weight || "",
       bmi: visit.clinicalData?.bmi || "",
+      idealBodyWeight: visit.clinicalData?.idealBodyWeight || "",
+      pulse: visit.clinicalData?.pulse || "",
+      systolicBP: visit.clinicalData?.systolicBP || "",
+      diastolicBP: visit.clinicalData?.diastolicBP || "",
+      respiratoryRate: visit.clinicalData?.respiratoryRate || "",
       generalExamination: visit.clinicalData?.generalExamination || "",
       systemicExamination: visit.clinicalData?.systemicExamination || "",
       courseInHospital: visit.clinicalData?.courseInHospital || "",
@@ -63,6 +73,7 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
   
   const height = form.watch("height");
   const weight = form.watch("weight");
+  const gender = visit.patientGender || 'Male'; // Defaulting to Male if not provided
 
   useEffect(() => {
     const h = parseFloat(height || "0");
@@ -73,7 +84,21 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
     } else {
       form.setValue("bmi", "");
     }
-  }, [height, weight, form]);
+
+    if (h > 0) {
+      const heightInMeters = h / 100;
+      let idealWeight;
+      if (gender === 'Male') {
+        idealWeight = 50 + 0.91 * (h - 152.4);
+      } else { // Female
+        idealWeight = 45.5 + 0.91 * (h - 152.4);
+      }
+      form.setValue("idealBodyWeight", idealWeight > 0 ? idealWeight.toFixed(2) : "");
+    } else {
+        form.setValue("idealBodyWeight", "");
+    }
+
+  }, [height, weight, gender, form]);
 
   const onSubmit = (data: ClinicalVisitFormData) => {
     // In a real app, this would save to a database.
@@ -148,10 +173,17 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
             <Card>
               <CardHeader><CardTitle>Examination</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <FormField control={form.control} name="height" render={({ field }) => ( <FormItem><FormLabel>Height (cm)</FormLabel><FormControl><Input type="number" placeholder="e.g., 175" {...field} /></FormControl><FormMessage /></FormItem> )} />
                   <FormField control={form.control} name="weight" render={({ field }) => ( <FormItem><FormLabel>Weight (kg)</FormLabel><FormControl><Input type="number" placeholder="e.g., 70" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  <FormField control={form.control} name="idealBodyWeight" render={({ field }) => ( <FormItem><FormLabel>Ideal Wt (kg)</FormLabel><FormControl><Input placeholder="Calculated" {...field} readOnly /></FormControl><FormMessage /></FormItem> )} />
                   <FormField control={form.control} name="bmi" render={({ field }) => ( <FormItem><FormLabel>BMI (kg/m²)</FormLabel><FormControl><Input placeholder="Calculated" {...field} readOnly /></FormControl><FormMessage /></FormItem> )} />
+                </div>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t mt-4">
+                  <FormField control={form.control} name="pulse" render={({ field }) => ( <FormItem><FormLabel>Pulse (/min)</FormLabel><FormControl><Input type="number" placeholder="e.g., 72" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  <FormField control={form.control} name="systolicBP" render={({ field }) => ( <FormItem><FormLabel>Systolic BP (mmHg)</FormLabel><FormControl><Input type="number" placeholder="e.g., 120" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  <FormField control={form.control} name="diastolicBP" render={({ field }) => ( <FormItem><FormLabel>Diastolic BP (mmHg)</FormLabel><FormControl><Input type="number" placeholder="e.g., 80" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                   <FormField control={form.control} name="respiratoryRate" render={({ field }) => ( <FormItem><FormLabel>Resp. Rate (/min)</FormLabel><FormControl><Input type="number" placeholder="e.g., 16" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 </div>
                 <FormField control={form.control} name="generalExamination" render={({ field }) => ( <FormItem><FormLabel>General Examination Findings</FormLabel><FormControl><Textarea rows={3} placeholder="Pallor, icterus, clubbing, etc." {...field} /></FormControl><FormMessage /></FormItem> )} />
                 <FormField control={form.control} name="systemicExamination" render={({ field }) => ( <FormItem><FormLabel>Systemic Examination Findings</FormLabel><FormControl><Textarea rows={3} placeholder="CVS, Respiratory, Abdomen, etc." {...field} /></FormControl><FormMessage /></FormItem> )} />
