@@ -182,15 +182,11 @@ export type VisitFormData = {
     groupName: string;
 };
 
+// This is the structure for the comprehensive clinical visit templates
 export type DiagnosisTemplate = {
     diagnoses: Omit<Diagnosis, 'icdName'>[];
     history: string;
-    height: string;
-    weight: string;
-    pulse: string;
-    systolicBP: string;
-    diastolicBP: string;
-    respiratoryRate: string;
+    // Vital signs are patient-specific, so they are not in the template.
     generalExamination: string;
     systemicExamination: string;
     courseInHospital: string;

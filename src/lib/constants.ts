@@ -154,49 +154,11 @@ export const INVESTIGATION_GROUPS: string[] = [
   'Hematological', 'Biochemistry', 'Radiology', 'Pathology', 'Special Investigations', 'Urine Analysis', 'Serology'
 ];
 
-export const DIAGNOSIS_MEDICATION_TEMPLATES: Record<string, Omit<Medication, 'id'>[]> = {
-  'Hypertensive Nephropathy': [
-    { name: 'Telmisartan', dosage: '40mg', frequency: 'OD', instructions: 'After food' },
-    { name: 'Amlodipine', dosage: '5mg', frequency: 'OD', instructions: 'After food' },
-  ],
-  'Diabetic Nephropathy': [
-    { name: 'Metformin', dosage: '500mg', frequency: 'BD', instructions: 'After food' },
-    { name: 'Dapagliflozin', dosage: '10mg', frequency: 'OD', instructions: 'After breakfast' },
-    { name: 'Atorvastatin', dosage: '10mg', frequency: 'HS', instructions: 'At bedtime' },
-  ],
-  'Chronic Kidney Disease (CKD)': [
-      { name: 'Calcirol Sachet', dosage: '60000 IU', frequency: 'Weekly', instructions: 'Once a week with milk' },
-      { name: 'Ferrous Ascorbate', dosage: '100mg', frequency: 'OD', instructions: 'After food' },
-  ],
-  'Glomerulonephritis': [
-      { name: 'Prednisolone', dosage: '40mg', frequency: 'OD', instructions: 'After breakfast' },
-      { name: 'Mycophenolate mofetil', dosage: '500mg', frequency: 'BD', instructions: 'After food' },
-  ],
-};
-
-
-// Medications for Analysis
-export const SGLT2_INHIBITORS: string[] = ['Empagliflozin', 'Dapagliflozin', 'Canagliflozin', 'Ertugliflozin'];
-export const ARBS: string[] = ['Telmisartan', 'Losartan', 'Valsartan', 'Olmesartan', 'Candesartan', 'Irbesartan'];
-export const ACE_INHIBITORS: string[] = ['Ramipril', 'Enalapril', 'Lisinopril', 'Perindopril'];
-export const FINERENONE: string = 'Finerenone'; // Specific drug
-
-export const RESIDENCE_TYPES: string[] = ['Rural', 'Urban', 'Semi-Urban', 'Other', 'Not Set'];
-
-export const PATIENT_GROUPS_FOR_ANALYSIS = ["Glomerulonephritis", "Diabetic Kidney Disease", "Hypertensive Nephropathy", "Chronic Kidney Disease (CKD) - General"];
-
-
 // Comprehensive Clinical Visit Templates
 export const DIAGNOSIS_TEMPLATES: Record<string, DiagnosisTemplate> = {
   "Hypertensive Nephropathy": {
     diagnoses: [{ name: "Hypertensive Nephropathy", icdCode: "I12.9" }],
     history: "Patient is a known case of hypertension for the last 5 years, presents with pedal edema and decreased urine output.",
-    height: "170",
-    weight: "85",
-    pulse: "88",
-    systolicBP: "160",
-    diastolicBP: "100",
-    respiratoryRate: "16",
     generalExamination: "Bilateral pitting pedal edema present. No pallor, icterus, or clubbing.",
     systemicExamination: "CVS: S1, S2 normal, no murmurs. Respiratory: Bilateral air entry equal, no added sounds. Abdomen: Soft, non-tender.",
     courseInHospital: "",
@@ -212,12 +174,6 @@ export const DIAGNOSIS_TEMPLATES: Record<string, DiagnosisTemplate> = {
   "Diabetic Nephropathy": {
     diagnoses: [{ name: "Diabetic Nephropathy", icdCode: "E11.21" }],
     history: "Patient with Type 2 Diabetes for 10 years, complains of frothy urine and progressive swelling of feet.",
-    height: "165",
-    weight: "78",
-    pulse: "80",
-    systolicBP: "140",
-    diastolicBP: "90",
-    respiratoryRate: "18",
     generalExamination: "Fundoscopy shows background diabetic retinopathy. Pedal edema present.",
     systemicExamination: "Peripheral neuropathy present in both lower limbs. CVS and Respiratory systems are normal.",
     courseInHospital: "",
@@ -230,5 +186,35 @@ export const DIAGNOSIS_TEMPLATES: Record<string, DiagnosisTemplate> = {
     ],
     opinionText: "The patient's clinical presentation is consistent with diabetic nephropathy. The key to management is multifactorial: optimal glycemic and blood pressure control, and use of RAAS inhibitors and SGLT2 inhibitors.",
     recommendations: "1. Maintain HbA1c < 7.0%. \n2. Regular screening for retinopathy and neuropathy. \n3. Urine for microalbuminuria assessment every 6 months."
+  },
+  "IgA Nephropathy": {
+    diagnoses: [{ name: "IgA Nephropathy", icdCode: "N03.3" }],
+    history: "Patient was detected to have proteinuria/ hypertension/ renal dysfunction during evaluation. He denies any history of hematuria, oliguria, nocturia, swelling of face or feet at any time. There was no preceding skin rash, arthritis, oral ulcers, nephrotoxic drug use. No history of NSAID's or alternative medication use. His 24 hr urine protein excretion was _____ mg/day. He was subjected to a kidney biopsy which was reported as IgA nephropathy. He was initiated on oral steroids and ARB's. Due for Nephrologist opinion",
+    generalExamination: "No pallor, pedal edema. Systemically : NAD",
+    systemicExamination: "CVS: S1, S2 normal, no murmurs. Respiratory: Bilateral air entry equal, no added sounds. Abdomen: Soft, non-tender.",
+    courseInHospital: "",
+    dischargeInstructions: "Continue medications as advised. Monitor blood pressure. Follow-up as scheduled.",
+    medications: [
+      { name: 'Tab Telmisartan', dosage: '40 mg', frequency: 'OD' },
+      { name: 'Tab Empagliflozin', dosage: '25 mg', frequency: 'OD' },
+    ],
+    opinionText: "Patient has IgA nephropathy related subnephrotic proteinuria with normal renal function and normal BP. The secondary causes of IgA Nephropathy have been reasonably ruled out on history and evaluation. He has been given a course of steroids and tapered, and his proteinuria is __ gm/day. He is planned to be kept on ACE-I or ARB's/ SGLT2-i to max tolerated doses. He will need continued observation and periodic review. His risk assessment was done to predict the risk of a 50% decline in eGFR or ESRD after 5 yrs of biopsy by International IgA prediction tool was _____ % ( https://qxmd.com/calculate/calculator_499/international-igan-prediction-tool-adults ) (Jama 2019). He has been counseled about the prognosis of his disease and the precautions he needs to observe. He has been vaccinated. He will need continued observation and periodic review.",
+    recommendations: `Medical Classification recommended:
+Medical Classification: SHAPE -3 ( x )
+Disability Profile: P3 (T-24) for
+Clinical Diagnosis: IgA Nephropathy 
+ICD-10 Diagnosis & Code: Chronic nephritic syndrome, diffuse mesangial proliferative (N03.3)
+
+Medical recommendations and employability restrictions as per Code ‘E’ (impacting functional status of the indl), if any, with justification: As per AO 3/2001
+
+Any other advice (with justification):
+Salt restricted 2100 KCal low saturated fat diet.
+Avoid nephrotoxic drugs, dehydration, and strenuous physical exercise.
+Monthly review in Medical OPD and 03 monthly review in Nephrology OPD with fresh inv reports.
+Next recat at Nephrology Centre
+
+USG: (No____ dt ____ CH(SC): Normal scan)
+
+Kidney Biopsy: (No: Dt ______ 25): __ glomeruli, of which _ are globally sclerosed. Rest show mild to moderate mesangial proliferation in segmental distribution with segmental glomerular crescents in _ (_cellular, _ fibrocellular and _ fibrous). Patchy tubular atrophy associated with interstitial fibrosis and inflammation in __% of visualized tissue. IF: Ig A (2+), C3 (3+), kappa (2+) and Lambda (3+). IgG, IgM and C1q are negative. Impression: IgA nephropathy with IFTA of _ %. MEST Score: (M0 E0 S0 T0-C0)`
   }
 };

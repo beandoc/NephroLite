@@ -134,16 +134,25 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
   };
 
   const handleTemplateSelect = (templateKey: string) => {
-    const template = DIAGNOSIS_TEMPLATES[templateKey];
+    const template = DIAGNOSIS_TEMPLATES[templateKey as keyof typeof DIAGNOSIS_TEMPLATES];
     if (!template) {
         toast({ title: "Template not found", variant: "destructive" });
         return;
     }
 
-    // Reset form with all template values
+    // Reset only the fields present in the template
+    // Vitals are intentionally left out as they are patient-specific
     form.reset({
-        ...template,
+        ...form.getValues(), // Keep existing values like vitals
+        diagnoses: template.diagnoses,
+        history: template.history,
+        generalExamination: template.generalExamination,
+        systemicExamination: template.systemicExamination,
+        courseInHospital: template.courseInHospital,
+        dischargeInstructions: template.dischargeInstructions,
         medications: template.medications.map(med => ({ ...med, id: crypto.randomUUID() })),
+        opinionText: template.opinionText,
+        recommendations: template.recommendations,
     });
 
     toast({ title: "Template Loaded", description: `The form has been pre-filled with the "${templateKey}" template.`});
@@ -158,7 +167,7 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
             <Card>
                 <CardHeader>
                     <CardTitle>Visit Data Entry</CardTitle>
-                    <CardDescription>If diagnosis is known, select a template to pre-fill the form. Otherwise, proceed with manual data entry.</CardDescription>
+                    <CardDescription>If diagnosis is known, select a template to pre-fill the form. Otherwise, proceed with manual data entry. Patient-specific vitals will not be overwritten by templates.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-col sm:flex-row gap-2 items-center">
