@@ -27,7 +27,7 @@ const diagnosisSchema = z.object({
 });
 
 const medicationSchema = z.object({
-  id: z.string().optional(),
+  id: z.string(),
   name: z.string().min(1, "Medication name is required."),
   dosage: z.string().optional(),
   frequency: z.string().optional(),
@@ -137,7 +137,6 @@ export default function TemplatesPage() {
   const handleAddDiagnosis = () => {
     const diagnosisToAdd = MOCK_DIAGNOSES.find(d => d.id === selectedDiagnosisToAdd);
     if (diagnosisToAdd) {
-        // Check if diagnosis already exists
         const isAlreadyAdded = diagnosisFields.some(field => field.icdCode === diagnosisToAdd.icdCode);
         if (isAlreadyAdded) {
             toast({ title: "Diagnosis Already Added", description: `"${diagnosisToAdd.name}" is already in the list.`, variant: "destructive" });
@@ -276,7 +275,7 @@ export default function TemplatesPage() {
                           ))}
                         </TableBody>
                       </Table>
-                      <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendMedication({ name: "", dosage: "", frequency: "", instructions: "" })}>
+                      <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendMedication({ id: crypto.randomUUID(), name: "", dosage: "", frequency: "", instructions: "" })}>
                         <PlusCircle className="mr-2 h-4 w-4"/>Add Medication
                       </Button>
                     </CardContent>

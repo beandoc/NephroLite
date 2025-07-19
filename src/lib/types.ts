@@ -44,7 +44,7 @@ export type Diagnosis = {
 };
 
 export type Medication = {
-  id?: string;
+  id: string;
   name: string;
   dosage?: string;
   frequency?: string;
