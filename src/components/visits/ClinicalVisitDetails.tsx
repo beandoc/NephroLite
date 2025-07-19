@@ -16,6 +16,8 @@ import { useEffect, useState } from "react";
 import { DIAGNOSIS_TEMPLATES } from "@/lib/constants";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { Badge } from "../ui/badge";
 
 
 const diagnosisSchema = z.object({
@@ -97,7 +99,8 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
   
   const height = form.watch("height");
   const weight = form.watch("weight");
-  const gender = visit.patientGender || 'Male'; 
+  const gender = visit.patientGender || 'Male';
+  const selectedDiagnosis = form.watch("diagnosis");
 
   useEffect(() => {
     const h = parseFloat(height || "0");
@@ -207,34 +210,22 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
             </CardHeader>
             <CardContent className="space-y-4">
                {availableDiagnoses.length > 0 ? (
-                 <FormField
-                    control={form.control}
-                    name="diagnosis.name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Select from Template</FormLabel>
-                        <Select
-                          onValueChange={(value) => {
-                            const selectedDiag = availableDiagnoses.find(d => d.name === value);
-                            if (selectedDiag) {
-                              form.setValue('diagnosis', selectedDiag);
-                            }
-                          }}
-                          value={field.value}
-                        >
-                          <FormControl><SelectTrigger><SelectValue placeholder="Select a specific diagnosis..." /></SelectTrigger></FormControl>
-                          <SelectContent>
-                            {availableDiagnoses.map(d => (
-                              <SelectItem key={d.icdCode || d.name} value={d.name}>
-                                {d.name} ({d.icdCode})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                 <div className="space-y-2">
+                   {availableDiagnoses.map((diag) => (
+                     <Button
+                       type="button"
+                       key={diag.icdCode || diag.name}
+                       variant={selectedDiagnosis?.name === diag.name ? "default" : "outline"}
+                       className="w-full justify-start text-left h-auto py-2"
+                       onClick={() => form.setValue('diagnosis', diag)}
+                     >
+                       <div className="flex justify-between items-center w-full">
+                         <span>{diag.name}</span>
+                         {diag.icdCode && <Badge variant={selectedDiagnosis?.name === diag.name ? "secondary" : "default"} className="ml-2">{diag.icdCode}</Badge>}
+                       </div>
+                     </Button>
+                   ))}
+                 </div>
                ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-end">
                   <FormField
