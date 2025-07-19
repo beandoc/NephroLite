@@ -72,10 +72,8 @@ export default function PatientProfilePage() {
             <Button variant="outline" onClick={() => router.back()}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Back
             </Button>
-            <Button asChild variant="outline">
-              <Link href={`/patients/${patient.id}/edit`}>
-                <Edit className="mr-2 h-4 w-4" /> Edit Profile
-              </Link>
+            <Button variant="outline" disabled>
+              <Edit className="mr-2 h-4 w-4" /> Edit Profile (Disabled)
             </Button>
              <Button variant="default" onClick={() => window.print()}>
               <Printer className="mr-2 h-4 w-4" /> Print Summary

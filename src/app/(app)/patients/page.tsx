@@ -36,10 +36,8 @@ export default function PatientsPage() {
         title="Patient Records" 
         description="Manage all patient information and history."
         actions={
-          <Button asChild>
-            <Link href="/patients/new">
-              <PlusCircle className="mr-2 h-4 w-4" /> Add New Patient
-            </Link>
+          <Button disabled>
+              <PlusCircle className="mr-2 h-4 w-4" /> Add New Patient (Disabled)
           </Button>
         }
       />

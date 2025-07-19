@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UserPlus, Search, Users, ListChecks, Edit3, ListPlusIcon } from 'lucide-react'; // Changed Eye to Edit3 or similar for "Create Visit"
+import { UserPlus, Search, Users, ListChecks } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { usePatientData } from '@/hooks/use-patient-data';
 import type { Patient } from '@/lib/types';
@@ -75,70 +75,43 @@ export default function RegistrationPage() {
     } else if (termName) {
       foundPatients = patients.filter(p => p.name.toLowerCase().includes(termName));
     }
-
-    if (foundPatients.length === 1) {
-      toast({
-        title: "Patient Found",
-        description: `Proceeding to create visit for ${foundPatients[0].name}.`,
-      });
-      router.push(`/patients/${foundPatients[0].id}/create-visit`); // Updated redirect
-    } else if (foundPatients.length > 1) {
-      setSearchResults(foundPatients);
-      toast({
-        title: "Multiple Patients Found",
-        description: "Please select a patient to proceed with visit creation.",
-      });
+    
+    // Simplified: always show list, never auto-redirect.
+    setSearchResults(foundPatients);
+    if (foundPatients.length > 0) {
+        toast({
+            title: `${foundPatients.length} Patient(s) Found`,
+            description: "Please select a patient to view their profile.",
+        });
     } else {
-      setSearchResults([]); 
-      toast({
-        title: "No Patient Found",
-        description: "No patient record matches your search criteria.",
-      });
+        toast({
+            title: "No Patient Found",
+            description: "No patient record matches your search criteria.",
+        });
     }
+    
     setIsSearching(false);
   };
 
   return (
     <div className="container mx-auto py-2">
       <PageHeader
-        title="Patient Registration & Search"
-        description="Register a new patient or find an existing patient to create a visit."
+        title="Patient Search"
+        description="Find an existing patient to view their profile and manage their care."
       />
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="font-headline flex items-center">
-              <UserPlus className="mr-2 h-6 w-6 text-primary" />
-              Register New Patient
-            </CardTitle>
-            <CardDescription>
-              Create a new comprehensive record for a patient visiting for the first time.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center text-center">
-            <p className="mb-4 text-sm text-muted-foreground">
-              Click the button below to open the new patient registration form. You will be guided through entering their demographic, clinical, and service-related details.
-            </p>
-            <Button asChild size="lg" className="w-full sm:w-auto">
-              <Link href="/patients/new">
-                <UserPlus className="mr-2 h-5 w-5" /> Go to New Patient Form
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-lg">
+        <Card className="shadow-lg md:col-span-2">
           <CardHeader>
             <CardTitle className="font-headline flex items-center">
               <Search className="mr-2 h-6 w-6 text-primary" />
               Search Existing Patient
             </CardTitle>
             <CardDescription>
-              Find an existing patient to create a new visit or update their records.
+              Find an existing patient to view their records and visit history. New patient registration is temporarily disabled for system upgrades.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="search-nephro-id">Nephro ID (e.g., SS123 or SS123/0624)</Label>
               <Input
@@ -159,9 +132,11 @@ export default function RegistrationPage() {
                 disabled={isSearching || patientsLoading}
               />
             </div>
-            <Button onClick={handleSearch} className="w-full" disabled={isSearching || patientsLoading}>
-              <Search className="mr-2 h-5 w-5" /> {isSearching ? "Searching..." : "Search Patient"}
-            </Button>
+            <div className="md:col-span-2">
+              <Button onClick={handleSearch} className="w-full" disabled={isSearching || patientsLoading}>
+                <Search className="mr-2 h-5 w-5" /> {isSearching ? "Searching..." : "Search Patient"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -177,10 +152,7 @@ export default function RegistrationPage() {
           <CardContent>
             {searchResults.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">
-                No patient found matching your criteria. You can{' '}
-                <Link href="/patients/new" className="text-primary hover:underline">
-                  register a new patient
-                </Link>.
+                No patient found matching your criteria.
               </p>
             ) : (
               <ul className="space-y-3">
@@ -191,8 +163,8 @@ export default function RegistrationPage() {
                       <p className="text-sm text-muted-foreground">Nephro ID: {patient.nephroId} &bull; DOB: {patient.dob}</p>
                     </div>
                     <Button asChild variant="outline" size="sm">
-                      <Link href={`/patients/${patient.id}/create-visit`}>
-                        <ListPlusIcon className="mr-2 h-4 w-4" /> Select & Create Visit
+                      <Link href={`/patients/${patient.id}`}>
+                        View Profile
                       </Link>
                     </Button>
                   </li>
@@ -250,5 +222,3 @@ export default function RegistrationPage() {
     </div>
   );
 }
-
-    
