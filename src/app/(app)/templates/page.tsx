@@ -18,6 +18,12 @@ import { DIAGNOSIS_TEMPLATES } from '@/lib/constants';
 import type { DiagnosisTemplate } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
+const diagnosisSchema = z.object({
+  name: z.string().min(1, "Diagnosis name is required."),
+  icdCode: z.string().optional(),
+  icdName: z.string().optional(),
+});
+
 const medicationSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, "Medication name is required."),
@@ -29,12 +35,12 @@ const medicationSchema = z.object({
 const templateFormSchema = z.object({
   templateName: z.string().min(1, "Template name is required."),
   templateType: z.enum(["Opinion Report", "Discharge Summary"]),
-  diagnoses: z.array(z.object({ name: z.string().min(1), icdCode: z.string().optional() })).min(1),
+  diagnoses: z.array(diagnosisSchema).min(1, "At least one diagnosis is required."),
   history: z.string().optional(),
   generalExamination: z.string().optional(),
   systemicExamination: z.string().optional(),
   medications: z.array(medicationSchema),
-  // Fields available for both
+  // Fields available for all
   usgReport: z.string().optional(),
   kidneyBiopsyReport: z.string().optional(),
   // Discharge Summary specific fields
@@ -56,7 +62,7 @@ export default function TemplatesPage() {
     defaultValues: {
       templateName: "",
       templateType: "Opinion Report",
-      diagnoses: [{ name: "" }],
+      diagnoses: [{ name: "", icdCode: "", icdName: "" }],
       history: "",
       generalExamination: "",
       systemicExamination: "",
@@ -72,6 +78,11 @@ export default function TemplatesPage() {
   const { fields: medicationFields, append: appendMedication, remove: removeMedication } = useFieldArray({
     control: form.control,
     name: "medications"
+  });
+
+  const { fields: diagnosisFields, append: appendDiagnosis, remove: removeDiagnosis } = useFieldArray({
+      control: form.control,
+      name: "diagnoses"
   });
 
   const templateType = form.watch("templateType");
@@ -90,7 +101,7 @@ export default function TemplatesPage() {
         form.reset({
             templateName: "",
             templateType: currentType,
-            diagnoses: [{ name: "" }],
+            diagnoses: [{ name: "" , icdCode: "", icdName: ""}],
             history: "",
             generalExamination: "",
             systemicExamination: "",
@@ -125,7 +136,7 @@ export default function TemplatesPage() {
     form.reset({
         templateName: "",
         templateType: "Opinion Report",
-        diagnoses: [{ name: "" }],
+        diagnoses: [{ name: "" , icdCode: "", icdName: ""}],
         history: "",
         generalExamination: "",
         systemicExamination: "",
@@ -145,7 +156,7 @@ export default function TemplatesPage() {
       <Card className="mt-6">
         <CardHeader>
           <CardTitle className="font-headline">Template Editor</CardTitle>
-          <CardDescription>Select an existing template to edit, or fill out the form to create a new one. Templates are linked to a primary diagnosis name.</CardDescription>
+          <CardDescription>Select an existing template to edit, or fill out the form to create a new one. A template name (e.g., 'Chronic Kidney Disease') can be mapped to multiple specific ICD-10 diagnoses.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-3 gap-6">
@@ -170,9 +181,9 @@ export default function TemplatesPage() {
                   <div className="grid md:grid-cols-2 gap-4">
                     <FormField control={form.control} name="templateName" render={({ field }) => (
                         <FormItem>
-                            <FormLabel className="text-base font-bold">Template / Diagnosis Name</FormLabel>
+                            <FormLabel className="text-base font-bold">Template Name</FormLabel>
                             <FormControl><Input placeholder="e.g., IgA Nephropathy" {...field} /></FormControl>
-                            <FormDescription>This name links the template to a diagnosis.</FormDescription>
+                            <FormDescription>The broad clinical diagnosis name for this template.</FormDescription>
                             <FormMessage />
                         </FormItem>
                     )} />
@@ -190,8 +201,36 @@ export default function TemplatesPage() {
                         </FormItem>
                     )} />
                   </div>
-                  
 
+                  <Card>
+                    <CardHeader><CardTitle className="text-md">Mapped ICD-10 Diagnoses</CardTitle></CardHeader>
+                    <CardContent className="space-y-3">
+                      {diagnosisFields.map((field, index) => (
+                        <div key={field.id} className="flex gap-2 items-end p-2 border rounded-md">
+                          <FormField control={form.control} name={`diagnoses.${index}.name`} render={({ field }) => (
+                            <FormItem className="flex-grow">
+                              <FormLabel className="text-xs">Diagnosis Name</FormLabel>
+                              <FormControl><Input placeholder="e.g., CKD Stage 3" {...field} /></FormControl>
+                              <FormMessage/>
+                            </FormItem>
+                          )}/>
+                          <FormField control={form.control} name={`diagnoses.${index}.icdCode`} render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">ICD-10 Code</FormLabel>
+                              <FormControl><Input placeholder="e.g., N18.3" {...field} className="w-24"/></FormControl>
+                               <FormMessage/>
+                            </FormItem>
+                          )}/>
+                          <Button type="button" variant="destructive" size="icon" onClick={() => removeDiagnosis(index)}><Trash2 className="h-4 w-4"/></Button>
+                        </div>
+                      ))}
+                      <Button type="button" variant="outline" size="sm" onClick={() => appendDiagnosis({ name: "", icdCode: "", icdName: "" })}>
+                        <PlusCircle className="mr-2 h-4 w-4"/>Add Diagnosis
+                      </Button>
+                       <FormMessage>{form.formState.errors.diagnoses?.message}</FormMessage>
+                    </CardContent>
+                  </Card>
+                  
                   <FormField control={form.control} name="history" render={({ field }) => (<FormItem><FormLabel>History / Summary Template</FormLabel><FormControl><Textarea rows={4} placeholder="Default history text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
 
                   <div className="space-y-4">

@@ -188,10 +188,10 @@ export type VisitFormData = {
 export type DiagnosisTemplate = {
     templateName: string; 
     templateType: "Opinion Report" | "Discharge Summary";
-    diagnoses: Omit<Diagnosis, 'icdName'>[];
-    history: string;
-    generalExamination: string;
-    systemicExamination: string;
+    diagnoses: Diagnosis[];
+    history?: string;
+    generalExamination?: string;
+    systemicExamination?: string;
     medications: Omit<Medication, 'id'>[];
 
     // Discharge Summary specific
@@ -203,5 +203,3 @@ export type DiagnosisTemplate = {
     opinionText?: string;
     recommendations?: string;
 }
-
-    
