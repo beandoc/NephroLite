@@ -15,8 +15,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FileSignature, Save, Trash2, PlusCircle, FileText, Activity, Microscope } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { DIAGNOSIS_TEMPLATES, MOCK_DIAGNOSES } from '@/lib/constants';
-import type { DiagnosisTemplate } from '@/lib/types';
+import type { DiagnosisTemplate, Diagnosis } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+
 
 const diagnosisSchema = z.object({
   name: z.string().min(1, "Diagnosis name is required."),
@@ -52,6 +54,7 @@ type TemplateFormData = z.infer<typeof templateFormSchema>;
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Record<string, DiagnosisTemplate>>(DIAGNOSIS_TEMPLATES);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [selectedDiagnosisToAdd, setSelectedDiagnosisToAdd] = useState<string>("");
   const { toast } = useToast();
 
   const form = useForm<TemplateFormData>({
@@ -64,9 +67,9 @@ export default function TemplatesPage() {
       generalExamination: "",
       systemicExamination: "",
       medications: [],
-      dischargeInstructions: "",
       usgReport: "",
       kidneyBiopsyReport: "",
+      dischargeInstructions: "",
       opinionText: "",
       recommendations: "",
     },
@@ -94,21 +97,7 @@ export default function TemplatesPage() {
             });
         }
     } else {
-        const currentType = form.getValues("templateType");
-        form.reset({
-            templateName: "",
-            templateType: currentType,
-            diagnoses: [{ name: "" , icdCode: "", icdName: ""}],
-            history: "",
-            generalExamination: "",
-            systemicExamination: "",
-            medications: [],
-            dischargeInstructions: "",
-            usgReport: "",
-            kidneyBiopsyReport: "",
-            opinionText: "",
-            recommendations: "",
-        });
+        handleCreateNew();
     }
   }, [selectedTemplate, templates, form]);
 
@@ -118,7 +107,6 @@ export default function TemplatesPage() {
       setSelectedTemplate(templateName);
     } else {
       setSelectedTemplate(null);
-      form.reset({ templateType: "Opinion Report" });
     }
   };
   
@@ -133,27 +121,37 @@ export default function TemplatesPage() {
     form.reset({
         templateName: "",
         templateType: "Opinion Report",
-        diagnoses: [{ name: "" , icdCode: "", icdName: ""}],
+        diagnoses: [],
         history: "",
         generalExamination: "",
         systemicExamination: "",
         medications: [],
-        dischargeInstructions: "",
         usgReport: "",
         kidneyBiopsyReport: "",
+        dischargeInstructions: "",
         opinionText: "",
         recommendations: "",
     });
   }
   
-  const handleDiagnosisSelect = (selectedValue: string, index: number) => {
-    const selectedDiagnosis = MOCK_DIAGNOSES.find(d => d.id === selectedValue);
-    if (selectedDiagnosis) {
-        form.setValue(`diagnoses.${index}.name`, selectedDiagnosis.name);
-        form.setValue(`diagnoses.${index}.icdCode`, selectedDiagnosis.icdCode);
-        form.setValue(`diagnoses.${index}.icdName`, selectedDiagnosis.icdName);
+  const handleAddDiagnosis = () => {
+    const diagnosisToAdd = MOCK_DIAGNOSES.find(d => d.id === selectedDiagnosisToAdd);
+    if (diagnosisToAdd) {
+        // Check if diagnosis already exists
+        const isAlreadyAdded = diagnosisFields.some(field => field.icdCode === diagnosisToAdd.icdCode);
+        if (isAlreadyAdded) {
+            toast({ title: "Diagnosis Already Added", description: `"${diagnosisToAdd.name}" is already in the list.`, variant: "destructive" });
+            return;
+        }
+        appendDiagnosis({
+            name: diagnosisToAdd.name,
+            icdCode: diagnosisToAdd.icdCode,
+            icdName: diagnosisToAdd.icdName,
+        });
+        setSelectedDiagnosisToAdd("");
     }
   };
+
 
   return (
     <div className="container mx-auto py-2">
@@ -209,43 +207,48 @@ export default function TemplatesPage() {
                   </div>
 
                   <Card>
-                    <CardHeader><CardTitle className="text-md">Mapped ICD-10 Diagnoses</CardTitle></CardHeader>
+                    <CardHeader>
+                      <CardTitle className="text-md">Mapped ICD-10 Diagnoses</CardTitle>
+                      <CardDescription>Add specific ICD-10 diagnoses that fall under this template's clinical category.</CardDescription>
+                    </CardHeader>
                     <CardContent className="space-y-3">
-                      {diagnosisFields.map((field, index) => (
-                        <div key={field.id} className="flex gap-2 items-end p-2 border rounded-md">
-                          <FormField
-                            control={form.control}
-                            name={`diagnoses.${index}.name`}
-                            render={({ field: nameField }) => (
-                                <FormItem className="flex-grow">
-                                    <FormLabel className="text-xs">Diagnosis</FormLabel>
-                                    <Select onValueChange={(value) => handleDiagnosisSelect(value, index)} defaultValue={field.id}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select a diagnosis...">
-                                                    {form.getValues(`diagnoses.${index}.name`) || "Select a diagnosis..."}
-                                                </SelectValue>
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {MOCK_DIAGNOSES.map(d => (
-                                                <SelectItem key={d.id} value={d.id}>
-                                                    {d.name} ({d.icdCode})
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                          />
-                          <Button type="button" variant="destructive" size="icon" onClick={() => removeDiagnosis(index)}><Trash2 className="h-4 w-4"/></Button>
-                        </div>
-                      ))}
-                      <Button type="button" variant="outline" size="sm" onClick={() => appendDiagnosis({ name: "", icdCode: "", icdName: "" })}>
-                        <PlusCircle className="mr-2 h-4 w-4"/>Add Diagnosis
-                      </Button>
-                       <FormMessage>{form.formState.errors.diagnoses?.message}</FormMessage>
+                      <div className="flex gap-2">
+                        <Select value={selectedDiagnosisToAdd} onValueChange={setSelectedDiagnosisToAdd}>
+                          <SelectTrigger className="flex-grow">
+                            <SelectValue placeholder="Select a diagnosis to add..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {MOCK_DIAGNOSES.map(d => (
+                              <SelectItem key={d.id} value={d.id}>
+                                {d.name} ({d.icdCode})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button type="button" variant="outline" onClick={handleAddDiagnosis} disabled={!selectedDiagnosisToAdd}>
+                          <PlusCircle className="mr-2 h-4 w-4" /> Add
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-2 pt-2">
+                        {diagnosisFields.length > 0 ? (
+                          diagnosisFields.map((field, index) => (
+                            <div key={field.id} className="flex items-center justify-between p-2 border rounded-md bg-muted/50">
+                              <p className="text-sm">
+                                <span className="font-semibold">{field.name}</span>
+                                <Badge variant="secondary" className="ml-2">{field.icdCode}</Badge>
+                              </p>
+                              <Button type="button" variant="ghost" size="icon" className="text-destructive h-6 w-6" onClick={() => removeDiagnosis(index)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-muted-foreground text-center py-2">No diagnoses mapped yet.</p>
+                        )}
+                      </div>
+
+                       <FormMessage>{form.formState.errors.diagnoses?.message || form.formState.errors.diagnoses?.root?.message}</FormMessage>
                     </CardContent>
                   </Card>
                   
@@ -278,6 +281,17 @@ export default function TemplatesPage() {
                       </Button>
                     </CardContent>
                   </Card>
+
+                  <Card className="bg-muted/50">
+                    <CardHeader>
+                        <CardTitle className="font-headline flex items-center"><Microscope className="mr-2 h-5 w-5 text-primary"/>Investigation Report Fields</CardTitle>
+                        <CardDescription>These fields are available for all template types.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <FormField control={form.control} name="usgReport" render={({ field }) => (<FormItem><FormLabel>USG Report Template</FormLabel><FormControl><Textarea rows={4} placeholder="Default USG report text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                      <FormField control={form.control} name="kidneyBiopsyReport" render={({ field }) => (<FormItem><FormLabel>Kidney Biopsy Report Template</FormLabel><FormControl><Textarea rows={6} placeholder="Default kidney biopsy report text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    </CardContent>
+                  </Card>
                   
                   {templateType === 'Discharge Summary' && (
                     <Card className="bg-muted/50">
@@ -301,17 +315,6 @@ export default function TemplatesPage() {
                         </CardContent>
                     </Card>
                   )}
-
-                  <Card className="bg-muted/50">
-                    <CardHeader>
-                        <CardTitle className="font-headline flex items-center"><Microscope className="mr-2 h-5 w-5 text-primary"/>Investigation Report Fields</CardTitle>
-                        <CardDescription>These fields are available for all template types.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <FormField control={form.control} name="usgReport" render={({ field }) => (<FormItem><FormLabel>USG Report Template</FormLabel><FormControl><Textarea rows={4} placeholder="Default USG report text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
-                      <FormField control={form.control} name="kidneyBiopsyReport" render={({ field }) => (<FormItem><FormLabel>Kidney Biopsy Report Template</FormLabel><FormControl><Textarea rows={6} placeholder="Default kidney biopsy report text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    </CardContent>
-                  </Card>
                   
                   <Button type="submit" className="w-full">
                     <Save className="mr-2 h-4 w-4" /> Save Template
@@ -325,3 +328,4 @@ export default function TemplatesPage() {
     </div>
   );
 }
+
