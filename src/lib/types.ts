@@ -38,7 +38,7 @@ export type ClinicalProfile = {
 };
 
 export type Diagnosis = {
-  id?: string;
+  id: string;
   name: string;
   icdName?: string;
   icdCode?: string;

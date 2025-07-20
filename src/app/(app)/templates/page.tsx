@@ -25,6 +25,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 const diagnosisSchema = z.object({
+  id: z.string(),
   name: z.string().min(1, "Diagnosis name is required."),
   icdCode: z.string().optional(),
   icdName: z.string().optional(),
@@ -141,12 +142,13 @@ export default function TemplatesPage() {
   const handleAddDiagnosis = (diagnosisId: string) => {
     const diagnosisToAdd = MOCK_DIAGNOSES.find(d => d.id === diagnosisId);
     if (diagnosisToAdd) {
-        const isAlreadyAdded = diagnosisFields.some(field => field.icdCode === diagnosisToAdd.icdCode);
+        const isAlreadyAdded = diagnosisFields.some(field => field.id === diagnosisToAdd.id);
         if (isAlreadyAdded) {
             toast({ title: "Diagnosis Already Added", description: `"${diagnosisToAdd.name}" is already in the list.`, variant: "destructive" });
             return;
         }
         appendDiagnosis({
+            id: diagnosisToAdd.id,
             name: diagnosisToAdd.name,
             icdCode: diagnosisToAdd.icdCode,
             icdName: diagnosisToAdd.icdName,
@@ -163,7 +165,7 @@ export default function TemplatesPage() {
       <Card className="mt-6 mb-8">
         <CardHeader>
           <CardTitle className="font-headline">Template Editor</CardTitle>
-          <CardDescription>Select an existing template to edit, or fill out the form to create a new one. A template name (e.g., 'Chronic Kidney Disease') can be mapped to multiple specific ICD-10 diagnoses from the master list below.</CardDescription>
+          <CardDescription>Select an existing template to edit, or fill out the form to create a new one. A template name (e.g., 'Chronic Kidney Disease') can be mapped to multiple specific ICD-10 diagnoses.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-3 gap-6">
@@ -212,7 +214,7 @@ export default function TemplatesPage() {
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-md">Mapped ICD-10 Diagnoses</CardTitle>
-                      <CardDescription>Click a diagnosis from the popover list to add it to this template.</CardDescription>
+                      <CardDescription>Add specific ICD-10 diagnoses that fall under this template's clinical category.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
@@ -223,7 +225,7 @@ export default function TemplatesPage() {
                             aria-expanded={isPopoverOpen}
                             className="w-full justify-between"
                           >
-                            Click to add a diagnosis...
+                            Click on a diagnosis to add...
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </PopoverTrigger>
