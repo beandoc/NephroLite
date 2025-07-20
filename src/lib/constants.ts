@@ -1,5 +1,5 @@
 
-import type { DiagnosisEntry, MedicationEntry, Medication, DiagnosisTemplate } from '@/lib/types';
+import type { DiagnosisEntry, MedicationEntry, Medication, DiagnosisTemplate, InvestigationMaster } from '@/lib/types';
 
 export const GENDERS: string[] = ['Male', 'Female', 'Other', 'Prefer not to say'];
 
@@ -215,12 +215,54 @@ export const INVESTIGATION_GROUPS: string[] = [
   'Hematological', 'Biochemistry', 'Radiology', 'Pathology', 'Special Investigations', 'Urine Analysis', 'Serology'
 ];
 
+export const INVESTIGATION_MASTER_LIST: InvestigationMaster[] = [
+  // Hematological
+  { id: 'inv_hem_001', name: 'Complete Blood Count (CBC)', group: 'Hematological' },
+  { id: 'inv_hem_002', name: 'Hemoglobin (Hb)', group: 'Hematological' },
+  { id: 'inv_hem_003', name: 'Platelet Count', group: 'Hematological' },
+  { id: 'inv_hem_004', name: 'ESR', group: 'Hematological' },
+  { id: 'inv_hem_005', name: 'Reticulocyte Count', group: 'Hematological' },
+  { id: 'inv_hem_006', name: 'Prothrombin Time (PT)', group: 'Hematological' },
+  { id: 'inv_hem_007', name: 'aPTT', group: 'Hematological' },
+
+  // Biochemistry
+  { id: 'inv_bio_001', name: 'Kidney Function Test (KFT)', group: 'Biochemistry' },
+  { id: 'inv_bio_002', name: 'Liver Function Test (LFT)', group: 'Biochemistry' },
+  { id: 'inv_bio_003', name: 'Serum Electrolytes', group: 'Biochemistry' },
+  { id: 'inv_bio_004', name: 'Fasting Blood Sugar (FBS)', group: 'Biochemistry' },
+  { id: 'inv_bio_005', name: 'Post Prandial Blood Sugar (PPBS)', group: 'Biochemistry' },
+  { id: 'inv_bio_006', name: 'HbA1c', group: 'Biochemistry' },
+  { id: 'inv_bio_007', name: 'Lipid Profile', group: 'Biochemistry' },
+  { id: 'inv_bio_008', name: 'Serum Calcium', group: 'Biochemistry' },
+  { id: 'inv_bio_009', name: 'Serum Phosphate', group: 'Biochemistry' },
+  { id: 'inv_bio_010', name: 'Uric Acid', group: 'Biochemistry' },
+  
+  // Radiology
+  { id: 'inv_rad_001', name: 'USG KUB', group: 'Radiology' },
+  { id: 'inv_rad_002', name: 'Chest X-Ray', group: 'Radiology' },
+  { id: 'inv_rad_003', name: 'CT KUB', group: 'Radiology' },
+  { id: 'inv_rad_004', name: 'MRI Abdomen', group: 'Radiology' },
+
+  // Serology
+  { id: 'inv_ser_001', name: 'HBsAg', group: 'Serology' },
+  { id: 'inv_ser_002', name: 'Anti-HCV', group: 'Serology' },
+  { id: 'inv_ser_003', name: 'HIV I & II', group: 'Serology' },
+  { id: 'inv_ser_004', name: 'ANA', group: 'Serology' },
+  { id: 'inv_ser_005', name: 'dsDNA', group: 'Serology' },
+  
+  // Special Investigations
+  { id: 'inv_spc_001', name: 'Kidney Biopsy', group: 'Special Investigations' },
+  { id: 'inv_spc_002', name: '24hr Urine Protein', group: 'Special Investigations' },
+  { id: 'inv_spc_003', name: 'Urine PCR', group: 'Special Investigations' },
+];
+
+
 // Comprehensive Clinical Visit Templates
 export const DIAGNOSIS_TEMPLATES: Record<string, DiagnosisTemplate> = {
   "Hypertensive Nephropathy": {
     templateName: "Hypertensive Nephropathy",
     templateType: "Discharge Summary",
-    diagnoses: [{ name: "Hypertensive Nephropathy", icdCode: "I12.9" }],
+    diagnoses: [{ id: 'diag_hn', name: "Hypertensive Nephropathy", icdCode: "I12.9" }],
     history: "Patient is a known case of hypertension for the last 5 years, presents with pedal edema and decreased urine output.",
     generalExamination: "Bilateral pitting pedal edema present. No pallor, icterus, or clubbing.",
     systemicExamination: "CVS: S1, S2 normal, no murmurs. Respiratory: Bilateral air entry equal, no added sounds. Abdomen: Soft, non-tender.",
@@ -234,7 +276,7 @@ export const DIAGNOSIS_TEMPLATES: Record<string, DiagnosisTemplate> = {
   "Diabetic Nephropathy": {
     templateName: "Diabetic Nephropathy",
     templateType: "Discharge Summary",
-    diagnoses: [{ name: "Diabetic Nephropathy", icdCode: "E11.21" }],
+    diagnoses: [{ id: 'diag_dn', name: "Diabetic Nephropathy", icdCode: "E11.21" }],
     history: "Patient with Type 2 Diabetes for 10 years, complains of frothy urine and progressive swelling of feet.",
     generalExamination: "Fundoscopy shows background diabetic retinopathy. Pedal edema present.",
     systemicExamination: "Peripheral neuropathy present in both lower limbs. CVS and Respiratory systems are normal.",
@@ -249,7 +291,7 @@ export const DIAGNOSIS_TEMPLATES: Record<string, DiagnosisTemplate> = {
   "IgA Nephropathy": {
     templateName: "IgA Nephropathy",
     templateType: "Opinion Report",
-    diagnoses: [{ name: "IgA Nephropathy", icdCode: "N03.3", icdName: "Chronic nephritic syndrome, diffuse mesangial proliferative" }],
+    diagnoses: [{ id: 'diag_igan', name: "IgA Nephropathy", icdCode: "N03.3", icdName: "Chronic nephritic syndrome, diffuse mesangial proliferative" }],
     history: "Patient was detected to have proteinuria/ hypertension/ renal dysfunction during evaluation. He denies any history of hematuria, oliguria, nocturia, swelling of face or feet at any time. There was no preceding skin rash, arthritis, oral ulcers, nephrotoxic drug use. No history of NSAID's or alternative medication use. His 24 hr urine protein excretion was _____ mg/day. He was subjected to a kidney biopsy which was reported as IgA nephropathy. He was initiated on oral steroids and ARB's. Due for Nephrologist opinion",
     generalExamination: "No pallor, pedal edema. Systemically : NAD",
     systemicExamination: "CVS: S1, S2 normal, no murmurs. Respiratory: Bilateral air entry equal, no added sounds. Abdomen: Soft, non-tender.",

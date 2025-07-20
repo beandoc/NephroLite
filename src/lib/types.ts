@@ -163,6 +163,12 @@ export type MedicationEntry = {
 };
 
 // For Patient Investigations
+export type InvestigationMaster = {
+  id: string;
+  name: string;
+  group: 'Hematological' | 'Biochemistry' | 'Radiology' | 'Pathology' | 'Special Investigations' | 'Urine Analysis' | 'Serology';
+};
+
 export type InvestigationTest = {
   id: string; // Unique ID for the test entry within a record
   group: string; // e.g., 'Hematological', 'Biochemistry'
