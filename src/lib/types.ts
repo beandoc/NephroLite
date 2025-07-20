@@ -149,9 +149,10 @@ export type Appointment = {
 // For Diagnosis and Medication Database Management
 export type DiagnosisEntry = {
   id: string;
-  name: string;
-  icdName: string;
+  name: string; // Primary, user-friendly name
+  icdName: string; // Official ICD-10 description
   icdCode: string;
+  clinicalNames: string[]; // All mappable clinical names including the primary one
 };
 
 export type MedicationEntry = {
@@ -210,3 +211,5 @@ export type DiagnosisTemplate = {
     opinionText?: string;
     recommendations?: string;
 }
+
+    

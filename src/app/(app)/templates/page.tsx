@@ -15,14 +15,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Save, Trash2, PlusCircle, FileText, Activity, Microscope, ChevronsUpDown, Pencil } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { DIAGNOSIS_TEMPLATES, MOCK_DIAGNOSES } from '@/lib/constants';
-import type { DiagnosisTemplate, Diagnosis, Medication } from '@/lib/types';
+import type { DiagnosisTemplate, Diagnosis, Medication, DiagnosisEntry } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 
 const diagnosisSchema = z.object({
   id: z.string(),
@@ -56,11 +56,114 @@ const templateFormSchema = z.object({
 
 type TemplateFormData = z.infer<typeof templateFormSchema>;
 
+// Component for the Master Diagnosis Edit Dialog
+function EditMasterDiagnosisDialog({
+  diagnosis,
+  isOpen,
+  onOpenChange,
+  onSave,
+}: {
+  diagnosis: DiagnosisEntry | null;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (updatedDiagnosis: DiagnosisEntry) => void;
+}) {
+  const [currentDiagnosis, setCurrentDiagnosis] = useState<DiagnosisEntry | null>(diagnosis);
+  const [newClinicalName, setNewClinicalName] = useState('');
+
+  useEffect(() => {
+    setCurrentDiagnosis(diagnosis);
+  }, [diagnosis]);
+
+  if (!currentDiagnosis) return null;
+
+  const handleAddClinicalName = () => {
+    if (newClinicalName && !currentDiagnosis.clinicalNames.includes(newClinicalName)) {
+      setCurrentDiagnosis({
+        ...currentDiagnosis,
+        clinicalNames: [...currentDiagnosis.clinicalNames, newClinicalName],
+      });
+      setNewClinicalName('');
+    }
+  };
+
+  const handleRemoveClinicalName = (nameToRemove: string) => {
+    setCurrentDiagnosis({
+      ...currentDiagnosis,
+      clinicalNames: currentDiagnosis.clinicalNames.filter(name => name !== nameToRemove),
+    });
+  };
+
+  const handleSave = () => {
+    onSave(currentDiagnosis);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Edit ICD-10 Mapping: {currentDiagnosis.icdCode}</DialogTitle>
+          <DialogDescription>
+            Map multiple clinical diagnosis names to a single ICD-10 code.
+            The first clinical name is used as the primary display name.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+            <div className="space-y-1">
+                <Label>Official ICD-10 Description</Label>
+                <p className="text-sm text-muted-foreground p-2 bg-muted rounded-md">{currentDiagnosis.icdName}</p>
+            </div>
+            <div className="space-y-2">
+                <Label>Mapped Clinical Names</Label>
+                <div className="space-y-2">
+                {currentDiagnosis.clinicalNames.map((name, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                    <Input value={name} readOnly className="flex-grow" />
+                    <Button variant="destructive" size="icon" onClick={() => handleRemoveClinicalName(name)} disabled={currentDiagnosis.clinicalNames.length <= 1}>
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                    </div>
+                ))}
+                {currentDiagnosis.clinicalNames.length === 0 && <p className="text-sm text-muted-foreground">No clinical names mapped yet.</p>}
+                </div>
+            </div>
+             <div className="space-y-2 pt-4 border-t">
+                <Label htmlFor="new-clinical-name">Add New Clinical Name</Label>
+                <div className="flex items-center gap-2">
+                    <Input
+                        id="new-clinical-name"
+                        value={newClinicalName}
+                        onChange={(e) => setNewClinicalName(e.target.value)}
+                        placeholder="Enter a new clinical name"
+                    />
+                    <Button onClick={handleAddClinicalName}>Add</Button>
+                </div>
+            </div>
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button type="button" variant="outline">Cancel</Button>
+          </DialogClose>
+          <Button type="button" onClick={handleSave}>Save Changes</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Record<string, DiagnosisTemplate>>(DIAGNOSIS_TEMPLATES);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { toast } = useToast();
+
+  // State for master diagnosis list and dialog
+  const [masterDiagnoses, setMasterDiagnoses] = useState<DiagnosisEntry[]>(MOCK_DIAGNOSES);
+  const [isEditMasterDiagOpen, setIsEditMasterDiagOpen] = useState(false);
+  const [selectedMasterDiag, setSelectedMasterDiag] = useState<DiagnosisEntry | null>(null);
+
 
   const form = useForm<TemplateFormData>({
     resolver: zodResolver(templateFormSchema),
@@ -140,21 +243,41 @@ export default function TemplatesPage() {
   }
   
   const handleAddDiagnosis = (diagnosisId: string) => {
-    const diagnosisToAdd = MOCK_DIAGNOSES.find(d => d.id === diagnosisId);
+    const diagnosisToAdd = masterDiagnoses.find(d => d.id === diagnosisId);
     if (diagnosisToAdd) {
-        const isAlreadyAdded = diagnosisFields.some(field => field.id === diagnosisToAdd.id);
-        if (isAlreadyAdded) {
-            toast({ title: "Diagnosis Already Added", description: `"${diagnosisToAdd.name}" is already in the list.`, variant: "destructive" });
-            return;
-        }
-        appendDiagnosis({
-            id: diagnosisToAdd.id,
-            name: diagnosisToAdd.name,
+        // Here we map all clinical names under that one master diagnosis entry
+        const diagnosesToAppend = diagnosisToAdd.clinicalNames.map(name => ({
+            id: `${diagnosisToAdd.id}-${name.replace(/\s/g, "")}`, // Create a more unique ID
+            name: name,
             icdCode: diagnosisToAdd.icdCode,
             icdName: diagnosisToAdd.icdName,
+        }));
+
+        diagnosesToAppend.forEach(diag => {
+            const isAlreadyAdded = diagnosisFields.some(field => field.name === diag.name && field.icdCode === diag.icdCode);
+            if (!isAlreadyAdded) {
+                appendDiagnosis(diag);
+            }
         });
+
+        toast({ title: "Diagnoses Added", description: `Added options for "${diagnosisToAdd.name}" to the template.` });
         setIsPopoverOpen(false); // Close popover after selection
     }
+  };
+
+  const handleEditMasterDiagnosis = (diagnosis: DiagnosisEntry) => {
+    setSelectedMasterDiag(diagnosis);
+    setIsEditMasterDiagOpen(true);
+  };
+
+  const handleSaveMasterDiagnosis = (updatedDiagnosis: DiagnosisEntry) => {
+    setMasterDiagnoses(prev =>
+      prev.map(d => (d.id === updatedDiagnosis.id ? updatedDiagnosis : d))
+    );
+    toast({
+      title: 'Master Diagnosis Updated',
+      description: `${updatedDiagnosis.icdCode} has been updated. (This is a mock save)`,
+    });
   };
 
 
@@ -235,7 +358,7 @@ export default function TemplatesPage() {
                             <CommandList>
                                 <CommandEmpty>No diagnosis found.</CommandEmpty>
                                 <CommandGroup>
-                                  {MOCK_DIAGNOSES.map((diagnosis) => (
+                                  {masterDiagnoses.map((diagnosis) => (
                                     <CommandItem
                                       key={diagnosis.id}
                                       value={`${diagnosis.name} ${diagnosis.icdCode}`}
@@ -362,20 +485,21 @@ export default function TemplatesPage() {
               <TableHeader className="sticky top-0 bg-card">
                 <TableRow>
                   <TableHead>ICD-10 Code</TableHead>
-                  <TableHead>Diagnosis Name</TableHead>
+                  <TableHead>Primary Clinical Name</TableHead>
                   <TableHead>Full ICD-10 Description</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {MOCK_DIAGNOSES.map(d => (
+                {masterDiagnoses.map(d => (
                   <TableRow key={d.id}>
                     <TableCell><Badge variant="secondary">{d.icdCode}</Badge></TableCell>
                     <TableCell className="font-medium">{d.name}</TableCell>
                     <TableCell className="text-muted-foreground">{d.icdName}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" disabled title="Edit Diagnosis">
-                        <Pencil className="h-4 w-4" />
+                      <Button variant="outline" size="sm" onClick={() => handleEditMasterDiagnosis(d)}>
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit Names
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -385,6 +509,15 @@ export default function TemplatesPage() {
           </ScrollArea>
         </CardContent>
       </Card>
+
+      <EditMasterDiagnosisDialog
+        isOpen={isEditMasterDiagOpen}
+        onOpenChange={setIsEditMasterDiagOpen}
+        diagnosis={selectedMasterDiag}
+        onSave={handleSaveMasterDiagnosis}
+      />
     </div>
   );
 }
+
+    
