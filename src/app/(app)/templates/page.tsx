@@ -117,8 +117,8 @@ function EditMasterDiagnosisDialog({
             <div className="space-y-2">
                 <Label>Mapped Clinical Names</Label>
                 <div className="space-y-2">
-                {currentDiagnosis.clinicalNames.map((name, index) => (
-                    <div key={index} className="flex items-center gap-2">
+                {currentDiagnosis.clinicalNames.map((name) => (
+                    <div key={name} className="flex items-center gap-2">
                     <Input value={name} readOnly className="flex-grow" />
                     <Button variant="destructive" size="icon" onClick={() => handleRemoveClinicalName(name)} disabled={currentDiagnosis.clinicalNames.length <= 1}>
                         <Trash2 className="h-4 w-4" />
