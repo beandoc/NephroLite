@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { INVESTIGATION_MASTER_LIST, INVESTIGATION_PANELS } from '@/lib/constants';
-import { Microscope, Beaker, Dna, Bone, Droplet, Send, Search, X, Package, TestTube, FlaskConical } from 'lucide-react';
+import { Microscope, Beaker, Dna, Bone, Droplet, Send, Search, X, Package, TestTube, FlaskConical, Info } from 'lucide-react';
 import type { InvestigationMaster, InvestigationPanel } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 
@@ -78,8 +78,8 @@ export default function InvestigationsPage() {
   return (
     <div className="container mx-auto py-2">
       <PageHeader
-        title="Order Investigations"
-        description="Select investigation panels or individual tests to order for a patient."
+        title="Browse Investigations"
+        description="Browse available tests and panels. To log results, please navigate to a patient's profile and use the 'Investigations' tab."
       />
       <Card className="mt-4 mb-6">
         <CardContent className="p-4">
@@ -134,7 +134,7 @@ export default function InvestigationsPage() {
           <Card className="h-full">
             <CardHeader>
               <CardTitle className="font-headline">{searchQuery ? `Search Results for "${searchQuery}"` : `${selectedGroup} Tests & Panels`}</CardTitle>
-              <CardDescription>Select panels or individual tests from the list below.</CardDescription>
+              <CardDescription>Select panels or individual tests to see what's included.</CardDescription>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[600px] pr-3">
@@ -214,13 +214,13 @@ export default function InvestigationsPage() {
                            </ul>
                        ) : (
                            <div className="h-full flex items-center justify-center text-sm text-muted-foreground text-center">
-                               Select tests or panels from the list.
+                               Select tests or panels from the list to see your selection here.
                            </div>
                        )}
                     </ScrollArea>
-                    <Button disabled={selectedCount === 0} className="w-full mt-4">
-                        <Send className="mr-2 h-4 w-4" />
-                        Order {selectedCount > 0 ? `${selectedCount} Test(s)` : 'Tests'} (WIP)
+                    <Button disabled className="w-full mt-4">
+                        <Info className="mr-2 h-4 w-4" />
+                        Log Results in Patient Profile
                     </Button>
                 </CardContent>
             </Card>
