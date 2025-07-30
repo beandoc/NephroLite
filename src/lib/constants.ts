@@ -71,22 +71,6 @@ export const DISABILITY_PROFILES: string[] = [
   'Not Set',
 ];
 
-export const VISIT_REMARK_OPTIONS_GN: string[] = [
-  'Routine Checkup',
-  'Follow-up',
-  'RELAPSE',
-  'REMISSION',
-  'LOW DRUG LEVEL',
-  'HIGH DRUG LEVELS',
-  'CHANGED Rx',
-  'Initial Consultation',
-  'Lab Results Review',
-  'Dialysis Session',
-  'Transplant Evaluation',
-  'Emergency',
-];
-
-
 export const APPOINTMENT_TYPES: string[] = [
   'Routine Checkup',
   'Follow-up',
@@ -115,11 +99,6 @@ export const TIME_SLOTS: string[] = [
   "16:00", "16:30", "17:00",
 ];
 
-export const SUBSPECIALITY_FOLLOWUP_OPTIONS: string[] = [
-  'NIL', 'Endocrinology', 'Cardiology', 'Gastroenterology', 'Urology', 'Surgery', 'Neurology', 'Gynaecology', 'Rheumatology', 'Ophthalmology (Eye)', 'ENT'
-];
-
-export const YES_NO_NIL_OPTIONS: string[] = ['Yes', 'No', 'NIL'];
 export const YES_NO_UNKNOWN_OPTIONS: Array<'Yes' | 'No' | 'Unknown'> = ['Yes', 'No', 'Unknown'];
 
 
