@@ -41,7 +41,7 @@ const visitFormSchema = z.object({
 });
 
 const defaultValues = {
-  visitType: "Data Entry Visit",
+  visitType: "Routine",
   visitRemark: "Initial registration visit.",
   groupName: "",
 };

@@ -60,7 +60,12 @@ export default function NewPatientPage() {
       title: "Initial Visit Created",
       description: "Redirecting to patient profile...",
     });
-    router.push(`/patients/${patientId}`);
+    router.push(`/patients/${patientId}?tab=visits`);
+  };
+
+  const handleDialogClose = () => {
+    // This is called when the dialog is closed without creating a visit
+    setNewlyCreatedPatient(null);
   };
 
   return (
@@ -79,7 +84,7 @@ export default function NewPatientPage() {
           onOpenChange={setIsVisitDialogOpen}
           patient={newlyCreatedPatient}
           onVisitCreated={handleVisitCreated}
-          onDialogClose={() => setNewlyCreatedPatient(null)}
+          onDialogClose={handleDialogClose}
         />
       )}
     </div>

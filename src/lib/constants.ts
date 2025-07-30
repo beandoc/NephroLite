@@ -128,7 +128,7 @@ export const VACCINATION_NAMES: string[] = [
 ];
 
 export const VISIT_TYPES: string[] = [
-  "Data Entry Visit", "Emergency Visit", "Routine Visit", "Missed Visit", "Unscheduled Visit"
+  "Routine", "Emergency", "Proxy", "Missed", "Admission"
 ];
 
 export const PATIENT_GROUP_NAMES: string[] = [
