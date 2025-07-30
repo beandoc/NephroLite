@@ -15,6 +15,26 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { Patient } from '@/lib/types';
+import dynamic from 'next/dynamic';
+
+const PatientAnalysisChart = dynamic(
+  () => import('@/components/dashboard/patient-analysis-chart').then(mod => mod.PatientAnalysisChart),
+  { 
+    ssr: false,
+    loading: () => (
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Patient Analysis by Diagnosis</CardTitle>
+                <CardDescription>Distribution of patients by primary diagnosis.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Skeleton className="h-80 w-full" />
+            </CardContent>
+        </Card>
+    )
+  }
+);
+
 
 interface MetricCardProps {
   title: string;
@@ -56,7 +76,7 @@ export default function AnalyticsPage() {
   const [selectedFilterTags, setSelectedFilterTags] = useState<string[]>([]);
 
   const patientGroupMetrics: MetricCardProps[] = [
-    { title: "Peritoneal dialysis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'End-Stage Renal Disease (ESRD)' && p.clinicalProfile.tags.includes('PD')).length, colorClass: "border-orange-500", icon: Waves /* Link removed */ },
+    { title: "Peritoneal dialysis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'End-Stage Renal Disease (ESRD)' && p.clinicalProfile.tags.includes('PD')).length, colorClass: "border-orange-500", icon: Waves, link: "/analytics/pd-module" },
     { title: "Hemodialysis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'End-Stage Renal Disease (ESRD)' && p.clinicalProfile.tags.includes('HD')).length, colorClass: "border-blue-500", icon: Droplets },
     { title: "Glomerulonephritis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Glomerulonephritis').length, colorClass: "border-green-500", icon: Stethoscope },
     { title: "Kidney transplant", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Transplant Prospect').length, colorClass: "border-green-600", icon: HeartPulse },
@@ -154,46 +174,50 @@ export default function AnalyticsPage() {
           </div>
         </CardContent>
       </Card>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <Card>
+            <CardHeader>
+            <CardTitle className="font-headline flex items-center"><PieChartIcon className="mr-2 h-5 w-5 text-primary" />Demographics</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <h3 className="text-lg font-semibold mb-2 text-center">Gender Distribution</h3>
+                {patientsLoading ? <Skeleton className="h-64 w-full" /> : genderData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                    <Pie data={genderData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                        {genderData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS_GENDER[index % COLORS_GENDER.length]} />
+                        ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                    </PieChart>
+                </ResponsiveContainer>
+                ) : <p className="text-muted-foreground text-center py-10">No gender data available.</p>}
+            </div>
+            <div>
+                <h3 className="text-lg font-semibold mb-2 text-center">Residence Type</h3>
+                {patientsLoading ? <Skeleton className="h-64 w-full" /> : residenceData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                    <Pie data={residenceData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                        {residenceData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS_RESIDENCE[index % COLORS_RESIDENCE.length]} />
+                        ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                    </PieChart>
+                </ResponsiveContainer>
+                ) : <p className="text-muted-foreground text-center py-10">No residence data available.</p>}
+            </div>
+            </CardContent>
+        </Card>
+        <PatientAnalysisChart />
+      </div>
 
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="font-headline flex items-center"><PieChartIcon className="mr-2 h-5 w-5 text-primary" />Overall Patient Demographics</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <h3 className="text-lg font-semibold mb-2 text-center">Gender Distribution</h3>
-            {patientsLoading ? <Skeleton className="h-64 w-full" /> : genderData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie data={genderData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                    {genderData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS_GENDER[index % COLORS_GENDER.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : <p className="text-muted-foreground text-center py-10">No gender data available.</p>}
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold mb-2 text-center">Residence Type Distribution</h3>
-            {patientsLoading ? <Skeleton className="h-64 w-full" /> : residenceData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie data={residenceData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                    {residenceData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS_RESIDENCE[index % COLORS_RESIDENCE.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : <p className="text-muted-foreground text-center py-10">No residence data available.</p>}
-          </div>
-        </CardContent>
-      </Card>
 
       <Card className="mb-8">
         <CardHeader>
@@ -305,3 +329,5 @@ export default function AnalyticsPage() {
     </div>
   );
 }
+
+    

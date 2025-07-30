@@ -86,7 +86,7 @@ export function OverviewMetrics() {
       iconColorClass: "text-purple-500",
       borderColorClass: "border-purple-500",
       loading: false,
-      href: "/lab-results"
+      href: "/investigations"
     },
   ];
 
@@ -124,3 +124,5 @@ export function OverviewMetrics() {
     </div>
   );
 }
+
+    

@@ -31,7 +31,9 @@ export function PatientAnalysisChart() {
       const diagnosisCounts: Record<string, number> = {};
       patients.forEach(patient => {
         const diagnosis = patient.clinicalProfile.primaryDiagnosis;
-        diagnosisCounts[diagnosis] = (diagnosisCounts[diagnosis] || 0) + 1;
+        if(diagnosis) {
+            diagnosisCounts[diagnosis] = (diagnosisCounts[diagnosis] || 0) + 1;
+        }
       });
 
       const formattedData: ChartDataPoint[] = Object.entries(diagnosisCounts)
@@ -105,3 +107,5 @@ export function PatientAnalysisChart() {
     </Card>
   );
 }
+
+    
