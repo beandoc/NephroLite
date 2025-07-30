@@ -32,7 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PATIENT_GROUP_NAMES, VISIT_TYPES } from "@/lib/constants";
 import type { Patient, VisitFormData } from "@/lib/types";
 import { usePatientData } from "@/hooks/use-patient-data";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const visitFormSchema = z.object({
   visitType: z.string().min(1, "Visit type is required."),
@@ -40,11 +40,18 @@ const visitFormSchema = z.object({
   groupName: z.string().min(1, "Group name is required."),
 });
 
+const defaultValues = {
+  visitType: "Data Entry Visit",
+  visitRemark: "Initial registration visit.",
+  groupName: "",
+};
+
 interface CreateVisitDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   patient: Patient;
   onVisitCreated: (patientId: string) => void;
+  onDialogClose: () => void;
 }
 
 export function CreateVisitDialog({
@@ -52,24 +59,29 @@ export function CreateVisitDialog({
   onOpenChange,
   patient,
   onVisitCreated,
+  onDialogClose,
 }: CreateVisitDialogProps) {
   const { addVisitToPatient } = usePatientData();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<VisitFormData>({
     resolver: zodResolver(visitFormSchema),
-    defaultValues: {
-      visitType: "Data Entry Visit",
-      visitRemark: "Initial registration visit.",
-      groupName: "",
-    },
+    defaultValues: defaultValues,
   });
+
+  useEffect(() => {
+    if (!isOpen) {
+      form.reset(defaultValues);
+      onDialogClose();
+    }
+  }, [isOpen, form, onDialogClose]);
 
   const onSubmit = (data: VisitFormData) => {
     setIsSubmitting(true);
     try {
       addVisitToPatient(patient.id, data);
       onVisitCreated(patient.id);
+      form.reset(defaultValues);
     } catch (error) {
       console.error("Failed to create visit:", error);
       // You might want to show a toast message here

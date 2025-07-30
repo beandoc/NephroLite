@@ -36,8 +36,7 @@ export default function NewPatientPage() {
         duration: 10000, // Keep toast open longer
       });
       
-      // We don't redirect immediately. We wait for the user to create a visit.
-      // Reset form state by letting the form component handle it after successful submission.
+      // The form will be reset via the onFormClear prop in PatientForm.
       setIsSubmitting(false);
 
     } catch (error) {
@@ -53,11 +52,17 @@ export default function NewPatientPage() {
 
   const handleVisitCreated = (patientId: string) => {
     setIsVisitDialogOpen(false);
+    setNewlyCreatedPatient(null);
     toast({
       title: "Initial Visit Created",
       description: "Redirecting to patient profile...",
     });
     router.push(`/patients/${patientId}`);
+  };
+
+  const handleClearForm = () => {
+    // This function is passed to PatientForm to signal that it should clear itself.
+    // The actual reset logic is within the PatientForm component itself.
   };
 
   return (
@@ -67,7 +72,7 @@ export default function NewPatientPage() {
         description="Fill in the demographic and contact details for the new patient." 
       />
       <div className="mt-6">
-        <PatientForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+        <PatientForm onSubmit={handleSubmit} isSubmitting={isSubmitting} onFormClear={handleClearForm} />
       </div>
 
       {newlyCreatedPatient && (
@@ -76,6 +81,7 @@ export default function NewPatientPage() {
           onOpenChange={setIsVisitDialogOpen}
           patient={newlyCreatedPatient}
           onVisitCreated={handleVisitCreated}
+          onDialogClose={() => setNewlyCreatedPatient(null)}
         />
       )}
     </div>
