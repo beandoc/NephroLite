@@ -243,6 +243,7 @@ export const INVESTIGATION_MASTER_LIST: InvestigationMaster[] = [
   { id: 'bio_015', name: 'Lipid Profile', group: 'Biochemistry' },
   { id: 'bio_016', name: 'Liver Function Test (LFT)', group: 'Biochemistry' },
   { id: 'bio_017', name: 'Kidney Function Test (KFT)', group: 'Biochemistry' },
+  { id: 'bio_018', name: 'eGFR', group: 'Biochemistry' },
   
   // Radiology
   { id: 'rad_001', name: 'USG KUB', group: 'Radiology' },
