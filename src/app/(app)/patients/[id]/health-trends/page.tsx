@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, TrendingUp, AlertTriangle, Heart, Activity, CalendarClock, LineChart as LineChartIcon } from 'lucide-react'; // Added icons
-import { EgfrTrendChart } from '@/components/charts/EgfrTrendChart'; // Import the new chart
+import { ArrowLeft, TrendingUp, AlertTriangle, Heart, Activity, CalendarClock, LineChart as LineChartIcon, BarChart3 } from 'lucide-react';
+import { EgfrTrendChart } from '@/components/charts/EgfrTrendChart';
 
 interface PredictionCardProps {
   title: string;
@@ -73,10 +73,24 @@ export default function PatientHealthTrendsPage() {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="font-headline flex items-center"><LineChartIcon className="mr-2 h-5 w-5 text-primary"/>eGFR Trend</CardTitle>
-          <CardDescription>Chart showing eGFR values over time.</CardDescription>
+          <CardDescription>Chart showing eGFR values over time with medication periods highlighted.</CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
           <EgfrTrendChart />
+        </CardContent>
+      </Card>
+
+       <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="font-headline flex items-center"><BarChart3 className="mr-2 h-5 w-5 text-primary"/>Albuminuria / 24h Protein Trend</CardTitle>
+          <CardDescription>Visualizing changes in proteinuria, with medication periods highlighted.</CardDescription>
+        </CardHeader>
+        <CardContent className="h-80 flex items-center justify-center border-2 border-dashed rounded-lg">
+           <p className="text-muted-foreground text-center">
+              Proteinuria trend chart placeholder.
+              <br />
+              (Functionality under development)
+            </p>
         </CardContent>
       </Card>
       

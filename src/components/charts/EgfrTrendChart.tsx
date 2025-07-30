@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Area, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import { Area, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceArea } from "recharts";
 import { ChartConfig, ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 
 // Mock data for eGFR trends. In a real app, this would come from props or fetched data.
@@ -20,12 +20,31 @@ const mockDataMonthlyEgfr = [
   { month: "Dec", egfr: 53 },
 ];
 
+const mockMedicationPeriods = [
+    { name: "ACEi/ARB", start: "Mar", end: "Dec", color: "rgba(3, 105, 161, 0.1)" }, // Cyan-700 at 10% opacity
+    { name: "SGLT2i", start: "Jun", end: "Sep", color: "rgba(5, 150, 105, 0.1)" }, // Emerald-600 at 10% opacity
+];
+
 const chartConfig = {
   egfr: {
     label: "eGFR (mL/min/1.73m²)",
     color: "hsl(var(--chart-3))", // Using chart-3 (dark teal from theme)
   },
 } satisfies ChartConfig;
+
+const CustomLegend = () => (
+    <div className="flex justify-center items-center gap-4 mt-2 text-sm">
+      <div className="flex items-center gap-1">
+        <div className="w-3 h-3" style={{ backgroundColor: 'rgba(3, 105, 161, 0.4)' }} />
+        <span>ACEi/ARB Period</span>
+      </div>
+      <div className="flex items-center gap-1">
+        <div className="w-3 h-3" style={{ backgroundColor: 'rgba(5, 150, 105, 0.4)' }} />
+        <span>SGLT2i Period</span>
+      </div>
+    </div>
+);
+
 
 interface EgfrTrendChartProps {
   // Props to pass actual data in the future
@@ -37,6 +56,7 @@ export function EgfrTrendChart({}: EgfrTrendChartProps) {
   const data = mockDataMonthlyEgfr;
 
   return (
+    <>
     <ChartContainer config={chartConfig} className="h-80 w-full">
       <AreaChart
         data={data}
@@ -73,6 +93,12 @@ export function EgfrTrendChart({}: EgfrTrendChartProps) {
             <stop offset="95%" stopColor="var(--color-egfr)" stopOpacity={0.1}/>
           </linearGradient>
         </defs>
+        
+        {/* Render medication periods as reference areas */}
+        {mockMedicationPeriods.map(period => (
+           <ReferenceArea key={period.name} x1={period.start} x2={period.end} strokeOpacity={0.3} fill={period.color} />
+        ))}
+        
         <Area
           type="monotone"
           dataKey="egfr"
@@ -92,5 +118,7 @@ export function EgfrTrendChart({}: EgfrTrendChartProps) {
         />
       </AreaChart>
     </ChartContainer>
+    <CustomLegend />
+    </>
   );
 }
