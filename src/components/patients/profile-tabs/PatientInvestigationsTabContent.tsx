@@ -7,19 +7,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
-import { INVESTIGATION_GROUPS, INVESTIGATION_MASTER_LIST } from '@/lib/constants';
-import type { InvestigationRecord } from '@/lib/types';
+import { INVESTIGATION_MASTER_LIST } from '@/lib/constants';
+import type { InvestigationRecord, InvestigationTest } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Notebook, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Notebook, Edit, Trash2, MoreVertical } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface PatientInvestigationsTabContentProps {
   patientId: string;
@@ -35,6 +35,7 @@ const testEntrySchema = z.object({
 });
 
 const investigationRecordFormSchema = z.object({
+  id: z.string().optional(),
   date: z.string().min(1, "Date is required"),
   notes: z.string().optional(),
   tests: z.array(testEntrySchema).min(1, "At least one test result is required."),
@@ -45,7 +46,9 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState<InvestigationRecord | null>(null);
 
   // Mock data would be replaced by actual data fetching in a real app
   const [investigationRecords, setInvestigationRecords] = useState<InvestigationRecord[]>([
@@ -76,30 +79,54 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
   const form = useForm<InvestigationRecordFormData>({
     resolver: zodResolver(investigationRecordFormSchema),
     defaultValues: {
+      id: undefined,
       date: new Date().toISOString().split('T')[0],
       notes: "",
       tests: [],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
     name: "tests",
   });
 
-  const handleSaveInvestigationRecord = (data: InvestigationRecordFormData) => {
-    console.log("Form data (to be saved):", data);
-    const newRecord: InvestigationRecord = {
-        id: crypto.randomUUID(),
-        ...data
-    };
-    setInvestigationRecords(prev => [newRecord, ...prev]);
-
-    toast({
-      title: "Investigation Added (Mock)",
-      description: `Record for ${data.date} logged with ${data.tests.length} test(s).`,
+  const handleOpenDialogForNew = () => {
+    form.reset({
+      id: undefined,
+      date: new Date().toISOString().split('T')[0],
+      notes: "",
+      tests: [],
     });
-    setIsAddDialogOpen(false);
+    setIsFormDialogOpen(true);
+  };
+  
+  const handleOpenDialogForEdit = (record: InvestigationRecord) => {
+    form.reset({
+      ...record,
+      date: format(parseISO(record.date), 'yyyy-MM-dd'),
+    });
+    setIsFormDialogOpen(true);
+  };
+
+  const handleSaveInvestigationRecord = (data: InvestigationRecordFormData) => {
+    if (data.id) { // Editing existing record
+      setInvestigationRecords(prev => prev.map(rec => rec.id === data.id ? { ...rec, ...data } : rec));
+      toast({ title: "Investigation Updated", description: `Record for ${data.date} has been updated.` });
+    } else { // Creating new record
+      const newRecord: InvestigationRecord = { ...data, id: crypto.randomUUID() };
+      setInvestigationRecords(prev => [newRecord, ...prev]);
+      toast({ title: "Investigation Added", description: `Record for ${data.date} logged.` });
+    }
+    setIsFormDialogOpen(false);
+  };
+
+  const handleDeleteRecord = () => {
+    if (!recordToDelete) return;
+    setInvestigationRecords(prev => prev.filter(rec => rec.id !== recordToDelete.id));
+    toast({ title: "Record Deleted", description: `Investigation record from ${format(parseISO(recordToDelete.date), 'PPP')} has been deleted.`, variant: "destructive" });
+    setIsDeleteDialogOpen(false);
+    setRecordToDelete(null);
   };
   
   const openDialogFromURL = useCallback(() => {
@@ -111,6 +138,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
       const testsToLog = INVESTIGATION_MASTER_LIST.filter(t => testIds.includes(t.id));
       
       form.reset({
+        id: undefined,
         date: dateParam,
         notes: "Ordered from main investigations browser.",
         tests: testsToLog.map(t => ({
@@ -123,8 +151,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
         })),
       });
 
-      setIsAddDialogOpen(true);
-      // Clean up URL to avoid re-triggering
+      setIsFormDialogOpen(true);
       const currentPath = window.location.pathname;
       router.replace(currentPath, { scroll: false });
     }
@@ -134,26 +161,23 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     openDialogFromURL();
   }, [openDialogFromURL]);
 
-
   return (
     <>
       <div className="flex justify-end mb-4">
-        <Button onClick={() => {
-            form.reset({
-                date: new Date().toISOString().split('T')[0],
-                notes: "",
-                tests: [],
-            });
-            setIsAddDialogOpen(true);
-        }}><PlusCircle className="mr-2 h-4 w-4" />Add New Investigation Record</Button>
+        <Button onClick={handleOpenDialogForNew}>
+          <PlusCircle className="mr-2 h-4 w-4" />Add New Investigation Record
+        </Button>
       </div>
 
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+      <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
         <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="font-headline flex items-center"><Notebook className="mr-2 h-5 w-5 text-primary"/>Log Investigation Results</DialogTitle>
+            <DialogTitle className="font-headline flex items-center">
+              <Notebook className="mr-2 h-5 w-5 text-primary"/>
+              {form.getValues('id') ? 'Edit Investigation Record' : 'Log New Investigation Results'}
+            </DialogTitle>
             <DialogDescription>
-              Enter the date and notes for this record, then fill in the results for each test.
+              {form.getValues('id') ? 'Update the date, notes, or test results for this record.' : 'Enter the date and notes for this record, then fill in the results for each test.'}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -187,7 +211,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                           <Trash2 className="h-4 w-4 text-destructive"/>
                         </Button>
                         <div className="font-medium">
-                          <span>{field.name}</span> <Badge variant="secondary">{field.group}</Badge>
+                           <span>{field.name}</span> <Badge variant="secondary">{field.group}</Badge>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                            <FormField control={form.control} name={`tests.${index}.result`} render={({ field }) => (
@@ -220,13 +244,29 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
               </Card>
 
               <DialogFooter className="pt-4 sticky bottom-0 bg-background/95 pb-2">
-                <Button type="button" variant="outline" onClick={() => { setIsAddDialogOpen(false); }}>Cancel</Button>
-                <Button type="submit">Save Record (Mock)</Button>
+                <Button type="button" variant="outline" onClick={() => setIsFormDialogOpen(false)}>Cancel</Button>
+                <Button type="submit">Save Record</Button>
               </DialogFooter>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
+      
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete this record?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the investigation record from {recordToDelete ? format(parseISO(recordToDelete.date), 'PPP') : ''}. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setRecordToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteRecord} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       {sortedRecords.length === 0 ? (
          <Card className="flex items-center justify-center h-40 border-dashed">
@@ -239,9 +279,23 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
               <CardHeader className="bg-muted/30">
                 <CardTitle className="font-headline text-lg flex items-center justify-between">
                   <span>Investigations on: {format(parseISO(record.date), 'PPP')}</span>
-                  <Button variant="ghost" size="sm" onClick={() => toast({title: "Edit/Delete Record (WIP)"})} className="text-xs">
-                    <Edit className="h-3 w-3 mr-1"/> Edit/Delete Record
-                  </Button>
+                   <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleOpenDialogForEdit(record)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          <span>Edit Record</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { setRecordToDelete(record); setIsDeleteDialogOpen(true); }} className="text-destructive focus:text-destructive">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Delete Record</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                 </CardTitle>
                 {record.notes && <CardDescription className="pt-1">{record.notes}</CardDescription>}
               </CardHeader>
