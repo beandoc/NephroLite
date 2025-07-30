@@ -97,7 +97,11 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
       </TabsContent>
       
       <TabsContent value="healthTrends">
-          <HealthTrendsTabContent patient={patient} />
+        <Card className="shadow-md">
+          <CardContent className="p-0">
+             <HealthTrendsTabContent patient={patient} />
+          </CardContent>
+        </Card>
       </TabsContent>
     </Tabs>
   );
