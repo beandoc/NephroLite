@@ -5,7 +5,8 @@ import { TodaysAppointments } from '@/components/dashboard/todays-appointments';
 import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Activity, Link2 } from 'lucide-react';
+import { RecentActivity } from '@/components/dashboard/recent-activity';
+import { QuickLinks } from '@/components/dashboard/quick-links';
 
 export default function DashboardPage() {
   return (
@@ -13,7 +14,6 @@ export default function DashboardPage() {
       <PageHeader 
         title="Nephrology Dashboard" 
         description="Welcome back, Dr. Sachin. Here's your overview for today."
-        // Removed actions prop which contained the "Add New Patient" button
       />
       <OverviewMetrics />
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -50,28 +50,8 @@ export default function DashboardPage() {
         </div>
       </div>
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-headline flex items-center"><Activity className="mr-2 h-5 w-5 text-primary"/>Recent Activity</CardTitle>
-            <CardDescription>Latest actions and updates in the system.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-40 flex items-center justify-center border-2 border-dashed rounded-lg">
-              <p className="text-muted-foreground">Recent activity feed placeholder.</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-headline flex items-center"><Link2 className="mr-2 h-5 w-5 text-primary"/>Quick Links</CardTitle>
-            <CardDescription>Navigate to frequently used sections.</CardDescription>
-          </CardHeader>
-          <CardContent>
-             <div className="h-40 flex items-center justify-center border-2 border-dashed rounded-lg">
-              <p className="text-muted-foreground">Quick links placeholder.</p>
-            </div>
-          </CardContent>
-        </Card>
+        <RecentActivity />
+        <QuickLinks />
       </div>
     </div>
   );

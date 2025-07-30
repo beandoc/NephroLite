@@ -5,6 +5,7 @@ import type { Patient, Vaccination, ClinicalProfile, PatientFormData, VisitFormD
 import { useState, useEffect, useCallback } from 'react';
 import { VACCINATION_NAMES, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS, RESIDENCE_TYPES } from '@/lib/constants';
 import { format } from 'date-fns';
+import { useAppointmentData } from './use-appointment-data';
 
 const LOCAL_STORAGE_KEY = 'nephrolite_patients';
 
@@ -195,6 +196,7 @@ const getInitialPatients = (): Patient[] => {
 export function usePatientData() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { deleteAppointmentsForPatient } = useAppointmentData();
 
   useEffect(() => {
     setPatients(getInitialPatients());
@@ -344,9 +346,13 @@ export function usePatientData() {
   const deletePatient = useCallback((id: string): boolean => {
     const updatedPatients = patients.filter(p => p.id !== id);
     if (updatedPatients.length === patients.length) return false;
+    
+    // Also delete associated appointments
+    deleteAppointmentsForPatient(id);
+    
     saveData(updatedPatients);
     return true;
-  }, [patients, saveData]);
+  }, [patients, saveData, deleteAppointmentsForPatient]);
 
   const admitPatient = useCallback((patientId: string): Patient | undefined => {
     const patientIndex = patients.findIndex(p => p.id === patientId);

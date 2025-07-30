@@ -1,0 +1,89 @@
+
+"use client";
+
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Activity, UserPlus, Eye, CalendarPlus } from 'lucide-react';
+import { usePatientData } from '@/hooks/use-patient-data';
+import { useAppointmentData } from '@/hooks/use-appointment-data';
+import { format, parseISO } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useMemo } from 'react';
+
+export function RecentActivity() {
+    const { patients, isLoading: patientsLoading } = usePatientData();
+    const { appointments, isLoading: appointmentsLoading } = useAppointmentData();
+
+    const recentActivities = useMemo(() => {
+        if (patientsLoading || appointmentsLoading) return [];
+
+        const patientActivities = patients.map(p => ({
+            type: 'patient' as const,
+            id: p.id,
+            description: `Patient ${p.name} was registered.`,
+            date: parseISO(p.registrationDate),
+            href: `/patients/${p.id}`,
+        }));
+
+        const appointmentActivities = appointments.map(a => ({
+            type: 'appointment' as const,
+            id: a.id,
+            description: `Appointment for ${a.patientName} scheduled.`,
+            date: parseISO(a.date),
+            href: `/appointments`,
+        }));
+        
+        return [...patientActivities, ...appointmentActivities]
+            .sort((a, b) => b.date.getTime() - a.date.getTime())
+            .slice(0, 5);
+
+    }, [patients, appointments, patientsLoading, appointmentsLoading]);
+
+    if (patientsLoading || appointmentsLoading) {
+        return (
+             <Card>
+                <CardHeader>
+                    <CardTitle className="font-headline flex items-center"><Activity className="mr-2 h-5 w-5 text-primary"/>Recent Activity</CardTitle>
+                    <CardDescription>Latest actions and updates in the system.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+                </CardContent>
+            </Card>
+        )
+    }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="font-headline flex items-center"><Activity className="mr-2 h-5 w-5 text-primary"/>Recent Activity</CardTitle>
+        <CardDescription>Latest actions and updates in the system.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {recentActivities.length > 0 ? (
+            <div className="space-y-4">
+                {recentActivities.map(activity => (
+                    <div key={`${activity.type}-${activity.id}`} className="flex items-center">
+                        <div className="flex-shrink-0">
+                            {activity.type === 'patient' ? <UserPlus className="h-5 w-5 text-green-500" /> : <CalendarPlus className="h-5 w-5 text-blue-500" />}
+                        </div>
+                        <div className="ml-3 flex-grow">
+                            <p className="text-sm">{activity.description}</p>
+                            <p className="text-xs text-muted-foreground">{format(activity.date, 'PPP')}</p>
+                        </div>
+                        <Button asChild variant="ghost" size="sm">
+                            <Link href={activity.href}><Eye className="h-4 w-4" /></Link>
+                        </Button>
+                    </div>
+                ))}
+            </div>
+        ) : (
+            <div className="h-40 flex items-center justify-center text-muted-foreground">
+                <p>No recent activity to display.</p>
+            </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

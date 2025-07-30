@@ -189,6 +189,11 @@ export function useAppointmentData() {
     return updatedAppointments[appointmentIndex];
   }, [appointments, saveData]);
 
+  const deleteAppointmentsForPatient = useCallback((patientId: string) => {
+    const updatedAppointments = appointments.filter(a => a.patientId !== patientId);
+    saveData(updatedAppointments);
+  }, [appointments, saveData]);
+
 
   return {
     appointments,
@@ -199,5 +204,6 @@ export function useAppointmentData() {
     updateAppointmentStatus,
     updateAppointment,
     updateMultipleAppointmentStatuses,
+    deleteAppointmentsForPatient,
   };
 }

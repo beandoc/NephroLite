@@ -74,8 +74,8 @@ export function PatientsTable({ patients, onDeletePatient }: PatientsTableProps)
                 <Button variant="ghost" size="icon" asChild title="View Profile">
                   <Link href={`/patients/${patient.id}`}><Eye className="h-4 w-4" /></Link>
                 </Button>
-                <Button variant="ghost" size="icon" title="Edit Patient" disabled>
-                  <Edit className="h-4 w-4" />
+                <Button variant="ghost" size="icon" asChild title="Edit Patient">
+                  <Link href={`/patients/${patient.id}/edit`}><Edit className="h-4 w-4" /></Link>
                 </Button>
                  <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -87,7 +87,7 @@ export function PatientsTable({ patients, onDeletePatient }: PatientsTableProps)
                     <AlertDialogHeader>
                       <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete patient <span className="font-semibold">{patient.name} ({patient.nephroId})</span> and all associated data.
+                        This action cannot be undone. This will permanently delete patient <span className="font-semibold">{patient.name} ({patient.nephroId})</span> and all associated data, including appointments.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

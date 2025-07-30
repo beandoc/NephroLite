@@ -13,6 +13,7 @@ import { usePatientData } from '@/hooks/use-patient-data';
 import type { Patient } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 // Mock data structure for a single PD patient's detailed data
 interface PdExchange {
@@ -105,6 +106,7 @@ export default function IndividualPDPage() {
   const router = useRouter();
   const params = useParams();
   const { getPatientById, isLoading: patientDataLoading } = usePatientData();
+  const { toast } = useToast();
 
   const [patient, setPatient] = useState<Patient | null>(null);
   const [pdData, setPdData] = useState<MockPdPatientDetail | null>(null);
@@ -118,6 +120,13 @@ export default function IndividualPDPage() {
       setPdData(samplePdDataForPatient[patientId] || null);
     }
   }, [patientId, getPatientById, patientDataLoading]);
+
+  const handleMockAction = (action: string) => {
+    toast({
+        title: "Feature Under Development",
+        description: `${action} functionality is a work-in-progress.`,
+    })
+  }
 
   if (patientDataLoading || !patientId) {
     return (
@@ -156,7 +165,7 @@ export default function IndividualPDPage() {
             <CardContent className="p-6 text-center text-muted-foreground">
                 This patient does not have detailed PD data recorded yet.
                 <br/>
-                <Button variant="link" className="mt-2" disabled>Add PD Data (WIP)</Button>
+                <Button variant="link" className="mt-2" onClick={() => handleMockAction('Adding PD Data')}>Add PD Data</Button>
             </CardContent>
         </Card>
       </div>
@@ -185,7 +194,7 @@ export default function IndividualPDPage() {
             <DetailItem label="PD Start Date" value={pdData.pdStartDate ? format(parseISO(pdData.pdStartDate), 'PPP') : 'N/A'} />
             <DetailItem label="Transfer Set Date" value={pdData.transferSetDate ? format(parseISO(pdData.transferSetDate), 'PPP') : 'N/A'} />
             <div className="md:col-span-2 mt-2">
-                <Button variant="outline" size="sm" disabled><Edit3 className="mr-2 h-4 w-4" />Manage PD Catheter Data (WIP)</Button>
+                <Button variant="outline" size="sm" onClick={() => handleMockAction('Managing PD Catheter Data')}><Edit3 className="mr-2 h-4 w-4" />Manage PD Catheter Data</Button>
                 <p className="text-xs text-muted-foreground mt-1">Log catheter insertion, exit site care, and transfer set changes.</p>
             </div>
           </CardContent>
@@ -227,7 +236,7 @@ export default function IndividualPDPage() {
               <p className="text-muted-foreground">No exchange schedule defined.</p>
             )}
             <div className="mt-4">
-                 <Button variant="outline" size="sm" disabled><Edit3 className="mr-2 h-4 w-4" />Manage PD Prescriptions (WIP)</Button>
+                 <Button variant="outline" size="sm" onClick={() => handleMockAction('Managing PD Prescriptions')}><Edit3 className="mr-2 h-4 w-4" />Manage PD Prescriptions</Button>
                  <p className="text-xs text-muted-foreground mt-1">Enter and track PD solution types, cycles, concentrations, and dwell details.</p>
             </div>
           </CardContent>
@@ -274,7 +283,7 @@ export default function IndividualPDPage() {
               <p className="text-muted-foreground">No peritonitis episodes recorded.</p>
             )}
              <div className="mt-4">
-                <Button variant="outline" size="sm" disabled><Edit3 className="mr-2 h-4 w-4" />Log New Peritonitis Episode (WIP)</Button>
+                <Button variant="outline" size="sm" onClick={() => handleMockAction('Logging Peritonitis Episode')}><Edit3 className="mr-2 h-4 w-4" />Log New Peritonitis Episode</Button>
              </div>
           </CardContent>
         </Card>

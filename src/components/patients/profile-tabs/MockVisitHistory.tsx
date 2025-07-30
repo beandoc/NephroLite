@@ -1,55 +1,70 @@
-
 "use client";
 
-import type { Visit } from '@/lib/types';
-import { useToast } from "@/hooks/use-toast";
-import { format } from 'date-fns';
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'; 
+import { PageHeader } from '@/components/shared/page-header';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { CalendarDays, MessageSquare, Eye, Edit, Copy, Trash2, PlusCircle } from 'lucide-react';
-import { ClinicalVisitDetails } from '@/components/visits/ClinicalVisitDetails';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Users, BellDot, ShieldCheck } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
-interface MockVisitHistoryProps {
-    visits: Visit[];
-    onAddNewVisit: () => void;
-}
+export default function SystemSettingsPage() {
+    const { toast } = useToast();
 
-export const MockVisitHistory = ({ visits, onAddNewVisit }: MockVisitHistoryProps) => {
-  const { toast } = useToast();
-  
-  const handleVisitAction = (action: string, visitId: string) => {
-     toast({ title: "Feature Under Development", description: `${action} functionality for visit ${visitId} is under development.` });
-  };
-
+    const handleAction = (feature: string) => {
+        toast({
+            title: "Feature Under Development",
+            description: `The ${feature} feature is a work in progress.`
+        })
+    }
   return (
-    <>
-      <div className="flex justify-end mb-4">
-        <Button onClick={onAddNewVisit}><PlusCircle className="mr-2 h-4 w-4"/>Add New Visit</Button>
+    <div className="container mx-auto py-2">
+      <PageHeader title="System Settings" description="Configure application settings and preferences." />
+      <div className="grid md:grid-cols-2 gap-6 mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center"><Users className="mr-2 h-5 w-5 text-primary"/>User Management</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">User role and permission settings.</p>
+            <Button onClick={() => handleAction('User Management')}>Manage Users</Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center"><BellDot className="mr-2 h-5 w-5 text-primary"/>Notification Preferences</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="email-notifications" className="flex flex-col space-y-1">
+                <span>Email Notifications</span>
+                <span className="font-normal leading-snug text-muted-foreground">
+                  Receive email updates for critical alerts.
+                </span>
+              </Label>
+              <Switch id="email-notifications" />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="sms-notifications" className="flex flex-col space-y-1">
+                <span>SMS Notifications</span>
+                <span className="font-normal leading-snug text-muted-foreground">
+                  Receive SMS for urgent appointment changes.
+                </span>
+              </Label>
+              <Switch id="sms-notifications" />
+            </div>
+          </CardContent>
+        </Card>
+         <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center"><ShieldCheck className="mr-2 h-5 w-5 text-primary"/>Security & Audit Logs</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">Access audit logs and security settings.</p>
+            <Button onClick={() => handleAction('Audit Logs')}>View Audit Logs</Button>
+          </CardContent>
+        </Card>
       </div>
-      <Accordion type="single" collapsible className="w-full">
-        {visits.map(visit => (
-          <AccordionItem value={visit.id} key={visit.id} className="border-b last:border-b-0 rounded-md mb-2 shadow-sm bg-card">
-            <AccordionTrigger className="hover:bg-muted/50 px-4 py-3 text-left rounded-t-md">
-              <div className="flex items-center gap-4 w-full">
-                <CalendarDays className="w-5 h-5 text-primary flex-shrink-0"/>
-                <div className="flex-grow">
-                  <p className="font-medium">{format(new Date(visit.date), 'PPP')} - <span className="font-semibold">{visit.visitType}</span></p>
-                  <p className="text-sm text-muted-foreground">Remark: {visit.visitRemark}</p>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-0 sm:px-4 pt-2 pb-4 bg-card rounded-b-md">
-              <ClinicalVisitDetails visit={visit} />
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-        {visits.length === 0 && (
-          <Card className="flex items-center justify-center h-32 border-dashed">
-            <p className="text-muted-foreground text-center py-4">No visit history recorded.</p>
-          </Card>
-        )}
-      </Accordion>
-    </>
+    </div>
   );
-};
+}

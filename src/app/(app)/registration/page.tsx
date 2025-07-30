@@ -108,7 +108,7 @@ export default function RegistrationPage() {
               Search Existing Patient
             </CardTitle>
             <CardDescription>
-              Find an existing patient to view their records and visit history. New patient registration is temporarily disabled for system upgrades.
+              Find an existing patient by their ID or name to view their records and visit history. To register a new patient, use the "Patient Management" page.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">

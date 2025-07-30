@@ -60,7 +60,7 @@ export default function PDModulePage() {
                   <p className="text-muted-foreground">No PD patients found.</p>
                 </div>
               )}
-              <Button variant="outline" className="w-full mt-3" disabled>
+              <Button variant="outline" className="w-full mt-3">
                 View Full PD Roster
               </Button>
             </div>
@@ -148,5 +148,3 @@ export default function PDModulePage() {
     </div>
   );
 }
-
-    
