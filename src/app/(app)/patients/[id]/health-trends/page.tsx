@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ArrowLeft, TrendingUp, AlertTriangle, Heart, Activity, CalendarClock, LineChart as LineChartIcon, BarChart3 } from 'lucide-react';
 import { EgfrTrendChart } from '@/components/charts/EgfrTrendChart';
 import { MedicationTimeline } from '@/components/patients/MedicationTimeline';
+import { PatientEvents } from '@/components/patients/PatientEvents';
 
 interface PredictionCardProps {
   title: string;
@@ -71,29 +72,31 @@ export default function PatientHealthTrendsPage() {
         </CardContent>
       </Card>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="font-headline flex items-center"><LineChartIcon className="mr-2 h-5 w-5 text-primary"/>eGFR Trend</CardTitle>
-          <CardDescription>Chart showing eGFR values over time with medication periods highlighted.</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <EgfrTrendChart />
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center"><LineChartIcon className="mr-2 h-5 w-5 text-primary"/>eGFR Trend</CardTitle>
+            <CardDescription>Chart showing eGFR values over time with medication periods highlighted.</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <EgfrTrendChart />
+          </CardContent>
+        </Card>
 
-       <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="font-headline flex items-center"><BarChart3 className="mr-2 h-5 w-5 text-primary"/>Albuminuria / 24h Protein Trend</CardTitle>
-          <CardDescription>Visualizing changes in proteinuria, with medication periods highlighted.</CardDescription>
-        </CardHeader>
-        <CardContent className="h-80 flex items-center justify-center border-2 border-dashed rounded-lg">
-           <p className="text-muted-foreground text-center">
-              Proteinuria trend chart placeholder.
-              <br />
-              (Functionality under development)
-            </p>
-        </CardContent>
-      </Card>
+         <Card>
+          <CardHeader>
+            <CardTitle className="font-headline flex items-center"><BarChart3 className="mr-2 h-5 w-5 text-primary"/>Albuminuria / 24h Protein Trend</CardTitle>
+            <CardDescription>Visualizing changes in proteinuria, with medication periods highlighted.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-80 flex items-center justify-center border-2 border-dashed rounded-lg">
+             <p className="text-muted-foreground text-center">
+                Proteinuria trend chart placeholder.
+                <br />
+                (Functionality under development)
+              </p>
+          </CardContent>
+        </Card>
+      </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
@@ -111,8 +114,8 @@ export default function PatientHealthTrendsPage() {
             <CardTitle className="font-headline flex items-center"><CalendarClock className="mr-2 h-5 w-5 text-primary"/>Patient Events</CardTitle>
             <CardDescription>Timeline of significant patient events.</CardDescription>
           </CardHeader>
-          <CardContent className="h-64 flex items-center justify-center border-2 border-dashed rounded-lg">
-             <p className="text-muted-foreground">Patient events timeline placeholder - (Under Development)</p>
+          <CardContent>
+            <PatientEvents />
           </CardContent>
         </Card>
       </div>
