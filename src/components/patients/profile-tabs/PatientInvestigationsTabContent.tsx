@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
-import { INVESTIGATION_MASTER_LIST, INVESTIGATION_PANELS } from '@/lib/constants';
+import { INVESTIGATION_MASTER_LIST, INVESTIGATION_PANELS, FREQUENTLY_USED_INVESTIGATIONS } from '@/lib/constants';
 import type { InvestigationRecord, InvestigationTest } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -17,12 +17,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Notebook, Edit, Trash2, MoreVertical, ChevronsUpDown, Package, TestTube } from 'lucide-react';
+import { PlusCircle, Notebook, Edit, Trash2, MoreVertical, ChevronsUpDown, Package, TestTube, Star } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 
 interface PatientInvestigationsTabContentProps {
@@ -187,6 +189,39 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     setIsSearchPopoverOpen(false);
   };
 
+  const handleFrequentInvestigationToggle = (item: { type: 'test' | 'panel'; id: string }) => {
+    let testIdsToToggle: string[] = [];
+    if (item.type === 'test') {
+        testIdsToToggle.push(item.id);
+    } else {
+        const panel = INVESTIGATION_PANELS.find(p => p.id === item.id);
+        if (panel) {
+            testIdsToToggle = panel.testIds;
+        }
+    }
+
+    if (testIdsToToggle.length === 0) return;
+
+    const testsInForm = fields.map(f => f.id);
+    const shouldAdd = testIdsToToggle.some(id => !testsInForm.includes(id));
+
+    if (shouldAdd) {
+        const testsToAdd = INVESTIGATION_MASTER_LIST
+            .filter(t => testIdsToToggle.includes(t.id) && !testsInForm.includes(t.id))
+            .map(t => ({ ...t, result: '', unit: '', normalRange: '' }));
+        append(testsToAdd);
+    } else {
+        const testIndicesToRemove: number[] = [];
+        fields.forEach((field, index) => {
+            if (testIdsToToggle.includes(field.id)) {
+                testIndicesToRemove.push(index);
+            }
+        });
+        // Remove in reverse order to avoid index shifting issues
+        testIndicesToRemove.reverse().forEach(index => remove(index));
+    }
+  };
+
 
   return (
     <>
@@ -232,40 +267,65 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                   <CardDescription>Add tests or panels using the search box below, then enter the results.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Popover open={isSearchPopoverOpen} onOpenChange={setIsSearchPopoverOpen}>
-                      <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full justify-start mb-4">
-                              <PlusCircle className="mr-2 h-4 w-4" /> Add Test or Panel...
-                          </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                          <Command>
-                              <CommandInput placeholder="Search for tests or panels..." />
-                              <CommandList>
-                                  <CommandEmpty>No results found.</CommandEmpty>
-                                  <CommandGroup heading={<div className="flex items-center"><Package className="mr-2 h-4 w-4"/>Panels</div>}>
-                                      {INVESTIGATION_PANELS.map(panel => (
-                                          <CommandItem key={panel.id} onSelect={() => {
-                                              const tests = INVESTIGATION_MASTER_LIST.filter(t => panel.testIds.includes(t.id));
-                                              addTestsToForm(tests.map(t => ({ id: t.id, name: t.name, group: t.group, result: '', unit: '', normalRange: ''})));
-                                          }}>
-                                              {panel.name}
-                                          </CommandItem>
-                                      ))}
-                                  </CommandGroup>
-                                   <CommandGroup heading={<div className="flex items-center"><TestTube className="mr-2 h-4 w-4"/>Individual Tests</div>}>
-                                       {INVESTIGATION_MASTER_LIST.map(test => (
-                                          <CommandItem key={test.id} onSelect={() => addTestsToForm([{...test, result: '', unit: '', normalRange: ''}])}>
-                                              {test.name}
-                                          </CommandItem>
-                                      ))}
-                                  </CommandGroup>
-                              </CommandList>
-                          </Command>
-                      </PopoverContent>
-                  </Popover>
+                    <div className="space-y-4">
+                        <div>
+                            <h4 className="text-sm font-medium mb-2 flex items-center"><Star className="mr-2 h-4 w-4 text-amber-500"/>Quick Investigations</h4>
+                             <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 p-3 border rounded-md bg-muted/30">
+                                {FREQUENTLY_USED_INVESTIGATIONS.map(item => {
+                                    const testIdsInPanel = item.type === 'panel'
+                                        ? INVESTIGATION_PANELS.find(p => p.id === item.id)?.testIds || []
+                                        : [item.id];
+                                    const isSelected = testIdsInPanel.every(id => fields.some(f => f.id === id));
+                                    
+                                    return (
+                                        <div key={`quick-${item.id}`} className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={`quick-chk-${item.id}`}
+                                                checked={isSelected}
+                                                onCheckedChange={() => handleFrequentInvestigationToggle(item)}
+                                            />
+                                            <Label htmlFor={`quick-chk-${item.id}`} className="font-normal cursor-pointer text-xs sm:text-sm">{item.name}</Label>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
 
-                  <div className="space-y-4">
+                        <Popover open={isSearchPopoverOpen} onOpenChange={setIsSearchPopoverOpen}>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" className="w-full justify-start">
+                                    <PlusCircle className="mr-2 h-4 w-4" /> Add More Tests or Panels...
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                <Command>
+                                    <CommandInput placeholder="Search for tests or panels..." />
+                                    <CommandList>
+                                        <CommandEmpty>No results found.</CommandEmpty>
+                                        <CommandGroup heading={<div className="flex items-center"><Package className="mr-2 h-4 w-4"/>Panels</div>}>
+                                            {INVESTIGATION_PANELS.map(panel => (
+                                                <CommandItem key={panel.id} onSelect={() => {
+                                                    const tests = INVESTIGATION_MASTER_LIST.filter(t => panel.testIds.includes(t.id));
+                                                    addTestsToForm(tests.map(t => ({ ...t, result: '', unit: '', normalRange: ''})));
+                                                }}>
+                                                    {panel.name}
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                        <CommandGroup heading={<div className="flex items-center"><TestTube className="mr-2 h-4 w-4"/>Individual Tests</div>}>
+                                            {INVESTIGATION_MASTER_LIST.map(test => (
+                                                <CommandItem key={test.id} onSelect={() => addTestsToForm([{...test, result: '', unit: '', normalRange: ''}])}>
+                                                    {test.name}
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+
+                  <div className="space-y-4 mt-4">
                     {fields.map((field, index) => {
                       const isNarrative = NARRATIVE_GROUPS.includes(field.group) || NARRATIVE_TEST_NAMES.includes(field.name);
                       return (
