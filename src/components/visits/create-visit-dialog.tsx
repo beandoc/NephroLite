@@ -51,7 +51,7 @@ interface CreateVisitDialogProps {
   onOpenChange: (open: boolean) => void;
   patient: Patient;
   onVisitCreated: (patientId: string) => void;
-  onDialogClose: () => void;
+  onDialogClose?: () => void;
 }
 
 export function CreateVisitDialog({
@@ -72,7 +72,9 @@ export function CreateVisitDialog({
   useEffect(() => {
     if (!isOpen) {
       form.reset(defaultValues);
-      onDialogClose();
+      if (onDialogClose) {
+        onDialogClose();
+      }
     }
   }, [isOpen, form, onDialogClose]);
 

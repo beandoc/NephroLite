@@ -52,6 +52,7 @@ export function PatientVisitsTabContent({ patient }: PatientVisitsTabContentProp
           onOpenChange={setIsVisitDialogOpen}
           patient={patient}
           onVisitCreated={handleVisitCreated}
+          onDialogClose={() => setIsVisitDialogOpen(false)}
         />
       )}
     </>
