@@ -5,6 +5,7 @@ import { Users, Activity, FlaskConical, Hospital } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { usePatientData } from "@/hooks/use-patient-data";
 import { Skeleton } from "@/components/ui/skeleton"; 
+import Link from "next/link";
 
 type MetricDetail = {
   key: string;
@@ -15,6 +16,7 @@ type MetricDetail = {
   iconColorClass: string; 
   borderColorClass: string; 
   loading?: boolean;
+  href: string;
 };
 
 export function OverviewMetrics() {
@@ -50,7 +52,8 @@ export function OverviewMetrics() {
       icon: Users,
       iconColorClass: "text-blue-500",
       borderColorClass: "border-blue-500",
-      loading: patientsLoading || randomIncrease === null
+      loading: patientsLoading || randomIncrease === null,
+      href: "/patients"
     },
     { 
       key: "total-ipd",
@@ -60,7 +63,8 @@ export function OverviewMetrics() {
       icon: Hospital,
       iconColorClass: "text-red-500",
       borderColorClass: "border-red-500",
-      loading: patientsLoading
+      loading: patientsLoading,
+      href: "/patients"
     },
     { 
       key: "dialysis",
@@ -70,7 +74,8 @@ export function OverviewMetrics() {
       icon: Activity, 
       iconColorClass: "text-green-500",
       borderColorClass: "border-green-500",
-      loading: false
+      loading: false,
+      href: "/appointments"
     },
     { 
       key: "labs",
@@ -80,39 +85,41 @@ export function OverviewMetrics() {
       icon: FlaskConical, 
       iconColorClass: "text-purple-500",
       borderColorClass: "border-purple-500",
-      loading: false 
+      loading: false,
+      href: "/investigations"
     },
   ];
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {metrics.map((metric) => (
-        <Card 
-          key={metric.key} 
-          className={`shadow-lg hover:shadow-xl transition-shadow duration-300 border-l-4 ${metric.borderColorClass}`}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground font-headline">
-              {metric.title}
-            </CardTitle>
-            <metric.icon className={`h-5 w-5 ${metric.iconColorClass}`} />
-          </CardHeader>
-          <CardContent>
-            {metric.loading ? (
-                 <Skeleton className="h-8 w-1/2 rounded-md my-1" />
-            ) : (
-              <div className="text-3xl font-bold">{metric.value}</div>
-            )}
-            
-            {metric.loading && metric.title.includes("OPD") ? (
-                <Skeleton className="h-3 w-3/4 mt-1 rounded-md" />
-            ) : metric.subtitle ? (
-              <p className="text-xs text-muted-foreground">{metric.subtitle}</p>
-            ) : (
-              <div className="h-[1rem] mt-1"></div> 
-            )}
-          </CardContent>
-        </Card>
+        <Link href={metric.href} key={metric.key} className="hover:opacity-90 transition-opacity">
+            <Card 
+            className={`shadow-lg hover:shadow-xl transition-shadow duration-300 border-l-4 ${metric.borderColorClass} h-full`}
+            >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground font-headline">
+                {metric.title}
+                </CardTitle>
+                <metric.icon className={`h-5 w-5 ${metric.iconColorClass}`} />
+            </CardHeader>
+            <CardContent>
+                {metric.loading ? (
+                    <Skeleton className="h-8 w-1/2 rounded-md my-1" />
+                ) : (
+                <div className="text-3xl font-bold">{metric.value}</div>
+                )}
+                
+                {metric.loading && metric.title.includes("OPD") ? (
+                    <Skeleton className="h-3 w-3/4 mt-1 rounded-md" />
+                ) : metric.subtitle ? (
+                <p className="text-xs text-muted-foreground">{metric.subtitle}</p>
+                ) : (
+                <div className="h-[1rem] mt-1"></div> 
+                )}
+            </CardContent>
+            </Card>
+        </Link>
       ))}
     </div>
   );
