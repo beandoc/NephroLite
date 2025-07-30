@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ArrowLeft, TrendingUp, AlertTriangle, Heart, Activity, CalendarClock, LineChart as LineChartIcon, BarChart3 } from 'lucide-react';
 import { EgfrTrendChart } from '@/components/charts/EgfrTrendChart';
+import { ProteinuriaTrendChart } from '@/components/charts/ProteinuriaTrendChart';
 import { MedicationTimeline } from '@/components/patients/MedicationTimeline';
 import { PatientEvents } from '@/components/patients/PatientEvents';
 
@@ -88,12 +89,8 @@ export default function PatientHealthTrendsPage() {
             <CardTitle className="font-headline flex items-center"><BarChart3 className="mr-2 h-5 w-5 text-primary"/>Albuminuria / 24h Protein Trend</CardTitle>
             <CardDescription>Visualizing changes in proteinuria, with medication periods highlighted.</CardDescription>
           </CardHeader>
-          <CardContent className="h-80 flex items-center justify-center border-2 border-dashed rounded-lg">
-             <p className="text-muted-foreground text-center">
-                Proteinuria trend chart placeholder.
-                <br />
-                (Functionality under development)
-              </p>
+          <CardContent className="pt-4">
+             <ProteinuriaTrendChart />
           </CardContent>
         </Card>
       </div>
