@@ -36,7 +36,7 @@ import { useEffect } from 'react';
 const patientFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   dob: z.string().min(1, "Date of birth is required."),
-  gender: z.string().min(1, "Gender is required."),
+  gender: z.enum(["Male", "Female"]),
   contact: z.string().optional(),
   email: z.string().email("Invalid email address.").optional().or(z.literal('')),
   whatsappNumber: z.string().optional(),
@@ -57,7 +57,7 @@ const patientFormSchema = z.object({
 const defaultFormValues: PatientFormData = {
   name: "",
   dob: "",
-  gender: "",
+  gender: "Male",
   contact: "",
   email: "",
   whatsappNumber: "",

@@ -18,14 +18,16 @@ export default function NewPatientPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVisitDialogOpen, setIsVisitDialogOpen] = useState(false);
   const [newlyCreatedPatient, setNewlyCreatedPatient] = useState<Patient | null>(null);
-  const [formClearKey, setFormClearKey] = useState(0);
+
+  // This is a key to force re-mounting and thus clearing the form
+  const [patientFormKey, setPatientFormKey] = useState(0);
 
   const handleSubmit = (data: PatientFormData) => {
     setIsSubmitting(true);
     try {
       const newPatient = addPatient(data);
       setNewlyCreatedPatient(newPatient);
-
+      
       toast({
         title: "Patient Registered",
         description: `${newPatient.name} (${newPatient.nephroId}) has been added.`,
@@ -36,9 +38,9 @@ export default function NewPatientPage() {
         ),
         duration: 10000, 
       });
-      
-      // Increment key to trigger form reset in child
-      setFormClearKey(prev => prev + 1);
+
+      // Reset the form for the next entry by changing its key
+      setPatientFormKey(prevKey => prevKey + 1);
 
     } catch (error) {
       console.error("Failed to register patient:", error);
@@ -61,11 +63,6 @@ export default function NewPatientPage() {
     router.push(`/patients/${patientId}`);
   };
 
-  const handleDialogClose = () => {
-    setNewlyCreatedPatient(null);
-  };
-
-
   return (
     <div className="container mx-auto py-2">
       <PageHeader 
@@ -73,7 +70,7 @@ export default function NewPatientPage() {
         description="Fill in the demographic and contact details for the new patient." 
       />
       <div className="mt-6">
-        <PatientForm key={formClearKey} onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+        <PatientForm key={patientFormKey} onSubmit={handleSubmit} isSubmitting={isSubmitting} />
       </div>
 
       {newlyCreatedPatient && (
@@ -82,7 +79,7 @@ export default function NewPatientPage() {
           onOpenChange={setIsVisitDialogOpen}
           patient={newlyCreatedPatient}
           onVisitCreated={handleVisitCreated}
-          onDialogClose={handleDialogClose}
+          onDialogClose={() => setNewlyCreatedPatient(null)}
         />
       )}
     </div>
