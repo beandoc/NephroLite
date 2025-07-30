@@ -268,23 +268,29 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
             )}
           />
 
+           <Card>
+              <CardHeader><CardTitle>Vitals</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <FormField control={form.control} name="height" render={({ field }) => ( <FormItem><FormLabel>Height (cm)</FormLabel><FormControl><Input type="number" placeholder="e.g., 175" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="weight" render={({ field }) => ( <FormItem><FormLabel>Weight (kg)</FormLabel><FormControl><Input type="number" placeholder="e.g., 70" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="idealBodyWeight" render={({ field }) => ( <FormItem><FormLabel>Ideal Wt (kg)</FormLabel><FormControl><Input placeholder="Calculated" {...field} readOnly /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="bmi" render={({ field }) => ( <FormItem><FormLabel>BMI (kg/m²)</FormLabel><FormControl><Input placeholder="Calculated" {...field} readOnly /></FormControl><FormMessage /></FormItem> )} />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t mt-4">
+                      <FormField control={form.control} name="pulse" render={({ field }) => ( <FormItem><FormLabel>Pulse (/min)</FormLabel><FormControl><Input type="number" placeholder="e.g., 72" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="systolicBP" render={({ field }) => ( <FormItem><FormLabel>Systolic BP (mmHg)</FormLabel><FormControl><Input type="number" placeholder="e.g., 120" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="diastolicBP" render={({ field }) => ( <FormItem><FormLabel>Diastolic BP (mmHg)</FormLabel><FormControl><Input type="number" placeholder="e.g., 80" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField control={form.control} name="respiratoryRate" render={({ field }) => ( <FormItem><FormLabel>Resp. Rate (/min)</FormLabel><FormControl><Input type="number" placeholder="e.g., 16" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  </div>
+              </CardContent>
+          </Card>
+
           <Card>
-            <CardHeader><CardTitle>Examination</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Examination Findings</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <FormField control={form.control} name="height" render={({ field }) => ( <FormItem><FormLabel>Height (cm)</FormLabel><FormControl><Input type="number" placeholder="e.g., 175" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                <FormField control={form.control} name="weight" render={({ field }) => ( <FormItem><FormLabel>Weight (kg)</FormLabel><FormControl><Input type="number" placeholder="e.g., 70" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                <FormField control={form.control} name="idealBodyWeight" render={({ field }) => ( <FormItem><FormLabel>Ideal Wt (kg)</FormLabel><FormControl><Input placeholder="Calculated" {...field} readOnly /></FormControl><FormMessage /></FormItem> )} />
-                <FormField control={form.control} name="bmi" render={({ field }) => ( <FormItem><FormLabel>BMI (kg/m²)</FormLabel><FormControl><Input placeholder="Calculated" {...field} readOnly /></FormControl><FormMessage /></FormItem> )} />
-              </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t mt-4">
-                <FormField control={form.control} name="pulse" render={({ field }) => ( <FormItem><FormLabel>Pulse (/min)</FormLabel><FormControl><Input type="number" placeholder="e.g., 72" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                <FormField control={form.control} name="systolicBP" render={({ field }) => ( <FormItem><FormLabel>Systolic BP (mmHg)</FormLabel><FormControl><Input type="number" placeholder="e.g., 120" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                <FormField control={form.control} name="diastolicBP" render={({ field }) => ( <FormItem><FormLabel>Diastolic BP (mmHg)</FormLabel><FormControl><Input type="number" placeholder="e.g., 80" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  <FormField control={form.control} name="respiratoryRate" render={({ field }) => ( <FormItem><FormLabel>Resp. Rate (/min)</FormLabel><FormControl><Input type="number" placeholder="e.g., 16" {...field} /></FormControl><FormMessage /></FormItem> )} />
-              </div>
-              <FormField control={form.control} name="generalExamination" render={({ field }) => ( <FormItem><FormLabel>General Examination Findings</FormLabel><FormControl><Textarea rows={3} placeholder="Pallor, icterus, clubbing, etc." {...field} /></FormControl><FormMessage /></FormItem> )} />
-              <FormField control={form.control} name="systemicExamination" render={({ field }) => ( <FormItem><FormLabel>Systemic Examination Findings</FormLabel><FormControl><Textarea rows={3} placeholder="CVS, Respiratory, Abdomen, etc." {...field} /></FormControl><FormMessage /></FormItem> )} />
+              <FormField control={form.control} name="generalExamination" render={({ field }) => ( <FormItem><FormLabel>General Examination</FormLabel><FormControl><Textarea rows={3} placeholder="Pallor, icterus, clubbing, etc." {...field} /></FormControl><FormMessage /></FormItem> )} />
+              <FormField control={form.control} name="systemicExamination" render={({ field }) => ( <FormItem><FormLabel>Systemic Examination</FormLabel><FormControl><Textarea rows={3} placeholder="CVS, Respiratory, Abdomen, etc." {...field} /></FormControl><FormMessage /></FormItem> )} />
             </CardContent>
           </Card>
 
@@ -403,3 +409,5 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
     </div>
   );
 }
+
+    
