@@ -26,13 +26,25 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 interface AppointmentsTableProps {
   appointments: Appointment[];
-  onUpdateStatus: (id: string, status: 'Completed' | 'Cancelled') => void;
+  onUpdateStatus: (id: string, status: Appointment['status']) => void;
   // onEditAppointment: (appointment: Appointment) => void; // For future edit functionality
 }
+
+const getStatusBadgeVariant = (status: Appointment['status']) => {
+    switch (status) {
+      case 'Scheduled': return 'default';
+      case 'Completed': return 'secondary';
+      case 'Cancelled': return 'destructive';
+      case 'Waiting': return 'outline'; 
+      case 'Not Showed': return 'destructive';
+      case 'Admitted': return 'default'; 
+      default: return 'default';
+    }
+  };
 
 export function AppointmentsTable({ appointments, onUpdateStatus }: AppointmentsTableProps) {
   const { toast } = useToast();
@@ -69,7 +81,7 @@ export function AppointmentsTable({ appointments, onUpdateStatus }: Appointments
         <TableBody>
           {sortedAppointments.map((appointment) => (
             <TableRow key={appointment.id} className={appointment.status === 'Cancelled' ? 'opacity-60' : ''}>
-              <TableCell>{format(new Date(appointment.date), 'PPP')}</TableCell>
+              <TableCell>{format(parseISO(appointment.date), 'PPP')}</TableCell>
               <TableCell>{appointment.time}</TableCell>
               <TableCell>
                 <Link href={`/patients/${appointment.patientId}`} className="hover:underline text-primary">
@@ -80,11 +92,7 @@ export function AppointmentsTable({ appointments, onUpdateStatus }: Appointments
               <TableCell>{appointment.doctorName}</TableCell>
               <TableCell>
                 <Badge 
-                  variant={
-                    appointment.status === 'Scheduled' ? 'default' : 
-                    appointment.status === 'Completed' ? 'secondary' : // Using secondary for completed
-                    'destructive' // Using destructive for cancelled
-                  }
+                  variant={getStatusBadgeVariant(appointment.status)}
                 >
                   {appointment.status}
                 </Badge>

@@ -21,6 +21,7 @@ import { Badge } from "../ui/badge";
 
 
 const diagnosisSchema = z.object({
+  id: z.string().optional(),
   name: z.string().min(1, "Diagnosis name is required"),
   icdName: z.string().optional(),
   icdCode: z.string().optional(),
@@ -36,7 +37,7 @@ const medicationSchema = z.object({
 
 
 const clinicalVisitSchema = z.object({
-  diagnosis: diagnosisSchema.optional(), // Changed from z.array to single object
+  diagnosis: diagnosisSchema.optional(),
   medications: z.array(medicationSchema),
   history: z.string().optional(),
   height: z.string().optional(),
@@ -70,7 +71,7 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
   const form = useForm<ClinicalVisitFormData>({
     resolver: zodResolver(clinicalVisitSchema),
     defaultValues: {
-      diagnosis: visit.diagnoses?.[0] || { name: "", icdCode: "", icdName: "" },
+      diagnosis: visit.diagnoses?.[0] || { id: "", name: "", icdCode: "", icdName: "" },
       medications: visit.clinicalData?.medications?.map(m => ({ ...m, id: m.id || crypto.randomUUID() })) || [],
       history: visit.clinicalData?.history || "",
       height: visit.clinicalData?.height || "",
@@ -164,7 +165,7 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
       ...template,
       ...existingVitals,
       medications: template.medications.map(med => ({ ...med, id: med.id || crypto.randomUUID() })),
-      diagnosis: template.diagnoses?.[0] || { name: "", icdCode: "", icdName: "" }
+      diagnosis: template.diagnoses?.[0] || { id: "", name: "", icdCode: "", icdName: "" }
     });
     
     setAvailableDiagnoses(template.diagnoses || []);
@@ -214,7 +215,7 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
                    {availableDiagnoses.map((diag) => (
                      <Button
                        type="button"
-                       key={diag.icdCode || diag.name}
+                       key={diag.id || diag.icdCode || diag.name}
                        variant={selectedDiagnosis?.name === diag.name ? "default" : "outline"}
                        className="w-full justify-start text-left h-auto py-2"
                        onClick={() => form.setValue('diagnosis', diag)}
@@ -317,33 +318,34 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
                               </TableRow>
                           </TableHeader>
                           <TableBody>
-                              {medicationFields.map((field, index) => (
-                                  <TableRow key={field.id}>
-                                      <TableCell>
-                                          <FormField control={form.control} name={`medications.${index}.name`} render={({ field }) => <Input placeholder="Medication" {...field} />} />
-                                      </TableCell>
-                                      <TableCell>
-                                          <FormField control={form.control} name={`medications.${index}.dosage`} render={({ field }) => <Input placeholder="e.g., 40mg" {...field} />} />
-                                      </TableCell>
-                                      <TableCell>
-                                          <FormField control={form.control} name={`medications.${index}.frequency`} render={({ field }) => <Input placeholder="e.g., OD" {...field} />} />
-                                      </TableCell>
+                              {medicationFields.length > 0 ? (
+                                medicationFields.map((field, index) => (
+                                    <TableRow key={field.id}>
                                         <TableCell>
-                                          <FormField control={form.control} name={`medications.${index}.instructions`} render={({ field }) => <Input placeholder="e.g., After food" {...field} />} />
-                                      </TableCell>
-                                      <TableCell>
-                                          <Button type="button" variant="destructive" size="icon" onClick={() => removeMedication(index)}>
-                                              <Trash2 className="h-4 w-4" />
-                                          </Button>
-                                      </TableCell>
-                                  </TableRow>
-                              ))}
-                              {medicationFields.length === 0 && (
-                                    <TableRow>
-                                      <TableCell colSpan={5} className="text-center text-muted-foreground">
-                                          No medications added. Load a template or add manually.
-                                      </TableCell>
-                                  </TableRow>
+                                            <FormField control={form.control} name={`medications.${index}.name`} render={({ field }) => <Input placeholder="Medication" {...field} />} />
+                                        </TableCell>
+                                        <TableCell>
+                                            <FormField control={form.control} name={`medications.${index}.dosage`} render={({ field }) => <Input placeholder="e.g., 40mg" {...field} />} />
+                                        </TableCell>
+                                        <TableCell>
+                                            <FormField control={form.control} name={`medications.${index}.frequency`} render={({ field }) => <Input placeholder="e.g., OD" {...field} />} />
+                                        </TableCell>
+                                          <TableCell>
+                                            <FormField control={form.control} name={`medications.${index}.instructions`} render={({ field }) => <Input placeholder="e.g., After food" {...field} />} />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button type="button" variant="destructive" size="icon" onClick={() => removeMedication(index)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                              ) : (
+                                  <TableRow>
+                                    <TableCell colSpan={5} className="text-center text-muted-foreground h-24">
+                                        No medications added. Load a template or add manually.
+                                    </TableCell>
+                                </TableRow>
                               )}
                           </TableBody>
                       </Table>

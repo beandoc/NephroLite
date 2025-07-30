@@ -1,7 +1,7 @@
 
 "use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Activity, FlaskConical, AlertTriangle, TrendingUp, CalendarClock, FileText, Hospital, Building } from "lucide-react"; 
+import { Users, Activity, FlaskConical, Hospital } from "lucide-react"; 
 import { useState, useEffect, useMemo } from "react";
 import { usePatientData } from "@/hooks/use-patient-data";
 import { Skeleton } from "@/components/ui/skeleton"; 
@@ -23,7 +23,6 @@ export function OverviewMetrics() {
   
   const [dialysisSessions] = useState(42); // Mock
   const [labResults] = useState(18); // Mock
-  const [criticalAlerts] = useState(3); // Mock
 
   useEffect(() => {
     // This effect now only runs once on the client to generate a random number.
@@ -105,12 +104,12 @@ export function OverviewMetrics() {
               <div className="text-3xl font-bold">{metric.value}</div>
             )}
             
-            {metric.loading && metric.title === "Total OPD Patients" ? (
+            {metric.loading && metric.title.includes("OPD") ? (
                 <Skeleton className="h-3 w-3/4 mt-1 rounded-md" />
             ) : metric.subtitle ? (
               <p className="text-xs text-muted-foreground">{metric.subtitle}</p>
             ) : (
-              <div className="h-3 mt-1"></div> 
+              <div className="h-[1rem] mt-1"></div> 
             )}
           </CardContent>
         </Card>

@@ -39,6 +39,8 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
     setPatient(initialPatient);
   }, [initialPatient]);
 
+  const hasServiceDetails = patient.serviceName || patient.serviceNumber || patient.rank || patient.unitName || patient.formation;
+
   return (
     <Tabs defaultValue="overview" className="w-full">
       <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6">
@@ -49,14 +51,10 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
         <TabsTrigger value="healthTrends"><TrendingUp className="w-4 h-4 mr-2 sm:hidden md:inline-block"/>Health Trends</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="overview">
-        <div className="space-y-6">
-          <DemographicsCard patient={patient} onUpdate={refreshPatientData} />
-          { (patient.serviceName || patient.serviceNumber || patient.rank || patient.unitName || patient.formation) && (
-            <ServiceDetailsCard patient={patient} />
-          )}
-          <ClinicalProfileCard patient={patient} />
-        </div>
+      <TabsContent value="overview" className="space-y-6">
+        <DemographicsCard patient={patient} onUpdate={refreshPatientData} />
+        {hasServiceDetails && <ServiceDetailsCard patient={patient} />}
+        <ClinicalProfileCard patient={patient} />
       </TabsContent>
 
       <TabsContent value="visits">

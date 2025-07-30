@@ -37,7 +37,7 @@ export default function NewPatientPage() {
       });
       
       // We don't redirect immediately. We wait for the user to create a visit.
-      // Reset form state, but keep the page open.
+      // Reset form state by letting the form component handle it after successful submission.
       setIsSubmitting(false);
 
     } catch (error) {

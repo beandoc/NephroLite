@@ -54,26 +54,28 @@ const patientFormSchema = z.object({
   }),
 });
 
+const defaultFormValues: PatientFormData = {
+  name: "",
+  dob: "",
+  gender: "",
+  contact: "",
+  email: "",
+  whatsappNumber: "",
+  uhid: "",
+  address: { street: "", city: "", state: "", pincode: "" },
+  guardian: { name: "", relation: "", contact: "" },
+};
 
 interface PatientFormProps {
   onSubmit: (data: PatientFormData) => void;
   isSubmitting?: boolean;
+  onFormClear?: () => void;
 }
 
-export function PatientForm({ onSubmit, isSubmitting }: PatientFormProps) {
+export function PatientForm({ onSubmit, isSubmitting, onFormClear }: PatientFormProps) {
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientFormSchema),
-    defaultValues: {
-      name: "",
-      dob: "",
-      gender: "",
-      contact: "",
-      email: "",
-      whatsappNumber: "",
-      uhid: "",
-      address: { street: "", city: "", state: "", pincode: "" },
-      guardian: { name: "", relation: "", contact: "" },
-    },
+    defaultValues: defaultFormValues,
   });
 
   const today = new Date();
@@ -88,10 +90,18 @@ export function PatientForm({ onSubmit, isSubmitting }: PatientFormProps) {
     }
   }, [relation, form]);
 
+  const handleFormSubmit = (data: PatientFormData) => {
+    onSubmit(data);
+    if(onFormClear) {
+      onFormClear();
+    }
+    form.reset(defaultFormValues);
+  }
+
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
         <Card>
           <CardHeader>
             <CardTitle className="font-headline">Demographic Information</CardTitle>
