@@ -167,7 +167,14 @@ export type MedicationEntry = {
 export type InvestigationMaster = {
   id: string;
   name: string;
-  group: 'Hematological' | 'Biochemistry' | 'Radiology' | 'Pathology' | 'Special Investigations' | 'Urine Analysis' | 'Serology';
+  group: 'Hematological' | 'Biochemistry' | 'Radiology' | 'Pathology' | 'Special Investigations' | 'Urine Analysis' | 'Serology' | 'Microbiology';
+};
+
+export type InvestigationPanel = {
+    id: string;
+    name: string;
+    group: InvestigationMaster['group'];
+    testIds: string[];
 };
 
 export type InvestigationTest = {
@@ -211,5 +218,3 @@ export type DiagnosisTemplate = {
     opinionText?: string;
     recommendations?: string;
 }
-
-    

@@ -1,6 +1,6 @@
 
 
-import type { DiagnosisEntry, MedicationEntry, Medication, DiagnosisTemplate, InvestigationMaster } from '@/lib/types';
+import type { DiagnosisEntry, InvestigationMaster, InvestigationPanel } from '@/lib/types';
 
 export const GENDERS: string[] = ['Male', 'Female', 'Other', 'Prefer not to say'];
 
@@ -207,134 +207,99 @@ export const MOCK_DIAGNOSES: DiagnosisEntry[] = [
   { id: 'n40', name: 'Hyperplasia of prostate', icdCode: 'N40', icdName: 'Hyperplasia of prostate', clinicalNames: ['Hyperplasia of prostate', 'BPH'] },
 ];
 
-export const MOCK_MEDICATIONS: MedicationEntry[] = [
-  { id: 'm001', name: 'Amlodipine', defaultDosage: '5mg', defaultFrequency: 'Once Daily', commonInstructions: 'Take with or without food.' },
-  { id: 'm002', name: 'Metformin', defaultDosage: '500mg', defaultFrequency: 'Twice Daily', commonInstructions: 'Take with meals to reduce stomach upset.' },
-  { id: 'm003', name: 'Telmisartan', defaultDosage: '40mg', defaultFrequency: 'Once Daily', commonInstructions: 'Monitor blood pressure regularly.' },
-  { id: 'm004', name: 'Prednisolone', defaultDosage: '10mg', defaultFrequency: 'Once Daily', commonInstructions: 'Take in the morning with food.' },
-];
-
 export const INVESTIGATION_GROUPS: string[] = [
-  'Hematological', 'Biochemistry', 'Radiology', 'Pathology', 'Special Investigations', 'Urine Analysis', 'Serology'
+  'Hematological', 'Biochemistry', 'Radiology', 'Pathology', 'Special Investigations', 'Urine Analysis', 'Serology', 'Microbiology'
 ];
 
 export const INVESTIGATION_MASTER_LIST: InvestigationMaster[] = [
   // Hematological
-  { id: 'inv_hem_001', name: 'Complete Blood Count (CBC)', group: 'Hematological' },
-  { id: 'inv_hem_002', name: 'Hemoglobin (Hb)', group: 'Hematological' },
-  { id: 'inv_hem_003', name: 'Platelet Count', group: 'Hematological' },
-  { id: 'inv_hem_004', name: 'ESR', group: 'Hematological' },
-  { id: 'inv_hem_005', name: 'Reticulocyte Count', group: 'Hematological' },
-  { id: 'inv_hem_006', name: 'Prothrombin Time (PT)', group: 'Hematological' },
-  { id: 'inv_hem_007', name: 'aPTT', group: 'Hematological' },
+  { id: 'hem_001', name: 'Hemoglobin (Hb)', group: 'Hematological' },
+  { id: 'hem_002', name: 'Total Leucocyte Count (TLC)', group: 'Hematological' },
+  { id: 'hem_003', name: 'Differential Leucocyte Count (DLC)', group: 'Hematological' },
+  { id: 'hem_004', name: 'Platelet Count', group: 'Hematological' },
+  { id: 'hem_005', name: 'Erythrocyte Sedimentation Rate (ESR)', group: 'Hematological' },
+  { id: 'hem_006', name: 'Prothrombin Time (PT)', group: 'Hematological' },
+  { id: 'hem_007', name: 'Activated Partial Thromboplastin Time (aPTT)', group: 'Hematological' },
+  { id: 'hem_008', name: 'Reticulocyte Count', group: 'Hematological' },
+  { id: 'hem_009', name: 'Peripheral Blood Smear (PBS)', group: 'Hematological' },
+  { id: 'hem_010', name: 'INR', group: 'Hematological' },
+  { id: 'hem_011', name: 'Complete Blood Count (CBC)', group: 'Hematological' },
 
   // Biochemistry
-  { id: 'inv_bio_001', name: 'Kidney Function Test (KFT)', group: 'Biochemistry' },
-  { id: 'inv_bio_002', name: 'Liver Function Test (LFT)', group: 'Biochemistry' },
-  { id: 'inv_bio_003', name: 'Serum Electrolytes', group: 'Biochemistry' },
-  { id: 'inv_bio_004', name: 'Fasting Blood Sugar (FBS)', group: 'Biochemistry' },
-  { id: 'inv_bio_005', name: 'Post Prandial Blood Sugar (PPBS)', group: 'Biochemistry' },
-  { id: 'inv_bio_006', name: 'HbA1c', group: 'Biochemistry' },
-  { id: 'inv_bio_007', name: 'Lipid Profile', group: 'Biochemistry' },
-  { id: 'inv_bio_008', name: 'Serum Calcium', group: 'Biochemistry' },
-  { id: 'inv_bio_009', name: 'Serum Phosphate', group: 'Biochemistry' },
-  { id: 'inv_bio_010', name: 'Uric Acid', group: 'Biochemistry' },
+  { id: 'bio_001', name: 'Blood Urea', group: 'Biochemistry' },
+  { id: 'bio_002', name: 'Serum Creatinine', group: 'Biochemistry' },
+  { id: 'bio_003', name: 'Serum Sodium (Na+)', group: 'Biochemistry' },
+  { id: 'bio_004', name: 'Serum Potassium (K+)', group: 'Biochemistry' },
+  { id: 'bio_005', name: 'Serum Bicarbonate', group: 'Biochemistry' },
+  { id: 'bio_006', name: 'Serum Calcium', group: 'Biochemistry' },
+  { id: 'bio_007', name: 'Serum Phosphate', group: 'Biochemistry' },
+  { id: 'bio_008', name: 'Serum Uric Acid', group: 'Biochemistry' },
+  { id: 'bio_009', name: 'Alkaline Phosphatase (ALP)', group: 'Biochemistry' },
+  { id: 'bio_010', name: 'Total Protein', group: 'Biochemistry' },
+  { id: 'bio_011', name: 'Serum Albumin', group: 'Biochemistry' },
+  { id: 'bio_012', name: 'Fasting Blood Sugar (FBS)', group: 'Biochemistry' },
+  { id: 'bio_013', name: 'Post Prandial Blood Sugar (PPBS)', group: 'Biochemistry' },
+  { id: 'bio_014', name: 'HbA1c', group: 'Biochemistry' },
+  { id: 'bio_015', name: 'Lipid Profile', group: 'Biochemistry' },
+  { id: 'bio_016', name: 'Liver Function Test (LFT)', group: 'Biochemistry' },
+  { id: 'bio_017', name: 'Kidney Function Test (KFT)', group: 'Biochemistry' },
   
   // Radiology
-  { id: 'inv_rad_001', name: 'USG KUB', group: 'Radiology' },
-  { id: 'inv_rad_002', name: 'Chest X-Ray', group: 'Radiology' },
-  { id: 'inv_rad_003', name: 'CT KUB', group: 'Radiology' },
-  { id: 'inv_rad_004', name: 'MRI Abdomen', group: 'Radiology' },
+  { id: 'rad_001', name: 'USG KUB', group: 'Radiology' },
+  { id: 'rad_002', name: 'Chest X-Ray (CXR)', group: 'Radiology' },
+  { id: 'rad_003', name: 'CT KUB (NCCT)', group: 'Radiology' },
+  { id: 'rad_004', name: 'CT Abdomen', group: 'Radiology' },
+  { id: 'rad_005', name: 'MRI Abdomen', group: 'Radiology' },
 
   // Serology
-  { id: 'inv_ser_001', name: 'HBsAg', group: 'Serology' },
-  { id: 'inv_ser_002', name: 'Anti-HCV', group: 'Serology' },
-  { id: 'inv_ser_003', name: 'HIV I & II', group: 'Serology' },
-  { id: 'inv_ser_004', name: 'ANA', group: 'Serology' },
-  { id: 'inv_ser_005', name: 'dsDNA', group: 'Serology' },
+  { id: 'ser_001', name: 'HBsAg', group: 'Serology' },
+  { id: 'ser_002', name: 'Anti-HCV', group: 'Serology' },
+  { id: 'ser_003', name: 'HIV I & II', group: 'Serology' },
+  { id: 'ser_004', name: 'ANA (Antinuclear Antibody)', group: 'Serology' },
+  { id: 'ser_005', name: 'dsDNA', group: 'Serology' },
+  { id: 'ser_006', name: 'C3', group: 'Serology' },
+  { id: 'ser_007', name: 'C4', group: 'Serology' },
+  { id: 'ser_008', name: 'ANCA (p-ANCA, c-ANCA)', group: 'Serology' },
+  { id: 'ser_009', name: 'Anti-GBM Antibody', group: 'Serology' },
+
+  // Urine Analysis
+  { id: 'urn_001', name: 'Urine Routine & Microscopy (R/M)', group: 'Urine Analysis' },
+  { id: 'urn_002', name: 'Urine Culture & Sensitivity', group: 'Urine Analysis' },
+  { id: 'urn_003', name: '24-hour Urine Protein', group: 'Urine Analysis' },
+  { id: 'urn_004', name: 'Urine Spot Protein/Creatinine Ratio (PCR)', group: 'Urine Analysis' },
   
   // Special Investigations
-  { id: 'inv_spc_001', name: 'Kidney Biopsy', group: 'Special Investigations' },
-  { id: 'inv_spc_002', name: '24hr Urine Protein', group: 'Special Investigations' },
-  { id: 'inv_spc_003', name: 'Urine PCR', group: 'Special Investigations' },
+  { id: 'spc_001', name: 'Kidney Biopsy', group: 'Special Investigations' },
+  { id: 'spc_002', name: 'ECG', group: 'Special Investigations' },
+  { id: 'spc_003', name: '2D Echocardiography', group: 'Special Investigations' },
+
+  // Microbiology
+  { id: 'mic_001', name: 'Blood Culture & Sensitivity', group: 'Microbiology' },
 ];
 
+export const INVESTIGATION_PANELS: InvestigationPanel[] = [
+    // Hematology Panels
+    { id: 'panel_hem_1', name: 'Hematology Basic', group: 'Hematological', testIds: ['hem_001', 'hem_002', 'hem_003', 'hem_004'] },
+    { id: 'panel_hem_2', name: 'Hematology Extended', group: 'Hematological', testIds: ['hem_001', 'hem_002', 'hem_003', 'hem_004', 'hem_005', 'hem_010', 'hem_006'] },
+    { id: 'panel_hem_3', name: 'Coagulation Profile', group: 'Hematological', testIds: ['hem_006', 'hem_007', 'hem_010', 'hem_004'] },
+    { id: 'panel_hem_4', name: 'Complete Anemia Profile', group: 'Hematological', testIds: ['hem_001', 'hem_002', 'hem_003', 'hem_004', 'hem_008', 'hem_009'] },
+    
+    // Biochemistry Panels
+    { id: 'panel_bio_1', name: 'Renal Function Basic (KFT)', group: 'Biochemistry', testIds: ['bio_001', 'bio_002', 'bio_003', 'bio_004', 'bio_005'] },
+    { id: 'panel_bio_2', name: 'Renal Function Extended', group: 'Biochemistry', testIds: ['bio_001', 'bio_002', 'bio_003', 'bio_004', 'bio_005', 'bio_006', 'bio_007', 'bio_008'] },
+    { id: 'panel_bio_3', name: 'Liver Function Test (LFT)', group: 'Biochemistry', testIds: ['bio_010', 'bio_011', 'bio_016'] }, // Simplified LFT
+    { id: 'panel_bio_4', name: 'Diabetic Profile', group: 'Biochemistry', testIds: ['bio_012', 'bio_013', 'bio_014'] },
+    { id: 'panel_bio_5', name: 'Metabolic Bone Disease (MBD) Screen', group: 'Biochemistry', testIds: ['bio_006', 'bio_007', 'bio_009'] },
+    
+    // Serology Panels
+    { id: 'panel_ser_1', name: 'Viral Markers', group: 'Serology', testIds: ['ser_001', 'ser_002', 'ser_003'] },
+    { id: 'panel_ser_2', name: 'Glomerulonephritis (GN) Basic', group: 'Serology', testIds: ['ser_004', 'ser_006', 'ser_007'] },
+    { id: 'panel_ser_3', name: 'Glomerulonephritis (GN) Extended', group: 'Serology', testIds: ['ser_004', 'ser_005', 'ser_006', 'ser_007', 'ser_008', 'ser_009'] },
 
-// Comprehensive Clinical Visit Templates
-export const DIAGNOSIS_TEMPLATES: Record<string, DiagnosisTemplate> = {
-  "Hypertensive Nephropathy": {
-    templateName: "Hypertensive Nephropathy",
-    templateType: "Discharge Summary",
-    diagnoses: [{ id: 'diag_hn', name: "Hypertensive Nephropathy", icdCode: "I12.9" }],
-    history: "Patient is a known case of hypertension for the last 5 years, presents with pedal edema and decreased urine output.",
-    generalExamination: "Bilateral pitting pedal edema present. No pallor, icterus, or clubbing.",
-    systemicExamination: "CVS: S1, S2 normal, no murmurs. Respiratory: Bilateral air entry equal, no added sounds. Abdomen: Soft, non-tender.",
-    medications: [
-      { id: 'med1', name: 'Telmisartan', dosage: '80mg', frequency: 'OD', instructions: 'After food' },
-      { id: 'med2', name: 'Amlodipine', dosage: '10mg', frequency: 'OD', instructions: 'After food' },
-      { id: 'med3', name: 'Torsemide', dosage: '20mg', frequency: 'OD', instructions: 'In the morning' },
-    ],
-    dischargeInstructions: "Advised low salt diet. Monitor BP daily. Follow up in 2 weeks with KFT, Urine R/M reports.",
-  },
-  "Diabetic Nephropathy": {
-    templateName: "Diabetic Nephropathy",
-    templateType: "Discharge Summary",
-    diagnoses: [{ id: 'diag_dn', name: "Diabetic Nephropathy", icdCode: "E11.21" }],
-    history: "Patient with Type 2 Diabetes for 10 years, complains of frothy urine and progressive swelling of feet.",
-    generalExamination: "Fundoscopy shows background diabetic retinopathy. Pedal edema present.",
-    systemicExamination: "Peripheral neuropathy present in both lower limbs. CVS and Respiratory systems are normal.",
-    medications: [
-      { id: 'med4', name: 'Metformin', dosage: '1g', frequency: 'BD', instructions: 'After food' },
-      { id: 'med5', name: 'Dapagliflozin', dosage: '10mg', frequency: 'OD', instructions: 'After breakfast' },
-      { id: 'med6', name: 'Atorvastatin', dosage: '20mg', frequency: 'HS', instructions: 'At bedtime' },
-      { id: 'med7', name: 'Ramipril', dosage: '5mg', frequency: 'OD', instructions: '' },
-    ],
-    dischargeInstructions: "Strict glycemic control. Low protein diet. Monitor blood sugar levels and report to endocrinology.",
-  },
-  "IgA Nephropathy": {
-    templateName: "IgA Nephropathy",
-    templateType: "Opinion Report",
-    diagnoses: [{ id: 'diag_igan', name: "IgA Nephropathy", icdCode: "N03.3", icdName: "Chronic nephritic syndrome, diffuse mesangial proliferative" }],
-    history: "Patient was detected to have proteinuria/ hypertension/ renal dysfunction during evaluation. He denies any history of hematuria, oliguria, nocturia, swelling of face or feet at any time. There was no preceding skin rash, arthritis, oral ulcers, nephrotoxic drug use. No history of NSAID's or alternative medication use. His 24 hr urine protein excretion was _____ mg/day. He was subjected to a kidney biopsy which was reported as IgA nephropathy. He was initiated on oral steroids and ARB's. Due for Nephrologist opinion",
-    generalExamination: "No pallor, pedal edema. Systemically : NAD",
-    systemicExamination: "CVS: S1, S2 normal, no murmurs. Respiratory: Bilateral air entry equal, no added sounds. Abdomen: Soft, non-tender.",
-    medications: [
-      { id: 'med8', name: 'Tab Telmisartan', dosage: '40 mg', frequency: 'OD' },
-      { id: 'med9', name: 'Tab Empagliflozin', dosage: '25 mg', frequency: 'OD' },
-    ],
-    opinionText: "Patient has IgA nephropathy related subnephrotic proteinuria with normal renal function and normal BP. The secondary causes of IgA Nephropathy have been reasonably ruled out on history and evaluation. He has been given a course of steroids and tapered, and his proteinuria is __ gm/day. He is planned to be kept on ACE-I or ARB's/ SGLT2-i to max tolerated doses. He will need continued observation and periodic review. His risk assessment was done to predict the risk of a 50% decline in eGFR or ESRD after 5 yrs of biopsy by International IgA prediction tool was _____ % ( https://qxmd.com/calculate/calculator_499/international-igan-prediction-tool-adults ) (Jama 2019). He has been counseled about the prognosis of his disease and the precautions he needs to observe. He has been vaccinated. He will need continued observation and periodic review.",
-    recommendations: `Medical Classification recommended:\nMedical Classification: SHAPE -3 ( x )\nDisability Profile: P3 (T-24) for\nClinical Diagnosis: IgA Nephropathy \nICD-10 Diagnosis & Code: Chronic nephritic syndrome, diffuse mesangial proliferative (N03.3)\n\nMedical recommendations and employability restrictions as per Code ‘E’ (impacting functional status of the indl), if any, with justification: As per AO 3/2001\n\nAny other advice (with justification):\nSalt restricted 2100 KCal low saturated fat diet.\nAvoid nephrotoxic drugs, dehydration, and strenuous physical exercise.\nMonthly review in Medical OPD and 03 monthly review in Nephrology OPD with fresh inv reports.\nNext recat at Nephrology Centre`,
-    usgReport: "( No____ dt ____ CH(SC): Normal scan",
-    kidneyBiopsyReport: "Kidney Biopsy (No: Dt ______ 25): __ glomeruli, of which _ are globally sclerosed. Rest show mild to moderate mesangial proliferation in segmental distribution with segmental glomerular crescents in _ (_cellular, _ fibrocellular and _ fibrous). Patchy tubular atrophy associated with interstitial fibrosis and inflammation in __% of visualized tissue.  IF: Ig A (2+), C3 (3+), kappa (2+) and Lambda (3+). IgG, IgM and C1q are negative. Impression: IgA nephropathy with IFTA of _ %. MEST Score: (M0 E0 S0 T0-C0)",
-  },
-  "Chronic Kidney Disease": {
-    templateName: "Chronic Kidney Disease",
-    templateType: "Opinion Report",
-    diagnoses: [
-      { id: "ckd1", name: "CKD Stage 1", icdCode: "N18.1", icdName: "Chronic kidney disease, stage 1" },
-      { id: "ckd2", name: "CKD Stage 2", icdCode: "N18.2", icdName: "Chronic kidney disease, stage 2 (mild)" },
-      { id: "ckd3", name: "CKD Stage 3", icdCode: "N18.3", icdName: "Chronic kidney disease, stage 3 (moderate)" },
-      { id: "ckd4", name: "CKD Stage 4", icdCode: "N18.4", icdName: "Chronic kidney disease, stage 4 (severe)" },
-      { id: "ckd5", name: "CKD Stage 5", icdCode: "N18.5", icdName: "Chronic kidney disease, stage 5" },
-      { id: "ckd6", name: "End-stage renal disease", icdCode: "N18.6", icdName: "End-stage renal disease" },
-    ],
-    history: "Patient was detected to be hypertensive ( BP _______ mm Hg) during medical examination. No complains of headache, chest pain, swelling of both lower limbs. No complains of hematuria, oliguria, froth in urine. No h/o joint pain, rash, oral ulcers, alopecia. No h/o alternative medication or chronic NSAID intake. Evaluation showed azotemia ( Creatinine ___ mg/dl). USG KUB showed B/L small echogenic kidneys. He was referred for Nephrology evaluation at CHSC. Due for opinion.",
-    generalExamination: "No pallor, pedal edema. Fundus: No evidence of retinopathy. Systemic exam: NAD",
-    systemicExamination: "NAD",
-    medications: [
-      { id: 'med10', name: 'Tab Amlodipine', dosage: '10 mg', frequency: 'OD' },
-      { id: 'med11', name: 'Tab Met XL', dosage: '25 mg', frequency: 'BD' },
-      { id: 'med12', name: 'Tab Sodabicarbonate', dosage: '500 mg', frequency: 'TDS' },
-      { id: 'med13', name: 'Tab Rantac', dosage: '150 mg', frequency: 'BD' },
-      { id: 'med14', name: 'Tab F/A', dosage: '5 mg', frequency: 'OD' },
-      { id: 'med15', name: 'Calcirol sachet', dosage: '60,000 IU/month', frequency: 'Monthly' },
-    ],
-    opinionText: "This patient detected to have chronic kidney disease during evaluation of hypertension. His autoimmune workup was negative. His BP has been controlled with anti hypertensive drugs and he has evidence of hypertension related target organ damage. Non oliguric at present. His present eGFR is ( ______ ml/min/1.73 sqm BSA). He has been counseled about the prognosis of his disease and the precautions he needs to observe. He will require initiation of RRT once uremic symptoms appear. He has been vaccinated against HBV. He will need continued observation and periodic review.",
-    recommendations: `Medical Classification recommended:\nMedical Classification: SHAPE -3 ( x )\nDisability Profile: P3 (T-24) for\nClinical diagnosis: CHRONIC KIDNEY DISEASE Stage 5\nICD code and Diagnosis: N18.5, Chronic kidney disease, stage 5\n\nMedical recommendations and employability restrictions as per Code ‘E’ (impacting functional status of the indl), if any, with justification: As per AO 3/2001\nUnfit for HAA\nTo be posted to a place within 04 hrs travelling to a service nephrology centre\n\nAny other advice (with justification):\nSalt restricted 2100 KCal low saturated fat diet\nAvoid nephrotoxic drugs, NSAIDs\nMonthly review in Nephro OPD with CBC, RFT and electrolytes report\nNext Recat at Nephrology centre`,
-    usgReport: "Bilateral echogenic kidney. No HDN",
-    kidneyBiopsyReport: "Not applicable.",
-  }
-};
+    // Urine Panels
+    { id: 'panel_urn_1', name: 'Basic Urinalysis', group: 'Urine Analysis', testIds: ['urn_001'] },
+    { id: 'panel_urn_2', name: 'Proteinuria Screen', group: 'Urine Analysis', testIds: ['urn_001', 'urn_004'] },
+];
 
 export const SGLT2_INHIBITORS = ["Canagliflozin", "Dapagliflozin", "Empagliflozin", "Ertugliflozin"];
 export const ARBS = ["Losartan", "Valsartan", "Irbesartan", "Candesartan", "Olmesartan", "Telmisartan", "Eprosartan", "Azilsartan"];
