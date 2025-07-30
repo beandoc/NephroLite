@@ -19,6 +19,7 @@ export default function PatientsPage() {
           title="Patient Records" 
           description="Manage all patient information and history."
           actions={<Button disabled><PlusCircle className="mr-2 h-4 w-4" /> Add New Patient</Button>}
+          backHref="/dashboard"
         />
         <div className="space-y-4 mt-6">
           <Skeleton className="h-12 w-full" />
@@ -42,6 +43,7 @@ export default function PatientsPage() {
             </Link>
           </Button>
         }
+        backHref="/dashboard"
       />
       <div className="mt-6">
         <PatientsTable patients={patients} onDeletePatient={deletePatient} />

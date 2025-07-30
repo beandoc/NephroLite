@@ -20,6 +20,7 @@ export default function AppointmentsPage() {
           title="Appointments" 
           description="Manage patient appointments schedule."
           actions={<Button disabled><CalendarPlus className="mr-2 h-4 w-4" /> Schedule New</Button>}
+          backHref="/dashboard"
         />
         <Card className="mt-8">
           <CardHeader>
@@ -47,6 +48,7 @@ export default function AppointmentsPage() {
             </Link>
           </Button>
         }
+        backHref="/dashboard"
       />
       <Card className="mt-8">
         <CardHeader>
