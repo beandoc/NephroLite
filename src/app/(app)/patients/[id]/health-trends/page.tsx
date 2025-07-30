@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ArrowLeft, TrendingUp, AlertTriangle, Heart, Activity, CalendarClock, LineChart as LineChartIcon, BarChart3 } from 'lucide-react';
 import { EgfrTrendChart } from '@/components/charts/EgfrTrendChart';
+import { MedicationTimeline } from '@/components/patients/MedicationTimeline';
 
 interface PredictionCardProps {
   title: string;
@@ -98,10 +99,10 @@ export default function PatientHealthTrendsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="font-headline flex items-center"><Activity className="mr-2 h-5 w-5 text-primary"/>Medications Timeline</CardTitle>
-            <CardDescription>Visual representation of medication history.</CardDescription>
+            <CardDescription>Visual representation of key medication history.</CardDescription>
           </CardHeader>
-          <CardContent className="h-64 flex items-center justify-center border-2 border-dashed rounded-lg">
-            <p className="text-muted-foreground">Medications chart placeholder - (Under Development)</p>
+          <CardContent>
+            <MedicationTimeline />
           </CardContent>
         </Card>
 
