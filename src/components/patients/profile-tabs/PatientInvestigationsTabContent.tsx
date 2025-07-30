@@ -22,6 +22,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Textarea } from '@/components/ui/textarea';
 
 
 interface PatientInvestigationsTabContentProps {
@@ -44,6 +45,8 @@ const investigationRecordFormSchema = z.object({
   tests: z.array(testEntrySchema).min(1, "At least one test result is required."),
 });
 type InvestigationRecordFormData = z.infer<typeof investigationRecordFormSchema>;
+
+const NARRATIVE_GROUPS = ['Radiology', 'Special Investigations'];
 
 export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigationsTabContentProps) => {
   const { toast } = useToast();
@@ -253,39 +256,53 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                   </Popover>
 
                   <div className="space-y-4">
-                    {fields.map((field, index) => (
-                      <div key={field.id} className="p-3 border rounded-lg space-y-2 relative bg-muted/50">
-                        <Button type="button" variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => remove(index)}>
-                          <Trash2 className="h-4 w-4 text-destructive"/>
-                        </Button>
-                        <div>
-                           <span className="font-medium">{field.name}</span> <Badge variant="secondary">{field.group}</Badge>
+                    {fields.map((field, index) => {
+                      const isNarrative = NARRATIVE_GROUPS.includes(field.group);
+                      return (
+                        <div key={field.id} className="p-3 border rounded-lg space-y-2 relative bg-muted/50">
+                          <Button type="button" variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => remove(index)}>
+                            <Trash2 className="h-4 w-4 text-destructive"/>
+                          </Button>
+                          <div>
+                            <span className="font-medium">{field.name}</span> <Badge variant="secondary">{field.group}</Badge>
+                          </div>
+                          
+                          {isNarrative ? (
+                             <FormField control={form.control} name={`tests.${index}.result`} render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Result / Report</FormLabel>
+                                  <FormControl><Textarea rows={3} placeholder="Enter report findings..." {...field} /></FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )} />
+                          ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                              <FormField control={form.control} name={`tests.${index}.result`} render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Result</FormLabel>
+                                  <FormControl><Input placeholder="e.g., 12.5, Positive" {...field} /></FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )} />
+                              <FormField control={form.control} name={`tests.${index}.unit`} render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Unit</FormLabel>
+                                  <FormControl><Input placeholder="e.g., g/dL" {...field} /></FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )} />
+                              <FormField control={form.control} name={`tests.${index}.normalRange`} render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Normal Range</FormLabel>
+                                  <FormControl><Input placeholder="e.g., 13.5-17.5" {...field} /></FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )} />
+                            </div>
+                          )}
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                           <FormField control={form.control} name={`tests.${index}.result`} render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Result</FormLabel>
-                              <FormControl><Input placeholder="e.g., 12.5, Positive" {...field} /></FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-                          <FormField control={form.control} name={`tests.${index}.unit`} render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Unit</FormLabel>
-                              <FormControl><Input placeholder="e.g., g/dL" {...field} /></FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-                          <FormField control={form.control} name={`tests.${index}.normalRange`} render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Normal Range</FormLabel>
-                              <FormControl><Input placeholder="e.g., 13.5-17.5" {...field} /></FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   <FormMessage>{form.formState.errors.tests?.message || form.formState.errors.tests?.root?.message}</FormMessage>
                 </CardContent>
