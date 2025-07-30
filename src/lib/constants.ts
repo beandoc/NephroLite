@@ -301,6 +301,19 @@ export const INVESTIGATION_PANELS: InvestigationPanel[] = [
     { id: 'panel_urn_2', name: 'Proteinuria Screen', group: 'Urine Analysis', testIds: ['urn_001', 'urn_004'] },
 ];
 
+export const FREQUENTLY_USED_INVESTIGATIONS: { name: string; type: 'test' | 'panel'; id: string }[] = [
+    { name: 'Hematology Basic', type: 'panel', id: 'panel_hem_1' },
+    { name: 'Renal Profile Extended', type: 'panel', id: 'panel_bio_2' },
+    { name: 'Liver Function Test', type: 'panel', id: 'panel_bio_3' },
+    { name: 'CXR PA View', type: 'test', id: 'rad_002' },
+    { name: 'ECG', type: 'test', id: 'spc_002' },
+    { name: 'USG KUB', type: 'test', id: 'rad_001' },
+    { name: 'Urine R/E', type: 'test', id: 'urn_001' },
+    { name: 'Urine PC Ratio', type: 'test', id: 'urn_004' },
+    { name: 'Kidney Biopsy', type: 'test', id: 'spc_001' },
+];
+
+
 export const SGLT2_INHIBITORS = ["Canagliflozin", "Dapagliflozin", "Empagliflozin", "Ertugliflozin"];
 export const ARBS = ["Losartan", "Valsartan", "Irbesartan", "Candesartan", "Olmesartan", "Telmisartan", "Eprosartan", "Azilsartan"];
 export const ACE_INHIBITORS = ["Lisinopril", "Enalapril", "Ramipril", "Benazepril", "Captopril", "Fosinopril", "Moexipril", "Perindopril", "Quinapril", "Trandolapril"];
@@ -313,3 +326,43 @@ export const PATIENT_GROUPS_FOR_ANALYSIS = [
   "Glomerulonephritis",
   "Post-Transplant",
 ];
+
+export const DIAGNOSIS_TEMPLATES = {
+    "IgA Nephropathy": {
+        templateName: "IgA Nephropathy",
+        templateType: "Opinion Report" as const,
+        diagnoses: [{ id: "d004", name: "IgA Nephropathy", icdCode: "N02.8", icdName: "IgA nephropathy" }],
+        history: "Patient presents with a history of recurrent macroscopic hematuria following upper respiratory tract infections. No significant family history of renal disease.",
+        generalExamination: "General condition is fair. No pallor, icterus, or edema noted.",
+        systemicExamination: "Cardiovascular: S1, S2 heard, no murmurs. Respiratory: Clear breath sounds. Abdomen: Soft, non-tender.",
+        medications: [
+            { id: crypto.randomUUID(), name: "Ramipril", dosage: "5mg", frequency: "OD", instructions: "After breakfast" },
+            { id: crypto.randomUUID(), name: "Atorvastatin", dosage: "10mg", frequency: "HS", instructions: "At bedtime" },
+        ],
+        usgReport: "Both kidneys are normal in size and echotexture. No evidence of hydronephrosis or calculi.",
+        kidneyBiopsyReport: "Light Microscopy: Mesangial hypercellularity with matrix expansion.\nImmunofluorescence: Dominant mesangial deposits of IgA and C3.\nElectron Microscopy: Electron-dense deposits in the mesangium.",
+        opinionText: "The findings are consistent with IgA Nephropathy. The patient has moderate proteinuria and preserved renal function.",
+        recommendations: "Continue ACE inhibitor for blood pressure control and proteinuria reduction. Regular monitoring of renal function and proteinuria is advised. Avoid nephrotoxic drugs.",
+    },
+    "Diabetic Nephropathy": {
+        templateName: "Diabetic Nephropathy",
+        templateType: "Discharge Summary" as const,
+        diagnoses: [
+            { id: "e11.21", name: "Diabetic Nephropathy", icdCode: "E11.21", icdName: "Type 2 diabetes mellitus with diabetic nephropathy" },
+            { id: "d002", name: "Type 2 Diabetes Mellitus", icdCode: "E11.9", icdName: "Type 2 diabetes mellitus without complications" },
+            { id: "d001", name: "Hypertension", icdCode: "I10", icdName: "Essential (primary) hypertension" },
+        ],
+        history: "Known case of Type 2 Diabetes Mellitus for 15 years with suboptimal glycemic control. Presented with progressive pedal edema and worsening renal function.",
+        generalExamination: "Bilateral pitting pedal edema present up to the knees. BP: 150/90 mmHg.",
+        systemicExamination: "Fundoscopy shows background diabetic retinopathy. Other systems are within normal limits.",
+        medications: [
+            { id: crypto.randomUUID(), name: "Insulin Glargine", dosage: "20 units", frequency: "HS", instructions: "Subcutaneous" },
+            { id: "randomid1", name: "Metformin", dosage: "500mg", frequency: "BD", instructions: "After meals (dosage adjusted for GFR)" },
+            { id: crypto.randomUUID(), name: "Telmisartan", dosage: "40mg", frequency: "OD", instructions: "" },
+            { id: crypto.randomUUID(), name: "Dapagliflozin", dosage: "10mg", frequency: "OD", instructions: "SGLT2 inhibitor for nephroprotection" },
+        ],
+        dischargeInstructions: "Advised strict glycemic and blood pressure control. Low salt, low protein diet. Monitor renal function tests every 3 months. Follow up in the nephrology OPD.",
+        usgReport: "Slightly increased echogenicity of both kidneys, suggestive of medical renal disease.",
+        kidneyBiopsyReport: "Not performed.",
+    }
+};

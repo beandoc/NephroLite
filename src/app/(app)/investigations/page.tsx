@@ -9,9 +9,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
-import { INVESTIGATION_MASTER_LIST, INVESTIGATION_PANELS } from '@/lib/constants';
-import { Microscope, Beaker, Dna, Bone, Droplet, Send, Search, X, Package, TestTube, FlaskConical, Info } from 'lucide-react';
-import type { InvestigationMaster, InvestigationPanel } from '@/lib/types';
+import { INVESTIGATION_MASTER_LIST, INVESTIGATION_PANELS, FREQUENTLY_USED_INVESTIGATIONS } from '@/lib/constants';
+import { Microscope, Beaker, Dna, Bone, Droplet, Send, Search, X, Package, TestTube, FlaskConical, Info, Star } from 'lucide-react';
+import type { InvestigationMaster, InvestigationPanel, InvestigationTest } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { OrderInvestigationsDialog } from '@/components/investigations/order-investigations-dialog';
 
@@ -49,8 +49,8 @@ export default function InvestigationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
 
-  const handleTestSelection = (testId: string) => {
-    setSelectedTests(prev => ({ ...prev, [testId]: !prev[testId] }));
+  const handleTestSelection = (testId: string, isSelected: boolean) => {
+    setSelectedTests(prev => ({ ...prev, [testId]: isSelected }));
   };
 
   const handlePanelSelection = (panel: InvestigationPanel) => {
@@ -59,6 +59,30 @@ export default function InvestigationsPage() {
     panel.testIds.forEach(id => {
         newSelectedTests[id] = !allTestsInPanelSelected;
     });
+    setSelectedTests(newSelectedTests);
+  };
+  
+  const handleFrequentInvestigationToggle = (item: { type: 'test' | 'panel'; id: string }) => {
+    let testIdsToToggle: string[] = [];
+    if (item.type === 'test') {
+      testIdsToToggle.push(item.id);
+    } else {
+      const panel = INVESTIGATION_PANELS.find(p => p.id === item.id);
+      if (panel) {
+        testIdsToToggle = panel.testIds;
+      }
+    }
+
+    if (testIdsToToggle.length === 0) return;
+
+    // If any of the tests in the group are not selected, select all. Otherwise, deselect all.
+    const shouldSelect = testIdsToToggle.some(id => !selectedTests[id]);
+    
+    const newSelectedTests = { ...selectedTests };
+    testIdsToToggle.forEach(id => {
+      newSelectedTests[id] = shouldSelect;
+    });
+
     setSelectedTests(newSelectedTests);
   };
   
@@ -107,6 +131,32 @@ export default function InvestigationsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Card className="mb-6">
+        <CardHeader>
+            <CardTitle className="text-lg font-headline flex items-center"><Star className="mr-2 h-5 w-5 text-primary"/>Quick Investigations</CardTitle>
+            <CardDescription>Select from frequently used investigations and panels as a shortcut.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {FREQUENTLY_USED_INVESTIGATIONS.map(item => {
+                const isSelected = item.type === 'test'
+                    ? selectedTests[item.id]
+                    : INVESTIGATION_PANELS.find(p => p.id === item.id)?.testIds.every(id => selectedTests[id]);
+                
+                return (
+                    <div key={item.id} className="flex items-center space-x-2">
+                        <Checkbox
+                            id={`freq-${item.id}`}
+                            checked={!!isSelected}
+                            onCheckedChange={() => handleFrequentInvestigationToggle(item)}
+                        />
+                        <Label htmlFor={`freq-${item.id}`} className="font-normal cursor-pointer">{item.name}</Label>
+                    </div>
+                );
+            })}
+        </CardContent>
+      </Card>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
@@ -178,7 +228,7 @@ export default function InvestigationsPage() {
                                     <Checkbox
                                         id={test.id}
                                         checked={!!selectedTests[test.id]}
-                                        onCheckedChange={() => handleTestSelection(test.id)}
+                                        onCheckedChange={(checked) => handleTestSelection(test.id, !!checked)}
                                     />
                                     <Label htmlFor={test.id} className="font-normal cursor-pointer flex-grow">
                                         {test.name}
@@ -214,7 +264,7 @@ export default function InvestigationsPage() {
                                    return test ? (
                                      <li key={test.id} className="text-sm flex justify-between items-center p-1.5 rounded-md hover:bg-muted">
                                          <span>{test.name}</span>
-                                         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleTestSelection(testId)}><X className="h-3 w-3"/></Button>
+                                         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleTestSelection(test.id, false)}><X className="h-3 w-3"/></Button>
                                      </li>
                                    ) : null;
                                })}
@@ -241,4 +291,3 @@ export default function InvestigationsPage() {
     </div>
   );
 }
-
