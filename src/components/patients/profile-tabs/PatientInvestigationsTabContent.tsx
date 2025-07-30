@@ -186,7 +186,9 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                         <Button type="button" variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => remove(index)}>
                           <Trash2 className="h-4 w-4 text-destructive"/>
                         </Button>
-                        <p className="font-medium">{field.name} <Badge variant="secondary">{field.group}</Badge></p>
+                        <div className="font-medium">
+                          <span>{field.name}</span> <Badge variant="secondary">{field.group}</Badge>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                            <FormField control={form.control} name={`tests.${index}.result`} render={({ field }) => (
                             <FormItem>
