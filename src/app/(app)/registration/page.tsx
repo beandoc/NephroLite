@@ -61,6 +61,7 @@ export default function RegistrationPage() {
 
     let foundPatients: Patient[] = [];
 
+    // Prioritize search by Nephro ID if provided
     if (termNephroId) {
       foundPatients = patients.filter(p => {
         const [prefix, dateSuffix] = p.nephroId.split('/');
@@ -76,12 +77,11 @@ export default function RegistrationPage() {
       foundPatients = patients.filter(p => p.name.toLowerCase().includes(termName));
     }
     
-    // Simplified: always show list, never auto-redirect.
     setSearchResults(foundPatients);
     if (foundPatients.length > 0) {
         toast({
             title: `${foundPatients.length} Patient(s) Found`,
-            description: "Please select a patient to view their profile.",
+            description: "Displaying matching patients below.",
         });
     } else {
         toast({
@@ -108,15 +108,15 @@ export default function RegistrationPage() {
               Search Existing Patient
             </CardTitle>
             <CardDescription>
-              Find an existing patient by their ID or name to view their records and visit history. To register a new patient, use the "Patient Management" page.
+              Find an existing patient by their ID or name. To register a new patient, navigate to the "New Patient Reg" page.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="search-nephro-id">Nephro ID (e.g., SS123 or SS123/0624)</Label>
+              <Label htmlFor="search-nephro-id">Nephro ID (e.g., 1001 or 1001/0724)</Label>
               <Input
                 id="search-nephro-id"
-                placeholder="e.g., SS123 or SS123/0624"
+                placeholder="e.g., 1001 or 1001/0724"
                 value={searchNephroId}
                 onChange={(e) => setSearchNephroId(e.target.value)}
                 disabled={isSearching || patientsLoading}

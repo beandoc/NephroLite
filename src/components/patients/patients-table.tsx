@@ -26,17 +26,18 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast";
+import { usePatientData } from "@/hooks/use-patient-data";
 
 interface PatientsTableProps {
   patients: Patient[];
-  onDeletePatient: (id: string) => void;
 }
 
-export function PatientsTable({ patients, onDeletePatient }: PatientsTableProps) {
+export function PatientsTable({ patients }: PatientsTableProps) {
   const { toast } = useToast();
+  const { deletePatient } = usePatientData();
 
   const handleDelete = (patientId: string, patientName: string) => {
-    onDeletePatient(patientId);
+    deletePatient(patientId);
     toast({
       title: "Patient Deleted",
       description: `${patientName} has been removed from the records.`,

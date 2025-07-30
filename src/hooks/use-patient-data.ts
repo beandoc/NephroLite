@@ -347,7 +347,7 @@ export function usePatientData() {
     const updatedPatients = patients.filter(p => p.id !== id);
     if (updatedPatients.length === patients.length) return false;
     
-    // Also delete associated appointments
+    // Centralized cleanup: Also delete associated appointments
     deleteAppointmentsForPatient(id);
     
     saveData(updatedPatients);

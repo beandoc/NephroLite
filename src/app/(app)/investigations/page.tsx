@@ -139,15 +139,19 @@ export default function InvestigationsPage() {
         </CardHeader>
         <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {FREQUENTLY_USED_INVESTIGATIONS.map(item => {
-                const isSelected = item.type === 'test'
-                    ? selectedTests[item.id]
-                    : INVESTIGATION_PANELS.find(p => p.id === item.id)?.testIds.every(id => selectedTests[id]);
+                let isSelected = false;
+                if (item.type === 'test') {
+                    isSelected = !!selectedTests[item.id];
+                } else {
+                    const panelTestIds = INVESTIGATION_PANELS.find(p => p.id === item.id)?.testIds || [];
+                    isSelected = panelTestIds.length > 0 && panelTestIds.every(id => selectedTests[id]);
+                }
                 
                 return (
                     <div key={item.id} className="flex items-center space-x-2">
                         <Checkbox
                             id={`freq-${item.id}`}
-                            checked={!!isSelected}
+                            checked={isSelected}
                             onCheckedChange={() => handleFrequentInvestigationToggle(item)}
                         />
                         <Label htmlFor={`freq-${item.id}`} className="font-normal cursor-pointer">{item.name}</Label>

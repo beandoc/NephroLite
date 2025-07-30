@@ -65,8 +65,8 @@ export default function OpdLoginPage() {
       description: `Welcome, ${patientWithMobile.name}. Redirecting to your status...`,
     });
 
-    // Redirect to a new dynamic page showing their specific status
-    router.push(`/opd-display/status/${todaysAppointment.id}`);
+    // Redirect to the public-facing display page, which now handles both queue and individual status
+    router.push(`/opd-display`);
   };
 
   return (
