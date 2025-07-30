@@ -29,7 +29,7 @@ const getInitialAppointments = (): Appointment[] => {
   const mockAppointments: Appointment[] = [
     {
       id: crypto.randomUUID(),
-      patientId: 'mock-patient-id-1', 
+      patientId: 'fixed-pd-patient-id-1', 
       patientName: 'Rajesh Kumar', 
       date: format(setMinutes(setHours(today, 9), 0), 'yyyy-MM-dd'), 
       time: '09:00',
@@ -40,7 +40,7 @@ const getInitialAppointments = (): Appointment[] => {
     },
     {
       id: crypto.randomUUID(),
-      patientId: 'mock-patient-id-2', 
+      patientId: 'fixed-pd-patient-id-2', 
       patientName: 'Priya Sharma', 
       date: format(setMinutes(setHours(today, 10), 30), 'yyyy-MM-dd'), 
       time: '10:30',
@@ -57,7 +57,7 @@ const getInitialAppointments = (): Appointment[] => {
       time: '13:15',
       type: 'Lab Results Review', 
       doctorName: MOCK_DOCTORS[2],
-      status: 'Scheduled',
+      status: 'Waiting',
       notes: 'Review recent blood work.'
     },
     {
@@ -73,7 +73,7 @@ const getInitialAppointments = (): Appointment[] => {
     },
     {
       id: crypto.randomUUID(),
-      patientId: 'mock-patient-id-1',
+      patientId: 'fixed-pd-patient-id-1',
       patientName: 'Rajesh Kumar',
       date: format(addDays(today, 2), 'yyyy-MM-dd'), 
       time: '10:00',
@@ -84,7 +84,7 @@ const getInitialAppointments = (): Appointment[] => {
     },
     {
       id: crypto.randomUUID(),
-      patientId: 'mock-patient-id-2',
+      patientId: 'fixed-pd-patient-id-2',
       patientName: 'Priya Sharma',
       date: format(addDays(today, 5), 'yyyy-MM-dd'), 
       time: '14:30',

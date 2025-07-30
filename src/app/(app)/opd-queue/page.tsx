@@ -13,6 +13,7 @@ import { User, Clock, ChevronRight, PlayCircle, Users, CheckCircle, Ban, Forward
 import Link from 'next/link';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
+import type { Appointment } from '@/lib/types';
 
 export default function OpdQueuePage() {
   const { appointments, isLoading, updateAppointmentStatus, updateMultipleAppointmentStatuses } = useAppointmentData();
@@ -122,7 +123,7 @@ export default function OpdQueuePage() {
                 <div className="space-y-2">
                   <p className="text-2xl font-bold text-primary">{nowServing.patientName}</p>
                   <p className="text-sm text-muted-foreground flex items-center"><Clock className="mr-1.5 h-4 w-4" />Scheduled at {nowServing.time}</p>
-                  <p className="text-sm text-muted-foreground flex items-center"><User className="mr-1.5 h-4 w-4" />Patient ID: {nowServing.patientId}</p>
+                  <p className="text-sm text-muted-foreground flex items-center"><User className="mr-1.5 h-4 w-4" />Nephro ID: {nowServing.patientId.split('-')[0]}</p>
                    <Button variant="link" asChild className="p-0 h-auto mt-2">
                         <Link href={`/patients/${nowServing.patientId}`}>View Patient Profile</Link>
                    </Button>

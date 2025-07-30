@@ -35,7 +35,7 @@ export function TodaysAppointments() {
         try {
             const appDate = parseISO(app.date); 
             // Show scheduled appointments for today
-            return isToday(appDate) && app.status === 'Scheduled';
+            return isToday(appDate) && (app.status === 'Scheduled' || app.status === 'Waiting');
         } catch (e) {
             console.error("Error parsing appointment date:", app.date, e);
             return false;
@@ -147,9 +147,11 @@ export function TodaysAppointments() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Waiting', appointment.patientName)}>
-                        <Hourglass className="mr-2 h-4 w-4 text-amber-600" /> Mark as Waiting
-                      </DropdownMenuItem>
+                      {appointment.status === 'Scheduled' &&
+                        <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Waiting', appointment.patientName)}>
+                          <Hourglass className="mr-2 h-4 w-4 text-amber-600" /> Mark as Waiting
+                        </DropdownMenuItem>
+                      }
                       <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Completed', appointment.patientName)}>
                         <CalendarCheck className="mr-2 h-4 w-4 text-green-600" /> Mark Completed
                       </DropdownMenuItem>
@@ -178,7 +180,7 @@ export function TodaysAppointments() {
         ) : (
           <div className="flex-grow flex flex-col items-center justify-center text-center text-muted-foreground p-6">
             <CalendarDays className="w-12 h-12 mb-3" />
-            <p>No more patients scheduled for today.</p>
+            <p>No more patients scheduled or waiting for today.</p>
           </div>
         )}
       </CardContent>

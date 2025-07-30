@@ -23,7 +23,7 @@ export default function OpdLoginPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!mobileNumber || mobileNumber.length !== 10) {
+    if (!mobileNumber || mobileNumber.length < 10) {
       toast({
         title: "Invalid Mobile Number",
         description: "Please enter a valid 10-digit mobile number.",

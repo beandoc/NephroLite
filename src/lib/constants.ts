@@ -136,6 +136,8 @@ export const PATIENT_GROUP_NAMES: string[] = [
   "Glomerulonephritis", "Kidney transplant", "ADPKD", "Misc", "Infection"
 ];
 
+export const RESIDENCE_TYPES: Array<'Rural' | 'Urban' | 'Semi-Urban' | 'Other' | 'Not Set'> = ['Rural', 'Urban', 'Semi-Urban', 'Other', 'Not Set'];
+
 export const MOCK_DIAGNOSES: DiagnosisEntry[] = [
   { id: 'd001', name: 'Hypertension', icdName: 'Essential (primary) hypertension', icdCode: 'I10', clinicalNames: ['Hypertension', 'High Blood Pressure'] },
   { id: 'd002', name: 'Type 2 Diabetes Mellitus', icdName: 'Type 2 diabetes mellitus without complications', icdCode: 'E11.9', clinicalNames: ['Type 2 Diabetes Mellitus', 'T2DM'] },
@@ -346,5 +348,3 @@ export const PATIENT_GROUPS_FOR_ANALYSIS = [
   "Glomerulonephritis",
   "Post-Transplant",
 ];
-
-    
