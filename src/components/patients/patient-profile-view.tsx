@@ -14,6 +14,7 @@ import { PatientInvestigationsTabContent } from './profile-tabs/PatientInvestiga
 import { MockDiagnosisRx } from './profile-tabs/MockDiagnosisRx';
 import { HealthTrendsTabContent } from './profile-tabs/HealthTrendsTabContent';
 import { usePatientData } from '@/hooks/use-patient-data';
+import { useSearchParams } from 'next/navigation';
 
 
 interface PatientProfileViewProps {
@@ -22,9 +23,11 @@ interface PatientProfileViewProps {
 
 export function PatientProfileView({ patient: initialPatient }: PatientProfileViewProps) {
   const { getPatientById } = usePatientData();
+  const searchParams = useSearchParams();
   
   // Use state to manage the patient data, which can be updated by child components
   const [patient, setPatient] = useState(initialPatient);
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
 
   // Function to refresh patient data from the hook
   const refreshPatientData = () => {
@@ -38,11 +41,19 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
   React.useEffect(() => {
     setPatient(initialPatient);
   }, [initialPatient]);
+  
+  // Update active tab if URL param changes
+  React.useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
 
   const hasServiceDetails = patient.serviceName || patient.serviceNumber || patient.rank || patient.unitName || patient.formation;
 
   return (
-    <Tabs defaultValue="overview" className="w-full">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6">
         <TabsTrigger value="overview"><User className="w-4 h-4 mr-2 sm:hidden md:inline-block"/>Overview</TabsTrigger>
         <TabsTrigger value="visits"><FileText className="w-4 h-4 mr-2 sm:hidden md:inline-block"/>Visit History</TabsTrigger>

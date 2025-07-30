@@ -13,6 +13,7 @@ import { INVESTIGATION_MASTER_LIST, INVESTIGATION_PANELS } from '@/lib/constants
 import { Microscope, Beaker, Dna, Bone, Droplet, Send, Search, X, Package, TestTube, FlaskConical, Info } from 'lucide-react';
 import type { InvestigationMaster, InvestigationPanel } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
+import { OrderInvestigationsDialog } from '@/components/investigations/order-investigations-dialog';
 
 
 const groupIcons: Record<string, React.ElementType> = {
@@ -46,6 +47,7 @@ export default function InvestigationsPage() {
   const [selectedGroup, setSelectedGroup] = useState<string>('Hematological');
   const [selectedTests, setSelectedTests] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
 
   const handleTestSelection = (testId: string) => {
     setSelectedTests(prev => ({ ...prev, [testId]: !prev[testId] }));
@@ -60,7 +62,13 @@ export default function InvestigationsPage() {
     setSelectedTests(newSelectedTests);
   };
   
-  const selectedCount = Object.values(selectedTests).filter(Boolean).length;
+  const selectedTestIds = useMemo(() => {
+    return Object.entries(selectedTests)
+      .filter(([, isSelected]) => isSelected)
+      .map(([testId]) => testId);
+  }, [selectedTests]);
+
+  const selectedCount = selectedTestIds.length;
   
   const filteredData = useMemo(() => {
     if (!searchQuery) {
@@ -79,7 +87,7 @@ export default function InvestigationsPage() {
     <div className="container mx-auto py-2">
       <PageHeader
         title="Browse Investigations"
-        description="Browse available tests and panels. To log results, please navigate to a patient's profile and use the 'Investigations' tab."
+        description="Select tests and panels, then proceed to log the results for a specific patient."
       />
       <Card className="mt-4 mb-6">
         <CardContent className="p-4">
@@ -201,8 +209,7 @@ export default function InvestigationsPage() {
                     <ScrollArea className="h-96 border rounded-md p-2">
                        {selectedCount > 0 ? (
                            <ul className="space-y-1">
-                               {Object.entries(selectedTests).map(([testId, isSelected]) => {
-                                   if (!isSelected) return null;
+                               {selectedTestIds.map((testId) => {
                                    const test = INVESTIGATION_MASTER_LIST.find(t => t.id === testId);
                                    return test ? (
                                      <li key={test.id} className="text-sm flex justify-between items-center p-1.5 rounded-md hover:bg-muted">
@@ -218,14 +225,20 @@ export default function InvestigationsPage() {
                            </div>
                        )}
                     </ScrollArea>
-                    <Button disabled className="w-full mt-4">
+                    <Button onClick={() => setIsOrderDialogOpen(true)} disabled={selectedCount === 0} className="w-full mt-4">
                         <Info className="mr-2 h-4 w-4" />
-                        Log Results in Patient Profile
+                        Log Results for Patient
                     </Button>
                 </CardContent>
             </Card>
         </div>
       </div>
+      <OrderInvestigationsDialog
+        isOpen={isOrderDialogOpen}
+        onOpenChange={setIsOrderDialogOpen}
+        selectedTestIds={selectedTestIds}
+      />
     </div>
   );
 }
+

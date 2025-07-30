@@ -1,13 +1,13 @@
 
 "use client";
 
-import { useState } from 'react';
-import { useForm } from "react-hook-form";
+import { useState, useEffect, useCallback } from 'react';
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
-import { INVESTIGATION_GROUPS } from '@/lib/constants';
+import { INVESTIGATION_GROUPS, INVESTIGATION_MASTER_LIST } from '@/lib/constants';
 import type { InvestigationRecord } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -18,28 +18,37 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Notebook, Edit } from 'lucide-react';
+import { PlusCircle, Notebook, Edit, Trash2 } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 interface PatientInvestigationsTabContentProps {
   patientId: string;
 }
 
+const testEntrySchema = z.object({
+  id: z.string(),
+  group: z.string(),
+  name: z.string(),
+  result: z.string().min(1, "Result is required"),
+  unit: z.string().optional(),
+  normalRange: z.string().optional(),
+});
+
 const investigationRecordFormSchema = z.object({
   date: z.string().min(1, "Date is required"),
   notes: z.string().optional(),
-  testGroup: z.string().min(1, "Test group is required"),
-  testName: z.string().min(1, "Test name is required"),
-  testResult: z.string().min(1, "Result is required"),
-  testUnit: z.string().optional(),
-  testNormalRange: z.string().optional(),
+  tests: z.array(testEntrySchema).min(1, "At least one test result is required."),
 });
 type InvestigationRecordFormData = z.infer<typeof investigationRecordFormSchema>;
 
 export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigationsTabContentProps) => {
   const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const mockInvestigationRecords: InvestigationRecord[] = [
+  // Mock data would be replaced by actual data fetching in a real app
+  const [investigationRecords, setInvestigationRecords] = useState<InvestigationRecord[]>([
     {
       id: 'ir001',
       date: '2024-04-15',
@@ -60,122 +69,156 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
         { id: 't002b', group: 'Serology', name: 'ANA', result: 'Negative', unit: '' },
       ],
     },
-  ];
+  ]);
   
-  const sortedRecords = [...mockInvestigationRecords].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedRecords = [...investigationRecords].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const form = useForm<InvestigationRecordFormData>({
     resolver: zodResolver(investigationRecordFormSchema),
     defaultValues: {
       date: new Date().toISOString().split('T')[0],
       notes: "",
-      testGroup: "",
-      testName: "",
-      testResult: "",
-      testUnit: "",
-      testNormalRange: "",
+      tests: [],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "tests",
   });
 
   const handleSaveInvestigationRecord = (data: InvestigationRecordFormData) => {
     console.log("Form data (to be saved):", data);
+    const newRecord: InvestigationRecord = {
+        id: crypto.randomUUID(),
+        ...data
+    };
+    setInvestigationRecords(prev => [newRecord, ...prev]);
+
     toast({
       title: "Investigation Added (Mock)",
-      description: `Test "${data.testName}" on ${data.date} logged. Full saving functionality is under development.`,
+      description: `Record for ${data.date} logged with ${data.tests.length} test(s).`,
     });
     setIsAddDialogOpen(false);
-    form.reset({ 
-        date: new Date().toISOString().split('T')[0],
-        notes: "", 
-        testGroup: "", 
-        testName: "", 
-        testResult: "", 
-        testUnit: "", 
-        testNormalRange: "" 
-    });
   };
+  
+  const openDialogFromURL = useCallback(() => {
+    const dateParam = searchParams.get('date');
+    const testsParam = searchParams.get('tests');
+    
+    if (dateParam && testsParam) {
+      const testIds = testsParam.split(',');
+      const testsToLog = INVESTIGATION_MASTER_LIST.filter(t => testIds.includes(t.id));
+      
+      form.reset({
+        date: dateParam,
+        notes: "Ordered from main investigations browser.",
+        tests: testsToLog.map(t => ({
+          id: t.id,
+          group: t.group,
+          name: t.name,
+          result: "",
+          unit: "",
+          normalRange: ""
+        })),
+      });
+
+      setIsAddDialogOpen(true);
+      // Clean up URL to avoid re-triggering
+      const currentPath = window.location.pathname;
+      router.replace(currentPath, { scroll: false });
+    }
+  }, [searchParams, form, router]);
+  
+  useEffect(() => {
+    openDialogFromURL();
+  }, [openDialogFromURL]);
+
 
   return (
     <>
       <div className="flex justify-end mb-4">
-        <Button onClick={() => setIsAddDialogOpen(true)}><PlusCircle className="mr-2 h-4 w-4" />Add New Investigation Record</Button>
+        <Button onClick={() => {
+            form.reset({
+                date: new Date().toISOString().split('T')[0],
+                notes: "",
+                tests: [],
+            });
+            setIsAddDialogOpen(true);
+        }}><PlusCircle className="mr-2 h-4 w-4" />Add New Investigation Record</Button>
       </div>
 
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="font-headline flex items-center"><Notebook className="mr-2 h-5 w-5 text-primary"/>Add New Investigation Record</DialogTitle>
+            <DialogTitle className="font-headline flex items-center"><Notebook className="mr-2 h-5 w-5 text-primary"/>Log Investigation Results</DialogTitle>
             <DialogDescription>
-              Enter the details for the set of investigations performed on a specific date.
-              Note: This form currently supports adding one test per record for demonstration. A full system would allow multiple tests.
+              Enter the date and notes for this record, then fill in the results for each test.
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSaveInvestigationRecord)} className="space-y-4 py-2 max-h-[60vh] overflow-y-auto pr-2">
-              <FormField control={form.control} name="date" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date of Investigation</FormLabel>
-                  <FormControl><Input type="date" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="notes" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Overall Notes (Optional)</FormLabel>
-                  <FormControl><Textarea placeholder="Any overall notes for this set of investigations" {...field} rows={2} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+            <form onSubmit={form.handleSubmit(handleSaveInvestigationRecord)} className="space-y-4 py-2 max-h-[70vh] overflow-y-auto pr-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField control={form.control} name="date" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date of Investigation</FormLabel>
+                    <FormControl><Input type="date" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                 <FormField control={form.control} name="notes" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Overall Notes (Optional)</FormLabel>
+                    <FormControl><Input placeholder="Any overall notes for this set of investigations" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
 
-              <Card className="pt-2">
-                <CardHeader className="pb-2 pt-2"><CardTitle className="text-md font-semibold">Test Entry</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
-                  <FormField control={form.control} name="testGroup" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Test Group</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select group" /></SelectTrigger></FormControl>
-                        <SelectContent>
-                          {INVESTIGATION_GROUPS.map(group => <SelectItem key={group} value={group}>{group}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="testName" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Test Name</FormLabel>
-                      <FormControl><Input placeholder="e.g., Hemoglobin, Serum Creatinine" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="testResult" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Result</FormLabel>
-                        <FormControl><Input placeholder="e.g., 12.5, Positive" {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <FormField control={form.control} name="testUnit" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Unit (Optional)</FormLabel>
-                        <FormControl><Input placeholder="e.g., g/dL, mg/dL" {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-md font-semibold">Test Results</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {fields.map((field, index) => (
+                      <div key={field.id} className="p-3 border rounded-lg space-y-2 relative bg-muted/50">
+                        <Button type="button" variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => remove(index)}>
+                          <Trash2 className="h-4 w-4 text-destructive"/>
+                        </Button>
+                        <p className="font-medium">{field.name} <Badge variant="secondary">{field.group}</Badge></p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                           <FormField control={form.control} name={`tests.${index}.result`} render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Result</FormLabel>
+                              <FormControl><Input placeholder="e.g., 12.5, Positive" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name={`tests.${index}.unit`} render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Unit</FormLabel>
+                              <FormControl><Input placeholder="e.g., g/dL" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={form.control} name={`tests.${index}.normalRange`} render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Normal Range</FormLabel>
+                              <FormControl><Input placeholder="e.g., 13.5-17.5" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <FormField control={form.control} name="testNormalRange" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Normal Range (Optional)</FormLabel>
-                      <FormControl><Input placeholder="e.g., 13.5-17.5" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
+                  <FormMessage>{form.formState.errors.tests?.message || form.formState.errors.tests?.root?.message}</FormMessage>
                 </CardContent>
               </Card>
-              <DialogFooter className="pt-4">
-                <Button type="button" variant="outline" onClick={() => { setIsAddDialogOpen(false); form.reset({ date: new Date().toISOString().split('T')[0], notes: "", testGroup: "", testName: "", testResult: "", testUnit: "", testNormalRange: "" }); }}>Cancel</Button>
+
+              <DialogFooter className="pt-4 sticky bottom-0 bg-background/95 pb-2">
+                <Button type="button" variant="outline" onClick={() => { setIsAddDialogOpen(false); }}>Cancel</Button>
                 <Button type="submit">Save Record (Mock)</Button>
               </DialogFooter>
             </form>
