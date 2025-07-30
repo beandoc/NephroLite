@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
-import { INVESTIGATION_MASTER_LIST } from '@/lib/constants';
+import { INVESTIGATION_MASTER_LIST, INVESTIGATION_PANELS } from '@/lib/constants';
 import type { InvestigationRecord, InvestigationTest } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -17,9 +17,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Notebook, Edit, Trash2, MoreVertical } from 'lucide-react';
+import { PlusCircle, Notebook, Edit, Trash2, MoreVertical, ChevronsUpDown, Package, TestTube } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+
 
 interface PatientInvestigationsTabContentProps {
   patientId: string;
@@ -48,6 +51,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
   const searchParams = useSearchParams();
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isSearchPopoverOpen, setIsSearchPopoverOpen] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState<InvestigationRecord | null>(null);
 
   // Mock data would be replaced by actual data fetching in a real app
@@ -160,6 +164,16 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
   useEffect(() => {
     openDialogFromURL();
   }, [openDialogFromURL]);
+  
+   const addTestsToForm = (testsToAdd: InvestigationTest[]) => {
+    const existingTestNames = fields.map(f => f.name);
+    const newTests = testsToAdd.filter(t => !existingTestNames.includes(t.name));
+    if(newTests.length > 0) {
+      append(newTests);
+    }
+    setIsSearchPopoverOpen(false);
+  };
+
 
   return (
     <>
@@ -202,16 +216,50 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
               <Card>
                 <CardHeader>
                   <CardTitle className="text-md font-semibold">Test Results</CardTitle>
+                  <CardDescription>Add tests or panels using the search box below, then enter the results.</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  <Popover open={isSearchPopoverOpen} onOpenChange={setIsSearchPopoverOpen}>
+                      <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start mb-4">
+                              <PlusCircle className="mr-2 h-4 w-4" /> Add Test or Panel...
+                          </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                          <Command>
+                              <CommandInput placeholder="Search for tests or panels..." />
+                              <CommandList>
+                                  <CommandEmpty>No results found.</CommandEmpty>
+                                  <CommandGroup heading={<div className="flex items-center"><Package className="mr-2 h-4 w-4"/>Panels</div>}>
+                                      {INVESTIGATION_PANELS.map(panel => (
+                                          <CommandItem key={panel.id} onSelect={() => {
+                                              const tests = INVESTIGATION_MASTER_LIST.filter(t => panel.testIds.includes(t.id));
+                                              addTestsToForm(tests.map(t => ({ id: t.id, name: t.name, group: t.group, result: '', unit: '', normalRange: ''})));
+                                          }}>
+                                              {panel.name}
+                                          </CommandItem>
+                                      ))}
+                                  </CommandGroup>
+                                   <CommandGroup heading={<div className="flex items-center"><TestTube className="mr-2 h-4 w-4"/>Individual Tests</div>}>
+                                       {INVESTIGATION_MASTER_LIST.map(test => (
+                                          <CommandItem key={test.id} onSelect={() => addTestsToForm([{...test, result: '', unit: '', normalRange: ''}])}>
+                                              {test.name}
+                                          </CommandItem>
+                                      ))}
+                                  </CommandGroup>
+                              </CommandList>
+                          </Command>
+                      </PopoverContent>
+                  </Popover>
+
                   <div className="space-y-4">
                     {fields.map((field, index) => (
                       <div key={field.id} className="p-3 border rounded-lg space-y-2 relative bg-muted/50">
                         <Button type="button" variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => remove(index)}>
                           <Trash2 className="h-4 w-4 text-destructive"/>
                         </Button>
-                        <div className="font-medium">
-                           <span>{field.name}</span> <Badge variant="secondary">{field.group}</Badge>
+                         <div>
+                           <span className="font-medium">{field.name}</span> <Badge variant="secondary">{field.group}</Badge>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                            <FormField control={form.control} name={`tests.${index}.result`} render={({ field }) => (
