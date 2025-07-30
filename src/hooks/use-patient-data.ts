@@ -265,12 +265,37 @@ export function usePatientData() {
     return patients.find(p => p.id === id);
   }, [patients]);
   
-  const updatePatient = useCallback((updatedPatientData: Patient): Patient | undefined => {
-    const patientIndex = patients.findIndex(p => p.id === updatedPatientData.id);
+  const updatePatient = useCallback((patientId: string, updatedData: PatientFormData): Patient | undefined => {
+    const patientIndex = patients.findIndex(p => p.id === patientId);
     if (patientIndex === -1) return undefined;
 
     const updatedPatients = [...patients];
-    updatedPatients[patientIndex] = updatedPatientData;
+    const existingPatient = updatedPatients[patientIndex];
+
+    updatedPatients[patientIndex] = {
+      ...existingPatient,
+      name: updatedData.name,
+      dob: updatedData.dob,
+      gender: updatedData.gender,
+      contact: updatedData.contact,
+      email: updatedData.email,
+      address: {
+        street: updatedData.address.street || "",
+        city: updatedData.address.city || "",
+        state: updatedData.address.state || "",
+        pincode: updatedData.address.pincode || "",
+      },
+      guardian: {
+        name: updatedData.guardian.relation === 'Self' ? updatedData.name : updatedData.guardian.name || "",
+        relation: updatedData.guardian.relation || "",
+        contact: updatedData.guardian.relation === 'Self' ? updatedData.contact : updatedData.guardian.contact || "",
+      },
+      clinicalProfile: {
+          ...existingPatient.clinicalProfile,
+          whatsappNumber: updatedData.whatsappNumber || '',
+          aabhaNumber: updatedData.uhid || '',
+      }
+    };
 
     saveData(updatedPatients);
     return updatedPatients[patientIndex];

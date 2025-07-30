@@ -30,7 +30,7 @@ import { format, parseISO } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GENDERS, INDIAN_STATES, RELATIONSHIPS } from "@/lib/constants";
-import type { PatientFormData } from "@/lib/types";
+import type { PatientFormData, Patient } from "@/lib/types";
 import { useEffect } from 'react';
 
 const patientFormSchema = z.object({
@@ -69,13 +69,46 @@ const defaultFormValues: PatientFormData = {
 interface PatientFormProps {
   onSubmit: (data: PatientFormData) => void;
   isSubmitting?: boolean;
+  existingPatientData?: Patient | null;
 }
 
-export function PatientForm({ onSubmit, isSubmitting }: PatientFormProps) {
+export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: PatientFormProps) {
+  
+  const getInitialValues = (): PatientFormData => {
+    if (existingPatientData) {
+      return {
+        name: existingPatientData.name,
+        dob: existingPatientData.dob,
+        gender: existingPatientData.gender,
+        contact: existingPatientData.contact || "",
+        email: existingPatientData.email || "",
+        whatsappNumber: existingPatientData.clinicalProfile.whatsappNumber || "",
+        uhid: existingPatientData.clinicalProfile.aabhaNumber || "",
+        address: {
+          street: existingPatientData.address?.street || "",
+          city: existingPatientData.address?.city || "",
+          state: existingPatientData.address?.state || "",
+          pincode: existingPatientData.address?.pincode || "",
+        },
+        guardian: {
+          name: existingPatientData.guardian?.name || "",
+          relation: existingPatientData.guardian?.relation || "",
+          contact: existingPatientData.guardian?.contact || "",
+        },
+      };
+    }
+    return defaultFormValues;
+  };
+  
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientFormSchema),
-    defaultValues: defaultFormValues,
+    defaultValues: getInitialValues(),
   });
+  
+  useEffect(() => {
+    form.reset(getInitialValues());
+  }, [existingPatientData, form]);
+
 
   const today = new Date();
   const twelveYearsAgo = new Date(today.getFullYear() - 12, today.getMonth(), today.getDate());
@@ -91,7 +124,9 @@ export function PatientForm({ onSubmit, isSubmitting }: PatientFormProps) {
 
   const handleFormSubmit = (data: PatientFormData) => {
     onSubmit(data);
-    form.reset(defaultFormValues);
+    if (!existingPatientData) {
+        form.reset(defaultFormValues);
+    }
   }
 
 
@@ -259,7 +294,10 @@ export function PatientForm({ onSubmit, isSubmitting }: PatientFormProps) {
         </Card>
 
         <Button type="submit" className="w-full md:w-auto" disabled={isSubmitting}>
-          {isSubmitting ? "Registering Patient..." : "Register Patient"}
+          {isSubmitting 
+              ? (existingPatientData ? "Saving Changes..." : "Registering Patient...")
+              : (existingPatientData ? "Save Changes" : "Register Patient")
+          }
         </Button>
       </form>
     </Form>
