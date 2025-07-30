@@ -18,6 +18,7 @@ export default function NewPatientPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVisitDialogOpen, setIsVisitDialogOpen] = useState(false);
   const [newlyCreatedPatient, setNewlyCreatedPatient] = useState<Patient | null>(null);
+  const [formClearKey, setFormClearKey] = useState(0);
 
   const handleSubmit = (data: PatientFormData) => {
     setIsSubmitting(true);
@@ -33,11 +34,11 @@ export default function NewPatientPage() {
             Create Visit
           </Button>
         ),
-        duration: 10000, // Keep toast open longer
+        duration: 10000, 
       });
       
-      // The form will be reset via the onFormClear prop in PatientForm.
-      setIsSubmitting(false);
+      // Increment key to trigger form reset in child
+      setFormClearKey(prev => prev + 1);
 
     } catch (error) {
       console.error("Failed to register patient:", error);
@@ -46,13 +47,13 @@ export default function NewPatientPage() {
         description: "An error occurred while registering the patient. Please try again.",
         variant: "destructive",
       });
-      setIsSubmitting(false);
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
   const handleVisitCreated = (patientId: string) => {
     setIsVisitDialogOpen(false);
-    setNewlyCreatedPatient(null);
     toast({
       title: "Initial Visit Created",
       description: "Redirecting to patient profile...",
@@ -60,10 +61,10 @@ export default function NewPatientPage() {
     router.push(`/patients/${patientId}`);
   };
 
-  const handleClearForm = () => {
-    // This function is passed to PatientForm to signal that it should clear itself.
-    // The actual reset logic is within the PatientForm component itself.
+  const handleDialogClose = () => {
+    setNewlyCreatedPatient(null);
   };
+
 
   return (
     <div className="container mx-auto py-2">
@@ -72,7 +73,7 @@ export default function NewPatientPage() {
         description="Fill in the demographic and contact details for the new patient." 
       />
       <div className="mt-6">
-        <PatientForm onSubmit={handleSubmit} isSubmitting={isSubmitting} onFormClear={handleClearForm} />
+        <PatientForm key={formClearKey} onSubmit={handleSubmit} isSubmitting={isSubmitting} />
       </div>
 
       {newlyCreatedPatient && (
@@ -81,7 +82,7 @@ export default function NewPatientPage() {
           onOpenChange={setIsVisitDialogOpen}
           patient={newlyCreatedPatient}
           onVisitCreated={handleVisitCreated}
-          onDialogClose={() => setNewlyCreatedPatient(null)}
+          onDialogClose={handleDialogClose}
         />
       )}
     </div>

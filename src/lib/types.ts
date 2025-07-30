@@ -1,5 +1,6 @@
 
 
+
 export type Address = {
   street?: string;
   city?: string;
@@ -79,7 +80,7 @@ export type Visit = {
   visitType: string;
   visitRemark: string;
   groupName: string;
-  patientGender?: 'Male' | 'Female' | 'Other' | 'Prefer not to say';
+  patientGender?: 'Male' | 'Female';
   patientRelation?: string; // To check for 'Self'
   diagnoses?: Diagnosis[];
   clinicalData?: ClinicalVisitData;
@@ -90,7 +91,7 @@ export type Patient = {
   nephroId: string;
   name: string;
   dob: string; // YYYY-MM-DD
-  gender: 'Male' | 'Female' | 'Other' | 'Prefer not to say';
+  gender: 'Male' | 'Female';
   contact?: string;
   email?: string;
   address: Address;
@@ -115,7 +116,7 @@ export type Patient = {
 export type PatientFormData = {
   name: string;
   dob: string;
-  gender: 'Male' | 'Female' | 'Other' | 'Prefer not to say';
+  gender: 'Male' | 'Female';
   contact?: string;
   email?: string;
   whatsappNumber?: string;

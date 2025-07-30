@@ -2,7 +2,7 @@
 
 import type { DiagnosisEntry, InvestigationMaster, InvestigationPanel } from '@/lib/types';
 
-export const GENDERS: string[] = ['Male', 'Female', 'Other', 'Prefer not to say'];
+export const GENDERS: string[] = ['Male', 'Female'];
 
 export const BLOOD_GROUPS: string[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'];
 

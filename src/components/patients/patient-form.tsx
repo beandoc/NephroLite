@@ -69,10 +69,9 @@ const defaultFormValues: PatientFormData = {
 interface PatientFormProps {
   onSubmit: (data: PatientFormData) => void;
   isSubmitting?: boolean;
-  onFormClear: () => void;
 }
 
-export function PatientForm({ onSubmit, isSubmitting, onFormClear }: PatientFormProps) {
+export function PatientForm({ onSubmit, isSubmitting }: PatientFormProps) {
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientFormSchema),
     defaultValues: defaultFormValues,
@@ -92,7 +91,6 @@ export function PatientForm({ onSubmit, isSubmitting, onFormClear }: PatientForm
 
   const handleFormSubmit = (data: PatientFormData) => {
     onSubmit(data);
-    onFormClear();
     form.reset(defaultFormValues);
   }
 
