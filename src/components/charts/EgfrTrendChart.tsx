@@ -21,8 +21,8 @@ const mockDataMonthlyEgfr = [
 ];
 
 const mockMedicationPeriods = [
-    { name: "ACEi/ARB", start: "Mar", end: "Dec", color: "rgba(3, 105, 161, 0.1)" }, // Cyan-700 at 10% opacity
-    { name: "SGLT2i", start: "Jun", end: "Sep", color: "rgba(5, 150, 105, 0.1)" }, // Emerald-600 at 10% opacity
+    { name: "ACEi/ARB", start: "Mar", end: "Dec", color: "hsl(var(--chart-1))" }, // Cyan-700
+    { name: "SGLT2i", start: "Jun", end: "Sep", color: "hsl(var(--chart-2))" }, // Emerald-600
 ];
 
 const chartConfig = {
@@ -35,11 +35,11 @@ const chartConfig = {
 const CustomLegend = () => (
     <div className="flex justify-center items-center gap-4 mt-2 text-sm">
       <div className="flex items-center gap-1">
-        <div className="w-3 h-3" style={{ backgroundColor: 'rgba(3, 105, 161, 0.4)' }} />
+        <div className="w-3 h-3" style={{ backgroundColor: 'hsl(var(--chart-1))' }} />
         <span>ACEi/ARB Period</span>
       </div>
       <div className="flex items-center gap-1">
-        <div className="w-3 h-3" style={{ backgroundColor: 'rgba(5, 150, 105, 0.4)' }} />
+        <div className="w-3 h-3" style={{ backgroundColor: 'hsl(var(--chart-2))' }} />
         <span>SGLT2i Period</span>
       </div>
     </div>
@@ -86,7 +86,7 @@ export function EgfrTrendChart({}: EgfrTrendChartProps) {
           cursor={true}
           content={<ChartTooltipContent indicator="dot" hideLabel />}
         />
-        <Legend verticalAlign="top" height={36} />
+        <Legend content={<CustomLegend />} verticalAlign="bottom" />
         <defs>
           <linearGradient id="fillEgfrChart3" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="var(--color-egfr)" stopOpacity={0.8}/>
@@ -96,7 +96,7 @@ export function EgfrTrendChart({}: EgfrTrendChartProps) {
         
         {/* Render medication periods as reference areas */}
         {mockMedicationPeriods.map(period => (
-           <ReferenceArea key={period.name} x1={period.start} x2={period.end} strokeOpacity={0.3} fill={period.color} />
+           <ReferenceArea key={period.name} x1={period.start} x2={period.end} strokeOpacity={0.3} fill={period.color} fillOpacity={0.1} />
         ))}
         
         <Area
@@ -118,7 +118,6 @@ export function EgfrTrendChart({}: EgfrTrendChartProps) {
         />
       </AreaChart>
     </ChartContainer>
-    <CustomLegend />
     </>
   );
 }
