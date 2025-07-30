@@ -45,7 +45,7 @@ const navItems: NavItem[] = [
   { href: "/patients", label: "Patient Management", icon: Users, matchStartsWith: true },
   { href: "/appointments", label: "Appointments", icon: CalendarDays, matchStartsWith: true },
   { href: "/investigations", label: "Investigations", icon: FlaskConical, matchStartsWith: true },
-  { href: "/lab-results", label: "Lab Results", icon: FlaskConical, matchStartsWith: true, disabled: true }, // Add lab-results, can be hidden
+  { href: "/lab-results", label: "Lab Results", icon: FlaskConical, matchStartsWith: true },
   { href: "/search", label: "Advanced Search", icon: SearchCheck },
   { href: "/clinical-tools", label: "Clinical Tools", icon: Stethoscope },
   { href: "/communication", label: "Communication", icon: MessageCircle },
@@ -66,12 +66,10 @@ export function SidebarNav() {
   const pathname = usePathname();
 
   const isAnalyticsActive = pathname.startsWith('/analytics');
-  
-  const visibleNavItems = navItems.filter(item => item.href !== '/lab-results'); // Hide lab results from nav
 
   return (
     <SidebarMenu>
-      {visibleNavItems.map((item) => {
+      {navItems.map((item) => {
         if (item.href === "/analytics") {
           return (
             <SidebarMenuItem key={item.label}>
