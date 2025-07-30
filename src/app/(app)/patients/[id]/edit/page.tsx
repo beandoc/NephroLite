@@ -15,7 +15,7 @@ import { ArrowLeft } from 'lucide-react';
 export default function EditPatientPage() {
   const router = useRouter();
   const params = useParams();
-  const { getPatientById, updatePatient } = usePatientData();
+  const { getPatientById, updatePatient, isLoading: isPatientDataLoading } = usePatientData();
   const { toast } = useToast();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,7 +23,7 @@ export default function EditPatientPage() {
   const patientId = typeof params.id === 'string' ? params.id : undefined;
 
   useEffect(() => {
-    if (patientId) {
+    if (patientId && !isPatientDataLoading) {
       const fetchedPatient = getPatientById(patientId);
       if (fetchedPatient) {
         setPatient(fetchedPatient);
@@ -33,7 +33,7 @@ export default function EditPatientPage() {
       }
       setIsLoading(false);
     }
-  }, [patientId, getPatientById, router, toast]);
+  }, [patientId, getPatientById, router, toast, isPatientDataLoading]);
 
   const handleSubmit = (data: PatientFormData) => {
     if (!patient) return;
@@ -45,11 +45,19 @@ export default function EditPatientPage() {
     router.push(`/patients/${patient.id}`);
   };
 
-  if (isLoading || !patient) {
+  if (isLoading || isPatientDataLoading) {
     return (
       <div className="container mx-auto py-2">
         <PageHeader title="Loading Patient for Editing..." />
         <Skeleton className="h-96 w-full mt-6" />
+      </div>
+    );
+  }
+
+  if (!patient) {
+     return (
+      <div className="container mx-auto py-2">
+        <PageHeader title="Could not load patient data." />
       </div>
     );
   }
