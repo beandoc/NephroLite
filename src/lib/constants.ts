@@ -261,6 +261,7 @@ export const INVESTIGATION_MASTER_LIST: InvestigationMaster[] = [
   { id: 'ser_007', name: 'C4', group: 'Serology' },
   { id: 'ser_008', name: 'ANCA (p-ANCA, c-ANCA)', group: 'Serology' },
   { id: 'ser_009', name: 'Anti-GBM Antibody', group: 'Serology' },
+  { id: 'ser_010', name: 'Anti PLA2R antibody', group: 'Serology' },
 
   // Urine Analysis
   { id: 'urn_001', name: 'Urine Routine & Microscopy (R/M)', group: 'Urine Analysis' },

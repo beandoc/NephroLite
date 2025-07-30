@@ -46,7 +46,17 @@ const investigationRecordFormSchema = z.object({
 });
 type InvestigationRecordFormData = z.infer<typeof investigationRecordFormSchema>;
 
+// Groups that are always narrative
 const NARRATIVE_GROUPS = ['Radiology', 'Special Investigations'];
+// Specific test names that are also narrative, even if not in the above groups
+const NARRATIVE_TEST_NAMES = [
+  'Urine Routine & Microscopy (R/M)',
+  'Urine Culture & Sensitivity',
+  'Blood Culture & Sensitivity',
+  'ECG',
+  'Kidney Biopsy',
+  'Peripheral Blood Smear (PBS)'
+];
 
 export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigationsTabContentProps) => {
   const { toast } = useToast();
@@ -257,7 +267,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
 
                   <div className="space-y-4">
                     {fields.map((field, index) => {
-                      const isNarrative = NARRATIVE_GROUPS.includes(field.group);
+                      const isNarrative = NARRATIVE_GROUPS.includes(field.group) || NARRATIVE_TEST_NAMES.includes(field.name);
                       return (
                         <div key={field.id} className="p-3 border rounded-lg space-y-2 relative bg-muted/50">
                           <Button type="button" variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => remove(index)}>
