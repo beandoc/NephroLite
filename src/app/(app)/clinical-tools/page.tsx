@@ -1,29 +1,63 @@
 
+"use client";
+
 import { PageHeader } from '@/components/shared/page-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Calculator, FilePlus2, Ruler } from 'lucide-react';
+import { EgfrCalculator } from '@/components/clinical-tools/EgfrCalculator';
+import { BmiCalculator } from '@/components/clinical-tools/BmiCalculator';
 
 export default function ClinicalToolsPage() {
   return (
     <div className="container mx-auto py-2">
       <PageHeader title="Clinical Tools" description="Access various clinical calculators and tools." />
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-        {[
-          { title: "eGFR Calculator", icon: Calculator, description: "Estimate Glomerular Filtration Rate." },
-          { title: "BMI Calculator", icon: Ruler, description: "Calculate Body Mass Index." },
-          { title: "Risk Score Assessors", icon: FilePlus2, description: "Assess patient risk scores (e.g., cardiovascular)." },
-        ].map(tool => (
-          <Card key={tool.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-lg font-medium font-headline">{tool.title}</CardTitle>
-              <tool.icon className="h-6 w-6 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">{tool.description}</p>
-              <p className="text-center text-muted-foreground pt-4 italic">Tool under development.</p>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+        
+        <Card className="lg:row-span-2">
+          <CardHeader>
+            <div className="flex items-center">
+              <Calculator className="h-6 w-6 mr-3 text-primary" />
+              <CardTitle className="text-lg font-medium font-headline">eGFR Calculator (CKD-EPI 2021)</CardTitle>
+            </div>
+            <CardDescription>Estimate Glomerular Filtration Rate using the 2021 CKD-EPI Creatinine equation.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <EgfrCalculator />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+             <div className="flex items-center">
+              <Ruler className="h-6 w-6 mr-3 text-primary" />
+              <CardTitle className="text-lg font-medium font-headline">BMI Calculator</CardTitle>
+            </div>
+            <CardDescription>Calculate Body Mass Index.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <BmiCalculator />
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+             <div className="flex items-center">
+              <FilePlus2 className="h-6 w-6 mr-3 text-primary" />
+              <CardTitle className="text-lg font-medium font-headline">Risk Score Assessors</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Assess patient risk scores (e.g., KFRE for kidney failure risk).
+            </p>
+            <div className="h-24 flex items-center justify-center border-2 border-dashed rounded-lg mt-4">
+              <p className="text-center text-muted-foreground italic">
+                Risk score calculators are under development.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
       </div>
     </div>
   );
