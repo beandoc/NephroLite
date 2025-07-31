@@ -2,7 +2,6 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAppointmentData } from '@/hooks/use-appointment-data';
 import { isToday, parseISO } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,7 +15,7 @@ import { usePatientData } from '@/hooks/use-patient-data';
 export default function OpdLoginPage() {
   const [mobileNumber, setMobileNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const [appointmentId, setAppointmentId] = useState<string | null>(null);
   const { toast } = useToast();
   const { appointments, isLoading: appointmentsLoading } = useAppointmentData();
   const { patients, isLoading: patientsLoading } = usePatientData();
@@ -34,7 +33,6 @@ export default function OpdLoginPage() {
 
     setIsLoading(true);
 
-    // Find the patient and their appointment for today
     const patientWithMobile = patients.find(p => p.contact === mobileNumber);
     if (!patientWithMobile) {
       toast({
@@ -46,8 +44,8 @@ export default function OpdLoginPage() {
       return;
     }
 
-    const todaysAppointment = appointments.find(app => 
-        app.patientId === patientWithMobile.id && isToday(parseISO(app.date))
+    const todaysAppointment = appointments.find(app =>
+      app.patientId === patientWithMobile.id && isToday(parseISO(app.date))
     );
 
     if (!todaysAppointment) {
@@ -62,11 +60,13 @@ export default function OpdLoginPage() {
 
     toast({
       title: "Login Successful",
-      description: `Welcome, ${patientWithMobile.name}. Redirecting to your status...`,
+      description: `Welcome, ${patientWithMobile.name}. Your status page will open.`,
     });
-
-    // Redirect to the public-facing display page, which now handles both queue and individual status
-    router.push(`/opd-display`);
+    
+    // Set the appointment ID and let the link handle navigation
+    setAppointmentId(todaysAppointment.id);
+    // Directly navigate using window.location to avoid router issues
+    window.location.href = `/opd-display/status/${todaysAppointment.id}`;
   };
 
   return (
