@@ -2,6 +2,8 @@
 "use client";
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { PatientsTable } from '@/components/patients/patients-table';
 import { PageHeader } from '@/components/shared/page-header';
@@ -10,7 +12,29 @@ import { PlusCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function PatientsPage() {
-  const { patients, isLoading, deletePatient } = usePatientData();
+  const { patients, isLoading } = usePatientData();
+  const searchParams = useSearchParams();
+  const statusFilter = searchParams.get('status');
+
+  const filteredPatients = useMemo(() => {
+    if (!statusFilter) {
+      return patients;
+    }
+    return patients.filter(p => p.patientStatus === statusFilter);
+  }, [patients, statusFilter]);
+
+  const getPageTitle = () => {
+    if (statusFilter === 'IPD') return 'IPD Patient Records';
+    if (statusFilter === 'OPD') return 'OPD Patient Records';
+    return 'Patient Records';
+  };
+
+  const getPageDescription = () => {
+    if (statusFilter === 'IPD') return 'Showing all currently admitted patients.';
+    if (statusFilter === 'OPD') return 'Showing all outpatient department patients.';
+    return 'Manage all patient information and history.';
+  };
+
 
   if (isLoading) {
     return (
@@ -34,8 +58,8 @@ export default function PatientsPage() {
   return (
     <div className="container mx-auto py-2">
       <PageHeader 
-        title="Patient Records" 
-        description="Manage all patient information and history."
+        title={getPageTitle()}
+        description={getPageDescription()}
         actions={
           <Button asChild>
             <Link href="/patients/new">
@@ -46,8 +70,9 @@ export default function PatientsPage() {
         backHref="/dashboard"
       />
       <div className="mt-6">
-        <PatientsTable patients={patients} onDeletePatient={deletePatient} />
+        <PatientsTable patients={filteredPatients} />
       </div>
     </div>
   );
 }
+

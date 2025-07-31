@@ -53,7 +53,7 @@ export function OverviewMetrics() {
       iconColorClass: "text-blue-500",
       borderColorClass: "border-blue-500",
       loading: patientsLoading || randomIncrease === null,
-      href: "/patients"
+      href: "/patients?status=OPD"
     },
     { 
       key: "total-ipd",
@@ -64,7 +64,7 @@ export function OverviewMetrics() {
       iconColorClass: "text-red-500",
       borderColorClass: "border-red-500",
       loading: patientsLoading,
-      href: "/patients"
+      href: "/patients?status=IPD"
     },
     { 
       key: "dialysis",

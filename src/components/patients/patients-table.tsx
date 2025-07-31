@@ -45,7 +45,7 @@ export function PatientsTable({ patients }: PatientsTableProps) {
   };
 
   if (patients.length === 0) {
-    return <p className="text-center text-muted-foreground py-8">No patients found. Add a new patient to get started.</p>;
+    return <p className="text-center text-muted-foreground py-8">No patients found. Add a new patient or clear filters to get started.</p>;
   }
 
   return (
@@ -56,7 +56,7 @@ export function PatientsTable({ patients }: PatientsTableProps) {
             <TableHead className="w-[100px]">Nephro ID</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Gender</TableHead>
-            <TableHead>Contact</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead>Primary Diagnosis</TableHead>
             <TableHead className="text-right w-[200px]">Actions</TableHead>
           </TableRow>
@@ -67,7 +67,14 @@ export function PatientsTable({ patients }: PatientsTableProps) {
               <TableCell className="font-medium">{patient.nephroId}</TableCell>
               <TableCell>{patient.name}</TableCell>
               <TableCell>{patient.gender}</TableCell>
-              <TableCell>{patient.contact}</TableCell>
+              <TableCell>
+                 <Badge 
+                    variant={patient.patientStatus === 'IPD' ? 'destructive' : 'secondary'}
+                    className={patient.patientStatus === 'Discharged' ? 'opacity-70' : ''}
+                 >
+                    {patient.patientStatus}
+                </Badge>
+              </TableCell>
               <TableCell>
                 <Badge variant="outline">{patient.clinicalProfile.primaryDiagnosis}</Badge>
               </TableCell>
