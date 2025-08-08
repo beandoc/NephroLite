@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { collection, onSnapshot, doc, getDoc, addDoc, updateDoc, deleteDoc, writeBatch, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData } from '@/lib/types';
+import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord } from '@/lib/types';
 import { format } from 'date-fns';
 import { VACCINATION_NAMES, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS } from '@/lib/constants';
 
@@ -56,8 +56,6 @@ export function usePatientData() {
       querySnapshot.forEach((doc) => {
         patientsData.push({ id: doc.id, ...doc.data() } as Patient);
       });
-      // By creating a new array, we ensure that React detects the change
-      // and re-renders components that depend on this hook.
       setPatients([...patientsData]);
       if(isLoading) setIsLoading(false);
     });
@@ -70,8 +68,6 @@ export function usePatientData() {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const year = String(now.getFullYear()).slice(-2);
     
-    // This logic to generate a new ID should ideally be a server-side transaction for true atomicity,
-    // but for this client-side implementation, we'll do a read-then-write.
     const q = query(collection(db, 'patients'), where('nephroId', '>=', `0000/${month}${year}`), where('nephroId', '<', `9999/${parseInt(month, 10) + 1}${year}`));
     const querySnapshot = await getDocs(q);
     const relevantPatients = querySnapshot.docs.map(doc => doc.data() as Patient);
@@ -107,6 +103,7 @@ export function usePatientData() {
       isTracked: false,
       residenceType: 'Not Set',
       visits: [],
+      investigationRecords: [],
       clinicalProfile: {
         ...getInitialClinicalProfile(),
         tags: [],
@@ -128,8 +125,6 @@ export function usePatientData() {
     const aabhaNumber = updatedData.uhid;
     const whatsappNumber = updatedData.whatsappNumber;
 
-    // We only update the fields that are part of the PatientFormData type.
-    // This avoids accidentally overwriting other important data.
     const dataToUpdate = {
         name: updatedData.name,
         dob: updatedData.dob,
@@ -200,14 +195,11 @@ export function usePatientData() {
     const updatedVisits = [...patient.visits];
     const existingVisit = updatedVisits[visitIndex];
     
-    // Merge existing data with new data
     existingVisit.clinicalData = { ...existingVisit.clinicalData, ...data };
     
-    // Also update top-level diagnoses if provided
     if (data.diagnoses && data.diagnoses.length > 0) {
       existingVisit.diagnoses = data.diagnoses;
     } else if (data.diagnoses === undefined) {
-      // Don't overwrite diagnoses if not provided in the form data
     } else {
        existingVisit.diagnoses = [];
     }
@@ -216,20 +208,49 @@ export function usePatientData() {
       visits: updatedVisits,
     });
   }, []);
+  
+  const addOrUpdateInvestigationRecord = useCallback(async (patientId: string, record: InvestigationRecord): Promise<void> => {
+    const patientDocRef = doc(db, 'patients', patientId);
+    const patientDoc = await getDoc(patientDocRef);
+    if (!patientDoc.exists()) throw new Error("Patient not found");
+
+    const patient = patientDoc.data() as Patient;
+    const records = patient.investigationRecords || [];
+    
+    const existingRecordIndex = records.findIndex(r => r.id === record.id);
+
+    if (existingRecordIndex > -1) {
+      records[existingRecordIndex] = record;
+    } else {
+      record.id = record.id || crypto.randomUUID();
+      records.push(record);
+    }
+
+    await updateDoc(patientDocRef, { investigationRecords: records });
+  }, []);
+  
+  const deleteInvestigationRecord = useCallback(async (patientId: string, recordId: string): Promise<void> => {
+    const patientDocRef = doc(db, 'patients', patientId);
+    const patientDoc = await getDoc(patientDocRef);
+    if (!patientDoc.exists()) throw new Error("Patient not found");
+
+    const patient = patientDoc.data() as Patient;
+    const records = patient.investigationRecords || [];
+    const updatedRecords = records.filter(r => r.id !== recordId);
+
+    await updateDoc(patientDocRef, { investigationRecords: updatedRecords });
+  }, []);
 
   const deletePatient = useCallback(async (patientId: string): Promise<void> => {
-    // This is a more robust way to handle deletion.
     const appointmentsQuery = query(collection(db, 'appointments'), where('patientId', '==', patientId));
     const appointmentsSnapshot = await getDocs(appointmentsQuery);
     
     const batch = writeBatch(db);
     
-    // Delete all appointments for the patient
     appointmentsSnapshot.forEach(doc => {
       batch.delete(doc.ref);
     });
 
-    // Delete the patient document
     const patientDocRef = doc(db, 'patients', patientId);
     batch.delete(patientDocRef);
 
@@ -239,7 +260,6 @@ export function usePatientData() {
   const admitPatient = useCallback(async (patientId: string): Promise<void> => {
     const patientDocRef = doc(db, 'patients', patientId);
     await updateDoc(patientDocRef, { patientStatus: 'IPD' });
-    // Manually trigger a refresh after the update
     await fetchPatients();
   }, [fetchPatients]);
 
@@ -260,5 +280,7 @@ export function usePatientData() {
     dischargePatient,
     addVisitToPatient,
     updateVisitData,
+    addOrUpdateInvestigationRecord,
+    deleteInvestigationRecord,
   };
 }

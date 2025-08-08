@@ -11,7 +11,7 @@ import { ClinicalProfileCard } from './cards/ClinicalProfileCard';
 import { ServiceDetailsCard } from './cards/ServiceDetailsCard';
 import { PatientVisitsTabContent } from './profile-tabs/PatientVisitsTabContent';
 import { PatientInvestigationsTabContent } from './profile-tabs/PatientInvestigationsTabContent';
-import { MockDiagnosisRx } from './profile-tabs/MockDiagnosisRx';
+import { PatientDiagnosisRx } from './profile-tabs/PatientDiagnosisRx';
 import { HealthTrendsTabContent } from './profile-tabs/HealthTrendsTabContent';
 import { usePatientData } from '@/hooks/use-patient-data';
 import { useSearchParams } from 'next/navigation';
@@ -25,11 +25,9 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
   const { getPatientById } = usePatientData();
   const searchParams = useSearchParams();
   
-  // Use state to manage the patient data, which can be updated by child components
   const [patient, setPatient] = useState(initialPatient);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
 
-  // Function to refresh patient data from the hook
   const refreshPatientData = () => {
     const freshPatientData = getPatientById(initialPatient.id);
     if (freshPatientData) {
@@ -37,12 +35,10 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
     }
   };
 
-  // Re-sync state if the initial prop changes
   React.useEffect(() => {
     setPatient(initialPatient);
   }, [initialPatient]);
   
-  // Update active tab if URL param changes
   React.useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
     if (tabFromUrl) {
@@ -88,10 +84,10 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
         <Card className="shadow-md">
           <CardHeader>
             <CardTitle className="font-headline text-xl">Diagnosis & Medication History</CardTitle>
-            <CardDescription>Historical view of diagnoses and prescribed medications.</CardDescription>
+            <CardDescription>Historical view of diagnoses and prescribed medications from all visits.</CardDescription>
           </CardHeader>
           <CardContent>
-            <MockDiagnosisRx patientId={patient.id} />
+            <PatientDiagnosisRx patient={patient} />
           </CardContent>
         </Card>
       </TabsContent>

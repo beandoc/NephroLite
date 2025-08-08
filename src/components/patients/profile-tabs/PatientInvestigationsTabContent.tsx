@@ -25,6 +25,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { usePatientData } from '@/hooks/use-patient-data';
 
 
 interface PatientInvestigationsTabContentProps {
@@ -48,9 +49,7 @@ const investigationRecordFormSchema = z.object({
 });
 type InvestigationRecordFormData = z.infer<typeof investigationRecordFormSchema>;
 
-// Groups that are always narrative
 const NARRATIVE_GROUPS = ['Radiology', 'Special Investigations'];
-// Specific test names that are also narrative, even if not in the above groups
 const NARRATIVE_TEST_NAMES = [
   'Urine Routine & Microscopy (R/M)',
   'Urine Culture & Sensitivity',
@@ -64,35 +63,15 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { getPatientById, addOrUpdateInvestigationRecord, deleteInvestigationRecord } = usePatientData();
+
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isSearchPopoverOpen, setIsSearchPopoverOpen] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState<InvestigationRecord | null>(null);
 
-  // Mock data would be replaced by actual data fetching in a real app
-  const [investigationRecords, setInvestigationRecords] = useState<InvestigationRecord[]>([
-    {
-      id: 'ir001',
-      date: '2024-04-15',
-      notes: 'Routine blood work after starting new medication.',
-      tests: [
-        { id: 't001a', group: 'Hematological', name: 'Hemoglobin', result: '11.5', unit: 'g/dL', normalRange: '13.5-17.5' },
-        { id: 't001b', group: 'Hematological', name: 'Platelet Count', result: '250', unit: 'x10^9/L', normalRange: '150-400' },
-        { id: 't001c', group: 'Biochemistry', name: 'Serum Creatinine', result: '1.9', unit: 'mg/dL', normalRange: '0.7-1.3' },
-        { id: 't001d', group: 'Biochemistry', name: 'eGFR', result: '38', unit: 'mL/min/1.73m²' },
-      ],
-    },
-    {
-      id: 'ir002',
-      date: '2024-01-10',
-      notes: 'Initial workup.',
-      tests: [
-        { id: 't002a', group: 'Urine Analysis', name: 'Protein', result: '2+', unit: '', normalRange: 'Negative' },
-        { id: 't002b', group: 'Serology', name: 'ANA', result: 'Negative', unit: '' },
-      ],
-    },
-  ]);
-  
+  const patient = getPatientById(patientId);
+  const investigationRecords = patient?.investigationRecords || [];
   const sortedRecords = [...investigationRecords].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const form = useForm<InvestigationRecordFormData>({
@@ -128,21 +107,21 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     setIsFormDialogOpen(true);
   };
 
-  const handleSaveInvestigationRecord = (data: InvestigationRecordFormData) => {
-    if (data.id) { // Editing existing record
-      setInvestigationRecords(prev => prev.map(rec => rec.id === data.id ? { ...rec, ...data } : rec));
-      toast({ title: "Investigation Updated", description: `Record for ${data.date} has been updated.` });
-    } else { // Creating new record
-      const newRecord: InvestigationRecord = { ...data, id: crypto.randomUUID() };
-      setInvestigationRecords(prev => [newRecord, ...prev]);
-      toast({ title: "Investigation Added", description: `Record for ${data.date} logged.` });
+  const handleSaveInvestigationRecord = async (data: InvestigationRecordFormData) => {
+    const recordToSave: InvestigationRecord = {
+        id: data.id || crypto.randomUUID(),
+        date: data.date,
+        notes: data.notes,
+        tests: data.tests
     }
+    await addOrUpdateInvestigationRecord(patientId, recordToSave);
+    toast({ title: "Investigation Saved", description: `Record for ${data.date} has been saved.` });
     setIsFormDialogOpen(false);
   };
 
-  const handleDeleteRecord = () => {
+  const handleDeleteRecord = async () => {
     if (!recordToDelete) return;
-    setInvestigationRecords(prev => prev.filter(rec => rec.id !== recordToDelete.id));
+    await deleteInvestigationRecord(patientId, recordToDelete.id);
     toast({ title: "Record Deleted", description: `Investigation record from ${format(parseISO(recordToDelete.date), 'PPP')} has been deleted.`, variant: "destructive" });
     setIsDeleteDialogOpen(false);
     setRecordToDelete(null);
@@ -217,7 +196,6 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                 testIndicesToRemove.push(index);
             }
         });
-        // Remove in reverse order to avoid index shifting issues
         testIndicesToRemove.reverse().forEach(index => remove(index));
     }
   };

@@ -1,4 +1,7 @@
 
+// This file is being replaced by PatientDiagnosisRx.tsx and will be removed.
+// The new file contains the real implementation for saving diagnosis and medication data.
+// Keeping this file to avoid breaking imports during the transition, but it is now obsolete.
 "use client";
 
 import { useToast } from "@/hooks/use-toast";

@@ -2,6 +2,7 @@
 
 
 
+
 export type Address = {
   street?: string;
   city?: string;
@@ -89,6 +90,23 @@ export type Visit = {
   patientId: string;
 };
 
+export type InvestigationTest = {
+  id: string; // Unique ID for the test entry within a record
+  group: string; // e.g., 'Hematological', 'Biochemistry'
+  name: string; // e.g., 'Hemoglobin', 'Serum Creatinine'
+  result: string;
+  unit?: string;
+  normalRange?: string;
+};
+
+export type InvestigationRecord = {
+  id: string; // Unique ID for the entire record/set of tests for a date
+  date: string; // YYYY-MM-DD, date of investigation
+  tests: InvestigationTest[];
+  notes?: string; // Optional overall notes for this set of investigations
+};
+
+
 export type Patient = {
   id: string;
   nephroId: string;
@@ -113,6 +131,7 @@ export type Patient = {
   isTracked: boolean;
   residenceType?: 'Rural' | 'Urban' | 'Semi-Urban' | 'Other' | 'Not Set';
   visits: Visit[];
+  investigationRecords?: InvestigationRecord[];
 };
 
 // This type mirrors the Zod schema in patient-form.tsx
@@ -179,22 +198,6 @@ export type InvestigationPanel = {
     name: string;
     group: InvestigationMaster['group'];
     testIds: string[];
-};
-
-export type InvestigationTest = {
-  id: string; // Unique ID for the test entry within a record
-  group: string; // e.g., 'Hematological', 'Biochemistry'
-  name: string; // e.g., 'Hemoglobin', 'Serum Creatinine'
-  result: string;
-  unit?: string;
-  normalRange?: string;
-};
-
-export type InvestigationRecord = {
-  id: string; // Unique ID for the entire record/set of tests for a date
-  date: string; // YYYY-MM-DD, date of investigation
-  tests: InvestigationTest[];
-  notes?: string; // Optional overall notes for this set of investigations
 };
 
 export type VisitFormData = {
