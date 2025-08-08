@@ -81,14 +81,14 @@ export default function PatientHealthTrendsPage() {
       .flatMap(rec => rec.tests.map(test => ({ ...test, date: rec.date })))
       .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
       
-    const latestEgfr = allTests.find(t => t.name === 'eGFR' && t.result);
-    const latestUacr = allTests.find(t => t.name === 'Urine Spot Protein/Creatinine Ratio (PCR)' && t.result);
+    const latestEgfrTest = allTests.find(t => t.name === 'eGFR' && t.result);
+    const latestUacrTest = allTests.find(t => t.name === 'Urine Spot Protein/Creatinine Ratio (PCR)' && t.result);
     
-    const date = latestEgfr?.date || latestUacr?.date;
+    const date = latestEgfrTest?.date || latestUacrTest?.date;
 
     return {
-        eGFR: latestEgfr ? parseFloat(latestEgfr.result) : null,
-        UACR: latestUacr ? parseFloat(latestUacr.result) : null,
+        eGFR: latestEgfrTest ? parseFloat(latestEgfrTest.result) : null,
+        UACR: latestUacrTest ? parseFloat(latestUacrTest.result) : null,
         date: date ? format(parseISO(date), 'PPP') : undefined,
     }
   }, [patient]);
