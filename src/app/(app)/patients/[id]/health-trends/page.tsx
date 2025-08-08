@@ -15,10 +15,9 @@ import { PatientEvents } from '@/components/patients/PatientEvents';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
-import { calculateKfre } from '@/lib/kfre-calculator';
+import { calculateKfre, calculateEgfrFromCreatinine } from '@/lib/kfre-calculator';
 import { calculatePreventRisk } from '@/lib/prevent-calculator';
 import type { PreventInput } from '@/lib/prevent-calculator';
-import { calculateEgfrFromCreatinine } from '@/lib/kfre-calculator';
 
 interface PredictionCardProps {
   title: string;
@@ -325,3 +324,4 @@ export default function PatientHealthTrendsPage() {
     </div>
   );
 }
+
