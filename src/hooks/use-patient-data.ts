@@ -5,7 +5,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { collection, onSnapshot, doc, getDoc, addDoc, updateDoc, deleteDoc, writeBatch, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile } from '@/lib/types';
-import { useAppointmentData } from './use-appointment-data';
 import { format } from 'date-fns';
 import { VACCINATION_NAMES, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS } from '@/lib/constants';
 
