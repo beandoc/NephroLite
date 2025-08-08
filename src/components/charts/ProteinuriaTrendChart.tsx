@@ -127,8 +127,8 @@ export function ProteinuriaTrendChart({ investigationRecords, medicationHistory 
         />
         <Legend content={<CustomLegend periods={medicationPeriods} />} verticalAlign="bottom" wrapperStyle={{paddingTop: 10}} />
         
-        {medicationPeriods.map(period => (
-           <ReferenceArea key={period.name} yAxisId="left" x1={period.start} x2={period.end} strokeOpacity={0.3} fill={period.color} fillOpacity={0.1} />
+        {medicationPeriods.map((period, index) => (
+           <ReferenceArea key={`${period.name}-${index}`} yAxisId="left" x1={period.start} x2={period.end} strokeOpacity={0.3} fill={period.color} fillOpacity={0.1} />
         ))}
         
         <Bar

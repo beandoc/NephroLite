@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import type { InvestigationRecord, Patient, Visit } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { SGLT2_INHIBITORS, ARBS, ACE_INHIBITORS, FINERENONE } from '@/lib/constants';
-import { calculateKfre } from "@/lib/kfre-calculator"; // We need this for the eGFR calc function inside it.
+import { calculateEgfrFromCreatinine } from "@/lib/kfre-calculator"; 
 
 const chartConfig = {
   egfr: {
@@ -36,24 +36,6 @@ const CustomLegend = ({ periods }: { periods: any[] }) => (
       ))}
     </div>
 );
-
-// Helper function to calculate eGFR from creatinine (based on CKD-EPI 2021)
-const calculateEgfrFromCreatinine = (creatinine: number, age: number, gender: 'Male' | 'Female'): number | null => {
-    if (!creatinine || !age || !gender) return null;
-    const kappa = gender === 'Female' ? 0.7 : 0.9;
-    const alpha = gender === 'Female' ? -0.241 : -0.302; // Updated alpha values for 2021
-    const genderCoefficient = gender === 'Female' ? 1.012 : 1;
-
-    const scrOverKappa = creatinine / kappa;
-    
-    const minTerm = Math.min(scrOverKappa, 1) ** alpha;
-    const maxTerm = Math.max(scrOverKappa, 1) ** -1.200;
-    
-    const ageTerm = 0.9938 ** age;
-
-    const egfr = 142 * minTerm * maxTerm * ageTerm * genderCoefficient;
-    return egfr;
-}
 
 
 interface EgfrTrendChartProps {
