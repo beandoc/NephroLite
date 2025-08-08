@@ -59,12 +59,11 @@ export default function RegistrationPage() {
       return;
     }
 
-    let foundPatients: Patient[] = [];
+    let foundPatients = patients;
 
-    // Prioritize search by Nephro ID if provided
     if (termNephroId) {
-      foundPatients = patients.filter(p => {
-        const [prefix, dateSuffix] = p.nephroId.split('/');
+      foundPatients = foundPatients.filter(p => {
+        const [prefix] = p.nephroId.split('/');
         const [searchPrefix, searchDateSuffix] = termNephroId.split('/');
         
         if (searchDateSuffix) { 
@@ -73,8 +72,10 @@ export default function RegistrationPage() {
             return prefix.toLowerCase() === searchPrefix;
         }
       });
-    } else if (termName) {
-      foundPatients = patients.filter(p => p.name.toLowerCase().includes(termName));
+    }
+    
+    if (termName) {
+      foundPatients = foundPatients.filter(p => p.name.toLowerCase().includes(termName));
     }
     
     setSearchResults(foundPatients);
