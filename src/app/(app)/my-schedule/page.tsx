@@ -27,9 +27,15 @@ import {
 type AppointmentFilter = "all" | "scheduled" | "completed" | "cancelled" | "waiting" | "admitted";
 
 export default function MySchedulePage() {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const { appointments, isLoading: appointmentsLoading } = useAppointmentData();
   const [filter, setFilter] = useState<AppointmentFilter>("all");
+
+  useEffect(() => {
+    // Set the initial date only on the client side to avoid hydration mismatch
+    setSelectedDate(new Date());
+  }, []);
+
 
   const eventDays = useMemo(() => {
     if (appointmentsLoading) return [];
@@ -124,7 +130,7 @@ export default function MySchedulePage() {
             <CardDescription>Showing {appointmentsForSelectedDay.length} appointment(s).</CardDescription>
           </CardHeader>
           <CardContent className="flex-grow p-0 sm:p-4 pt-0">
-            {appointmentsLoading ? (
+            {appointmentsLoading || !selectedDate ? (
               <div className="space-y-4 p-4">
                 {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 w-full" />)}
               </div>
