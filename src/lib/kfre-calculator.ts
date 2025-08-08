@@ -78,7 +78,7 @@ export function calculateKfre(input: KFRE_Input): KFRE_Output {
   // Where S(t) is the baseline survival probability at time t.
   
   // Baseline survival from the paper for North American cohort
-  const BASELINE_SURVIVAL_2_YEAR = 0.9835;
+  const BASELINE_SURVIVAL_2_YEAR = 0.983; // As seen in the provided image formula
   const BASELINE_SURVIVAL_5_YEAR = 0.9525;
   
   const twoYearRisk = 100 * (1 - Math.pow(BASELINE_SURVIVAL_2_YEAR, Math.exp(predictorSum)));
