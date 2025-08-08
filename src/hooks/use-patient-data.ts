@@ -37,6 +37,18 @@ export function usePatientData() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchPatients = useCallback(async () => {
+    const q = collection(db, 'patients');
+    const querySnapshot = await getDocs(q);
+    const patientsData: Patient[] = [];
+    querySnapshot.forEach((doc) => {
+      patientsData.push({ id: doc.id, ...doc.data() } as Patient);
+    });
+    setPatients(patientsData);
+    setIsLoading(false);
+  }, []);
+
+
   useEffect(() => {
     const q = collection(db, 'patients');
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -47,11 +59,11 @@ export function usePatientData() {
       // By creating a new array, we ensure that React detects the change
       // and re-renders components that depend on this hook.
       setPatients([...patientsData]);
-      setIsLoading(false);
+      if(isLoading) setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [isLoading]);
 
   const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
     const now = new Date();
@@ -192,12 +204,15 @@ export function usePatientData() {
   const admitPatient = useCallback(async (patientId: string): Promise<void> => {
     const patientDocRef = doc(db, 'patients', patientId);
     await updateDoc(patientDocRef, { patientStatus: 'IPD' });
-  }, []);
+    // Manually trigger a refresh after the update
+    await fetchPatients();
+  }, [fetchPatients]);
 
   const dischargePatient = useCallback(async (patientId: string): Promise<void> => {
     const patientDocRef = doc(db, 'patients', patientId);
     await updateDoc(patientDocRef, { patientStatus: 'Discharged' });
-  }, []);
+    await fetchPatients();
+  }, [fetchPatients]);
 
   return {
     patients,
