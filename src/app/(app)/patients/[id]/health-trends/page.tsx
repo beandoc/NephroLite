@@ -202,7 +202,7 @@ export default function PatientHealthTrendsPage() {
             <CardDescription>Chart showing eGFR values over time with medication periods highlighted.</CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
-            <EgfrTrendChart investigationRecords={patient.investigationRecords || []} medicationHistory={patient.visits || []} />
+            <EgfrTrendChart patient={patient} />
           </CardContent>
         </Card>
 
