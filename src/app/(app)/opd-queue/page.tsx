@@ -16,21 +16,14 @@ import { useRouter } from 'next/navigation';
 import type { Appointment } from '@/lib/types';
 
 export default function OpdQueuePage() {
-  const { appointments, isLoading, updateAppointmentStatus, updateMultipleAppointmentStatuses } = useAppointmentData();
+  const { appointments, isLoading, updateMultipleAppointmentStatuses } = useAppointmentData(true); // <<<< Ask for OPD Queue specific data
   const { toast } = useToast();
   const router = useRouter();
 
   const { nowServing, waitingList } = useMemo(() => {
-    const todaysAppointments = appointments.filter(app => {
-      try {
-        return isToday(parseISO(app.date));
-      } catch {
-        return false;
-      }
-    });
-
-    const nowServing = todaysAppointments.find(app => app.status === 'Now Serving') || null;
-    const waitingList = todaysAppointments
+    // No need to filter by date anymore as the hook does it for us.
+    const nowServing = appointments.find(app => app.status === 'Now Serving') || null;
+    const waitingList = appointments
       .filter(app => app.status === 'Waiting')
       .sort((a, b) => a.time.localeCompare(b.time));
     

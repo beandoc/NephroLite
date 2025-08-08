@@ -1,12 +1,11 @@
 
-
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, writeBatch, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Appointment, Patient } from '@/lib/types';
-import { format } from 'date-fns';
+import { format, startOfDay, endOfDay } from 'date-fns';
 
 const initialAppointments: Appointment[] = [
     {
@@ -22,16 +21,29 @@ const initialAppointments: Appointment[] = [
     },
 ];
 
-export function useAppointmentData() {
+export function useAppointmentData(forOpdQueue: boolean = false) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const startTime = performance.now();
-    const q = collection(db, 'appointments');
+    
+    let q;
+    if (forOpdQueue) {
+      // For OPD Queue, we only care about today's appointments that are in a queueable state.
+      const today_start = format(startOfDay(new Date()), 'yyyy-MM-dd');
+      q = query(
+        collection(db, 'appointments'), 
+        where('date', '==', today_start),
+        where('status', 'in', ['Scheduled', 'Waiting', 'Now Serving', 'Completed'])
+      );
+    } else {
+      q = collection(db, 'appointments');
+    }
+    
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       // Seeding logic for initial data on first load if db is empty
-      if (querySnapshot.empty && initialAppointments.length > 0) {
+      if (!forOpdQueue && querySnapshot.empty && initialAppointments.length > 0) {
         const batch = writeBatch(db);
         initialAppointments.forEach(appt => {
             const docRef = doc(db, 'appointments', appt.id);
@@ -61,7 +73,7 @@ export function useAppointmentData() {
     });
 
     return () => unsubscribe();
-  }, [isLoading]);
+  }, [isLoading, forOpdQueue]);
 
   const addAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'status' | 'patientName'>, patient: Patient): Promise<Appointment> => {
     const newAppointmentData: Omit<Appointment, 'id'> = {
