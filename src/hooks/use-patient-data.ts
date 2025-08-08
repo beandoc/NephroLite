@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { collection, onSnapshot, doc, getDoc, addDoc, updateDoc, deleteDoc, writeBatch, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile } from '@/lib/types';
+import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData } from '@/lib/types';
 import { format } from 'date-fns';
 import { VACCINATION_NAMES, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS } from '@/lib/constants';
 
@@ -182,6 +182,41 @@ export function usePatientData() {
     });
   }, []);
 
+  const updateVisitData = useCallback(async (patientId: string, visitId: string, data: ClinicalVisitData): Promise<void> => {
+    const patientDocRef = doc(db, 'patients', patientId);
+    const patientDoc = await getDoc(patientDocRef);
+
+    if (!patientDoc.exists()) {
+      throw new Error("Patient not found");
+    }
+
+    const patient = patientDoc.data() as Patient;
+    const visitIndex = patient.visits.findIndex(v => v.id === visitId);
+
+    if (visitIndex === -1) {
+      throw new Error("Visit not found");
+    }
+    
+    const updatedVisits = [...patient.visits];
+    const existingVisit = updatedVisits[visitIndex];
+    
+    // Merge existing data with new data
+    existingVisit.clinicalData = { ...existingVisit.clinicalData, ...data };
+    
+    // Also update top-level diagnoses if provided
+    if (data.diagnoses && data.diagnoses.length > 0) {
+      existingVisit.diagnoses = data.diagnoses;
+    } else if (data.diagnoses === undefined) {
+      // Don't overwrite diagnoses if not provided in the form data
+    } else {
+       existingVisit.diagnoses = [];
+    }
+
+    await updateDoc(patientDocRef, {
+      visits: updatedVisits,
+    });
+  }, []);
+
   const deletePatient = useCallback(async (patientId: string): Promise<void> => {
     // This is a more robust way to handle deletion.
     const appointmentsQuery = query(collection(db, 'appointments'), where('patientId', '==', patientId));
@@ -224,5 +259,6 @@ export function usePatientData() {
     admitPatient,
     dischargePatient,
     addVisitToPatient,
+    updateVisitData,
   };
 }

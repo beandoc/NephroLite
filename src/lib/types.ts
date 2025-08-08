@@ -1,6 +1,7 @@
 
 
 
+
 export type Address = {
   street?: string;
   city?: string;
@@ -54,6 +55,7 @@ export type Medication = {
 };
 
 export type ClinicalVisitData = {
+  diagnoses?: Diagnosis[];
   history?: string;
   height?: string; // cm
   weight?: string; // kg
@@ -84,6 +86,7 @@ export type Visit = {
   patientRelation?: string; // To check for 'Self'
   diagnoses?: Diagnosis[];
   clinicalData?: ClinicalVisitData;
+  patientId: string;
 };
 
 export type Patient = {

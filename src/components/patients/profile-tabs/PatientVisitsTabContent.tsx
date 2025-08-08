@@ -63,7 +63,7 @@ export function PatientVisitsTabContent({ patient }: PatientVisitsTabContentProp
                     </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-0 sm:px-4 pt-2 pb-4 bg-card rounded-b-md">
-                    <ClinicalVisitDetails visit={visit} />
+                    <ClinicalVisitDetails visit={{...visit, patientId: patient.id}} />
                     </AccordionContent>
                 </AccordionItem>
                 ))}

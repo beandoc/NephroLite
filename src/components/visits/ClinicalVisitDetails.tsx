@@ -18,6 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/badge";
+import { usePatientData } from "@/hooks/use-patient-data";
 
 
 const diagnosisSchema = z.object({
@@ -37,7 +38,7 @@ const medicationSchema = z.object({
 
 
 const clinicalVisitSchema = z.object({
-  diagnosis: diagnosisSchema.optional(),
+  diagnoses: z.array(diagnosisSchema).optional(), // Changed to array
   medications: z.array(medicationSchema),
   history: z.string().optional(),
   height: z.string().optional(),
@@ -56,6 +57,8 @@ const clinicalVisitSchema = z.object({
   recommendations: z.string().optional(),
   usgReport: z.string().optional(),
   kidneyBiopsyReport: z.string().optional(),
+  // Added single diagnosis for form handling
+  diagnosis: diagnosisSchema.optional(),
 });
 
 type ClinicalVisitFormData = z.infer<typeof clinicalVisitSchema>;
@@ -66,6 +69,8 @@ interface ClinicalVisitDetailsProps {
 
 export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
   const { toast } = useToast();
+  const { updateVisitData } = usePatientData();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [availableDiagnoses, setAvailableDiagnoses] = useState<Diagnosis[]>([]);
 
   const form = useForm<ClinicalVisitFormData>({
@@ -128,17 +133,32 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
   }, [height, weight, gender, form]);
 
 
-  const onSubmit = (data: ClinicalVisitFormData) => {
-    // Transform single diagnosis back into an array for saving if needed
-    const dataToSave = {
-        ...data,
-        diagnoses: data.diagnosis ? [data.diagnosis] : []
-    };
-    console.log("Saving visit data for visit ID:", visit.id, dataToSave);
-    toast({
-      title: "Data Saved (Mock)",
-      description: "Clinical visit data has been logged to the console.",
-    });
+  const onSubmit = async (data: ClinicalVisitFormData) => {
+    setIsSubmitting(true);
+    try {
+      // Transform single diagnosis back into an array for saving if needed
+      const dataToSave: ClinicalVisitData = {
+          ...data,
+          diagnoses: data.diagnosis ? [data.diagnosis] : []
+      };
+      // remove the temporary single 'diagnosis' field
+      delete (dataToSave as any).diagnosis;
+
+      await updateVisitData(visit.patientId, visit.id, dataToSave);
+      toast({
+        title: "Clinical Data Saved",
+        description: "The visit details have been successfully saved to the database.",
+      });
+    } catch (error) {
+       toast({
+        title: "Save Failed",
+        description: "An error occurred while saving the visit data.",
+        variant: "destructive",
+      });
+       console.error("Failed to save visit data:", error);
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   const handleTemplateSelect = (templateKey: string) => {
@@ -400,8 +420,9 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
           />
 
           <div className="flex justify-end">
-            <Button type="submit">
-              <Save className="mr-2 h-4 w-4" /> Save Clinical Data (Mock)
+            <Button type="submit" disabled={isSubmitting}>
+              <Save className="mr-2 h-4 w-4" />
+              {isSubmitting ? "Saving..." : "Save Clinical Data"}
             </Button>
           </div>
         </form>
@@ -409,5 +430,3 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
     </div>
   );
 }
-
-    
