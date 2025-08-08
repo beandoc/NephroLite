@@ -1,6 +1,7 @@
 
 
 
+
 import type { DiagnosisEntry, InvestigationMaster, InvestigationPanel } from '@/lib/types';
 
 export const GENDERS: string[] = ['Male', 'Female'];
@@ -224,6 +225,9 @@ export const INVESTIGATION_MASTER_LIST: InvestigationMaster[] = [
   { id: 'bio_016', name: 'Liver Function Test (LFT)', group: 'Biochemistry' },
   { id: 'bio_017', name: 'Kidney Function Test (KFT)', group: 'Biochemistry' },
   { id: 'bio_018', name: 'eGFR', group: 'Biochemistry', unit: 'mL/min/1.73m²', normalRange: '>90' },
+  { id: 'bio_019', name: 'Total Cholesterol', group: 'Biochemistry', unit: 'mg/dL', normalRange: '<200' },
+  { id: 'bio_020', name: 'HDL Cholesterol', group: 'Biochemistry', unit: 'mg/dL', normalRange: '>40' },
+  { id: 'bio_021', name: 'LDL Cholesterol', group: 'Biochemistry', unit: 'mg/dL', normalRange: '<100' },
   
   // Radiology
   { id: 'rad_001', name: 'USG KUB', group: 'Radiology' },
@@ -272,7 +276,8 @@ export const INVESTIGATION_PANELS: InvestigationPanel[] = [
     { id: 'panel_bio_3', name: 'Liver Function Test (LFT)', group: 'Biochemistry', testIds: ['bio_010', 'bio_011', 'bio_016'] }, // Simplified LFT
     { id: 'panel_bio_4', name: 'Diabetic Profile', group: 'Biochemistry', testIds: ['bio_012', 'bio_013', 'bio_014'] },
     { id: 'panel_bio_5', name: 'Metabolic Bone Disease (MBD) Screen', group: 'Biochemistry', testIds: ['bio_006', 'bio_007', 'bio_009'] },
-    
+    { id: 'panel_bio_6', name: 'Lipid Profile', group: 'Biochemistry', testIds: ['bio_019', 'bio_020', 'bio_021'] },
+
     // Serology Panels
     { id: 'panel_ser_1', name: 'Viral Markers', group: 'Serology', testIds: ['ser_001', 'ser_002', 'ser_003'] },
     { id: 'panel_ser_2', name: 'Glomerulonephritis (GN) Basic', group: 'Serology', testIds: ['ser_004', 'ser_006', 'ser_007'] },

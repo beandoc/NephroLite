@@ -1,5 +1,6 @@
 
 
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -82,7 +83,7 @@ const initialPatients: Patient[] = [
         ],
         clinicalProfile: {
             primaryDiagnosis: "Chronic Kidney disease",
-            tags: ["CKD", "Hypertension"],
+            tags: ["CKD", "Hypertension", "onStatin", "onAntiHypertensive"],
             nutritionalStatus: "Well-nourished",
             disability: "None",
             subspecialityFollowUp: "NIL",

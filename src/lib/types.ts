@@ -39,6 +39,10 @@ export type ClinicalProfile = {
   bloodGroup?: string;
   drugAllergies?: string;
   whatsappNumber?: string;
+  // Fields for PREVENT calculator
+  hasDiabetes?: boolean;
+  onAntiHypertensiveMedication?: boolean;
+  onLipidLoweringMedication?: boolean;
 };
 
 export type Diagnosis = {

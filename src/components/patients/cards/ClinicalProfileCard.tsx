@@ -2,22 +2,22 @@
 "use client";
 
 import type { Patient } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Stethoscope, ShieldQuestion, Leaf, Accessibility, Cigarette, Wine, ShieldAlert, PencilLine, TagsIcon, Syringe, HeartPulse } from 'lucide-react';
+import { Stethoscope, ShieldQuestion, Leaf, Accessibility, Cigarette, Wine, ShieldAlert, PencilLine, TagsIcon, Syringe, HeartPulse, CheckCircle, XCircle, HelpingHand } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
 interface ClinicalProfileCardProps {
   patient: Patient;
 }
 
-const DetailItem = ({ label, value, icon: Icon, className }: { label: string; value?: string | null; icon?: React.ElementType, className?: string }) => (
+const DetailItem = ({ label, value, icon: Icon, className }: { label: string; value?: React.ReactNode | null; icon?: React.ElementType, className?: string }) => (
   <div className={className}>
     <h3 className="text-sm font-medium text-muted-foreground flex items-center">
       {Icon && <Icon className="w-4 h-4 mr-2 text-primary" />}
       {label}
     </h3>
-    <p className="text-base">{value || 'N/A'}</p>
+    <div className="text-base pt-1">{value || 'N/A'}</div>
   </div>
 );
 
@@ -70,6 +70,18 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
             </h3>
             <POMRDisplay pomrText={clinicalProfile.pomr} />
           </div>
+        </CardContent>
+      </Card>
+      
+      <Card className="shadow-md">
+        <CardHeader className="bg-muted/30">
+            <CardTitle className="font-headline text-xl flex items-center"><HelpingHand className="w-6 h-6 mr-3 text-primary"/>Cardiovascular Risk Factors</CardTitle>
+            <CardDescription>Key factors for the PREVENT cardiovascular risk score calculation.</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-6">
+             <DetailItem label="Diabetes Status" value={typeof clinicalProfile.hasDiabetes === 'boolean' ? (clinicalProfile.hasDiabetes ? 'Yes' : 'No') : <span className="text-muted-foreground">Not Set</span>} />
+             <DetailItem label="On Anti-Hypertensive Meds" value={typeof clinicalProfile.onAntiHypertensiveMedication === 'boolean' ? (clinicalProfile.onAntiHypertensiveMedication ? 'Yes' : 'No') : <span className="text-muted-foreground">Not Set</span>} />
+             <DetailItem label="On Lipid-Lowering Meds" value={typeof clinicalProfile.onLipidLoweringMedication === 'boolean' ? (clinicalProfile.onLipidLoweringMedication ? 'Yes' : 'No') : <span className="text-muted-foreground">Not Set</span>} />
         </CardContent>
       </Card>
 
