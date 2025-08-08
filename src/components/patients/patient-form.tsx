@@ -107,7 +107,8 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
   
   useEffect(() => {
     form.reset(getInitialValues());
-  }, [existingPatientData, form]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingPatientData]);
 
 
   const today = new Date();

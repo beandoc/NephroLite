@@ -12,7 +12,6 @@ import { usePatientData } from '@/hooks/use-patient-data';
 
 interface DemographicsCardProps {
   patient: Patient;
-  onUpdate: () => void;
 }
 
 const DetailItem = ({ label, value, icon: Icon, className }: { label: string; value?: string | null; icon?: React.ElementType, className?: string }) => (
@@ -25,19 +24,17 @@ const DetailItem = ({ label, value, icon: Icon, className }: { label: string; va
   </div>
 );
 
-export function DemographicsCard({ patient, onUpdate }: DemographicsCardProps) {
+export function DemographicsCard({ patient }: DemographicsCardProps) {
   const { toast } = useToast();
   const { admitPatient, dischargePatient } = usePatientData();
 
   const handleAdmitPatient = () => {
     admitPatient(patient.id);
-    onUpdate(); // Notify parent to refresh data
     toast({ title: "Patient Admitted", description: `${patient.name} is now marked as IPD.` });
   };
 
   const handleDischargePatient = () => {
     dischargePatient(patient.id);
-    onUpdate(); // Notify parent to refresh data
     toast({ title: "Patient Discharged", description: `${patient.name} has been discharged.` });
   };
 

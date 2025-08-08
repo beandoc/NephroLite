@@ -155,7 +155,6 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
         description: "An error occurred while saving the visit data.",
         variant: "destructive",
       });
-       console.error("Failed to save visit data:", error);
     } finally {
         setIsSubmitting(false);
     }

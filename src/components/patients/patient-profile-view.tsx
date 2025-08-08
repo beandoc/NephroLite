@@ -25,19 +25,10 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
   const { getPatientById } = usePatientData();
   const searchParams = useSearchParams();
   
-  const [patient, setPatient] = useState(initialPatient);
+  // Use getPatientById to ensure we always have the latest data from the reactive hook
+  const patient = getPatientById(initialPatient.id) || initialPatient;
+  
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
-
-  const refreshPatientData = () => {
-    const freshPatientData = getPatientById(initialPatient.id);
-    if (freshPatientData) {
-      setPatient(freshPatientData);
-    }
-  };
-
-  React.useEffect(() => {
-    setPatient(initialPatient);
-  }, [initialPatient]);
   
   React.useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
@@ -59,7 +50,7 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
       </TabsList>
 
       <TabsContent value="overview" className="space-y-6">
-        <DemographicsCard patient={patient} onUpdate={refreshPatientData} />
+        <DemographicsCard patient={patient} />
         {hasServiceDetails && <ServiceDetailsCard patient={patient} />}
         <ClinicalProfileCard patient={patient} />
       </TabsContent>

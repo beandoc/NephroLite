@@ -37,18 +37,6 @@ export function usePatientData() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchPatients = useCallback(async () => {
-    const q = collection(db, 'patients');
-    const querySnapshot = await getDocs(q);
-    const patientsData: Patient[] = [];
-    querySnapshot.forEach((doc) => {
-      patientsData.push({ id: doc.id, ...doc.data() } as Patient);
-    });
-    setPatients(patientsData);
-    setIsLoading(false);
-  }, []);
-
-
   useEffect(() => {
     const q = collection(db, 'patients');
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -56,8 +44,11 @@ export function usePatientData() {
       querySnapshot.forEach((doc) => {
         patientsData.push({ id: doc.id, ...doc.data() } as Patient);
       });
-      setPatients([...patientsData]);
-      if(isLoading) setIsLoading(false);
+      setPatients(patientsData);
+      if (isLoading) setIsLoading(false);
+    }, (error) => {
+      console.error("Error fetching patients: ", error);
+      setIsLoading(false);
     });
 
     return () => unsubscribe();
@@ -154,6 +145,7 @@ export function usePatientData() {
       ...visitData,
       patientGender: patient.gender,
       patientRelation: patient.guardian.relation,
+      patientId: patient.id,
     };
 
     const newVisits = [...(patient.visits || []), newVisit];
@@ -200,6 +192,7 @@ export function usePatientData() {
     if (data.diagnoses && data.diagnoses.length > 0) {
       existingVisit.diagnoses = data.diagnoses;
     } else if (data.diagnoses === undefined) {
+      // Do nothing, keep existing diagnoses
     } else {
        existingVisit.diagnoses = [];
     }
@@ -260,14 +253,12 @@ export function usePatientData() {
   const admitPatient = useCallback(async (patientId: string): Promise<void> => {
     const patientDocRef = doc(db, 'patients', patientId);
     await updateDoc(patientDocRef, { patientStatus: 'IPD' });
-    await fetchPatients();
-  }, [fetchPatients]);
+  }, []);
 
   const dischargePatient = useCallback(async (patientId: string): Promise<void> => {
     const patientDocRef = doc(db, 'patients', patientId);
     await updateDoc(patientDocRef, { patientStatus: 'Discharged' });
-    await fetchPatients();
-  }, [fetchPatients]);
+  }, []);
 
   return {
     patients,
