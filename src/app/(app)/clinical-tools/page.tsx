@@ -3,9 +3,10 @@
 
 import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Calculator, FilePlus2, Ruler } from 'lucide-react';
+import { Calculator, FilePlus2, Ruler, ShieldAlert } from 'lucide-react';
 import { EgfrCalculator } from '@/components/clinical-tools/EgfrCalculator';
 import { BmiCalculator } from '@/components/clinical-tools/BmiCalculator';
+import { KfreCalculator } from '@/components/clinical-tools/KfreCalculator';
 
 export default function ClinicalToolsPage() {
   return (
@@ -13,7 +14,7 @@ export default function ClinicalToolsPage() {
       <PageHeader title="Clinical Tools" description="Access various clinical calculators and tools." />
       <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
         
-        <Card className="lg:row-span-2">
+        <Card>
           <CardHeader>
             <div className="flex items-center">
               <Calculator className="h-6 w-6 mr-3 text-primary" />
@@ -29,6 +30,19 @@ export default function ClinicalToolsPage() {
         <Card>
           <CardHeader>
              <div className="flex items-center">
+              <ShieldAlert className="h-6 w-6 mr-3 text-primary" />
+              <CardTitle className="text-lg font-medium font-headline">Kidney Failure Risk (KFRE)</CardTitle>
+            </div>
+             <CardDescription>Calculate the 2 and 5-year risk of kidney failure.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <KfreCalculator />
+          </CardContent>
+        </Card>
+        
+        <Card className="lg:col-span-2">
+          <CardHeader>
+             <div className="flex items-center">
               <Ruler className="h-6 w-6 mr-3 text-primary" />
               <CardTitle className="text-lg font-medium font-headline">BMI Calculator</CardTitle>
             </div>
@@ -36,25 +50,6 @@ export default function ClinicalToolsPage() {
           </CardHeader>
           <CardContent>
             <BmiCalculator />
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-             <div className="flex items-center">
-              <FilePlus2 className="h-6 w-6 mr-3 text-primary" />
-              <CardTitle className="text-lg font-medium font-headline">Risk Score Assessors</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Assess patient risk scores (e.g., KFRE for kidney failure risk).
-            </p>
-            <div className="h-24 flex items-center justify-center border-2 border-dashed rounded-lg mt-4">
-              <p className="text-center text-muted-foreground italic">
-                Risk score calculators are under development.
-              </p>
-            </div>
           </CardContent>
         </Card>
 
