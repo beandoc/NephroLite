@@ -33,71 +33,6 @@ const getInitialClinicalProfile = (): Omit<ClinicalProfile, 'tags'> => ({
   whatsappNumber: "",
 });
 
-const initialPatients: Patient[] = [
-    {
-        id: "vf2dUPqYyjiiFperqjSz",
-        nephroId: "1001/0825",
-        name: "sachin new test",
-        dob: "1988-08-08",
-        gender: "Male",
-        contact: "9876543210",
-        email: "sachin.test@example.com",
-        address: {
-            street: "123 Test Lane",
-            city: "Pune",
-            state: "Maharashtra",
-            pincode: "411001",
-        },
-        guardian: {
-            name: "sachin new test",
-            relation: "Self",
-            contact: "9876543210",
-        },
-        registrationDate: "2025-08-08",
-        patientStatus: "IPD",
-        isTracked: false,
-        residenceType: "Urban",
-        visits: [
-            {
-                id: "visit-1",
-                date: "2025-08-08",
-                visitType: "Routine",
-                visitRemark: "Initial registration visit.",
-                groupName: "Chronic Kidney disease",
-                patientId: "vf2dUPqYyjiiFperqjSz",
-                patientGender: "Male",
-                patientRelation: "Self",
-            }
-        ],
-        investigationRecords: [
-            {
-                id: "invest-1",
-                date: "2024-01-10",
-                notes: "Initial workup.",
-                tests: [
-                    { id: "urn_003", group: 'Urine Analysis', name: 'Protein', result: '2+', unit: 'N/A', normalRange: 'Negative' },
-                    { id: "ser_004", group: 'Serology', name: 'ANA', result: 'Negative', unit: 'N/A', normalRange: 'N/A' },
-                ]
-            }
-        ],
-        clinicalProfile: {
-            primaryDiagnosis: "Chronic Kidney disease",
-            tags: ["CKD", "Hypertension", "onStatin", "onAntiHypertensive"],
-            nutritionalStatus: "Well-nourished",
-            disability: "None",
-            subspecialityFollowUp: "NIL",
-            smokingStatus: "No",
-            alcoholConsumption: "No",
-            vaccinations: getDefaultVaccinations(),
-            pomr: "[2025-08-08] Visit (Routine): Initial registration visit.",
-            aabhaNumber: "1234-5678-9012",
-            bloodGroup: "O+",
-            drugAllergies: "None",
-            whatsappNumber: "9876543210",
-        },
-    },
-];
-
 export function usePatientData() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -105,19 +40,6 @@ export function usePatientData() {
   useEffect(() => {
     const q = collection(db, 'patients');
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      // Seeding logic for initial data on first load if db is empty
-      if (querySnapshot.empty && initialPatients.length > 0) {
-          const batch = writeBatch(db);
-          initialPatients.forEach(p => {
-              const docRef = doc(db, 'patients', p.id);
-              const patientData = {...p};
-              delete (patientData as any).id;
-              batch.set(docRef, patientData);
-          });
-          batch.commit().catch(err => {
-              console.error("Error seeding initial data:", err);
-          });
-      }
       const patientsData: Patient[] = [];
       querySnapshot.forEach((doc) => {
         patientsData.push({ id: doc.id, ...doc.data() } as Patient);
