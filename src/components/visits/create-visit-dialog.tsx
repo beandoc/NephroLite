@@ -79,17 +79,18 @@ export function CreateVisitDialog({
   }, [isOpen, form, onDialogClose]);
 
   const onSubmit = async (data: VisitFormData) => {
-    if (!patient) return; // Guard clause
+    if (!patient) return;
     setIsSubmitting(true);
     try {
       await addVisitToPatient(patient.id, data);
-      onVisitCreated(patient.id);
+      // Important: Reset state BEFORE calling the navigation callback
+      setIsSubmitting(false);
       form.reset(defaultValues);
+      onVisitCreated(patient.id);
     } catch (error) {
       console.error("Failed to create visit:", error);
+      setIsSubmitting(false); // Ensure state is reset on error
       // You might want to show a toast message here
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
