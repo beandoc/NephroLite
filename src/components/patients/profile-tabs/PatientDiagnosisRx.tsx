@@ -34,12 +34,12 @@ export const PatientDiagnosisRx = ({ patient: initialPatient }: PatientDiagnosis
 
   // Flatten and sort the history from all visits
   const history = (patient.visits || [])
-    .filter(visit => visit.diagnoses || (visit.clinicalData?.medications && visit.clinicalData.medications.length > 0))
+    .filter(visit => (visit.diagnoses && visit.diagnoses.length > 0) || (visit.clinicalData?.medications && visit.clinicalData.medications.length > 0))
     .map(visit => ({
       id: visit.id,
       date: visit.date,
       diagnosis: visit.diagnoses && visit.diagnoses.length > 0 ? visit.diagnoses[0].name : "N/A", // Display first diagnosis
-      medication: visit.clinicalData?.medications?.map(m => m.name).join(', ') || "No medication prescribed",
+      medication: visit.clinicalData?.medications?.map(m => `${m.name} ${m.dosage || ''} ${m.frequency || ''}`.trim()).join(', ') || "No medication prescribed",
       doctor: 'Dr. Sachin' // Placeholder
     }))
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
