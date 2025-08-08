@@ -3,12 +3,12 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  projectId: "nephrolite-d8e95",
-  appId: "1:229893058058:web:99e59bee16b3630a0139f3",
-  storageBucket: "nephrolite-d8e95.appspot.com",
-  apiKey: "AIzaSyByw3ekGvxQCE0Fht5muCVNSH-bYwHSSpg",
-  authDomain: "nephrolite-d8e95.firebaseapp.com",
-  messagingSenderId: "229893058058",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase
