@@ -83,7 +83,7 @@ export default function AnalyticsPage() {
       { title: "Hemodialysis", value: patients.filter(p => p.clinicalProfile.tags.includes('HD')).length, colorClass: "border-blue-500", icon: Droplets, link: "/analytics/hd-module", disabled: true },
       { title: "Glomerulonephritis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Glomerulonephritis').length, colorClass: "border-green-500", icon: Stethoscope },
       { title: "Kidney transplant", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Transplant Prospect').length, colorClass: "border-green-600", icon: HeartPulse, link: "/analytics/transplant-module", disabled: true },
-      { title: "Chronic Kidney disease", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis?.startsWith('Chronic Kidney Disease')).length, colorClass: "border-cyan-500", icon: Activity },
+      { title: "Chronic Kidney disease", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis?.toLowerCase().startsWith('chronic kidney disease')).length, colorClass: "border-cyan-500", icon: Activity },
     ];
   }, [patients, patientsLoading]);
 
