@@ -5,7 +5,7 @@ import type { Patient } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { User, Microscope, Pill, FileText, TrendingUp } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DemographicsCard } from './cards/DemographicsCard';
 import { ClinicalProfileCard } from './cards/ClinicalProfileCard';
 import { ServiceDetailsCard } from './cards/ServiceDetailsCard';
@@ -28,12 +28,15 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
   // Use getPatientById to ensure we always have the latest data from the reactive hook
   const patient = getPatientById(initialPatient.id) || initialPatient;
   
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
+  const [activeTab, setActiveTab] = useState('overview');
   
-  React.useEffect(() => {
+  useEffect(() => {
+    // This effect runs on the client, preventing hydration mismatch
     const tabFromUrl = searchParams.get('tab');
     if (tabFromUrl) {
       setActiveTab(tabFromUrl);
+    } else {
+      setActiveTab('overview');
     }
   }, [searchParams]);
 

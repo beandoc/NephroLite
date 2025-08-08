@@ -39,7 +39,11 @@ export default function MySchedulePage() {
 
   const eventDays = useMemo(() => {
     if (appointmentsLoading) return [];
-    return appointments.map(app => startOfDay(parseISO(app.date)));
+    try {
+      return appointments.map(app => startOfDay(parseISO(app.date)));
+    } catch(e) {
+      return [];
+    }
   }, [appointments, appointmentsLoading]);
 
   const appointmentsForSelectedDay = useMemo(() => {
@@ -84,7 +88,7 @@ export default function MySchedulePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex justify-center">
-            {appointmentsLoading ? (
+            {appointmentsLoading || !selectedDate ? (
               <Skeleton className="h-[290px] w-[280px]" />
             ) : (
               <Calendar

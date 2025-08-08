@@ -25,22 +25,19 @@ export default function RegistrationPage() {
   const [searchResults, setSearchResults] = useState<Patient[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
 
-  const [alphabeticalPatients, setAlphabeticalPatients] = useState<Patient[]>([]);
-  const [byRegistrationDatePatients, setByRegistrationDatePatients] = useState<Patient[]>([]);
-
+  // Client-side state to prevent hydration errors
+  const [clientReady, setClientReady] = useState(false);
   useEffect(() => {
-    if (!patientsLoading && patients.length > 0) {
-      const alphaSorted = [...patients].sort((a, b) => a.name.localeCompare(b.name));
-      setAlphabeticalPatients(alphaSorted.slice(0, 5));
+    setClientReady(true);
+  }, []);
 
-      const dateSorted = [...patients].sort((a, b) => new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime());
-      setByRegistrationDatePatients(dateSorted.slice(0, 5));
-    } else if (!patientsLoading) {
-        setAlphabeticalPatients([]);
-        setByRegistrationDatePatients([]);
-    }
-  }, [patients, patientsLoading]);
-
+  const alphabeticalPatients = clientReady
+    ? [...patients].sort((a, b) => a.name.localeCompare(b.name)).slice(0, 5)
+    : [];
+  
+  const byRegistrationDatePatients = clientReady
+    ? [...patients].sort((a, b) => new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime()).slice(0, 5)
+    : [];
 
   const handleSearch = () => {
     setIsSearching(true);
@@ -63,14 +60,8 @@ export default function RegistrationPage() {
 
     if (termNephroId) {
       foundPatients = foundPatients.filter(p => {
-        const [prefix] = p.nephroId.split('/');
-        const [searchPrefix, searchDateSuffix] = termNephroId.split('/');
-        
-        if (searchDateSuffix) { 
-            return p.nephroId.toLowerCase() === termNephroId;
-        } else { 
-            return prefix.toLowerCase() === searchPrefix;
-        }
+        const nephroIdLower = p.nephroId.toLowerCase();
+        return nephroIdLower.includes(termNephroId);
       });
     }
     
@@ -189,7 +180,7 @@ export default function RegistrationPage() {
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <h3 className="text-md font-semibold mb-2">By Name (A-Z, Top 5)</h3>
-            {patientsLoading ? <Skeleton className="h-20 w-full" /> : alphabeticalPatients.length > 0 ? (
+            {(patientsLoading || !clientReady) ? <Skeleton className="h-20 w-full" /> : alphabeticalPatients.length > 0 ? (
               <ul className="space-y-2 text-sm">
                 {alphabeticalPatients.map(p => (
                   <li key={p.id}>
@@ -201,7 +192,7 @@ export default function RegistrationPage() {
           </div>
           <div>
             <h3 className="text-md font-semibold mb-2">By Registration Date (Newest, Top 5)</h3>
-            {patientsLoading ? <Skeleton className="h-20 w-full" /> : byRegistrationDatePatients.length > 0 ? (
+            {(patientsLoading || !clientReady) ? <Skeleton className="h-20 w-full" /> : byRegistrationDatePatients.length > 0 ? (
               <ul className="space-y-2 text-sm">
                 {byRegistrationDatePatients.map(p => (
                   <li key={p.id}>
