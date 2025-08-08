@@ -42,16 +42,16 @@ export function EgfrCalculator() {
   const onSubmit = (data: EgfrFormData) => {
     const { creatinine, age, gender } = data;
     const kappa = gender === 'Female' ? 0.7 : 0.9;
-    const alpha = gender === 'Female' ? -0.241 : -0.302;
-    const genderCoefficient = gender === 'Female' ? 1.012 : 1;
-
+    const alpha = gender === 'Female' ? -0.329 : -0.411;
+    const genderCoefficient = gender === 'Female' ? 1.018 : 1;
+    
     const scrOverKappa = creatinine / kappa;
 
-    const term1 = Math.min(scrOverKappa, 1) ** alpha;
-    const term2 = Math.max(scrOverKappa, 1) ** -1.200;
-    const ageTerm = 0.9938 ** age;
+    const minTerm = Math.min(scrOverKappa, 1) ** alpha;
+    const maxTerm = Math.max(scrOverKappa, 1) ** -1.209;
+    const ageTerm = 0.993 ** age;
 
-    const egfr = 142 * term1 * term2 * ageTerm * genderCoefficient;
+    const egfr = 141 * minTerm * maxTerm * ageTerm * genderCoefficient;
 
     setEgfrResult(egfr);
   };
