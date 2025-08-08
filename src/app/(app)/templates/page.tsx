@@ -328,7 +328,7 @@ export default function TemplatesPage() {
     const diagnosisToAdd = masterDiagnoses.find(d => d.id === diagnosisId);
     if (diagnosisToAdd) {
         // Here we map all clinical names under that one master diagnosis entry
-        const diagnosesToAppend = diagnosisToAdd.clinicalNames.map(name => ({
+        const diagnosesToAppend: Diagnosis[] = diagnosisToAdd.clinicalNames.map(name => ({
             id: `${diagnosisToAdd.id}-${name.replace(/\s/g, "")}`, // Create a more unique ID
             name: name,
             icdCode: diagnosisToAdd.icdCode,
