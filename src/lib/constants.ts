@@ -1,8 +1,3 @@
-
-
-
-
-
 import type { DiagnosisEntry, InvestigationMaster, InvestigationPanel } from '@/lib/types';
 
 export const GENDERS: string[] = ['Male', 'Female'];

@@ -16,6 +16,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import { calculateKfre } from '@/lib/kfre-calculator';
+import { calculatePreventRisk } from '@/lib/prevent-calculator';
+import type { PreventInput } from '@/lib/prevent-calculator';
 
 interface PredictionCardProps {
   title: string;
@@ -30,6 +32,13 @@ interface PredictionCardProps {
 const getRiskLevel = (value: number | null): PredictionCardProps['riskLevel'] => {
     if (value === null) return "N/A";
     if (value > 20) return "High Risk";
+    if (value > 5) return "Medium Risk";
+    return "Low Risk";
+};
+
+const getPreventRiskLevel = (value: number | null): PredictionCardProps['riskLevel'] => {
+    if (value === null) return "N/A";
+    if (value > 7.5) return "High Risk";
     if (value > 5) return "Medium Risk";
     return "Low Risk";
 };
@@ -75,21 +84,47 @@ export default function PatientHealthTrendsPage() {
   }, [patientId, getPatientById, dataLoading]);
   
   const latestLabData = useMemo(() => {
-    if (!patient?.investigationRecords) return { eGFR: null, UACR: null, date: null };
+    if (!patient?.investigationRecords) return { eGFR: null, UACR: null, totalCholesterol: null, hdlCholesterol: null, systolicBP: null, date: null };
     
     const allTests = patient.investigationRecords
       .flatMap(rec => rec.tests.map(test => ({ ...test, date: rec.date })))
       .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
       
-    const latestEgfrTest = allTests.find(t => t.name === 'eGFR' && t.result);
-    const latestUacrTest = allTests.find(t => t.name === 'Urine for AC Ratio (mg/gm)' && t.result);
+    const getLatestValue = (name: string): { value: number; date: string } | null => {
+        const test = allTests.find(t => t.name === name && t.result && !isNaN(parseFloat(t.result)));
+        if (test) {
+            return { value: parseFloat(test.result), date: test.date };
+        }
+        return null;
+    };
     
-    const date = latestEgfrTest?.date || latestUacrTest?.date;
+    const latestEgfrTest = getLatestValue('eGFR');
+    const latestUacrTest = getLatestValue('Urine for AC Ratio (mg/gm)');
+    const latestTotalCholesterol = getLatestValue('Total Cholesterol');
+    const latestHdlCholesterol = getLatestValue('HDL Cholesterol');
+    
+    const latestSystolicBP = patient.visits
+        .filter(v => v.clinicalData?.systolicBP)
+        .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
+        [0]?.clinicalData?.systolicBP;
+
+
+    const allDates = [
+        latestEgfrTest?.date, 
+        latestUacrTest?.date, 
+        latestTotalCholesterol?.date, 
+        latestHdlCholesterol?.date
+    ].filter(Boolean) as string[];
+
+    const latestDate = allDates.length > 0 ? allDates.sort((a,b) => parseISO(b).getTime() - parseISO(a).getTime())[0] : undefined;
 
     return {
-        eGFR: latestEgfrTest ? parseFloat(latestEgfrTest.result) : null,
-        UACR: latestUacrTest ? parseFloat(latestUacrTest.result) : null,
-        date: date ? format(parseISO(date), 'PPP') : undefined,
+        eGFR: latestEgfrTest?.value || null,
+        UACR: latestUacrTest?.value || null,
+        totalCholesterol: latestTotalCholesterol?.value || null,
+        hdlCholesterol: latestHdlCholesterol?.value || null,
+        systolicBP: latestSystolicBP ? parseFloat(latestSystolicBP) : null,
+        date: latestDate ? format(parseISO(latestDate), 'PPP') : undefined,
     }
   }, [patient]);
 
@@ -108,39 +143,75 @@ export default function PatientHealthTrendsPage() {
         uacr: latestLabData.UACR,
     });
   }, [patient, latestLabData]);
+
+  const preventScore = useMemo(() => {
+    if (!patient || !latestLabData.eGFR || !latestLabData.totalCholesterol || !latestLabData.hdlCholesterol || !latestLabData.systolicBP) {
+        return null;
+    }
+    const age = new Date().getFullYear() - parseISO(patient.dob).getFullYear();
+    const lastVisit = patient.visits.sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())[0];
+    const bmi = lastVisit?.clinicalData?.bmi ? parseFloat(lastVisit.clinicalData.bmi) : null;
+    
+    if (!bmi) return null;
+
+    const preventInput: PreventInput = {
+        age: age,
+        sex: patient.gender,
+        totalCholesterol: latestLabData.totalCholesterol,
+        hdlCholesterol: latestLabData.hdlCholesterol,
+        systolicBP: latestLabData.systolicBP,
+        isSmoker: patient.clinicalProfile.smokingStatus === 'Yes',
+        hasDiabetes: patient.clinicalProfile.hasDiabetes === true,
+        onAntiHypertensiveMedication: patient.clinicalProfile.onAntiHypertensiveMedication === true,
+        onStatinMedication: patient.clinicalProfile.onLipidLoweringMedication === true,
+        egfr: latestLabData.eGFR,
+        bmi: bmi,
+    };
+    return calculatePreventRisk(preventInput);
+  }, [patient, latestLabData]);
   
-  const getMissingData = (): string[] => {
+  const getKfreMissingData = (): string[] => {
       const missing = [];
       if (!latestLabData.eGFR) missing.push("eGFR");
       if (!latestLabData.UACR) missing.push("UACR");
+      return missing;
+  }
+  
+  const getPreventMissingData = (): string[] => {
+      const missing = [];
+      if (!latestLabData.eGFR) missing.push("eGFR");
+      if (!latestLabData.totalCholesterol) missing.push("Total Cholesterol");
+      if (!latestLabData.hdlCholesterol) missing.push("HDL Cholesterol");
+      if (!latestLabData.systolicBP) missing.push("Latest SBP");
+      if (!patient?.visits?.[0]?.clinicalData?.bmi) missing.push("Latest BMI");
       return missing;
   }
 
   const predictionData: PredictionCardProps[] = [
     { 
         title: "2-Year Risk of Kidney Failure (KFRE)", 
-        value: kfreScores.twoYear !== null ? `${kfreScores.twoYear.toFixed(2)}%` : "N/A", 
+        value: kfreScores.twoYear !== null ? `${kfreScores.twoYear.toFixed(1)}%` : "N/A", 
         riskLevel: getRiskLevel(kfreScores.twoYear), 
         lastDataDate: latestLabData.date, 
-        missingData: getMissingData(),
+        missingData: getKfreMissingData(),
         icon: AlertTriangle, 
         iconColorClass: "text-destructive" 
     },
     { 
         title: "5-Year Risk of Kidney Failure (KFRE)", 
-        value: kfreScores.fiveYear !== null ? `${kfreScores.fiveYear.toFixed(2)}%` : "N/A", 
+        value: kfreScores.fiveYear !== null ? `${kfreScores.fiveYear.toFixed(1)}%` : "N/A", 
         riskLevel: getRiskLevel(kfreScores.fiveYear), 
         lastDataDate: latestLabData.date,
-        missingData: getMissingData(),
+        missingData: getKfreMissingData(),
         icon: AlertTriangle, 
         iconColorClass: "text-destructive" 
     },
     { 
-        title: "2-Year Risk of Cardiovascular Disease", 
-        value: "N/A", 
-        riskLevel: "N/A", 
+        title: "10-Year ASCVD Risk (PREVENT)", 
+        value: preventScore !== null ? `${preventScore.tenYearRisk.toFixed(1)}%` : "N/A", 
+        riskLevel: getPreventRiskLevel(preventScore?.tenYearRisk ?? null), 
         lastDataDate: latestLabData.date, 
-        missingData: ["Model Not Implemented"],
+        missingData: getPreventMissingData(),
         icon: Heart, 
         iconColorClass: "text-red-500" 
     },
@@ -188,7 +259,7 @@ export default function PatientHealthTrendsPage() {
       <Card className="mb-6 mt-4">
         <CardHeader>
           <CardTitle className="font-headline flex items-center"><TrendingUp className="mr-2 h-5 w-5 text-primary"/>Risk Predictions</CardTitle>
-          <CardDescription>Calculated using the 8-variable Kidney Failure Risk Equation (Tangri et al., 2016). Requires latest eGFR and UACR values.</CardDescription>
+          <CardDescription>Risk scores are calculated based on the latest available lab data and clinical information.</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {predictionData.map(data => <PredictionCard key={data.title} {...data} />)}
