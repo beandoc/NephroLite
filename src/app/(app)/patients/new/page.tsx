@@ -44,6 +44,7 @@ export default function NewPatientPage() {
         description: "An error occurred while registering the patient. Please try again.",
         variant: "destructive",
       });
+      setIsSubmitting(false); // Also set submitting to false on error
     } finally {
         setIsSubmitting(false);
     }
@@ -57,6 +58,10 @@ export default function NewPatientPage() {
     });
     router.push(`/patients/${patientId}?tab=visits`);
   };
+
+  const handleDialogClose = () => {
+    setNewlyCreatedPatient(null);
+  }
 
   return (
     <div className="container mx-auto py-2">
@@ -74,6 +79,7 @@ export default function NewPatientPage() {
           onOpenChange={setIsVisitDialogOpen}
           patient={newlyCreatedPatient}
           onVisitCreated={handleVisitCreated}
+          onDialogClose={handleDialogClose}
         />
       )}
     </div>
