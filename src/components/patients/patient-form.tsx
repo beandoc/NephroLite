@@ -66,6 +66,33 @@ const defaultFormValues: PatientFormData = {
   guardian: { name: "", relation: "", contact: "" },
 };
 
+const getInitialValues = (patient?: Patient | null): PatientFormData => {
+  if (patient) {
+    return {
+      name: patient.name || "",
+      dob: patient.dob || "",
+      gender: patient.gender || "Male",
+      contact: patient.contact || "",
+      email: patient.email || "",
+      whatsappNumber: patient.clinicalProfile?.whatsappNumber || "",
+      uhid: patient.clinicalProfile?.aabhaNumber || "",
+      address: {
+        street: patient.address?.street || "",
+        city: patient.address?.city || "",
+        state: patient.address?.state || "",
+        pincode: patient.address?.pincode || "",
+      },
+      guardian: {
+        name: patient.guardian?.name || "",
+        relation: patient.guardian?.relation || "",
+        contact: patient.guardian?.contact || "",
+      },
+    };
+  }
+  return defaultFormValues;
+};
+
+
 interface PatientFormProps {
   onSubmit: (data: PatientFormData) => void;
   isSubmitting?: boolean;
@@ -74,43 +101,11 @@ interface PatientFormProps {
 
 export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: PatientFormProps) {
   
-  const getInitialValues = (): PatientFormData => {
-    if (existingPatientData) {
-      return {
-        name: existingPatientData.name || "",
-        dob: existingPatientData.dob || "",
-        gender: existingPatientData.gender || "Male",
-        contact: existingPatientData.contact || "",
-        email: existingPatientData.email || "",
-        whatsappNumber: existingPatientData.clinicalProfile?.whatsappNumber || "",
-        uhid: existingPatientData.clinicalProfile?.aabhaNumber || "",
-        address: {
-          street: existingPatientData.address?.street || "",
-          city: existingPatientData.address?.city || "",
-          state: existingPatientData.address?.state || "",
-          pincode: existingPatientData.address?.pincode || "",
-        },
-        guardian: {
-          name: existingPatientData.guardian?.name || "",
-          relation: existingPatientData.guardian?.relation || "",
-          contact: existingPatientData.guardian?.contact || "",
-        },
-      };
-    }
-    return defaultFormValues;
-  };
-  
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientFormSchema),
-    defaultValues: getInitialValues(),
+    defaultValues: getInitialValues(existingPatientData),
   });
   
-  useEffect(() => {
-    form.reset(getInitialValues());
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [existingPatientData, form.reset]);
-
-
   const today = new Date();
   const twelveYearsAgo = new Date(today.getFullYear() - 12, today.getMonth(), today.getDate());
   const oneHundredYearsAgo = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
