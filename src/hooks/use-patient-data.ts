@@ -131,7 +131,7 @@ export function usePatientData() {
     });
 
     return () => unsubscribe();
-  }, [isLoading]);
+  }, []);
 
   const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
     const now = new Date();
