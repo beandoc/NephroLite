@@ -15,17 +15,27 @@ import { PatientEvents } from '@/components/patients/PatientEvents';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
+import { calculateKfre } from '@/lib/kfre-calculator';
 
 interface PredictionCardProps {
   title: string;
   value: string;
-  riskLevel: "High Risk" | "Medium Risk" | "Low Risk";
-  lastEgfrDate?: string;
+  riskLevel: "High Risk" | "Medium Risk" | "Low Risk" | "N/A";
+  lastDataDate?: string;
+  missingData?: string[];
   icon: React.ElementType;
   iconColorClass: string;
 }
 
-const PredictionCard: React.FC<PredictionCardProps> = ({ title, value, riskLevel, lastEgfrDate, icon: Icon, iconColorClass }) => {
+const getRiskLevel = (value: number | null): PredictionCardProps['riskLevel'] => {
+    if (value === null) return "N/A";
+    if (value > 20) return "High Risk";
+    if (value > 5) return "Medium Risk";
+    return "Low Risk";
+};
+
+
+const PredictionCard: React.FC<PredictionCardProps> = ({ title, value, riskLevel, lastDataDate, missingData, icon: Icon, iconColorClass }) => {
   return (
     <Card className="shadow-md">
       <CardHeader className="pb-2">
@@ -36,12 +46,18 @@ const PredictionCard: React.FC<PredictionCardProps> = ({ title, value, riskLevel
       </CardHeader>
       <CardContent>
         <div className="text-4xl font-bold">{value}</div>
-        <p className={`text-sm font-semibold ${riskLevel === "High Risk" ? "text-destructive" : riskLevel === "Medium Risk" ? "text-yellow-500" : "text-green-500"}`}>
+        <p className={`text-sm font-semibold ${riskLevel === "High Risk" ? "text-destructive" : riskLevel === "Medium Risk" ? "text-yellow-500" : riskLevel === "Low Risk" ? "text-green-500" : ""}`}>
           {riskLevel}
         </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          {lastEgfrDate ? `Last eGFR Date: ${lastEgfrDate}` : "eGFR data needed for prediction."}
-        </p>
+         {missingData && missingData.length > 0 ? (
+            <p className="text-xs text-destructive mt-1">
+                Missing: {missingData.join(', ')}
+            </p>
+         ) : (
+            <p className="text-xs text-muted-foreground mt-1">
+            {lastDataDate ? `Last Data: ${lastDataDate}` : "Data needed for prediction."}
+            </p>
+         )}
       </CardContent>
     </Card>
   );
@@ -58,24 +74,76 @@ export default function PatientHealthTrendsPage() {
     return getPatientById(patientId);
   }, [patientId, getPatientById, dataLoading]);
   
-  const lastEgfr = useMemo(() => {
-    if (!patient?.investigationRecords) return null;
+  const latestLabData = useMemo(() => {
+    if (!patient?.investigationRecords) return { eGFR: null, UACR: null, date: null };
     
-    const allEgfrTests = patient.investigationRecords
+    const allTests = patient.investigationRecords
       .flatMap(rec => rec.tests.map(test => ({ ...test, date: rec.date })))
-      .filter(test => test.name === 'eGFR' && test.result);
+      .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
       
-    if (allEgfrTests.length === 0) return null;
+    const latestEgfr = allTests.find(t => t.name === 'eGFR' && t.result);
+    const latestUacr = allTests.find(t => t.name === 'Urine Spot Protein/Creatinine Ratio (PCR)' && t.result);
+    
+    const date = latestEgfr?.date || latestUacr?.date;
 
-    allEgfrTests.sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
-    return allEgfrTests[0];
+    return {
+        eGFR: latestEgfr ? parseFloat(latestEgfr.result) : null,
+        UACR: latestUacr ? parseFloat(latestUacr.result) : null,
+        date: date ? format(parseISO(date), 'PPP') : undefined,
+    }
   }, [patient]);
 
 
+  const kfreScores = useMemo(() => {
+    if (!patient || !latestLabData.eGFR || !latestLabData.UACR) {
+        return { twoYear: null, fiveYear: null };
+    }
+    
+    const age = new Date().getFullYear() - parseISO(patient.dob).getFullYear();
+
+    return calculateKfre({
+        age: age,
+        sex: patient.gender,
+        egfr: latestLabData.eGFR,
+        uacr: latestLabData.UACR,
+    });
+  }, [patient, latestLabData]);
+  
+  const getMissingData = (): string[] => {
+      const missing = [];
+      if (!latestLabData.eGFR) missing.push("eGFR");
+      if (!latestLabData.UACR) missing.push("UACR");
+      return missing;
+  }
+
   const predictionData: PredictionCardProps[] = [
-    { title: "2-Year Risk of Kidney Failure (KFRE)", value: "60%", riskLevel: "High Risk", lastEgfrDate: lastEgfr ? format(parseISO(lastEgfr.date), 'PPP') : undefined, icon: AlertTriangle, iconColorClass: "text-destructive" },
-    { title: "5-Year Risk of Kidney Failure (KFRE)", value: "94%", riskLevel: "High Risk", lastEgfrDate: lastEgfr ? format(parseISO(lastEgfr.date), 'PPP') : undefined, icon: AlertTriangle, iconColorClass: "text-destructive" },
-    { title: "2-Year Risk of Cardiovascular Disease", value: "40%", riskLevel: "Medium Risk", lastEgfrDate: lastEgfr ? format(parseISO(lastEgfr.date), 'PPP') : undefined, icon: Heart, iconColorClass: "text-red-500" },
+    { 
+        title: "2-Year Risk of Kidney Failure (KFRE)", 
+        value: kfreScores.twoYear !== null ? `${kfreScores.twoYear.toFixed(2)}%` : "N/A", 
+        riskLevel: getRiskLevel(kfreScores.twoYear), 
+        lastDataDate: latestLabData.date, 
+        missingData: getMissingData(),
+        icon: AlertTriangle, 
+        iconColorClass: "text-destructive" 
+    },
+    { 
+        title: "5-Year Risk of Kidney Failure (KFRE)", 
+        value: kfreScores.fiveYear !== null ? `${kfreScores.fiveYear.toFixed(2)}%` : "N/A", 
+        riskLevel: getRiskLevel(kfreScores.fiveYear), 
+        lastDataDate: latestLabData.date,
+        missingData: getMissingData(),
+        icon: AlertTriangle, 
+        iconColorClass: "text-destructive" 
+    },
+    { 
+        title: "2-Year Risk of Cardiovascular Disease", 
+        value: "N/A", 
+        riskLevel: "N/A", 
+        lastDataDate: latestLabData.date, 
+        missingData: ["Model Not Implemented"],
+        icon: Heart, 
+        iconColorClass: "text-red-500" 
+    },
   ];
 
   if (dataLoading) {
@@ -119,7 +187,8 @@ export default function PatientHealthTrendsPage() {
 
       <Card className="mb-6 mt-4">
         <CardHeader>
-          <CardTitle className="font-headline flex items-center"><TrendingUp className="mr-2 h-5 w-5 text-primary"/>Risk Predictions (Placeholders)</CardTitle>
+          <CardTitle className="font-headline flex items-center"><TrendingUp className="mr-2 h-5 w-5 text-primary"/>Risk Predictions</CardTitle>
+          <CardDescription>Calculated using the 8-variable Kidney Failure Risk Equation (Tangri et al., 2016). Requires latest eGFR and UACR values.</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {predictionData.map(data => <PredictionCard key={data.title} {...data} />)}
