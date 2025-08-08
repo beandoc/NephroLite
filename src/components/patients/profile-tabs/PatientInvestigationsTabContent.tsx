@@ -74,7 +74,9 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
 
   const patient = getPatientById(patientId);
   const investigationRecords = patient?.investigationRecords || [];
-  const sortedRecords = [...investigationRecords].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedRecords = useMemo(() => {
+      return [...investigationRecords].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [investigationRecords]);
 
   const form = useForm<InvestigationRecordFormData>({
     resolver: zodResolver(investigationRecordFormSchema),
@@ -91,7 +93,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     name: "tests",
   });
 
-  const handleOpenDialogForNew = () => {
+  const handleOpenDialogForNew = useCallback(() => {
     form.reset({
       id: undefined,
       date: new Date().toISOString().split('T')[0],
@@ -100,18 +102,18 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     });
     setAddTestSearchQuery('');
     setIsFormDialogOpen(true);
-  };
+  }, [form]);
   
-  const handleOpenDialogForEdit = (record: InvestigationRecord) => {
+  const handleOpenDialogForEdit = useCallback((record: InvestigationRecord) => {
     form.reset({
       ...record,
       date: format(parseISO(record.date), 'yyyy-MM-dd'),
     });
     setAddTestSearchQuery('');
     setIsFormDialogOpen(true);
-  };
+  }, [form]);
 
-  const handleSaveInvestigationRecord = async (data: InvestigationRecordFormData) => {
+  const handleSaveInvestigationRecord = useCallback(async (data: InvestigationRecordFormData) => {
     const recordToSave: InvestigationRecord = {
         id: data.id || crypto.randomUUID(),
         date: data.date,
@@ -121,15 +123,15 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     await addOrUpdateInvestigationRecord(patientId, recordToSave);
     toast({ title: "Investigation Saved", description: `Record for ${data.date} has been saved.` });
     setIsFormDialogOpen(false);
-  };
+  }, [patientId, addOrUpdateInvestigationRecord, toast]);
 
-  const handleDeleteRecord = async () => {
+  const handleDeleteRecord = useCallback(async () => {
     if (!recordToDelete) return;
     await deleteInvestigationRecord(patientId, recordToDelete.id);
     toast({ title: "Record Deleted", description: `Investigation record from ${format(parseISO(recordToDelete.date), 'PPP')} has been deleted.`, variant: "destructive" });
     setIsDeleteDialogOpen(false);
     setRecordToDelete(null);
-  };
+  }, [recordToDelete, patientId, deleteInvestigationRecord, toast]);
   
   const addTestsFromMaster = useCallback((testIds: string[]) => {
     const testsToLog = INVESTIGATION_MASTER_LIST.filter(t => testIds.includes(t.id));
@@ -168,16 +170,16 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     openDialogFromURL();
   }, [openDialogFromURL]);
   
-   const addTestsToForm = (testsToAdd: Partial<InvestigationTest>[]) => {
+   const addTestsToForm = useCallback((testsToAdd: Partial<InvestigationTest>[]) => {
     const existingTestNames = fields.map(f => f.name);
     const newTests = testsToAdd.filter(t => !existingTestNames.includes(t.name || ''));
     if(newTests.length > 0) {
       append(newTests.map(t => ({...t, id: t.id!, group: t.group!, name: t.name!, result: t.result || '' })));
     }
     setAddTestSearchQuery('');
-  };
+  }, [append, fields]);
 
-  const handleFrequentInvestigationToggle = (item: { type: 'test' | 'panel'; id: string }) => {
+  const handleFrequentInvestigationToggle = useCallback((item: { type: 'test' | 'panel'; id: string }) => {
     let testIdsToToggle: string[] = [];
     if (item.type === 'test') {
         testIdsToToggle.push(item.id);
@@ -207,7 +209,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
         });
         testIndicesToRemove.reverse().forEach(index => remove(index));
     }
-  };
+  }, [fields, append, remove]);
 
   const filteredCommandItems = useMemo(() => {
     if (!addTestSearchQuery) return { panels: [], tests: [] };
