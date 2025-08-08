@@ -63,11 +63,11 @@ export default function OpdQueuePage() {
   };
   
   const handleCopyDisplayLink = () => {
-    const url = new URL('/opd-display', window.location.origin);
+    const url = new URL('/opd-display/public', window.location.origin);
     navigator.clipboard.writeText(url.href);
     toast({
         title: "Link Copied",
-        description: "The patient display link has been copied to your clipboard.",
+        description: "The public waiting room display link has been copied to your clipboard.",
     });
   };
 
@@ -91,10 +91,10 @@ export default function OpdQueuePage() {
         actions={
           <div className="flex gap-2">
             <Button onClick={handleCopyDisplayLink} variant="secondary">
-              <Copy className="mr-2 h-4 w-4" /> Copy Display Link
+              <Copy className="mr-2 h-4 w-4" /> Copy Public Display Link
             </Button>
-            <Button onClick={() => router.push('/opd-display')} variant="outline">
-              <Tv2 className="mr-2 h-4 w-4" /> Open Patient Display
+            <Button onClick={() => router.push('/opd-display/public')} variant="outline">
+              <Tv2 className="mr-2 h-4 w-4" /> Open Public Display
             </Button>
           </div>
         }

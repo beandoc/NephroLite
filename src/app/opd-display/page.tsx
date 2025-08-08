@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, LogIn } from 'lucide-react';
+import { Loader2, LogIn, CircleUserRound } from 'lucide-react';
 import { usePatientData } from '@/hooks/use-patient-data';
 import { useRouter } from 'next/navigation';
 
@@ -68,11 +68,12 @@ export default function OpdLoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-100">
+    <div className="flex items-center justify-center min-h-screen bg-slate-100 p-4">
       <Card className="w-full max-w-md shadow-2xl">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-primary">Patient Queue Status</CardTitle>
-          <CardDescription>Enter your mobile number to view your queue details.</CardDescription>
+        <CardHeader className="text-center space-y-2">
+            <CircleUserRound className="mx-auto h-12 w-12 text-primary" />
+            <CardTitle className="text-2xl font-bold text-primary">Patient Queue Status</CardTitle>
+            <CardDescription>Enter your registered mobile number to view your queue details.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
@@ -85,10 +86,10 @@ export default function OpdLoginPage() {
                 value={mobileNumber}
                 onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                 required
-                className="text-lg"
+                className="text-lg h-12 text-center tracking-widest"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading || appointmentsLoading || patientsLoading}>
+            <Button type="submit" className="w-full h-11" disabled={isLoading || appointmentsLoading || patientsLoading}>
               {isLoading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
