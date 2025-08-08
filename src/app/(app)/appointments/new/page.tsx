@@ -19,7 +19,7 @@ export default function NewAppointmentPage() {
   const handleSubmit = async (data: AppointmentFormData, patient: Patient) => {
     setIsSubmitting(true);
     try {
-      const newAppointment = addAppointment(data, patient);
+      const newAppointment = await addAppointment(data, patient);
       toast({
         title: "Appointment Scheduled",
         description: `Appointment for ${patient.name} with ${newAppointment.doctorName} on ${format(parse(newAppointment.date, "yyyy-MM-dd", new Date()), 'PPP')} at ${newAppointment.time} has been scheduled.`,

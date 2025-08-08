@@ -1,3 +1,4 @@
+
 import type { DiagnosisEntry, InvestigationMaster, InvestigationPanel } from '@/lib/types';
 
 export const GENDERS: string[] = ['Male', 'Female'];
@@ -85,10 +86,9 @@ export const APPOINTMENT_STATUSES: Array<'Scheduled' | 'Completed' | 'Cancelled'
   ['Scheduled', 'Completed', 'Cancelled', 'Waiting', 'Not Showed', 'Admitted', 'Now Serving'];
 
 export const MOCK_DOCTORS: string[] = [
-  'Dr. Anya Sharma',
-  'Dr. Vikram Singh',
-  'Dr. Priya Patel',
-  'Dr. Rohan Gupta',
+  'Dr. Sachin',
+  'Dr. Atul',
+  'Dr. Parikshit',
 ];
 
 export const TIME_SLOTS: string[] = [
