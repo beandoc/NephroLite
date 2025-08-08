@@ -44,7 +44,9 @@ export function usePatientData() {
       querySnapshot.forEach((doc) => {
         patientsData.push({ id: doc.id, ...doc.data() } as Patient);
       });
-      setPatients(patientsData);
+      // By creating a new array, we ensure that React detects the change
+      // and re-renders components that depend on this hook.
+      setPatients([...patientsData]);
       setIsLoading(false);
     });
 
