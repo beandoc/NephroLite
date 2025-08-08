@@ -30,7 +30,6 @@ export function useAppointmentData(forOpdQueue: boolean = false) {
     
     let q;
     if (forOpdQueue) {
-      // For OPD Queue, we only care about today's appointments that are in a queueable state.
       const today_start = format(startOfDay(new Date()), 'yyyy-MM-dd');
       q = query(
         collection(db, 'appointments'), 
@@ -73,7 +72,7 @@ export function useAppointmentData(forOpdQueue: boolean = false) {
     });
 
     return () => unsubscribe();
-  }, [isLoading, forOpdQueue]);
+  }, [forOpdQueue, isLoading]);
 
   const addAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'status' | 'patientName'>, patient: Patient): Promise<Appointment> => {
     const newAppointmentData: Omit<Appointment, 'id'> = {
