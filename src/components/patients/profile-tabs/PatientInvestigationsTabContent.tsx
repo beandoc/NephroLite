@@ -210,6 +210,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
   };
 
   const filteredCommandItems = useMemo(() => {
+    if (!addTestSearchQuery) return { panels: [], tests: [] };
     const lowercasedQuery = addTestSearchQuery.toLowerCase();
     
     const panels = INVESTIGATION_PANELS.filter(p => p.name.toLowerCase().includes(lowercasedQuery));
@@ -296,28 +297,28 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                                     onValueChange={setAddTestSearchQuery}
                                 />
                                 <CommandList>
-                                    <CommandEmpty>No results found.</CommandEmpty>
-                                    {filteredCommandItems.panels.length > 0 && (
-                                        <CommandGroup heading={<div className="flex items-center"><Package className="mr-2 h-4 w-4"/>Panels</div>}>
-                                            {filteredCommandItems.panels.map(panel => (
-                                                <CommandItem key={panel.id} onSelect={() => {
-                                                    const tests = INVESTIGATION_MASTER_LIST.filter(t => panel.testIds.includes(t.id));
-                                                    addTestsToForm(tests.map(t => ({ ...t, result: ''})));
-                                                }}>
-                                                    {panel.name}
-                                                </CommandItem>
-                                            ))}
-                                        </CommandGroup>
-                                    )}
-                                    {filteredCommandItems.tests.length > 0 && (
-                                        <CommandGroup heading={<div className="flex items-center"><TestTube className="mr-2 h-4 w-4"/>Individual Tests</div>}>
-                                            {filteredCommandItems.tests.map(test => (
-                                                <CommandItem key={test.id} onSelect={() => addTestsToForm([{...test, result: ''}])}>
-                                                    {test.name}
-                                                </CommandItem>
-                                            ))}
-                                        </CommandGroup>
-                                    )}
+                                  <CommandEmpty>No results found.</CommandEmpty>
+                                  {filteredCommandItems.panels.length > 0 && (
+                                    <CommandGroup heading={<div className="flex items-center"><Package className="mr-2 h-4 w-4"/>Panels</div>}>
+                                      {filteredCommandItems.panels.map(panel => (
+                                        <CommandItem key={panel.id} onSelect={() => {
+                                          const tests = INVESTIGATION_MASTER_LIST.filter(t => panel.testIds.includes(t.id));
+                                          addTestsToForm(tests.map(t => ({ ...t, result: ''})));
+                                        }}>
+                                          {panel.name}
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  )}
+                                  {filteredCommandItems.tests.length > 0 && (
+                                    <CommandGroup heading={<div className="flex items-center"><TestTube className="mr-2 h-4 w-4"/>Individual Tests</div>}>
+                                      {filteredCommandItems.tests.map(test => (
+                                        <CommandItem key={test.id} onSelect={() => addTestsToForm([{...test, result: ''}])}>
+                                          {test.name}
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  )}
                                 </CommandList>
                             </Command>
                         </div>
