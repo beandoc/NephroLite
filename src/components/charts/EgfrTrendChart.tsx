@@ -136,8 +136,8 @@ export function EgfrTrendChart({ investigationRecords, medicationHistory }: Egfr
           cursor={true}
           content={<ChartTooltipContent indicator="dot" />}
           formatter={(value, name) => {
-              if (name === 'egfr') return [`${(value as number).toFixed(0)} mL/min`, 'eGFR'];
-              if (name === 'creatinine') return [`${(value as number).toFixed(2)} mg/dL`, 'Creatinine'];
+              if (name === 'eGFR (mL/min/1.73m²)') return [`${(value as number).toFixed(0)} mL/min`, 'eGFR'];
+              if (name === 'Creatinine (mg/dL)') return [`${(value as number).toFixed(2)} mg/dL`, 'Creatinine'];
               return [value, name];
           }}
           labelFormatter={(label) => format(parseISO(label), 'PPP')}
