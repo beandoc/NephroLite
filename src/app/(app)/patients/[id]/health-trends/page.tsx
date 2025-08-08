@@ -82,7 +82,7 @@ export default function PatientHealthTrendsPage() {
       .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
       
     const latestEgfrTest = allTests.find(t => t.name === 'eGFR' && t.result);
-    const latestUacrTest = allTests.find(t => t.name === 'Urine Spot Protein/Creatinine Ratio (PCR)' && t.result);
+    const latestUacrTest = allTests.find(t => t.name === 'Urine for AC Ratio (mg/gm)' && t.result);
     
     const date = latestEgfrTest?.date || latestUacrTest?.date;
 
