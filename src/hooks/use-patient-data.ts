@@ -56,6 +56,8 @@ export function usePatientData() {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const year = String(now.getFullYear()).slice(-2);
     
+    // This logic to generate a new ID should ideally be a server-side transaction for true atomicity,
+    // but for this client-side implementation, we'll do a read-then-write.
     const q = query(collection(db, 'patients'), where('nephroId', '>=', `0000/${month}${year}`), where('nephroId', '<', `9999/${parseInt(month, 10) + 1}${year}`));
     const querySnapshot = await getDocs(q);
     const relevantPatients = querySnapshot.docs.map(doc => doc.data() as Patient);
@@ -112,9 +114,8 @@ export function usePatientData() {
     const aabhaNumber = updatedData.uhid;
     const whatsappNumber = updatedData.whatsappNumber;
 
-    const currentDoc = await getDoc(patientDocRef);
-    const currentClinicalProfile = currentDoc.data()?.clinicalProfile || {};
-
+    // We only update the fields that are part of the PatientFormData type.
+    // This avoids accidentally overwriting other important data.
     const dataToUpdate = {
         name: updatedData.name,
         dob: updatedData.dob,
