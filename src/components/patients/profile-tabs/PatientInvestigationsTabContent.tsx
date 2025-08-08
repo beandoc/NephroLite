@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -18,7 +18,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Notebook, Edit, Trash2, MoreVertical, ChevronsUpDown, Package, TestTube, Star } from 'lucide-react';
+import { PlusCircle, Notebook, Edit, Trash2, MoreVertical, ChevronsUpDown, Package, TestTube, Star, Search } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -68,8 +68,9 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
 
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isSearchPopoverOpen, setIsSearchPopoverOpen] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState<InvestigationRecord | null>(null);
+  const [addTestSearchQuery, setAddTestSearchQuery] = useState('');
+
 
   const patient = getPatientById(patientId);
   const investigationRecords = patient?.investigationRecords || [];
@@ -85,7 +86,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     },
   });
 
-  const { fields, append, remove, replace } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "tests",
   });
@@ -97,6 +98,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
       notes: "",
       tests: [],
     });
+    setAddTestSearchQuery('');
     setIsFormDialogOpen(true);
   };
   
@@ -105,6 +107,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
       ...record,
       date: format(parseISO(record.date), 'yyyy-MM-dd'),
     });
+    setAddTestSearchQuery('');
     setIsFormDialogOpen(true);
   };
 
@@ -144,6 +147,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
         normalRange: t.normalRange || ""
       })),
     });
+    setAddTestSearchQuery('');
     setIsFormDialogOpen(true);
   }, [form]);
 
@@ -170,7 +174,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     if(newTests.length > 0) {
       append(newTests.map(t => ({...t, id: t.id!, group: t.group!, name: t.name!, result: t.result || '' })));
     }
-    setIsSearchPopoverOpen(false);
+    setAddTestSearchQuery('');
   };
 
   const handleFrequentInvestigationToggle = (item: { type: 'test' | 'panel'; id: string }) => {
@@ -204,6 +208,15 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
         testIndicesToRemove.reverse().forEach(index => remove(index));
     }
   };
+
+  const filteredCommandItems = useMemo(() => {
+    const lowercasedQuery = addTestSearchQuery.toLowerCase();
+    
+    const panels = INVESTIGATION_PANELS.filter(p => p.name.toLowerCase().includes(lowercasedQuery));
+    const tests = INVESTIGATION_MASTER_LIST.filter(t => t.name.toLowerCase().includes(lowercasedQuery));
+
+    return { panels, tests };
+  }, [addTestSearchQuery]);
 
 
   return (
@@ -274,19 +287,19 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                             </div>
                         </div>
 
-                        <Popover open={isSearchPopoverOpen} onOpenChange={setIsSearchPopoverOpen}>
-                            <PopoverTrigger asChild>
-                                <Button variant="outline" className="w-full justify-start">
-                                    <PlusCircle className="mr-2 h-4 w-4" /> Add More Tests or Panels...
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                <Command>
-                                    <CommandInput placeholder="Search for tests or panels..." />
-                                    <CommandList>
-                                        <CommandEmpty>No results found.</CommandEmpty>
+                         <div>
+                            <h4 className="text-sm font-medium mb-2 flex items-center"><Search className="mr-2 h-4 w-4 text-sky-500"/>Add More Tests or Panels</h4>
+                            <Command shouldFilter={false} className="border rounded-md">
+                                <CommandInput 
+                                    placeholder="Search for tests or panels..." 
+                                    value={addTestSearchQuery}
+                                    onValueChange={setAddTestSearchQuery}
+                                />
+                                <CommandList>
+                                    <CommandEmpty>No results found.</CommandEmpty>
+                                    {filteredCommandItems.panels.length > 0 && (
                                         <CommandGroup heading={<div className="flex items-center"><Package className="mr-2 h-4 w-4"/>Panels</div>}>
-                                            {INVESTIGATION_PANELS.map(panel => (
+                                            {filteredCommandItems.panels.map(panel => (
                                                 <CommandItem key={panel.id} onSelect={() => {
                                                     const tests = INVESTIGATION_MASTER_LIST.filter(t => panel.testIds.includes(t.id));
                                                     addTestsToForm(tests.map(t => ({ ...t, result: ''})));
@@ -295,17 +308,19 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                                                 </CommandItem>
                                             ))}
                                         </CommandGroup>
+                                    )}
+                                    {filteredCommandItems.tests.length > 0 && (
                                         <CommandGroup heading={<div className="flex items-center"><TestTube className="mr-2 h-4 w-4"/>Individual Tests</div>}>
-                                            {INVESTIGATION_MASTER_LIST.map(test => (
+                                            {filteredCommandItems.tests.map(test => (
                                                 <CommandItem key={test.id} onSelect={() => addTestsToForm([{...test, result: ''}])}>
                                                     {test.name}
                                                 </CommandItem>
                                             ))}
                                         </CommandGroup>
-                                    </CommandList>
-                                </Command>
-                            </PopoverContent>
-                        </Popover>
+                                    )}
+                                </CommandList>
+                            </Command>
+                        </div>
                     </div>
 
                   <div className="space-y-4 mt-4">

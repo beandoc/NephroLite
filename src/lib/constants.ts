@@ -2,6 +2,7 @@
 
 
 
+
 import type { DiagnosisEntry, InvestigationMaster, InvestigationPanel } from '@/lib/types';
 
 export const GENDERS: string[] = ['Male', 'Female'];
@@ -253,6 +254,7 @@ export const INVESTIGATION_MASTER_LIST: InvestigationMaster[] = [
   { id: 'urn_002', name: 'Urine Culture & Sensitivity', group: 'Urine Analysis' },
   { id: 'urn_003', name: '24-hour Urine Protein', group: 'Urine Analysis', unit: 'mg/day', normalRange: '<150' },
   { id: 'urn_004', name: 'Urine Spot Protein/Creatinine Ratio (PCR)', group: 'Urine Analysis', unit: 'mg/g', normalRange: '<150' },
+  { id: 'urn_005', name: 'Urine for AC Ratio (mg/gm)', group: 'Urine Analysis', unit: 'mg/gm', normalRange: '<30' },
   
   // Special Investigations
   { id: 'spc_001', name: 'Kidney Biopsy', group: 'Special Investigations' },
@@ -297,6 +299,7 @@ export const FREQUENTLY_USED_INVESTIGATIONS: { name: string; type: 'test' | 'pan
     { name: 'USG KUB', type: 'test', id: 'rad_001' },
     { name: 'Urine R/E', type: 'test', id: 'urn_001' },
     { name: 'Urine PC Ratio', type: 'test', id: 'urn_004' },
+    { name: 'Urine for AC Ratio', type: 'test', id: 'urn_005' },
     { name: 'Kidney Biopsy', type: 'test', id: 'spc_001' },
 ];
 
