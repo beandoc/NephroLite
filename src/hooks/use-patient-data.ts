@@ -262,7 +262,7 @@ export function usePatientData() {
 
   const dischargePatient = useCallback(async (patientId: string): Promise<void> => {
     const patientDocRef = doc(db, 'patients', patientId);
-    await updateDoc(patientDocRef, { patientStatus: 'Discharged' });
+    await updateDoc(patientDocRef, { patientStatus: 'OPD' });
   }, []);
 
   return useMemo(() => ({
