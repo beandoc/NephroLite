@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { collection, onSnapshot, doc, getDoc, addDoc, updateDoc, deleteDoc, writeBatch, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord } from '@/lib/types';
@@ -99,12 +99,13 @@ const initialPatients: Patient[] = [
 ];
 
 export function usePatientData() {
-  const [patients, setPatients] = useState<Patient[]>(initialPatients);
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const q = collection(db, 'patients');
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      // Seeding logic for initial data on first load if db is empty
       if (querySnapshot.empty && initialPatients.length > 0) {
           const batch = writeBatch(db);
           initialPatients.forEach(p => {
@@ -113,9 +114,7 @@ export function usePatientData() {
               delete (patientData as any).id;
               batch.set(docRef, patientData);
           });
-          batch.commit().then(() => {
-              console.log("Initial patient data seeded.");
-          }).catch(err => {
+          batch.commit().catch(err => {
               console.error("Error seeding initial data:", err);
           });
       }
@@ -124,7 +123,7 @@ export function usePatientData() {
         patientsData.push({ id: doc.id, ...doc.data() } as Patient);
       });
       setPatients(patientsData);
-      if (isLoading) setIsLoading(false);
+      setIsLoading(false);
     }, (error) => {
       console.error("Error fetching patients: ", error);
       setIsLoading(false);
@@ -195,14 +194,17 @@ export function usePatientData() {
     const aabhaNumber = updatedData.uhid;
     const whatsappNumber = updatedData.whatsappNumber;
 
-    const { uhid, ...restOfData } = updatedData;
+    const { uhid, whatsappNumber: whatsappNum, ...restOfData } = updatedData;
 
-    const dataToUpdate = {
-        ...restOfData,
-        'clinicalProfile.aabhaNumber': aabhaNumber,
-        'clinicalProfile.whatsappNumber': whatsappNumber
-    };
-
+    const dataToUpdate: Record<string, any> = { ...restOfData };
+    
+    if (aabhaNumber !== undefined) {
+      dataToUpdate['clinicalProfile.aabhaNumber'] = aabhaNumber;
+    }
+    if (whatsappNumber !== undefined) {
+      dataToUpdate['clinicalProfile.whatsappNumber'] = whatsappNum;
+    }
+    
     await updateDoc(patientDocRef, dataToUpdate);
   }, []);
 
@@ -335,7 +337,7 @@ export function usePatientData() {
     await updateDoc(patientDocRef, { patientStatus: 'Discharged' });
   }, []);
 
-  return {
+  return useMemo(() => ({
     patients,
     isLoading,
     addPatient,
@@ -348,5 +350,18 @@ export function usePatientData() {
     updateVisitData,
     addOrUpdateInvestigationRecord,
     deleteInvestigationRecord,
-  };
+  }), [
+    patients, 
+    isLoading, 
+    addPatient, 
+    getPatientById, 
+    updatePatient, 
+    deletePatient, 
+    admitPatient, 
+    dischargePatient, 
+    addVisitToPatient, 
+    updateVisitData, 
+    addOrUpdateInvestigationRecord, 
+    deleteInvestigationRecord
+  ]);
 }

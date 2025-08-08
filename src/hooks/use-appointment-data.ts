@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Appointment, Patient } from '@/lib/types';
@@ -28,20 +28,19 @@ export function useAppointmentData() {
   useEffect(() => {
     const q = collection(db, 'appointments');
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        if (querySnapshot.empty && initialAppointments.length > 0) {
-          const batch = writeBatch(db);
-          initialAppointments.forEach(appt => {
-              const docRef = doc(db, 'appointments', appt.id);
-              const apptData = {...appt};
-              delete (apptData as any).id;
-              batch.set(docRef, apptData);
-          });
-          batch.commit().then(() => {
-              console.log("Initial appointment data seeded.");
-          }).catch(err => {
-              console.error("Error seeding initial appointments:", err);
-          });
-        }
+      // Seeding logic for initial data on first load if db is empty
+      if (querySnapshot.empty && initialAppointments.length > 0) {
+        const batch = writeBatch(db);
+        initialAppointments.forEach(appt => {
+            const docRef = doc(db, 'appointments', appt.id);
+            const apptData = {...appt};
+            delete (apptData as any).id;
+            batch.set(docRef, apptData);
+        });
+        batch.commit().catch(err => {
+            console.error("Error seeding initial appointments:", err);
+        });
+      }
       
       const appointmentsData: Appointment[] = [];
       querySnapshot.forEach((doc) => {
@@ -49,6 +48,9 @@ export function useAppointmentData() {
       });
       setAppointments(appointmentsData);
       setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching appointments: ", error);
+        setIsLoading(false);
     });
 
     return () => unsubscribe();
@@ -84,17 +86,16 @@ export function useAppointmentData() {
         ...updatedAppointmentData,
         date: format(new Date(updatedAppointmentData.date), 'yyyy-MM-dd') 
     };
-    // Don't pass the id in the update payload
     delete (dataToUpdate as Partial<Appointment>).id;
     await updateDoc(appointmentDocRef, dataToUpdate);
   }, []);
 
-  return {
+  return useMemo(() => ({
     appointments,
     isLoading,
     addAppointment,
     updateAppointmentStatus,
     updateAppointment,
     updateMultipleAppointmentStatuses,
-  };
+  }), [appointments, isLoading, addAppointment, updateAppointmentStatus, updateAppointment, updateMultipleAppointmentStatuses]);
 }
