@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -26,6 +27,7 @@ export function useAppointmentData() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const startTime = performance.now();
     const q = collection(db, 'appointments');
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       // Seeding logic for initial data on first load if db is empty
@@ -47,14 +49,19 @@ export function useAppointmentData() {
         appointmentsData.push({ id: doc.id, ...doc.data() } as Appointment);
       });
       setAppointments(appointmentsData);
-      setIsLoading(false);
+      
+      if (isLoading) {
+        const endTime = performance.now();
+        console.log(`[Performance] Appointment data loaded in ${(endTime - startTime).toFixed(1)}ms`);
+        setIsLoading(false);
+      }
     }, (error) => {
         console.error("Error fetching appointments: ", error);
         setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [isLoading]);
 
   const addAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'status' | 'patientName'>, patient: Patient): Promise<Appointment> => {
     const newAppointmentData: Omit<Appointment, 'id'> = {

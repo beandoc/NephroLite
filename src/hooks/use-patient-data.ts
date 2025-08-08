@@ -38,6 +38,7 @@ export function usePatientData() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const startTime = performance.now();
     const q = collection(db, 'patients');
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const patientsData: Patient[] = [];
@@ -45,14 +46,19 @@ export function usePatientData() {
         patientsData.push({ id: doc.id, ...doc.data() } as Patient);
       });
       setPatients(patientsData);
-      setIsLoading(false);
+      
+      if (isLoading) {
+        const endTime = performance.now();
+        console.log(`[Performance] Patient data loaded in ${(endTime - startTime).toFixed(1)}ms`);
+        setIsLoading(false);
+      }
     }, (error) => {
       console.error("Error fetching patients: ", error);
       setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [isLoading]);
 
   const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
     const now = new Date();
