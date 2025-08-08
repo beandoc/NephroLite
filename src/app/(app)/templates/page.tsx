@@ -56,6 +56,87 @@ const templateFormSchema = z.object({
 
 type TemplateFormData = z.infer<typeof templateFormSchema>;
 
+// Schema for adding/editing a master diagnosis
+const masterDiagnosisSchema = z.object({
+    icdCode: z.string().min(1, "ICD-10 code is required."),
+    name: z.string().min(1, "Primary clinical name is required."),
+    icdName: z.string().min(1, "Full ICD-10 description is required."),
+});
+type MasterDiagnosisFormData = z.infer<typeof masterDiagnosisSchema>;
+
+
+// Component for Adding a new Master Diagnosis
+function AddMasterDiagnosisDialog({
+  isOpen,
+  onOpenChange,
+  onSave,
+}: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (newDiagnosis: MasterDiagnosisFormData) => void;
+}) {
+  const form = useForm<MasterDiagnosisFormData>({
+    resolver: zodResolver(masterDiagnosisSchema),
+    defaultValues: {
+      icdCode: "",
+      name: "",
+      icdName: "",
+    },
+  });
+
+  const handleSave = (data: MasterDiagnosisFormData) => {
+    onSave(data);
+    onOpenChange(false);
+    form.reset();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Add New Master Diagnosis</DialogTitle>
+          <DialogDescription>
+            Add a new ICD-10 code and its description to the central database.
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4 py-4">
+                <FormField control={form.control} name="icdCode" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>ICD-10 Code</FormLabel>
+                        <FormControl><Input placeholder="e.g., N18.9" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+                <FormField control={form.control} name="name" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Primary Clinical Name</FormLabel>
+                        <FormControl><Input placeholder="e.g., Chronic Kidney Disease, Unspecified" {...field} /></FormControl>
+                        <FormDescription>This is the user-friendly name that will appear in lists.</FormDescription>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+                <FormField control={form.control} name="icdName" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Full ICD-10 Description</FormLabel>
+                        <FormControl><Textarea placeholder="The official description from the ICD-10 manual." {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button type="button" variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button type="submit">Add Diagnosis</Button>
+                </DialogFooter>
+            </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
 // Component for the Master Diagnosis Edit Dialog
 function EditMasterDiagnosisDialog({
   diagnosis,
@@ -159,9 +240,10 @@ export default function TemplatesPage() {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { toast } = useToast();
 
-  // State for master diagnosis list and dialog
+  // State for master diagnosis list and dialogs
   const [masterDiagnoses, setMasterDiagnoses] = useState<DiagnosisEntry[]>(MOCK_DIAGNOSES);
   const [isEditMasterDiagOpen, setIsEditMasterDiagOpen] = useState(false);
+  const [isAddMasterDiagOpen, setIsAddMasterDiagOpen] = useState(false);
   const [selectedMasterDiag, setSelectedMasterDiag] = useState<DiagnosisEntry | null>(null);
 
 
@@ -278,6 +360,23 @@ export default function TemplatesPage() {
       title: 'Master Diagnosis Updated',
       description: `${updatedDiagnosis.icdCode} has been updated. (This is a mock save)`,
     });
+  };
+
+  const handleAddNewMasterDiagnosis = (data: MasterDiagnosisFormData) => {
+    const newDiagnosis: DiagnosisEntry = {
+        id: data.icdCode, // Use ICD code as a unique ID for new entries
+        icdCode: data.icdCode,
+        name: data.name,
+        icdName: data.icdName,
+        clinicalNames: [data.name], // Start with the primary name
+    };
+    // Check if it already exists
+    if(masterDiagnoses.some(d => d.id === newDiagnosis.id)) {
+        toast({ title: "Error", description: `Diagnosis with ICD-10 code ${newDiagnosis.icdCode} already exists.`, variant: "destructive" });
+        return;
+    }
+    setMasterDiagnoses(prev => [newDiagnosis, ...prev]);
+    toast({ title: "Diagnosis Added", description: `Successfully added ${newDiagnosis.name} to the master list.` });
   };
 
 
@@ -476,7 +575,9 @@ export default function TemplatesPage() {
               <CardTitle className="font-headline">ICD-10 Diagnosis Master List</CardTitle>
               <CardDescription>This is the central database of all available diagnoses.</CardDescription>
             </div>
-            <Button variant="outline" disabled><PlusCircle className="mr-2 h-4 w-4"/>Add New Diagnosis (WIP)</Button>
+            <Button variant="outline" onClick={() => setIsAddMasterDiagOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4"/>Add New Diagnosis
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -491,7 +592,7 @@ export default function TemplatesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {masterDiagnoses.map(d => (
+                {masterDiagnoses.sort((a,b) => a.icdCode.localeCompare(b.icdCode)).map(d => (
                   <TableRow key={d.id}>
                     <TableCell><Badge variant="secondary">{d.icdCode}</Badge></TableCell>
                     <TableCell className="font-medium">{d.name}</TableCell>
@@ -510,6 +611,12 @@ export default function TemplatesPage() {
         </CardContent>
       </Card>
 
+      <AddMasterDiagnosisDialog 
+        isOpen={isAddMasterDiagOpen}
+        onOpenChange={setIsAddMasterDiagOpen}
+        onSave={handleAddNewMasterDiagnosis}
+      />
+
       <EditMasterDiagnosisDialog
         isOpen={isEditMasterDiagOpen}
         onOpenChange={setIsEditMasterDiagOpen}
@@ -519,5 +626,3 @@ export default function TemplatesPage() {
     </div>
   );
 }
-
-    
