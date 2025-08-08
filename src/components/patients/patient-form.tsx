@@ -77,13 +77,13 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
   const getInitialValues = (): PatientFormData => {
     if (existingPatientData) {
       return {
-        name: existingPatientData.name,
-        dob: existingPatientData.dob,
-        gender: existingPatientData.gender,
+        name: existingPatientData.name || "",
+        dob: existingPatientData.dob || "",
+        gender: existingPatientData.gender || "Male",
         contact: existingPatientData.contact || "",
         email: existingPatientData.email || "",
-        whatsappNumber: existingPatientData.clinicalProfile.whatsappNumber || "",
-        uhid: existingPatientData.clinicalProfile.aabhaNumber || "",
+        whatsappNumber: existingPatientData.clinicalProfile?.whatsappNumber || "",
+        uhid: existingPatientData.clinicalProfile?.aabhaNumber || "",
         address: {
           street: existingPatientData.address?.street || "",
           city: existingPatientData.address?.city || "",
@@ -108,7 +108,7 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
   useEffect(() => {
     form.reset(getInitialValues());
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [existingPatientData]);
+  }, [existingPatientData, form.reset]);
 
 
   const today = new Date();

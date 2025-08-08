@@ -1,6 +1,5 @@
 
 
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -196,14 +195,10 @@ export function usePatientData() {
     const aabhaNumber = updatedData.uhid;
     const whatsappNumber = updatedData.whatsappNumber;
 
+    const { uhid, ...restOfData } = updatedData;
+
     const dataToUpdate = {
-        name: updatedData.name,
-        dob: updatedData.dob,
-        gender: updatedData.gender,
-        contact: updatedData.contact,
-        email: updatedData.email,
-        address: updatedData.address,
-        guardian: updatedData.guardian,
+        ...restOfData,
         'clinicalProfile.aabhaNumber': aabhaNumber,
         'clinicalProfile.whatsappNumber': whatsappNumber
     };
