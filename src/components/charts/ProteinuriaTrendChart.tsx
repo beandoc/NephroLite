@@ -13,9 +13,9 @@ const chartConfig = {
     label: "Proteinuria (mg/day)",
     color: "hsl(var(--chart-2))",
   },
-  pcr: {
-    label: "Urine PCR (mg/g)",
-    color: "hsl(var(--chart-5))",
+  uacr: {
+    label: "Urine ACR (mg/g)",
+    color: "hsl(var(--chart-1))",
   }
 } satisfies ChartConfig;
 
@@ -49,9 +49,9 @@ export function ProteinuriaTrendChart({ investigationRecords, medicationHistory 
 
     const proteinTests = investigationRecords
       .flatMap(record => record.tests.map(test => ({ ...test, date: record.date })))
-      .filter(test => (test.name === '24-hour Urine Protein' || test.name === 'Urine Spot Protein/Creatinine Ratio (PCR)') && !isNaN(parseFloat(test.result)));
+      .filter(test => (test.name === '24-hour Urine Protein' || test.name === 'Urine for AC Ratio (mg/gm)') && !isNaN(parseFloat(test.result)));
 
-    const groupedByDate: Record<string, { protein?: number; pcr?: number }> = {};
+    const groupedByDate: Record<string, { protein?: number; uacr?: number }> = {};
     
     proteinTests.forEach(test => {
         const dateKey = format(parseISO(test.date), 'yyyy-MM-dd');
@@ -59,7 +59,7 @@ export function ProteinuriaTrendChart({ investigationRecords, medicationHistory 
             groupedByDate[dateKey] = {};
         }
         if(test.name === '24-hour Urine Protein') groupedByDate[dateKey].protein = parseFloat(test.result);
-        if(test.name === 'Urine Spot Protein/Creatinine Ratio (PCR)') groupedByDate[dateKey].pcr = parseFloat(test.result);
+        if(test.name === 'Urine for AC Ratio (mg/gm)') groupedByDate[dateKey].uacr = parseFloat(test.result);
     });
     
     return Object.entries(groupedByDate)
@@ -138,10 +138,10 @@ export function ProteinuriaTrendChart({ investigationRecords, medicationHistory 
           name="Proteinuria (mg/day)"
         />
         <Bar
-          dataKey="pcr"
-          fill="var(--color-pcr)"
+          dataKey="uacr"
+          fill="var(--color-uacr)"
           radius={4}
-          name="Urine PCR (mg/g)"
+          name="Urine ACR (mg/g)"
         />
       </BarChart>
     </ChartContainer>

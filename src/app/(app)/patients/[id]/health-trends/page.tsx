@@ -18,6 +18,7 @@ import { format, parseISO } from 'date-fns';
 import { calculateKfre } from '@/lib/kfre-calculator';
 import { calculatePreventRisk } from '@/lib/prevent-calculator';
 import type { PreventInput } from '@/lib/prevent-calculator';
+import { calculateEgfrFromCreatinine } from '@/lib/kfre-calculator';
 
 interface PredictionCardProps {
   title: string;
@@ -98,7 +99,18 @@ export default function PatientHealthTrendsPage() {
         return null;
     };
     
-    const latestEgfrTest = getLatestValue('eGFR');
+    let latestEgfr = getLatestValue('eGFR');
+    if (!latestEgfr) {
+        const latestCreatinineTest = getLatestValue('Serum Creatinine');
+        if (latestCreatinineTest) {
+            const age = new Date().getFullYear() - parseISO(patient.dob).getFullYear();
+            const calculated = calculateEgfrFromCreatinine(latestCreatinineTest.value, age, patient.gender);
+            if (calculated) {
+                latestEgfr = { value: calculated, date: latestCreatinineTest.date };
+            }
+        }
+    }
+    
     const latestUacrTest = getLatestValue('Urine for AC Ratio (mg/gm)');
     const latestTotalCholesterol = getLatestValue('Total Cholesterol');
     const latestHdlCholesterol = getLatestValue('HDL Cholesterol');
@@ -110,7 +122,7 @@ export default function PatientHealthTrendsPage() {
 
 
     const allDates = [
-        latestEgfrTest?.date, 
+        latestEgfr?.date, 
         latestUacrTest?.date, 
         latestTotalCholesterol?.date, 
         latestHdlCholesterol?.date
@@ -119,7 +131,7 @@ export default function PatientHealthTrendsPage() {
     const latestDate = allDates.length > 0 ? allDates.sort((a,b) => parseISO(b).getTime() - parseISO(a).getTime())[0] : undefined;
 
     return {
-        eGFR: latestEgfrTest?.value || null,
+        eGFR: latestEgfr?.value || null,
         UACR: latestUacrTest?.value || null,
         totalCholesterol: latestTotalCholesterol?.value || null,
         hdlCholesterol: latestHdlCholesterol?.value || null,
