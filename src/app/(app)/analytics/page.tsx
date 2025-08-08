@@ -75,13 +75,16 @@ export default function AnalyticsPage() {
   const [tagInput, setTagInput] = useState('');
   const [selectedFilterTags, setSelectedFilterTags] = useState<string[]>([]);
 
-  const patientGroupMetrics: MetricCardProps[] = [
-    { title: "Peritoneal dialysis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'End-Stage Renal Disease (ESRD)' && p.clinicalProfile.tags.includes('PD')).length, colorClass: "border-orange-500", icon: Waves, link: "/analytics/pd-module" },
-    { title: "Hemodialysis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'End-Stage Renal Disease (ESRD)' && p.clinicalProfile.tags.includes('HD')).length, colorClass: "border-blue-500", icon: Droplets },
-    { title: "Glomerulonephritis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Glomerulonephritis').length, colorClass: "border-green-500", icon: Stethoscope },
-    { title: "Kidney transplant", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Transplant Prospect').length, colorClass: "border-green-600", icon: HeartPulse },
-    { title: "Chronic Kidney disease", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis?.startsWith('Chronic Kidney Disease')).length, colorClass: "border-cyan-500", icon: Activity },
-  ];
+  const patientGroupMetrics: MetricCardProps[] = useMemo(() => {
+    if (patientsLoading) return [];
+    return [
+      { title: "Peritoneal dialysis", value: patients.filter(p => p.clinicalProfile.tags.includes('PD')).length, colorClass: "border-orange-500", icon: Waves, link: "/analytics/pd-module" },
+      { title: "Hemodialysis", value: patients.filter(p => p.clinicalProfile.tags.includes('HD')).length, colorClass: "border-blue-500", icon: Droplets, link: "/analytics/hd-module" },
+      { title: "Glomerulonephritis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Glomerulonephritis').length, colorClass: "border-green-500", icon: Stethoscope },
+      { title: "Kidney transplant", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Transplant Prospect').length, colorClass: "border-green-600", icon: HeartPulse, link: "/analytics/transplant-module" },
+      { title: "Chronic Kidney disease", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis?.startsWith('Chronic Kidney Disease')).length, colorClass: "border-cyan-500", icon: Activity },
+    ];
+  }, [patients, patientsLoading]);
 
   const gnModuleAnalytics: MetricCardProps[] = [
     { title: "24hr Urine Protein Graph", icon: BarChart3, description: "Track proteinuria over time.", colorClass: "border-purple-500" },
@@ -329,5 +332,3 @@ export default function AnalyticsPage() {
     </div>
   );
 }
-
-    
