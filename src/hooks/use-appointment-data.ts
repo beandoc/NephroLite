@@ -7,6 +7,20 @@ import { db } from '@/lib/firebase';
 import type { Appointment, Patient } from '@/lib/types';
 import { format } from 'date-fns';
 
+const initialAppointments: Appointment[] = [
+    {
+        id: "appt-1",
+        patientId: "vf2dUPqYyjiiFperqjSz",
+        patientName: "sachin new test",
+        date: "2025-08-23",
+        time: "11:00",
+        type: "Follow-up",
+        doctorName: "Dr. Sachin",
+        status: "Scheduled",
+        notes: "Discuss recent lab results."
+    },
+];
+
 export function useAppointmentData() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -14,6 +28,21 @@ export function useAppointmentData() {
   useEffect(() => {
     const q = collection(db, 'appointments');
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        if (querySnapshot.empty && initialAppointments.length > 0) {
+          const batch = writeBatch(db);
+          initialAppointments.forEach(appt => {
+              const docRef = doc(db, 'appointments', appt.id);
+              const apptData = {...appt};
+              delete (apptData as any).id;
+              batch.set(docRef, apptData);
+          });
+          batch.commit().then(() => {
+              console.log("Initial appointment data seeded.");
+          }).catch(err => {
+              console.error("Error seeding initial appointments:", err);
+          });
+        }
+      
       const appointmentsData: Appointment[] = [];
       querySnapshot.forEach((doc) => {
         appointmentsData.push({ id: doc.id, ...doc.data() } as Appointment);
