@@ -49,7 +49,7 @@ const defaultValues = {
 interface CreateVisitDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  patient: Patient;
+  patient: Patient | null; // Allow null
   onVisitCreated: (patientId: string) => void;
   onDialogClose?: () => void;
 }
@@ -78,10 +78,11 @@ export function CreateVisitDialog({
     }
   }, [isOpen, form, onDialogClose]);
 
-  const onSubmit = (data: VisitFormData) => {
+  const onSubmit = async (data: VisitFormData) => {
+    if (!patient) return; // Guard clause
     setIsSubmitting(true);
     try {
-      addVisitToPatient(patient.id, data);
+      await addVisitToPatient(patient.id, data);
       onVisitCreated(patient.id);
       form.reset(defaultValues);
     } catch (error) {
@@ -91,6 +92,10 @@ export function CreateVisitDialog({
       setIsSubmitting(false);
     }
   };
+
+  if (!patient) {
+    return null; // Don't render the dialog if there's no patient
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

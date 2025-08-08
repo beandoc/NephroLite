@@ -7,7 +7,6 @@ import { PatientForm, type PatientFormData } from '@/components/patients/patient
 import { PageHeader } from '@/components/shared/page-header';
 import { usePatientData } from '@/hooks/use-patient-data';
 import { useToast } from "@/hooks/use-toast";
-import { Button } from '@/components/ui/button';
 import { CreateVisitDialog } from '@/components/visits/create-visit-dialog';
 import type { Patient } from '@/lib/types';
 
@@ -22,23 +21,19 @@ export default function NewPatientPage() {
   // This is a key to force re-mounting and thus clearing the form
   const [patientFormKey, setPatientFormKey] = useState(0);
 
-  const handleSubmit = (data: PatientFormData) => {
+  const handleSubmit = async (data: PatientFormData) => {
     setIsSubmitting(true);
     try {
-      const newPatient = addPatient(data);
+      const newPatient = await addPatient(data);
       setNewlyCreatedPatient(newPatient);
       
       toast({
         title: "Patient Registered",
         description: `${newPatient.name} (${newPatient.nephroId}) has been added.`,
-        action: (
-          <Button onClick={() => setIsVisitDialogOpen(true)}>
-            Create Visit
-          </Button>
-        ),
-        duration: 10000, 
       });
 
+      // Programmatically open the dialog after successful registration
+      setIsVisitDialogOpen(true);
       // Reset the form for the next entry by changing its key
       setPatientFormKey(prevKey => prevKey + 1);
 
@@ -63,11 +58,6 @@ export default function NewPatientPage() {
     router.push(`/patients/${patientId}?tab=visits`);
   };
 
-  const handleDialogClose = () => {
-    // This is called when the dialog is closed without creating a visit
-    setNewlyCreatedPatient(null);
-  };
-
   return (
     <div className="container mx-auto py-2">
       <PageHeader 
@@ -84,7 +74,6 @@ export default function NewPatientPage() {
           onOpenChange={setIsVisitDialogOpen}
           patient={newlyCreatedPatient}
           onVisitCreated={handleVisitCreated}
-          onDialogClose={handleDialogClose}
         />
       )}
     </div>
