@@ -1,3 +1,4 @@
+
 "use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Activity, FlaskConical, Hospital } from "lucide-react"; 
@@ -5,6 +6,9 @@ import { useState, useEffect, useMemo } from "react";
 import { usePatientData } from "@/hooks/use-patient-data";
 import { Skeleton } from "@/components/ui/skeleton"; 
 import Link from "next/link";
+import { useAppointmentData } from "@/hooks/use-appointment-data";
+import { isToday, parseISO } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 type MetricDetail = {
   key: string;
@@ -20,44 +24,63 @@ type MetricDetail = {
 
 export function OverviewMetrics() {
   const { patients, isLoading: patientsLoading } = usePatientData();
-  const [randomIncrease, setRandomIncrease] = useState<number | null>(null);
+  const { appointments, isLoading: appointmentsLoading } = useAppointmentData();
+  const { toast } = useToast();
   
-  const [dialysisSessions] = useState(42); // Mock
-  const [labResults] = useState(18); // Mock
-
-  useEffect(() => {
-    // This effect now only runs once on the client to generate a random number.
-    if (randomIncrease === null) {
-      setRandomIncrease(Math.floor(Math.random() * 10) + 5);
+  const metricsData = useMemo(() => {
+    if (patientsLoading || appointmentsLoading) {
+      return {
+        opdPatients: 0,
+        ipdPatients: 0,
+        dialysisSessionsToday: 0,
+        labResultsToReview: 0,
+        totalLabRecords: 0,
+      };
     }
-  }, [randomIncrease]);
 
-  const { opdPatients, ipdPatients } = useMemo(() => {
-    if (patientsLoading) {
-      return { opdPatients: 0, ipdPatients: 0 };
-    }
     const opd = patients.filter(p => p.patientStatus === 'OPD').length;
     const ipd = patients.filter(p => p.patientStatus === 'IPD').length;
-    return { opdPatients: opd, ipdPatients: ipd };
-  }, [patients, patientsLoading]);
+    const dialysisToday = appointments.filter(a => isToday(parseISO(a.date)) && a.type === 'Dialysis Session').length;
+    const totalLabs = patients.reduce((acc, p) => acc + (p.investigationRecords?.length || 0), 0);
+    
+    // This is a placeholder for a real implementation of "needs review"
+    const labsToReview = patients.reduce((acc, p) => {
+        const critical = p.investigationRecords?.some(rec => rec.tests.some(t => {
+            if (!t.result || !t.normalRange || t.normalRange === 'N/A') return false;
+            const resultValue = parseFloat(t.result);
+            if (isNaN(resultValue)) return false;
+            const rangeMatch = t.normalRange.match(/([\d.]+)\s*-\s*([\d.]+)/);
+            if(rangeMatch) return resultValue < parseFloat(rangeMatch[1]) || resultValue > parseFloat(rangeMatch[2]);
+            return false;
+        }));
+        return critical ? acc + 1 : acc;
+    }, 0);
 
+    return {
+      opdPatients: opd,
+      ipdPatients: ipd,
+      dialysisSessionsToday: dialysisToday,
+      labResultsToReview: labsToReview,
+      totalLabRecords: totalLabs,
+    };
+  }, [patients, appointments, patientsLoading, appointmentsLoading]);
 
   const metrics: MetricDetail[] = [
     { 
       key: "total-opd",
       title: "Total OPD Patients", 
-      value: opdPatients, 
-      subtitle: (randomIncrease !== null && !patientsLoading) ? `+${randomIncrease} this month (OPD)` : undefined,
+      value: metricsData.opdPatients, 
+      subtitle: `${patients.length} total patients registered`,
       icon: Users,
       iconColorClass: "text-blue-500",
       borderColorClass: "border-blue-500",
-      loading: patientsLoading || randomIncrease === null,
+      loading: patientsLoading,
       href: "/patients?status=OPD"
     },
     { 
       key: "total-ipd",
       title: "Total IPD Patients", 
-      value: ipdPatients, 
+      value: metricsData.ipdPatients, 
       subtitle: "Currently Admitted", 
       icon: Hospital,
       iconColorClass: "text-red-500",
@@ -67,24 +90,24 @@ export function OverviewMetrics() {
     },
     { 
       key: "dialysis",
-      title: "Dialysis Sessions", 
-      value: dialysisSessions, 
-      subtitle: "Today's schedule", 
+      title: "Dialysis Sessions Today", 
+      value: metricsData.dialysisSessionsToday, 
+      subtitle: "Scheduled for today", 
       icon: Activity, 
       iconColorClass: "text-green-500",
       borderColorClass: "border-green-500",
-      loading: false,
+      loading: appointmentsLoading,
       href: "/appointments"
     },
     { 
       key: "labs",
-      title: "Lab Results", 
-      value: labResults, 
-      subtitle: "5 need review", 
+      title: "Total Lab Records", 
+      value: metricsData.totalLabRecords, 
+      subtitle: `${metricsData.labResultsToReview} patient(s) need review`, 
       icon: FlaskConical, 
       iconColorClass: "text-purple-500",
       borderColorClass: "border-purple-500",
-      loading: false,
+      loading: patientsLoading,
       href: "/lab-results"
     },
   ];
@@ -109,7 +132,7 @@ export function OverviewMetrics() {
                 <div className="text-3xl font-bold">{metric.value}</div>
                 )}
                 
-                {metric.loading && metric.title.includes("OPD") ? (
+                {metric.loading ? (
                     <Skeleton className="h-3 w-3/4 mt-1 rounded-md" />
                 ) : metric.subtitle ? (
                 <p className="text-xs text-muted-foreground">{metric.subtitle}</p>

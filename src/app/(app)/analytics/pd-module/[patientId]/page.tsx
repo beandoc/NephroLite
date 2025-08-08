@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PageHeader } from '@/components/shared/page-header';
@@ -10,12 +10,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ArrowLeft, Calendar, Droplet, Edit3, Gauge, Syringe, UserCircle, Weight, ListChecks, FileText, Activity, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { usePatientData } from '@/hooks/use-patient-data';
-import type { Patient } from '@/lib/types';
+import type { Patient, Visit } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 
+
 // Mock data structure for a single PD patient's detailed data
+// This is now an illustrative type, not a data source.
 interface PdExchange {
   id: string;
   exchangeNo: number;
@@ -32,7 +34,7 @@ interface PeritonitisEpisode {
     outcome: 'Cured' | 'Catheter Removed' | 'Shifted to HD' | 'Death' | 'Ongoing';
 }
 
-interface MockPdPatientDetail {
+interface PdPatientDetail {
   id: string; // Corresponds to patientId
   pdStartDate?: string;
   transferSetDate?: string;
@@ -46,51 +48,6 @@ interface MockPdPatientDetail {
   exchangeSchedule: PdExchange[];
   peritonitisHistory: PeritonitisEpisode[];
 }
-
-// Sample data for one patient for demonstration
-// Keys should match actual patient IDs from usePatientData
-const samplePdDataForPatient: Record<string, MockPdPatientDetail> = {
-    "fixed-pd-patient-id-1": { // Matches Rajesh Kumar's fixed ID
-        id: "fixed-pd-patient-id-1",
-        pdStartDate: "2025-06-03",
-        transferSetDate: "2025-06-19",
-        transporterStatus: "Average",
-        ktVValue: "1.2",
-        baselineWeight: "89 kg",
-        baselineBP: "130/80 mmHg",
-        baselineUrineOutput: "1500 mL/24hr",
-        numberOfCycles: 4,
-        generalDwellVolume: "2L",
-        exchangeSchedule: [
-            { id: 'ex1', exchangeNo: 1, strength: "1.5%D", exchangeTime: "Day", dwellTime: "4 hours", dwellVolume: "2L" },
-            { id: 'ex2', exchangeNo: 2, strength: "2.5%D", exchangeTime: "Day", dwellTime: "4 hours", dwellVolume: "2L" },
-            { id: 'ex3', exchangeNo: 3, strength: "2.5%D", exchangeTime: "Day", dwellTime: "4 hours", dwellVolume: "2L" },
-            { id: 'ex4', exchangeNo: 4, strength: "7.5%D", exchangeTime: "Night", dwellTime: "10 hours", dwellVolume: "2L" },
-        ],
-        peritonitisHistory: [
-             { id: 'p1', date: '2025-07-15', organism: 'Staphylococcus aureus', outcome: 'Cured' },
-        ],
-    },
-    "fixed-pd-patient-id-2": { // Matches Priya Sharma's fixed ID
-        id: "fixed-pd-patient-id-2",
-        pdStartDate: "2024-11-10",
-        transferSetDate: "2024-11-25",
-        transporterStatus: "High-Average",
-        ktVValue: "1.5",
-        baselineWeight: "75 kg",
-        baselineBP: "120/70 mmHg",
-        baselineUrineOutput: "1200 mL/24hr",
-        numberOfCycles: 3,
-        generalDwellVolume: "2.5L",
-        exchangeSchedule: [
-            { id: 'ex1', exchangeNo: 1, strength: "1.5%D", exchangeTime: "Day", dwellTime: "5 hours", dwellVolume: "2.5L" },
-            { id: 'ex2', exchangeNo: 2, strength: "2.5%D", exchangeTime: "Day", dwellTime: "5 hours", dwellVolume: "2.5L" },
-            { id: 'ex3', exchangeNo: 3, strength: "4.25%D", exchangeTime: "Night", dwellTime: "9 hours", dwellVolume: "2.5L" },
-        ],
-        peritonitisHistory: [],
-    }
-};
-
 
 const DetailItem = ({ label, value, icon: Icon, className }: { label: string; value?: string | number | null; icon?: React.ElementType, className?: string }) => (
   <div className={className || "mb-3"}>
@@ -109,7 +66,7 @@ export default function IndividualPDPage() {
   const { toast } = useToast();
 
   const [patient, setPatient] = useState<Patient | null>(null);
-  const [pdData, setPdData] = useState<MockPdPatientDetail | null>(null);
+  const [pdData, setPdData] = useState<PdPatientDetail | null>(null);
   
   const patientId = typeof params.patientId === 'string' ? params.patientId : undefined;
 
@@ -117,7 +74,11 @@ export default function IndividualPDPage() {
     if (patientId && !patientDataLoading) {
       const generalPatientData = getPatientById(patientId);
       setPatient(generalPatientData || null);
-      setPdData(samplePdDataForPatient[patientId] || null);
+      
+      // In a real app, this data would come from the patient object.
+      // For now, we simulate this by checking a non-existent property.
+      const detailedData = (generalPatientData as any)?.pdData;
+      setPdData(detailedData || null);
     }
   }, [patientId, getPatientById, patientDataLoading]);
 

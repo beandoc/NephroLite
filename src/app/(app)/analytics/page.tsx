@@ -43,11 +43,12 @@ interface MetricCardProps {
   colorClass?: string;
   icon?: React.ElementType;
   link?: string;
+  disabled?: boolean;
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ title, value, description, colorClass, icon: Icon, link }) => {
+const MetricCard: React.FC<MetricCardProps> = ({ title, value, description, colorClass, icon: Icon, link, disabled }) => {
   const content = (
-    <Card className={`shadow-lg relative overflow-hidden ${colorClass ? `border-t-4 ${colorClass}` : 'border-t-4 border-transparent'}`}>
+    <Card className={`shadow-lg relative overflow-hidden ${colorClass ? `border-t-4 ${colorClass}` : 'border-t-4 border-transparent'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
       <CardHeader className="pb-2 pt-4">
         {Icon && <Icon className="h-7 w-7 text-muted-foreground mb-2" />}
         {value !== undefined && <CardTitle className="text-3xl font-bold text-center">{value}</CardTitle>}
@@ -59,7 +60,7 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, description, colo
     </Card>
   );
 
-  if (link) {
+  if (link && !disabled) {
     return <Link href={link} className="hover:opacity-80 transition-opacity block">{content}</Link>;
   }
   return content;
@@ -79,9 +80,9 @@ export default function AnalyticsPage() {
     if (patientsLoading) return [];
     return [
       { title: "Peritoneal dialysis", value: patients.filter(p => p.clinicalProfile.tags.includes('PD')).length, colorClass: "border-orange-500", icon: Waves, link: "/analytics/pd-module" },
-      { title: "Hemodialysis", value: patients.filter(p => p.clinicalProfile.tags.includes('HD')).length, colorClass: "border-blue-500", icon: Droplets, link: "/analytics/hd-module" },
+      { title: "Hemodialysis", value: patients.filter(p => p.clinicalProfile.tags.includes('HD')).length, colorClass: "border-blue-500", icon: Droplets, link: "/analytics/hd-module", disabled: true },
       { title: "Glomerulonephritis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Glomerulonephritis').length, colorClass: "border-green-500", icon: Stethoscope },
-      { title: "Kidney transplant", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Transplant Prospect').length, colorClass: "border-green-600", icon: HeartPulse, link: "/analytics/transplant-module" },
+      { title: "Kidney transplant", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Transplant Prospect').length, colorClass: "border-green-600", icon: HeartPulse, link: "/analytics/transplant-module", disabled: true },
       { title: "Chronic Kidney disease", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis?.startsWith('Chronic Kidney Disease')).length, colorClass: "border-cyan-500", icon: Activity },
     ];
   }, [patients, patientsLoading]);
@@ -90,7 +91,7 @@ export default function AnalyticsPage() {
     { title: "24hr Urine Protein Graph", icon: BarChart3, description: "Track proteinuria over time.", colorClass: "border-purple-500" },
     { title: "Diet Management Module", icon: NotebookText, description: "Access dietary planning tools.", colorClass: "border-teal-500" },
     { title: "Key Event Log Summary", icon: FileText, description: "View significant patient events.", colorClass: "border-indigo-500" },
-    { title: "Disease Progression Models", icon: LinkIconLucide, description: "External prediction model links.", colorClass: "border-pink-500", link: "#" }
+    { title: "Disease Progression Models", icon: LinkIconLucide, description: "External prediction model links.", colorClass: "border-pink-500", disabled: true }
   ];
 
   const genderData = useMemo(() => {

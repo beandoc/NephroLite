@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -33,8 +34,8 @@ export function TodaysAppointments() {
     .filter(app => {
         try {
             const appDate = parseISO(app.date); 
-            // Show scheduled appointments for today
-            return isToday(appDate) && (app.status === 'Scheduled' || app.status === 'Waiting');
+            // Only show patients who are scheduled for today and need to be checked in
+            return isToday(appDate) && app.status === 'Scheduled';
         } catch (e) {
             console.error("Error parsing appointment date:", app.date, e);
             return false;
@@ -179,7 +180,7 @@ export function TodaysAppointments() {
         ) : (
           <div className="flex-grow flex flex-col items-center justify-center text-center text-muted-foreground p-6">
             <CalendarDays className="w-12 h-12 mb-3" />
-            <p>No more patients scheduled or waiting for today.</p>
+            <p>No more patients scheduled for today.</p>
           </div>
         )}
       </CardContent>

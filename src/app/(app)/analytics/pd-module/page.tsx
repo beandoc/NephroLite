@@ -60,7 +60,7 @@ export default function PDModulePage() {
                   <p className="text-muted-foreground">No PD patients found.</p>
                 </div>
               )}
-              <Button variant="outline" className="w-full mt-3">
+              <Button variant="outline" className="w-full mt-3" disabled>
                 View Full PD Roster
               </Button>
             </div>
@@ -69,19 +69,19 @@ export default function PDModulePage() {
               <div className="space-y-2 text-sm p-3 border rounded-md bg-card">
                 <div className="flex justify-between">
                   <span className="font-medium">Total Active PD Patients:</span>
-                  {patientsLoading ? <Skeleton className="h-4 w-10 inline-block" /> : <span className="text-muted-foreground">{pdPatients.length}</span>}
+                  {patientsLoading ? <Skeleton className="h-4 w-10 inline-block" /> : <span className="font-bold">{pdPatients.length}</span>}
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Average Duration on PD:</span>
-                  <span className="text-muted-foreground">(Placeholder)</span>
+                  <span className="text-muted-foreground">(Not Implemented)</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Catheter Infection Rate:</span>
-                  <span className="text-muted-foreground">(Placeholder)</span>
+                  <span className="text-muted-foreground">(Not Implemented)</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Peritonitis Rate:</span>
-                  <span className="text-muted-foreground">(Placeholder)</span>
+                  <span className="text-muted-foreground">(Not Implemented)</span>
                 </div>
               </div>
               <div className="h-24 flex items-center justify-center border-2 border-dashed rounded-lg mt-3">

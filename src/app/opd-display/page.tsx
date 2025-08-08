@@ -11,11 +11,12 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, LogIn } from 'lucide-react';
 import { usePatientData } from '@/hooks/use-patient-data';
+import { useRouter } from 'next/navigation';
 
 export default function OpdLoginPage() {
+  const router = useRouter();
   const [mobileNumber, setMobileNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [appointmentId, setAppointmentId] = useState<string | null>(null);
   const { toast } = useToast();
   const { appointments, isLoading: appointmentsLoading } = useAppointmentData();
   const { patients, isLoading: patientsLoading } = usePatientData();
@@ -63,10 +64,7 @@ export default function OpdLoginPage() {
       description: `Welcome, ${patientWithMobile.name}. Your status page will open.`,
     });
     
-    // Set the appointment ID and let the link handle navigation
-    setAppointmentId(todaysAppointment.id);
-    // Directly navigate using window.location to avoid router issues
-    window.location.href = `/opd-display/status/${todaysAppointment.id}`;
+    router.push(`/opd-display/status/${todaysAppointment.id}`);
   };
 
   return (

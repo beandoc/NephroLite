@@ -4,33 +4,6 @@
 import { Line, LineChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { ChartConfig, ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 
-const mockDataWeekly = [
-  { day: "Mon", gfr: 60, creatinine: 1.2 },
-  { day: "Tue", gfr: 58, creatinine: 1.3 },
-  { day: "Wed", gfr: 62, creatinine: 1.1 },
-  { day: "Thu", gfr: 55, creatinine: 1.4 },
-  { day: "Fri", gfr: 59, creatinine: 1.2 },
-  { day: "Sat", gfr: 61, creatinine: 1.1 },
-  { day: "Sun", gfr: 57, creatinine: 1.3 },
-];
-
-const mockDataMonthly = [
-  { month: "Jan", gfr: 65, creatinine: 1.1 },
-  { month: "Feb", gfr: 62, creatinine: 1.2 },
-  { month: "Mar", gfr: 60, creatinine: 1.2 },
-  { month: "Apr", gfr: 58, creatinine: 1.3 },
-  { month: "May", gfr: 55, creatinine: 1.4 },
-  { month: "Jun", gfr: 57, creatinine: 1.3 },
-];
-
-const mockDataYearly = [
-  { yearPeriod: "Q1", gfr: 70, creatinine: 1.0 },
-  { yearPeriod: "Q2", gfr: 65, creatinine: 1.1 },
-  { yearPeriod: "Q3", gfr: 60, creatinine: 1.2 },
-  { yearPeriod: "Q4", gfr: 58, creatinine: 1.3 },
-];
-
-
 const chartConfig = {
   gfr: {
     label: "GFR (mL/min)",
@@ -47,24 +20,20 @@ interface KidneyFunctionChartProps {
 }
 
 export function KidneyFunctionChart({ period = "weekly" }: KidneyFunctionChartProps) {
-  let data;
-  let xDataKey;
-  switch (period) {
-    case "monthly":
-      data = mockDataMonthly;
-      xDataKey = "month";
-      break;
-    case "yearly":
-      data = mockDataYearly;
-      xDataKey = "yearPeriod";
-      break;
-    case "weekly":
-    default:
-      data = mockDataWeekly;
-      xDataKey = "day";
-      break;
+  
+  const noData = true; // This is now a placeholder until a specific patient/group is selected.
+
+  if (noData) {
+    return (
+        <div className="h-80 w-full flex items-center justify-center text-muted-foreground bg-muted/50 rounded-md">
+            <p>Kidney function chart requires a patient or group to be selected.</p>
+        </div>
+    );
   }
 
+  // All mock data has been removed. The following code is kept for when real data is plumbed in.
+  const data: any[] = [];
+  const xDataKey = "date";
 
   return (
     <ChartContainer config={chartConfig} className="h-80 w-full">
