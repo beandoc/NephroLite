@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -64,15 +65,16 @@ export function useAppointmentData(forOpdQueue: boolean = false) {
       if (isLoading) {
         const endTime = performance.now();
         console.log(`[Performance] Appointment data loaded in ${(endTime - startTime).toFixed(1)}ms`);
-        setIsLoading(false);
       }
+      setIsLoading(false);
+      
     }, (error) => {
         console.error("Error fetching appointments: ", error);
         setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, [forOpdQueue, isLoading]);
+  }, [forOpdQueue]);
 
   const addAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'status' | 'patientName'>, patient: Patient): Promise<Appointment> => {
     const newAppointmentData: Omit<Appointment, 'id'> = {

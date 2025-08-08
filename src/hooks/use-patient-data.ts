@@ -50,15 +50,16 @@ export function usePatientData() {
       if (isLoading) {
         const endTime = performance.now();
         console.log(`[Performance] Patient data loaded in ${(endTime - startTime).toFixed(1)}ms`);
-        setIsLoading(false);
       }
+      setIsLoading(false);
+
     }, (error) => {
       console.error("Error fetching patients: ", error);
       setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, [isLoading]);
+  }, []);
 
   const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
     const now = new Date();
