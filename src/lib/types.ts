@@ -3,6 +3,7 @@
 
 
 
+
 export type Address = {
   street?: string;
   city?: string;
@@ -191,6 +192,8 @@ export type InvestigationMaster = {
   id: string;
   name: string;
   group: 'Hematological' | 'Biochemistry' | 'Radiology' | 'Pathology' | 'Special Investigations' | 'Urine Analysis' | 'Serology' | 'Microbiology';
+  unit?: string;
+  normalRange?: string;
 };
 
 export type InvestigationPanel = {

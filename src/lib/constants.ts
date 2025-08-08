@@ -1,5 +1,6 @@
 
 
+
 import type { DiagnosisEntry, InvestigationMaster, InvestigationPanel } from '@/lib/types';
 
 export const GENDERS: string[] = ['Male', 'Female'];
@@ -192,37 +193,37 @@ export const INVESTIGATION_GROUPS: string[] = [
 
 export const INVESTIGATION_MASTER_LIST: InvestigationMaster[] = [
   // Hematological
-  { id: 'hem_001', name: 'Hemoglobin (Hb)', group: 'Hematological' },
-  { id: 'hem_002', name: 'Total Leucocyte Count (TLC)', group: 'Hematological' },
-  { id: 'hem_003', name: 'Differential Leucocyte Count (DLC)', group: 'Hematological' },
-  { id: 'hem_004', name: 'Platelet Count', group: 'Hematological' },
-  { id: 'hem_005', name: 'Erythrocyte Sedimentation Rate (ESR)', group: 'Hematological' },
-  { id: 'hem_006', name: 'Prothrombin Time (PT)', group: 'Hematological' },
-  { id: 'hem_007', name: 'Activated Partial Thromboplastin Time (aPTT)', group: 'Hematological' },
-  { id: 'hem_008', name: 'Reticulocyte Count', group: 'Hematological' },
+  { id: 'hem_001', name: 'Hemoglobin (Hb)', group: 'Hematological', unit: 'g/dL', normalRange: '13.5-17.5' },
+  { id: 'hem_002', name: 'Total Leucocyte Count (TLC)', group: 'Hematological', unit: '/mm³', normalRange: '4000-11000' },
+  { id: 'hem_003', name: 'Differential Leucocyte Count (DLC)', group: 'Hematological', unit: '%', normalRange: 'N:40-75,L:20-45,M:2-10,E:1-6' },
+  { id: 'hem_004', name: 'Platelet Count', group: 'Hematological', unit: '/mm³', normalRange: '150,000-450,000' },
+  { id: 'hem_005', name: 'Erythrocyte Sedimentation Rate (ESR)', group: 'Hematological', unit: 'mm/hr', normalRange: '0-20' },
+  { id: 'hem_006', name: 'Prothrombin Time (PT)', group: 'Hematological', unit: 'sec', normalRange: '11-13.5' },
+  { id: 'hem_007', name: 'Activated Partial Thromboplastin Time (aPTT)', group: 'Hematological', unit: 'sec', normalRange: '25-35' },
+  { id: 'hem_008', name: 'Reticulocyte Count', group: 'Hematological', unit: '%', normalRange: '0.5-2.5' },
   { id: 'hem_009', name: 'Peripheral Blood Smear (PBS)', group: 'Hematological' },
-  { id: 'hem_010', name: 'INR', group: 'Hematological' },
+  { id: 'hem_010', name: 'INR', group: 'Hematological', unit: '', normalRange: '0.8-1.2' },
   { id: 'hem_011', name: 'Complete Blood Count (CBC)', group: 'Hematological' },
 
   // Biochemistry
-  { id: 'bio_001', name: 'Blood Urea', group: 'Biochemistry' },
-  { id: 'bio_002', name: 'Serum Creatinine', group: 'Biochemistry' },
-  { id: 'bio_003', name: 'Serum Sodium (Na+)', group: 'Biochemistry' },
-  { id: 'bio_004', name: 'Serum Potassium (K+)', group: 'Biochemistry' },
-  { id: 'bio_005', name: 'Serum Bicarbonate', group: 'Biochemistry' },
-  { id: 'bio_006', name: 'Serum Calcium', group: 'Biochemistry' },
-  { id: 'bio_007', name: 'Serum Phosphate', group: 'Biochemistry' },
-  { id: 'bio_008', name: 'Serum Uric Acid', group: 'Biochemistry' },
-  { id: 'bio_009', name: 'Alkaline Phosphatase (ALP)', group: 'Biochemistry' },
-  { id: 'bio_010', name: 'Total Protein', group: 'Biochemistry' },
-  { id: 'bio_011', name: 'Serum Albumin', group: 'Biochemistry' },
-  { id: 'bio_012', name: 'Fasting Blood Sugar (FBS)', group: 'Biochemistry' },
-  { id: 'bio_013', name: 'Post Prandial Blood Sugar (PPBS)', group: 'Biochemistry' },
-  { id: 'bio_014', name: 'HbA1c', group: 'Biochemistry' },
+  { id: 'bio_001', name: 'Blood Urea', group: 'Biochemistry', unit: 'mg/dL', normalRange: '15-45' },
+  { id: 'bio_002', name: 'Serum Creatinine', group: 'Biochemistry', unit: 'mg/dL', normalRange: '0.6-1.2' },
+  { id: 'bio_003', name: 'Serum Sodium (Na+)', group: 'Biochemistry', unit: 'mEq/L', normalRange: '135-145' },
+  { id: 'bio_004', name: 'Serum Potassium (K+)', group: 'Biochemistry', unit: 'mEq/L', normalRange: '3.5-5.1' },
+  { id: 'bio_005', name: 'Serum Bicarbonate', group: 'Biochemistry', unit: 'mEq/L', normalRange: '22-29' },
+  { id: 'bio_006', name: 'Serum Calcium', group: 'Biochemistry', unit: 'mg/dL', normalRange: '8.5-10.5' },
+  { id: 'bio_007', name: 'Serum Phosphate', group: 'Biochemistry', unit: 'mg/dL', normalRange: '2.5-4.5' },
+  { id: 'bio_008', name: 'Serum Uric Acid', group: 'Biochemistry', unit: 'mg/dL', normalRange: '3.5-7.2' },
+  { id: 'bio_009', name: 'Alkaline Phosphatase (ALP)', group: 'Biochemistry', unit: 'IU/L', normalRange: '44-147' },
+  { id: 'bio_010', name: 'Total Protein', group: 'Biochemistry', unit: 'g/dL', normalRange: '6.0-8.3' },
+  { id: 'bio_011', name: 'Serum Albumin', group: 'Biochemistry', unit: 'g/dL', normalRange: '3.5-5.5' },
+  { id: 'bio_012', name: 'Fasting Blood Sugar (FBS)', group: 'Biochemistry', unit: 'mg/dL', normalRange: '70-100' },
+  { id: 'bio_013', name: 'Post Prandial Blood Sugar (PPBS)', group: 'Biochemistry', unit: 'mg/dL', normalRange: '<140' },
+  { id: 'bio_014', name: 'HbA1c', group: 'Biochemistry', unit: '%', normalRange: '<5.7' },
   { id: 'bio_015', name: 'Lipid Profile', group: 'Biochemistry' },
   { id: 'bio_016', name: 'Liver Function Test (LFT)', group: 'Biochemistry' },
   { id: 'bio_017', name: 'Kidney Function Test (KFT)', group: 'Biochemistry' },
-  { id: 'bio_018', name: 'eGFR', group: 'Biochemistry' },
+  { id: 'bio_018', name: 'eGFR', group: 'Biochemistry', unit: 'mL/min/1.73m²', normalRange: '>90' },
   
   // Radiology
   { id: 'rad_001', name: 'USG KUB', group: 'Radiology' },
@@ -237,8 +238,8 @@ export const INVESTIGATION_MASTER_LIST: InvestigationMaster[] = [
   { id: 'ser_003', name: 'HIV I & II', group: 'Serology' },
   { id: 'ser_004', name: 'ANA (Antinuclear Antibody)', group: 'Serology' },
   { id: 'ser_005', name: 'dsDNA', group: 'Serology' },
-  { id: 'ser_006', name: 'C3', group: 'Serology' },
-  { id: 'ser_007', name: 'C4', group: 'Serology' },
+  { id: 'ser_006', name: 'C3', group: 'Serology', unit: 'mg/dL', normalRange: '90-180' },
+  { id: 'ser_007', name: 'C4', group: 'Serology', unit: 'mg/dL', normalRange: '10-40' },
   { id: 'ser_008', name: 'ANCA (p-ANCA, c-ANCA)', group: 'Serology' },
   { id: 'ser_009', name: 'Anti-GBM Antibody', group: 'Serology' },
   { id: 'ser_010', name: 'Anti PLA2R antibody', group: 'Serology' },
@@ -246,8 +247,8 @@ export const INVESTIGATION_MASTER_LIST: InvestigationMaster[] = [
   // Urine Analysis
   { id: 'urn_001', name: 'Urine Routine & Microscopy (R/M)', group: 'Urine Analysis' },
   { id: 'urn_002', name: 'Urine Culture & Sensitivity', group: 'Urine Analysis' },
-  { id: 'urn_003', name: '24-hour Urine Protein', group: 'Urine Analysis' },
-  { id: 'urn_004', name: 'Urine Spot Protein/Creatinine Ratio (PCR)', group: 'Urine Analysis' },
+  { id: 'urn_003', name: '24-hour Urine Protein', group: 'Urine Analysis', unit: 'mg/day', normalRange: '<150' },
+  { id: 'urn_004', name: 'Urine Spot Protein/Creatinine Ratio (PCR)', group: 'Urine Analysis', unit: 'mg/g', normalRange: '<150' },
   
   // Special Investigations
   { id: 'spc_001', name: 'Kidney Biopsy', group: 'Special Investigations' },

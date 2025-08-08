@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -127,43 +128,47 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     setRecordToDelete(null);
   };
   
+  const addTestsFromMaster = useCallback((testIds: string[]) => {
+    const testsToLog = INVESTIGATION_MASTER_LIST.filter(t => testIds.includes(t.id));
+      
+    form.reset({
+      id: undefined,
+      date: new Date().toISOString().split('T')[0],
+      notes: "Ordered from main investigations browser.",
+      tests: testsToLog.map(t => ({
+        id: t.id,
+        group: t.group,
+        name: t.name,
+        result: "",
+        unit: t.unit || "",
+        normalRange: t.normalRange || ""
+      })),
+    });
+    setIsFormDialogOpen(true);
+  }, [form]);
+
   const openDialogFromURL = useCallback(() => {
     const dateParam = searchParams.get('date');
     const testsParam = searchParams.get('tests');
     
     if (dateParam && testsParam) {
       const testIds = testsParam.split(',');
-      const testsToLog = INVESTIGATION_MASTER_LIST.filter(t => testIds.includes(t.id));
-      
-      form.reset({
-        id: undefined,
-        date: dateParam,
-        notes: "Ordered from main investigations browser.",
-        tests: testsToLog.map(t => ({
-          id: t.id,
-          group: t.group,
-          name: t.name,
-          result: "",
-          unit: "",
-          normalRange: ""
-        })),
-      });
-
-      setIsFormDialogOpen(true);
+      addTestsFromMaster(testIds);
+      // Clean up URL params after use
       const currentPath = window.location.pathname;
       router.replace(currentPath, { scroll: false });
     }
-  }, [searchParams, form, router]);
+  }, [searchParams, addTestsFromMaster, router]);
   
   useEffect(() => {
     openDialogFromURL();
   }, [openDialogFromURL]);
   
-   const addTestsToForm = (testsToAdd: InvestigationTest[]) => {
+   const addTestsToForm = (testsToAdd: Partial<InvestigationTest>[]) => {
     const existingTestNames = fields.map(f => f.name);
-    const newTests = testsToAdd.filter(t => !existingTestNames.includes(t.name));
+    const newTests = testsToAdd.filter(t => !existingTestNames.includes(t.name || ''));
     if(newTests.length > 0) {
-      append(newTests);
+      append(newTests.map(t => ({...t, id: t.id!, group: t.group!, name: t.name!, result: t.result || '' })));
     }
     setIsSearchPopoverOpen(false);
   };
@@ -187,7 +192,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     if (shouldAdd) {
         const testsToAdd = INVESTIGATION_MASTER_LIST
             .filter(t => testIdsToToggle.includes(t.id) && !testsInForm.includes(t.id))
-            .map(t => ({ ...t, result: '', unit: '', normalRange: '' }));
+            .map(t => ({ ...t, result: '' }));
         append(testsToAdd);
     } else {
         const testIndicesToRemove: number[] = [];
@@ -284,7 +289,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                                             {INVESTIGATION_PANELS.map(panel => (
                                                 <CommandItem key={panel.id} onSelect={() => {
                                                     const tests = INVESTIGATION_MASTER_LIST.filter(t => panel.testIds.includes(t.id));
-                                                    addTestsToForm(tests.map(t => ({ ...t, result: '', unit: '', normalRange: ''})));
+                                                    addTestsToForm(tests.map(t => ({ ...t, result: ''})));
                                                 }}>
                                                     {panel.name}
                                                 </CommandItem>
@@ -292,7 +297,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                                         </CommandGroup>
                                         <CommandGroup heading={<div className="flex items-center"><TestTube className="mr-2 h-4 w-4"/>Individual Tests</div>}>
                                             {INVESTIGATION_MASTER_LIST.map(test => (
-                                                <CommandItem key={test.id} onSelect={() => addTestsToForm([{...test, result: '', unit: '', normalRange: ''}])}>
+                                                <CommandItem key={test.id} onSelect={() => addTestsToForm([{...test, result: ''}])}>
                                                     {test.name}
                                                 </CommandItem>
                                             ))}
@@ -332,20 +337,14 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                                   <FormMessage />
                                 </FormItem>
                               )} />
-                              <FormField control={form.control} name={`tests.${index}.unit`} render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Unit</FormLabel>
-                                  <FormControl><Input placeholder="e.g., g/dL" {...field} /></FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )} />
-                              <FormField control={form.control} name={`tests.${index}.normalRange`} render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Normal Range</FormLabel>
-                                  <FormControl><Input placeholder="e.g., 13.5-17.5" {...field} /></FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )} />
+                               <FormItem>
+                                <FormLabel>Unit</FormLabel>
+                                <FormControl><Input placeholder="Unit" value={field.unit || ''} readOnly disabled /></FormControl>
+                              </FormItem>
+                               <FormItem>
+                                <FormLabel>Normal Range</FormLabel>
+                                <FormControl><Input placeholder="Normal Range" value={field.normalRange || ''} readOnly disabled/></FormControl>
+                              </FormItem>
                             </div>
                           )}
                         </div>
