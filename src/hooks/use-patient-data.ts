@@ -67,7 +67,9 @@ export function usePatientData() {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const year = String(now.getFullYear()).slice(-2);
     
-    const q = query(collection(db, 'patients'), where('nephroId', '>=', `0000/${month}${year}`), where('nephroId', '<', `9999/${parseInt(month, 10) + 1}${year}`));
+    // We need to query to find the last used ID for the current month/year to increment it.
+    // This is a simplified sequential ID generation. For high-concurrency, a different approach would be needed.
+    const q = query(collection(db, 'patients'), where('nephroId', '>=', `1001/${month}${year}`), where('nephroId', '<=', `9999/${month}${year}`));
     const querySnapshot = await getDocs(q);
     const relevantPatients = querySnapshot.docs.map(doc => doc.data() as Patient);
 
