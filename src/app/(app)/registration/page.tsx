@@ -56,18 +56,16 @@ export default function RegistrationPage() {
       return;
     }
 
-    let foundPatients = patients;
-
-    if (termNephroId) {
-      foundPatients = foundPatients.filter(p => {
-        const nephroIdLower = p.nephroId.toLowerCase();
-        return nephroIdLower.includes(termNephroId);
-      });
-    }
-    
-    if (termName) {
-      foundPatients = foundPatients.filter(p => p.name.toLowerCase().includes(termName));
-    }
+    // Start with the full list of patients for every search
+    let foundPatients = patients.filter(patient => {
+      const nephroIdMatch = termNephroId 
+        ? patient.nephroId.toLowerCase().includes(termNephroId) 
+        : true;
+      const nameMatch = termName 
+        ? patient.name.toLowerCase().includes(termName) 
+        : true;
+      return nephroIdMatch && nameMatch;
+    });
     
     setSearchResults(foundPatients);
     if (foundPatients.length > 0) {
@@ -112,6 +110,7 @@ export default function RegistrationPage() {
                 value={searchNephroId}
                 onChange={(e) => setSearchNephroId(e.target.value)}
                 disabled={isSearching || patientsLoading}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
             <div className="space-y-2">
@@ -122,6 +121,7 @@ export default function RegistrationPage() {
                 value={searchPatientName}
                 onChange={(e) => setSearchPatientName(e.target.value)}
                 disabled={isSearching || patientsLoading}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
             <div className="md:col-span-2">
