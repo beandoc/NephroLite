@@ -176,7 +176,9 @@ function EditMasterDiagnosisDialog({
   };
 
   const handleSave = () => {
-    onSave(currentDiagnosis);
+    if(currentDiagnosis) {
+      onSave(currentDiagnosis);
+    }
     onOpenChange(false);
   };
 
@@ -539,7 +541,7 @@ export default function TemplatesPage() {
                     <Card className="bg-muted/50">
                         <CardHeader>
                             <CardTitle className="font-headline flex items-center"><Activity className="mr-2 h-5 w-5 text-primary"/>Discharge Summary Fields</CardTitle>
-                        </CardHeader>
+                        </Header>
                         <CardContent className="space-y-4">
                             <FormField control={form.control} name="dischargeInstructions" render={({ field }) => (<FormItem><FormLabel>Discharge Instructions</FormLabel><FormControl><Textarea rows={4} placeholder="Default discharge instructions..." {...field} /></FormControl><FormMessage /></FormItem>)} />
                         </CardContent>
