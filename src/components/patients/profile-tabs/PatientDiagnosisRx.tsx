@@ -17,11 +17,11 @@ interface PatientDiagnosisRxProps {
 
 export const PatientDiagnosisRx = ({ patient: initialPatient }: PatientDiagnosisRxProps) => {
   const { toast } = useToast();
-  const { getPatientById } = usePatientData();
+  const { currentPatient } = usePatientData();
   const [isVisitDialogOpen, setIsVisitDialogOpen] = useState(false);
   
   // Get the most up-to-date patient data
-  const patient = getPatientById(initialPatient.id) || initialPatient;
+  const patient = currentPatient(initialPatient.id) || initialPatient;
   
   const handleAddNew = () => {
     setIsVisitDialogOpen(true);

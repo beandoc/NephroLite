@@ -22,11 +22,11 @@ interface PatientProfileViewProps {
 }
 
 export function PatientProfileView({ patient: initialPatient }: PatientProfileViewProps) {
-  const { getPatientById } = usePatientData();
+  const { currentPatient } = usePatientData();
   const searchParams = useSearchParams();
   
-  // Use getPatientById to ensure we always have the latest data from the reactive hook
-  const patient = getPatientById(initialPatient.id) || initialPatient;
+  // Use currentPatient to ensure we always have the latest data from the reactive hook
+  const patient = currentPatient(initialPatient.id) || initialPatient;
   
   const [activeTab, setActiveTab] = useState('overview');
   

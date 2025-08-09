@@ -5,8 +5,9 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { collection, onSnapshot, doc, getDoc, addDoc, updateDoc, deleteDoc, writeBatch, query, where, getDocs, runTransaction } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord } from '@/lib/types';
-import { format } from 'date-fns';
-import { VACCINATION_NAMES, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS } from '@/lib/constants';
+import { format, parseISO } from 'date-fns';
+import { VACCINATION_NAMES } from '@/lib/constants';
+
 
 const getDefaultVaccinations = () => {
   return VACCINATION_NAMES.map(name => ({
@@ -44,7 +45,7 @@ export function usePatientData() {
     const startTime = performance.now();
     const q = collection(db, 'patients');
     
-    const unsubscribe = onSnapshot(q, async (querySnapshot) => {
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const patientsData: Patient[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
@@ -54,6 +55,7 @@ export function usePatientData() {
             createdAt: data.createdAt || data.registrationDate 
         } as Patient);
       });
+
       setPatients(patientsData);
       
       if (isLoading) {
@@ -68,7 +70,7 @@ export function usePatientData() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [isLoading]);
 
  const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
     const counterRef = doc(db, 'counters', 'patientCounter');
@@ -78,16 +80,6 @@ export function usePatientData() {
       
       let newIdNumber = 1001; 
       if (!counterDoc.exists()) {
-        const patientsQuery = query(collection(db, 'patients'));
-        const patientsSnapshot = await getDocs(patientsQuery);
-        if(!patientsSnapshot.empty) {
-           const maxId = patientsSnapshot.docs.reduce((max, p) => {
-              const numPart = (p.data().nephroId || '0').split('/')[0];
-              const num = parseInt(numPart, 10);
-              return !isNaN(num) && num > max ? num : max;
-           }, 0);
-           newIdNumber = maxId > 0 ? maxId + 1 : 1001;
-        }
         transaction.set(counterRef, { currentId: newIdNumber });
       } else {
         newIdNumber = counterDoc.data().currentId + 1;
@@ -140,20 +132,19 @@ export function usePatientData() {
     return { id: docRef.id, ...newPatientData };
   }, []);
 
-  const getPatientById = useCallback(async (id: string): Promise<Patient | undefined> => {
-    // First, try to get from the local state for speed
-    const localPatient = patients.find(p => p.id === id);
-    if(localPatient) return localPatient;
-    
-    // If not found (e.g., on initial hard load), fetch from DB
+  const getPatientById = useCallback(async (id: string): Promise<Patient | null> => {
     const patientDocRef = doc(db, 'patients', id);
-    const patientDoc = await getDoc(patientDocRef);
-    if(patientDoc.exists()) {
-        return {id: patientDoc.id, ...patientDoc.data()} as Patient;
+    const docSnap = await getDoc(patientDocRef);
+    if (docSnap.exists()) {
+        const data = docSnap.data();
+        return {
+             id: docSnap.id,
+             ...data,
+            createdAt: data.createdAt || data.registrationDate 
+        } as Patient;
     }
-    
-    return undefined;
-  }, [patients]);
+    return null;
+  }, []);
   
   const updatePatient = useCallback(async (patientId: string, updatedData: Partial<PatientFormData & { isTracked?: boolean }>): Promise<void> => {
     const patientDocRef = doc(db, 'patients', patientId);
@@ -185,106 +176,116 @@ export function usePatientData() {
 
   const addVisitToPatient = useCallback(async (patientId: string, visitData: VisitFormData): Promise<void> => {
     const patientDocRef = doc(db, 'patients', patientId);
-    const patientDoc = await getDoc(patientDocRef);
-    if (!patientDoc.exists()) {
-      throw new Error("Patient not found");
-    }
     
-    const patient = patientDoc.data() as Patient;
-    const nowISO = new Date().toISOString();
-    const newVisit: Visit = {
-      id: crypto.randomUUID(),
-      date: nowISO.split('T')[0],
-      createdAt: nowISO,
-      ...visitData,
-      patientGender: patient.gender,
-      patientRelation: patient.guardian.relation,
-      patientId: patient.id,
-    };
+    await runTransaction(db, async (transaction) => {
+        const patientDoc = await transaction.get(patientDocRef);
+        if (!patientDoc.exists()) {
+          throw new Error("Patient not found");
+        }
+        
+        const patient = patientDoc.data() as Patient;
+        const nowISO = new Date().toISOString();
+        const newVisit: Visit = {
+          id: crypto.randomUUID(),
+          date: nowISO.split('T')[0],
+          createdAt: nowISO,
+          ...visitData,
+          patientGender: patient.gender,
+          patientRelation: patient.guardian.relation,
+          patientId: patient.id,
+        };
 
-    const newVisits = [...(patient.visits || []), newVisit];
-    const newTags = Array.from(new Set([...(patient.clinicalProfile.tags || []), visitData.groupName]));
-    
-    let newPrimaryDiagnosis = patient.clinicalProfile.primaryDiagnosis;
-    if (newPrimaryDiagnosis === 'Not Set' && visitData.groupName !== 'Misc') {
-        newPrimaryDiagnosis = visitData.groupName;
-    }
+        const newVisits = [...(patient.visits || []), newVisit];
+        const newTags = Array.from(new Set([...(patient.clinicalProfile.tags || []), visitData.groupName]));
+        
+        let newPrimaryDiagnosis = patient.clinicalProfile.primaryDiagnosis;
+        if (newPrimaryDiagnosis === 'Not Set' && visitData.groupName !== 'Misc') {
+            newPrimaryDiagnosis = visitData.groupName;
+        }
 
-    const visitRemarkEntry = `[${format(new Date(newVisit.date), 'yyyy-MM-dd')}] Visit (${newVisit.visitType}): ${newVisit.visitRemark}`;
-    const newPomr = patient.clinicalProfile.pomr 
-      ? `${patient.clinicalProfile.pomr}\n${visitRemarkEntry}`
-      : visitRemarkEntry;
+        const visitRemarkEntry = `[${format(parseISO(newVisit.date), 'yyyy-MM-dd')}] Visit (${newVisit.visitType}): ${newVisit.visitRemark}`;
+        const newPomr = patient.clinicalProfile.pomr 
+          ? `${patient.clinicalProfile.pomr}\n${visitRemarkEntry}`
+          : visitRemarkEntry;
 
-    await updateDoc(patientDocRef, {
-      visits: newVisits,
-      'clinicalProfile.tags': newTags,
-      'clinicalProfile.primaryDiagnosis': newPrimaryDiagnosis,
-      'clinicalProfile.pomr': newPomr
+        transaction.update(patientDocRef, {
+            visits: newVisits,
+            'clinicalProfile.tags': newTags,
+            'clinicalProfile.primaryDiagnosis': newPrimaryDiagnosis,
+            'clinicalProfile.pomr': newPomr
+        });
     });
   }, []);
 
   const updateVisitData = useCallback(async (patientId: string, visitId: string, data: ClinicalVisitData): Promise<void> => {
     const patientDocRef = doc(db, 'patients', patientId);
-    const patientDoc = await getDoc(patientDocRef);
 
-    if (!patientDoc.exists()) {
-      throw new Error("Patient not found");
-    }
+    await runTransaction(db, async (transaction) => {
+        const patientDoc = await transaction.get(patientDocRef);
+        if (!patientDoc.exists()) {
+          throw new Error("Patient not found");
+        }
 
-    const patient = patientDoc.data() as Patient;
-    const visitIndex = patient.visits.findIndex(v => v.id === visitId);
+        const patient = patientDoc.data() as Patient;
+        const visitIndex = patient.visits.findIndex(v => v.id === visitId);
 
-    if (visitIndex === -1) {
-      throw new Error("Visit not found");
-    }
-    
-    const updatedVisits = [...patient.visits];
-    const existingVisit = updatedVisits[visitIndex];
-    
-    existingVisit.clinicalData = { ...existingVisit.clinicalData, ...data };
-    
-    if (data.diagnoses && data.diagnoses.length > 0) {
-      existingVisit.diagnoses = data.diagnoses;
-    } else if (data.diagnoses === undefined) {
-    } else {
-       existingVisit.diagnoses = [];
-    }
+        if (visitIndex === -1) {
+          throw new Error("Visit not found");
+        }
+        
+        const updatedVisits = [...patient.visits];
+        const existingVisit = updatedVisits[visitIndex];
+        
+        existingVisit.clinicalData = { ...existingVisit.clinicalData, ...data };
+        
+        if (data.diagnoses && data.diagnoses.length > 0) {
+          existingVisit.diagnoses = data.diagnoses;
+        } else if (data.diagnoses === undefined) {
+            // Do nothing if diagnoses is undefined, keep existing
+        } else {
+           existingVisit.diagnoses = [];
+        }
 
-    await updateDoc(patientDocRef, {
-      visits: updatedVisits,
+        transaction.update(patientDocRef, {
+            visits: updatedVisits,
+        });
     });
   }, []);
   
   const addOrUpdateInvestigationRecord = useCallback(async (patientId: string, record: InvestigationRecord): Promise<void> => {
     const patientDocRef = doc(db, 'patients', patientId);
-    const patientDoc = await getDoc(patientDocRef);
-    if (!patientDoc.exists()) throw new Error("Patient not found");
-
-    const patient = patientDoc.data() as Patient;
-    const records = patient.investigationRecords || [];
     
-    const existingRecordIndex = records.findIndex(r => r.id === record.id);
+    await runTransaction(db, async (transaction) => {
+        const patientDoc = await transaction.get(patientDocRef);
+        if (!patientDoc.exists()) throw new Error("Patient not found");
 
-    if (existingRecordIndex > -1) {
-      records[existingRecordIndex] = record;
-    } else {
-      record.id = record.id || crypto.randomUUID();
-      records.push(record);
-    }
+        const patient = patientDoc.data() as Patient;
+        const records = patient.investigationRecords || [];
+        
+        const existingRecordIndex = records.findIndex(r => r.id === record.id);
 
-    await updateDoc(patientDocRef, { investigationRecords: records });
+        if (existingRecordIndex > -1) {
+          records[existingRecordIndex] = record;
+        } else {
+          record.id = record.id || crypto.randomUUID();
+          records.push(record);
+        }
+        transaction.update(patientDocRef, { investigationRecords: records });
+    });
   }, []);
   
   const deleteInvestigationRecord = useCallback(async (patientId: string, recordId: string): Promise<void> => {
     const patientDocRef = doc(db, 'patients', patientId);
-    const patientDoc = await getDoc(patientDocRef);
-    if (!patientDoc.exists()) throw new Error("Patient not found");
+    await runTransaction(db, async (transaction) => {
+        const patientDoc = await transaction.get(patientDocRef);
+        if (!patientDoc.exists()) throw new Error("Patient not found");
 
-    const patient = patientDoc.data() as Patient;
-    const records = patient.investigationRecords || [];
-    const updatedRecords = records.filter(r => r.id !== recordId);
+        const patient = patientDoc.data() as Patient;
+        const records = patient.investigationRecords || [];
+        const updatedRecords = records.filter(r => r.id !== recordId);
 
-    await updateDoc(patientDocRef, { investigationRecords: updatedRecords });
+        transaction.update(patientDocRef, { investigationRecords: updatedRecords });
+    });
   }, []);
 
   const deletePatient = useCallback(async (patientId: string): Promise<void> => {
@@ -312,6 +313,10 @@ export function usePatientData() {
     const patientDocRef = doc(db, 'patients', patientId);
     await updateDoc(patientDocRef, { patientStatus: 'OPD' });
   }, []);
+  
+  const currentPatient = useCallback((id: string): Patient | undefined => {
+    return patients.find(p => p.id === id);
+  }, [patients]);
 
   return useMemo(() => ({
     patients,
@@ -327,6 +332,7 @@ export function usePatientData() {
     addOrUpdateInvestigationRecord,
     deleteInvestigationRecord,
     updateClinicalProfile,
+    currentPatient,
   }), [
     patients, 
     isLoading, 
@@ -341,5 +347,6 @@ export function usePatientData() {
     addOrUpdateInvestigationRecord, 
     deleteInvestigationRecord,
     updateClinicalProfile,
+    currentPatient,
   ]);
 }

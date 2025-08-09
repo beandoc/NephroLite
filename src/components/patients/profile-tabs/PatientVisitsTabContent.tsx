@@ -21,11 +21,11 @@ interface PatientVisitsTabContentProps {
 
 export function PatientVisitsTabContent({ patient }: PatientVisitsTabContentProps) {
   const { toast } = useToast();
-  const { getPatientById } = usePatientData();
+  const { currentPatient } = usePatientData();
   const [isVisitDialogOpen, setIsVisitDialogOpen] = useState(false);
 
   // We need to get the latest patient data from the hook in case it was updated
-  const currentPatientData = getPatientById(patient.id);
+  const currentPatientData = currentPatient(patient.id) || patient;
   const visits = [...(currentPatientData?.visits || [])].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const handleVisitCreated = (patientId: string) => {
