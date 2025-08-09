@@ -7,16 +7,14 @@ import { PatientForm, type PatientFormData } from '@/components/patients/patient
 import { PageHeader } from '@/components/shared/page-header';
 import { usePatientData } from '@/hooks/use-patient-data';
 import { useToast } from "@/hooks/use-toast";
-import type { Patient } from '@/lib/types';
+import type { Patient, ClinicalProfile } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import { format } from 'date-fns';
+import { ClinicalProfileForm } from '@/components/patients/clinical-profile-form';
 
 export default function EditPatientPage() {
   const router = useRouter();
   const params = useParams();
-  const { getPatientById, updatePatient, isLoading: isPatientDataLoading } = usePatientData();
+  const { getPatientById, updatePatient, updateClinicalProfile, isLoading: isPatientDataLoading } = usePatientData();
   const { toast } = useToast();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,15 +34,26 @@ export default function EditPatientPage() {
     }
   }, [patientId, getPatientById, router, toast, isPatientDataLoading]);
 
-  const handleSubmit = (data: PatientFormData) => {
+  const handleDemographicsSubmit = (data: PatientFormData) => {
     if (!patient) return;
     updatePatient(patient.id, data);
     toast({
-      title: "Patient Updated",
+      title: "Patient Demographics Updated",
       description: `${data.name}'s profile has been successfully updated.`,
     });
     router.push(`/patients/${patient.id}`);
   };
+  
+  const handleClinicalSubmit = (data: ClinicalProfile) => {
+      if(!patient) return;
+      updateClinicalProfile(patient.id, data);
+      toast({
+        title: "Clinical Profile Updated",
+        description: `${patient.name}'s clinical profile has been successfully updated.`,
+      });
+      router.push(`/patients/${patient.id}`);
+  };
+
 
   if (isLoading || isPatientDataLoading) {
     return (
@@ -67,14 +76,19 @@ export default function EditPatientPage() {
     <div className="container mx-auto py-2">
       <PageHeader 
         title={`Edit Profile: ${patient.name}`}
-        description="Update the patient's demographic and contact details."
+        description="Update the patient's demographic and clinical details."
         backHref={`/patients/${patient.id}`}
       />
-      <div className="mt-6">
+      <div className="mt-6 space-y-8">
         <PatientForm
-          onSubmit={handleSubmit}
-          isSubmitting={false} // You can add submitting state if needed
+          onSubmit={handleDemographicsSubmit}
+          isSubmitting={false}
           existingPatientData={patient}
+        />
+        <ClinicalProfileForm 
+          onSubmit={handleClinicalSubmit}
+          isSubmitting={false}
+          existingProfileData={patient.clinicalProfile}
         />
       </div>
     </div>

@@ -218,6 +218,12 @@ export function usePatientData() {
     
     await updateDoc(patientDocRef, dataToUpdate);
   }, []);
+  
+  const updateClinicalProfile = useCallback(async (patientId: string, clinicalProfileData: ClinicalProfile): Promise<void> => {
+    const patientDocRef = doc(db, 'patients', patientId);
+    await updateDoc(patientDocRef, { clinicalProfile: clinicalProfileData });
+  }, []);
+
 
   const addVisitToPatient = useCallback(async (patientId: string, visitData: VisitFormData): Promise<void> => {
     const patientDocRef = doc(db, 'patients', patientId);
@@ -363,6 +369,7 @@ export function usePatientData() {
     updateVisitData,
     addOrUpdateInvestigationRecord,
     deleteInvestigationRecord,
+    updateClinicalProfile,
   }), [
     patients, 
     isLoading, 
@@ -375,6 +382,7 @@ export function usePatientData() {
     addVisitToPatient, 
     updateVisitData, 
     addOrUpdateInvestigationRecord, 
-    deleteInvestigationRecord
+    deleteInvestigationRecord,
+    updateClinicalProfile,
   ]);
 }
