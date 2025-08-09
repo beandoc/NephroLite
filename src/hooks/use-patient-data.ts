@@ -33,6 +33,43 @@ const getInitialClinicalProfile = (): Omit<ClinicalProfile, 'tags'> => ({
   whatsappNumber: "",
 });
 
+// A single sample patient for safe, one-time seeding
+const samplePatient: Omit<Patient, 'id'> = {
+  nephroId: '1001/0824',
+  name: 'Sachin Test New',
+  dob: '1985-05-20',
+  gender: 'Male',
+  contact: '9876543210',
+  email: 'sachin.new@example.com',
+  address: { street: '123 Test Lane', city: 'Testville', state: 'Delhi', pincode: '110001' },
+  guardian: { name: 'Guardian Test', relation: 'Spouse', contact: '9876543211' },
+  registrationDate: '2024-08-23',
+  patientStatus: 'OPD',
+  isTracked: true,
+  residenceType: 'Urban',
+  visits: [],
+  investigationRecords: [],
+  clinicalProfile: {
+    primaryDiagnosis: 'Chronic Kidney Disease (CKD)',
+    tags: ['CKD', 'Hypertension'],
+    nutritionalStatus: 'Well-nourished',
+    disability: 'None',
+    subspecialityFollowUp: 'NIL',
+    smokingStatus: 'No',
+    alcoholConsumption: 'No',
+    vaccinations: getDefaultVaccinations(),
+    pomr: '[2024-08-23] Initial registration visit.',
+    aabhaNumber: '12-3456-7890-1234',
+    bloodGroup: 'O+',
+    drugAllergies: 'None',
+    whatsappNumber: '9876543210',
+    hasDiabetes: true,
+    onAntiHypertensiveMedication: true,
+    onLipidLoweringMedication: false,
+  },
+};
+
+
 export function usePatientData() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,7 +78,23 @@ export function usePatientData() {
     const startTime = performance.now();
     const q = collection(db, 'patients');
     
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const unsubscribe = onSnapshot(q, async (querySnapshot) => {
+      // Safe, one-time seeding logic. Only runs if the collection is truly empty.
+      if (querySnapshot.empty) {
+        console.log("Patient collection is empty. Seeding initial sample patient...");
+        try {
+          await addDoc(collection(db, 'patients'), samplePatient);
+          console.log("Sample patient seeded successfully.");
+          // The listener will pick up this new patient automatically.
+        } catch (error) {
+          console.error("Error seeding initial patient:", error);
+          // If seeding fails, still proceed with an empty list.
+          setPatients([]);
+          setIsLoading(false);
+        }
+        return; // Exit here, the listener will re-trigger with the new data.
+      }
+      
       const patientsData: Patient[] = [];
       querySnapshot.forEach((doc) => {
         patientsData.push({ id: doc.id, ...doc.data() } as Patient);
@@ -60,15 +113,13 @@ export function usePatientData() {
     });
 
     return () => unsubscribe();
-  }, []); // Dependency array is empty to run only once on mount
+  }, []);
 
   const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
     const now = new Date();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const year = String(now.getFullYear()).slice(-2);
     
-    // We need to query to find the last used ID for the current month/year to increment it.
-    // This is a simplified sequential ID generation. For high-concurrency, a different approach would be needed.
     const q = query(collection(db, 'patients'), where('nephroId', '>=', `1001/${month}${year}`), where('nephroId', '<=', `9999/${month}${year}`));
     const querySnapshot = await getDocs(q);
     const relevantPatients = querySnapshot.docs.map(doc => doc.data() as Patient);
