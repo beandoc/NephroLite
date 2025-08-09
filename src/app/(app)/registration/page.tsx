@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePatientData } from '@/hooks/use-patient-data';
 import type { Patient } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { format, parseISO } from 'date-fns';
 
 export default function RegistrationPage() {
   const router = useRouter();
@@ -32,11 +33,11 @@ export default function RegistrationPage() {
   }, []);
 
   const alphabeticalPatients = clientReady
-    ? [...patients].sort((a, b) => a.name.localeCompare(b.name)).slice(0, 5)
+    ? [...patients].sort((a, b) => a.name.localeCompare(b.name)).slice(0, 10)
     : [];
   
   const byRegistrationDatePatients = clientReady
-    ? [...patients].sort((a, b) => new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime()).slice(0, 5)
+    ? [...patients].sort((a, b) => new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime()).slice(0, 10)
     : [];
 
   const handleSearch = () => {
@@ -152,7 +153,7 @@ export default function RegistrationPage() {
                   <li key={patient.id} className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50">
                     <div>
                       <p className="font-semibold">{patient.name}</p>
-                      <p className="text-sm text-muted-foreground">Nephro ID: {patient.nephroId} &bull; DOB: {patient.dob}</p>
+                      <p className="text-sm text-muted-foreground">Nephro ID: {patient.nephroId} &bull; DOB: {format(parseISO(patient.dob), 'PPP')}</p>
                     </div>
                     <Button asChild variant="outline" size="sm">
                       <Link href={`/patients/${patient.id}`}>
@@ -179,24 +180,25 @@ export default function RegistrationPage() {
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <h3 className="text-md font-semibold mb-2">By Name (A-Z, Top 5)</h3>
-            {(patientsLoading || !clientReady) ? <Skeleton className="h-20 w-full" /> : alphabeticalPatients.length > 0 ? (
+            <h3 className="text-md font-semibold mb-2">Recently Added Patients (Top 10)</h3>
+            {(patientsLoading || !clientReady) ? <Skeleton className="h-20 w-full" /> : byRegistrationDatePatients.length > 0 ? (
               <ul className="space-y-2 text-sm">
-                {alphabeticalPatients.map(p => (
+                {byRegistrationDatePatients.map(p => (
                   <li key={p.id}>
                     <Link href={`/patients/${p.id}`} className="text-primary hover:underline">{p.name}</Link> ({p.nephroId})
+                     <span className="text-muted-foreground text-xs ml-2"> - Reg: {format(parseISO(p.registrationDate), 'dd-MMM-yy')}</span>
                   </li>
                 ))}
               </ul>
             ) : <p className="text-sm text-muted-foreground">No patients found.</p>}
           </div>
           <div>
-            <h3 className="text-md font-semibold mb-2">By Registration Date (Newest, Top 5)</h3>
-            {(patientsLoading || !clientReady) ? <Skeleton className="h-20 w-full" /> : byRegistrationDatePatients.length > 0 ? (
+            <h3 className="text-md font-semibold mb-2">By Name (A-Z, Top 10)</h3>
+            {(patientsLoading || !clientReady) ? <Skeleton className="h-20 w-full" /> : alphabeticalPatients.length > 0 ? (
               <ul className="space-y-2 text-sm">
-                {byRegistrationDatePatients.map(p => (
+                {alphabeticalPatients.map(p => (
                   <li key={p.id}>
-                    <Link href={`/patients/${p.id}`} className="text-primary hover:underline">{p.name}</Link> ({p.nephroId}) - Reg: {new Date(p.registrationDate).toLocaleDateString()}
+                    <Link href={`/patients/${p.id}`} className="text-primary hover:underline">{p.name}</Link> ({p.nephroId})
                   </li>
                 ))}
               </ul>

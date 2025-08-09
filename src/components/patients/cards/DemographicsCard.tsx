@@ -67,7 +67,7 @@ export function DemographicsCard({ patient }: DemographicsCardProps) {
           {patient.patientStatus === 'Discharged' && <Badge variant="outline">Discharged</Badge>}
         </div>
         <DetailItem label="Date of Birth" value={patient.dob ? format(parseISO(patient.dob), 'PPP') : 'N/A'} />
-        <DetailItem label="Age" value={patient.dob ? `${new Date().getFullYear() - parseISO(patient.dob).getFullYear()} years` : 'N/A'} />
+        <DetailItem label="Age" value={patient.dob ? `${new Date().getFullYear() - new Date(patient.dob).getFullYear()} years` : 'N/A'} />
         <DetailItem label="Gender" value={patient.gender} />
         <DetailItem label="Contact Number" value={patient.contact} />
         <DetailItem label="Email Address" value={patient.email} />

@@ -70,7 +70,7 @@ const getInitialValues = (patient?: Patient | null): PatientFormData => {
   if (patient) {
     return {
       name: patient.name || "",
-      dob: patient.dob || "",
+      dob: patient.dob ? format(parseISO(patient.dob), "yyyy-MM-dd") : "",
       gender: patient.gender || "Male",
       contact: patient.contact || "",
       email: patient.email || "",

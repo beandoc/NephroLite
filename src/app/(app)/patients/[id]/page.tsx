@@ -11,6 +11,7 @@ import { usePatientData } from '@/hooks/use-patient-data';
 import type { Patient } from '@/lib/types';
 import { ArrowLeft, Edit, Printer } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { format, parseISO } from 'date-fns';
 
 export default function PatientProfilePage() {
   const router = useRouter();
@@ -66,7 +67,7 @@ export default function PatientProfilePage() {
     <div className="container mx-auto py-2">
       <PageHeader 
         title={`${patient.name} (${patient.nephroId})`}
-        description={`Patient Profile Overview. Registered on ${new Date(patient.registrationDate).toLocaleDateString()}`}
+        description={`Patient Profile Overview. Registered on ${format(parseISO(patient.registrationDate), 'PPP')}`}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => router.back()}>

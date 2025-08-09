@@ -11,6 +11,7 @@ import type { Patient } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { format } from 'date-fns';
 
 export default function EditPatientPage() {
   const router = useRouter();
