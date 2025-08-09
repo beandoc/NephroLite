@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/shared/page-header';
@@ -32,13 +32,20 @@ export default function RegistrationPage() {
     setClientReady(true);
   }, []);
 
-  const alphabeticalPatients = clientReady
-    ? [...patients].sort((a, b) => a.name.localeCompare(b.name)).slice(0, 10)
-    : [];
+  const byRegistrationDatePatients = useMemo(() => {
+    if (!clientReady || patientsLoading) return [];
+    return [...patients]
+        .sort((a, b) => new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime())
+        .slice(0, 10);
+  }, [clientReady, patients, patientsLoading]);
   
-  const byRegistrationDatePatients = clientReady
-    ? [...patients].sort((a, b) => new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime()).slice(0, 10)
-    : [];
+  const alphabeticalPatients = useMemo(() => {
+    if (!clientReady || patientsLoading) return [];
+    return [...patients]
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .slice(0, 10);
+  }, [clientReady, patients, patientsLoading]);
+
 
   const handleSearch = () => {
     setIsSearching(true);
