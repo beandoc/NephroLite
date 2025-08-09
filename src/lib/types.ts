@@ -1,9 +1,4 @@
 
-
-
-
-
-
 export type Address = {
   street?: string;
   city?: string;
@@ -134,7 +129,7 @@ export type Patient = {
   formation?: string;
   // New top-level fields
   patientStatus: 'OPD' | 'IPD' | 'Discharged';
-  nextAppointmentDate?: string; // YYYY-MM-DD
+  nextAppointmentDate?: string | null; // YYYY-MM-DD
   isTracked: boolean;
   residenceType?: 'Rural' | 'Urban' | 'Semi-Urban' | 'Other' | 'Not Set';
   visits: Visit[];

@@ -9,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { UserCircleIcon, Hospital, LogOut, MapPin, ShieldCheck, CalendarDays, MessageSquare, Info, Droplet, User, CheckCircle, XCircle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { usePatientData } from '@/hooks/use-patient-data';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 
 interface DemographicsCardProps {
   patient: Patient;
@@ -26,7 +28,7 @@ const DetailItem = ({ label, value, icon: Icon, className }: { label: string; va
 
 export function DemographicsCard({ patient }: DemographicsCardProps) {
   const { toast } = useToast();
-  const { admitPatient, dischargePatient } = usePatientData();
+  const { admitPatient, dischargePatient, updatePatient } = usePatientData();
 
   const handleAdmitPatient = () => {
     admitPatient(patient.id);
@@ -37,6 +39,14 @@ export function DemographicsCard({ patient }: DemographicsCardProps) {
     dischargePatient(patient.id);
     toast({ title: "Patient Discharged", description: `${patient.name} has been discharged.` });
   };
+  
+  const handleTrackingToggle = (isToggled: boolean) => {
+    updatePatient(patient.id, { isTracked: isToggled });
+    toast({
+        title: `Patient Tracking ${isToggled ? 'Enabled' : 'Disabled'}`,
+        description: `${patient.name}'s tracking status has been updated.`
+    });
+  }
 
   return (
     <Card className="shadow-md">
@@ -45,16 +55,12 @@ export function DemographicsCard({ patient }: DemographicsCardProps) {
           <UserCircleIcon className="w-6 h-6 mr-3 text-primary"/>Demographic Information
         </CardTitle>
         <div className="flex items-center gap-2">
-          {(patient.patientStatus === 'OPD' || patient.patientStatus === 'Discharged') && (
-            <Button onClick={handleAdmitPatient} size="sm" variant="outline">
-              <Hospital className="mr-2 h-4 w-4" /> Admit Patient
-            </Button>
-          )}
-          {patient.patientStatus === 'IPD' && (
-            <Button onClick={handleDischargePatient} size="sm" variant="outline">
-              <LogOut className="mr-2 h-4 w-4" /> Discharge Patient
-            </Button>
-          )}
+          <Button onClick={handleAdmitPatient} size="sm" variant="outline" disabled={patient.patientStatus === 'IPD'}>
+            <Hospital className="mr-2 h-4 w-4" /> Admit
+          </Button>
+          <Button onClick={handleDischargePatient} size="sm" variant="outline" disabled={patient.patientStatus !== 'IPD'}>
+            <LogOut className="mr-2 h-4 w-4" /> Discharge
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -76,7 +82,15 @@ export function DemographicsCard({ patient }: DemographicsCardProps) {
         <DetailItem label="Blood Group" value={patient.clinicalProfile.bloodGroup} icon={Droplet}/>
         <DetailItem label="Registration Date" value={patient.registrationDate ? format(parseISO(patient.registrationDate), 'PPP') : 'N/A'} />
         <DetailItem label="Next Appointment" value={patient.nextAppointmentDate ? format(parseISO(patient.nextAppointmentDate), 'PPP') : 'N/A'} icon={CalendarDays}/>
-        <DetailItem label="Tracked Patient" value={patient.isTracked ? 'Yes' : 'No'} icon={patient.isTracked ? CheckCircle : XCircle} />
+        <div className="flex flex-col space-y-1.5">
+            <Label htmlFor="patient-tracking-switch" className="text-sm font-medium text-muted-foreground flex items-center">
+                <CheckCircle className="w-4 h-4 mr-2 text-primary" /> Tracked Patient
+            </Label>
+            <div className="flex items-center space-x-2">
+                <Switch id="patient-tracking-switch" checked={patient.isTracked} onCheckedChange={handleTrackingToggle} />
+                <span className="text-sm">{patient.isTracked ? 'Yes' : 'No'}</span>
+            </div>
+        </div>
       </CardContent>
     </Card>
   );

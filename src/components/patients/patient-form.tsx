@@ -165,11 +165,11 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
                         mode="single"
                         selected={field.value ? parseISO(field.value) : undefined}
                         onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
-                        disabled={(date) => date > twelveYearsAgo || date < oneHundredYearsAgo}
+                        disabled={(date) => date > today || date < oneHundredYearsAgo}
                         initialFocus
                         captionLayout="dropdown-buttons" 
                         fromYear={oneHundredYearsAgo.getFullYear()} 
-                        toYear={twelveYearsAgo.getFullYear()}
+                        toYear={today.getFullYear()}
                       />
                     </PopoverContent>
                   </Popover>

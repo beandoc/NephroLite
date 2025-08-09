@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -19,59 +18,22 @@ const getDefaultVaccinations = () => {
 };
 
 const getInitialClinicalProfile = (): Omit<ClinicalProfile, 'tags'> => ({
-  primaryDiagnosis: PRIMARY_DIAGNOSIS_OPTIONS.includes('Not Set') ? 'Not Set' : PRIMARY_DIAGNOSIS_OPTIONS[0] || "",
-  nutritionalStatus: NUTRITIONAL_STATUSES.includes('Not Set') ? 'Not Set' : NUTRITIONAL_STATUSES[0] || "",
-  disability: DISABILITY_PROFILES.includes('Not Set') ? 'Not Set' : DISABILITY_PROFILES[0] || "",
+  primaryDiagnosis: "Not Set",
+  nutritionalStatus: "Not Set",
+  disability: "None",
   subspecialityFollowUp: 'NIL',
   smokingStatus: 'NIL',
   alcoholConsumption: 'NIL',
   vaccinations: getDefaultVaccinations(),
   pomr: "",
   aabhaNumber: "",
-  bloodGroup: BLOOD_GROUPS.includes('Unknown') ? 'Unknown' : BLOOD_GROUPS[0] || "",
+  bloodGroup: "Unknown",
   drugAllergies: "",
   whatsappNumber: "",
   hasDiabetes: false,
   onAntiHypertensiveMedication: false,
   onLipidLoweringMedication: false,
 });
-
-// A single sample patient for safe, one-time seeding
-const samplePatient: Omit<Patient, 'id'> = {
-  nephroId: '1001/0824',
-  name: 'Sachin Test New',
-  dob: '1985-05-20',
-  gender: 'Male',
-  contact: '9876543210',
-  email: 'sachin.new@example.com',
-  address: { street: '123 Test Lane', city: 'Testville', state: 'Delhi', pincode: '110001' },
-  guardian: { name: 'Guardian Test', relation: 'Spouse', contact: '9876543211' },
-  registrationDate: '2024-08-23',
-  createdAt: new Date().toISOString(),
-  patientStatus: 'OPD',
-  isTracked: true,
-  residenceType: 'Urban',
-  visits: [],
-  investigationRecords: [],
-  clinicalProfile: {
-    primaryDiagnosis: 'Chronic Kidney Disease (CKD)',
-    tags: ['CKD', 'Hypertension'],
-    nutritionalStatus: 'Well-nourished',
-    disability: 'None',
-    subspecialityFollowUp: 'NIL',
-    smokingStatus: 'No',
-    alcoholConsumption: 'No',
-    vaccinations: getDefaultVaccinations(),
-    pomr: '[2024-08-23] Initial registration visit.',
-    aabhaNumber: '12-3456-7890-1234',
-    bloodGroup: 'O+',
-    drugAllergies: 'None',
-    whatsappNumber: '9876543210',
-    hasDiabetes: true,
-    onAntiHypertensiveMedication: true,
-    onLipidLoweringMedication: false,
-  },
-};
 
 
 export function usePatientData() {
@@ -83,20 +45,6 @@ export function usePatientData() {
     const q = collection(db, 'patients');
     
     const unsubscribe = onSnapshot(q, async (querySnapshot) => {
-      // Safe, one-time seeding logic. Only runs if the collection is truly empty.
-      if (querySnapshot.empty && isLoading) { // Only seed if empty on initial load
-        console.log("Patient collection is empty. Seeding initial sample patient...");
-        try {
-          await addDoc(collection(db, 'patients'), samplePatient);
-          console.log("Sample patient seeded successfully.");
-        } catch (error) {
-          console.error("Error seeding initial patient:", error);
-           setPatients([]);
-           setIsLoading(false);
-        }
-        return;
-      }
-      
       const patientsData: Patient[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
@@ -121,17 +69,18 @@ export function usePatientData() {
     });
 
     return () => unsubscribe();
-  }, [isLoading]);
+  }, []);
 
  const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
     const counterRef = doc(db, 'counters', 'patientCounter');
-    const newPatientRef = doc(collection(db, 'patients'));
-
+    
+    // Firestore transaction to ensure atomic read and update of the counter
     const newNephroId = await runTransaction(db, async (transaction) => {
       const counterDoc = await transaction.get(counterRef);
       
       let newIdNumber = 1001; 
       if (!counterDoc.exists()) {
+        // Fallback for first-ever run: check existing patients to set a baseline
         const patientsQuery = query(collection(db, 'patients'));
         const patientsSnapshot = await getDocs(patientsQuery);
         if(!patientsSnapshot.empty) {
@@ -166,7 +115,7 @@ export function usePatientData() {
         street: patientData.address.street || "",
         city: patientData.address.city || "",
         state: patientData.address.state || "",
-        pincode: patientData.address.pincode || "",
+        pincode: patientData.pincode || "",
       },
       guardian: {
         name: patientData.guardian.relation === 'Self' ? patientData.name : patientData.guardian.name || "",
@@ -180,6 +129,7 @@ export function usePatientData() {
       residenceType: 'Not Set',
       visits: [],
       investigationRecords: [],
+      nextAppointmentDate: "",
       clinicalProfile: {
         ...getInitialClinicalProfile(),
         tags: [],
@@ -188,34 +138,36 @@ export function usePatientData() {
       },
     };
     
-    await addDoc(collection(db, 'patients'), newPatientData);
+    const docRef = await addDoc(collection(db, 'patients'), newPatientData);
     
-    return { id: newPatientRef.id, ...newPatientData };
+    return { id: docRef.id, ...newPatientData };
   }, []);
 
   const getPatientById = useCallback((id: string): Patient | undefined => {
     return patients.find(p => p.id === id);
   }, [patients]);
   
-  const updatePatient = useCallback(async (patientId: string, updatedData: Partial<PatientFormData>): Promise<void> => {
+  const updatePatient = useCallback(async (patientId: string, updatedData: Partial<PatientFormData & { isTracked?: boolean }>): Promise<void> => {
     const patientDocRef = doc(db, 'patients', patientId);
     
-    const aabhaNumber = updatedData.uhid;
-    const whatsappNumber = updatedData.whatsappNumber;
+    const dataToUpdate: Record<string, any> = {};
 
-    const restOfData = { ...updatedData };
-    delete (restOfData as any).uhid;
-    delete (restOfData as any).whatsappNumber;
+    // Direct properties of PatientFormData
+    const patientFormKeys: Array<keyof PatientFormData> = ['name', 'dob', 'gender', 'contact', 'email'];
+    patientFormKeys.forEach(key => {
+        if (updatedData[key] !== undefined) {
+            dataToUpdate[key] = updatedData[key];
+        }
+    });
+    
+    if (updatedData.address) dataToUpdate.address = updatedData.address;
+    if (updatedData.guardian) dataToUpdate.guardian = updatedData.guardian;
+    if (updatedData.isTracked !== undefined) dataToUpdate.isTracked = updatedData.isTracked;
 
-    const dataToUpdate: Record<string, any> = { ...restOfData };
-    
-    if (aabhaNumber !== undefined) {
-      dataToUpdate['clinicalProfile.aabhaNumber'] = aabhaNumber;
-    }
-    if (whatsappNumber !== undefined) {
-      dataToUpdate['clinicalProfile.whatsappNumber'] = whatsappNumber;
-    }
-    
+    // Properties nested in clinicalProfile
+    if (updatedData.uhid !== undefined) dataToUpdate['clinicalProfile.aabhaNumber'] = updatedData.uhid;
+    if (updatedData.whatsappNumber !== undefined) dataToUpdate['clinicalProfile.whatsappNumber'] = updatedData.whatsappNumber;
+
     await updateDoc(patientDocRef, dataToUpdate);
   }, []);
   

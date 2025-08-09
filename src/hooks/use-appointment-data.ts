@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -7,21 +6,6 @@ import { collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, writeBatch, 
 import { db } from '@/lib/firebase';
 import type { Appointment, Patient } from '@/lib/types';
 import { format, startOfDay, endOfDay } from 'date-fns';
-
-const initialAppointments: Appointment[] = [
-    {
-        id: "appt-1",
-        patientId: "vf2dUPqYyjiiFperqjSz",
-        patientName: "sachin new test",
-        date: "2025-08-23",
-        createdAt: "2025-08-22T10:00:00Z",
-        time: "11:00",
-        type: "Follow-up",
-        doctorName: "Dr. Sachin",
-        status: "Scheduled",
-        notes: "Discuss recent lab results."
-    },
-];
 
 export function useAppointmentData(forOpdQueue: boolean = false) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -65,7 +49,7 @@ export function useAppointmentData(forOpdQueue: boolean = false) {
     });
 
     return () => unsubscribe();
-  }, [forOpdQueue, isLoading]);
+  }, [forOpdQueue]);
 
   const addAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'status' | 'patientName' | 'createdAt'>, patient: Patient): Promise<Appointment> => {
     const nowISO = new Date().toISOString();
@@ -76,6 +60,11 @@ export function useAppointmentData(forOpdQueue: boolean = false) {
       createdAt: nowISO,
     };
     const docRef = await addDoc(collection(db, 'appointments'), newAppointmentData);
+    
+    // Update patient's nextAppointmentDate
+    const patientDocRef = doc(db, 'patients', patient.id);
+    await updateDoc(patientDocRef, { nextAppointmentDate: appointmentData.date });
+
     return { id: docRef.id, ...newAppointmentData };
   }, []);
 
