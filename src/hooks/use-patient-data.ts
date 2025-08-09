@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { collection, onSnapshot, doc, getDoc, addDoc, updateDoc, deleteDoc, writeBatch, query, where, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot, doc, getDoc, addDoc, updateDoc, deleteDoc, writeBatch, query, where, getDocs, runTransaction } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord } from '@/lib/types';
 import { format } from 'date-fns';
@@ -120,26 +120,44 @@ export function usePatientData() {
     return () => unsubscribe();
   }, [isLoading]);
 
-  const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
-    const now = new Date();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = String(now.getFullYear()).slice(-2);
-    
-    // Efficiently get the last patient ID for the current month/year to increment it.
-    const q = query(collection(db, 'patients'), where('nephroId', '>=', `1000/${month}${year}`), where('nephroId', '<=', `9999/${month}${year}`));
-    const querySnapshot = await getDocs(q);
-    const relevantPatients = querySnapshot.docs.map(doc => doc.data() as Patient);
+ const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
+    const counterRef = doc(db, 'counters', 'patientCounter');
 
-    const maxId = relevantPatients.reduce((max, p) => {
-        const numPart = p.nephroId.split('/')[0];
-        const num = parseInt(numPart, 10);
-        return !isNaN(num) && num > max ? num : max;
-    }, 1000);
+    const newPatientRef = doc(collection(db, 'patients'));
 
-    const newIdNumber = maxId === 1000 && relevantPatients.length === 0 ? 1001 : maxId + 1;
-    
+    // Run a transaction to ensure atomic read and write for the counter.
+    const newNephroId = await runTransaction(db, async (transaction) => {
+      const counterDoc = await transaction.get(counterRef);
+      
+      let newIdNumber = 1001; // Default starting ID
+      if (!counterDoc.exists()) {
+        console.log("Counter document does not exist. Initializing.");
+        // If the counter doesn't exist, we must initialize it.
+        // We can check the latest patient ID as a fallback just in case.
+        const allPatientsQuery = query(collection(db, 'patients'));
+        const patientsSnapshot = await transaction.get(allPatientsQuery);
+        if(!patientsSnapshot.empty) {
+           const maxId = patientsSnapshot.docs.reduce((max, p) => {
+              const numPart = (p.data().nephroId || '0').split('/')[0];
+              const num = parseInt(numPart, 10);
+              return !isNaN(num) && num > max ? num : max;
+           }, 0);
+           newIdNumber = maxId > 0 ? maxId + 1 : 1001;
+        }
+        transaction.set(counterRef, { currentId: newIdNumber });
+      } else {
+        newIdNumber = counterDoc.data().currentId + 1;
+        transaction.update(counterRef, { currentId: newIdNumber });
+      }
+      
+      const now = new Date();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = String(now.getFullYear()).slice(-2);
+      return `${newIdNumber}/${month}${year}`;
+    });
+
     const newPatientData: Omit<Patient, 'id'> = {
-      nephroId: `${newIdNumber}/${month}${year}`,
+      nephroId: newNephroId,
       name: patientData.name,
       dob: patientData.dob,
       gender: patientData.gender,
@@ -156,7 +174,7 @@ export function usePatientData() {
         relation: patientData.guardian.relation || "",
         contact: patientData.guardian.relation === 'Self' ? patientData.contact : patientData.guardian.contact || "",
       },
-      registrationDate: now.toISOString().split('T')[0],
+      registrationDate: new Date().toISOString().split('T')[0],
       patientStatus: 'OPD',
       isTracked: false,
       residenceType: 'Not Set',
@@ -169,8 +187,11 @@ export function usePatientData() {
         aabhaNumber: patientData.uhid || '',
       },
     };
-    const docRef = await addDoc(collection(db, 'patients'), newPatientData);
-    return { id: docRef.id, ...newPatientData };
+    
+    // Now set the new patient data outside the transaction
+    await addDoc(collection(db, 'patients'), newPatientData);
+    
+    return { id: newPatientRef.id, ...newPatientData };
   }, []);
 
   const getPatientById = useCallback((id: string): Patient | undefined => {
