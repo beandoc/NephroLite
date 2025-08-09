@@ -40,6 +40,7 @@ export function usePatientData() {
   useEffect(() => {
     const startTime = performance.now();
     const q = collection(db, 'patients');
+    
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const patientsData: Patient[] = [];
       querySnapshot.forEach((doc) => {
@@ -59,7 +60,7 @@ export function usePatientData() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, []); // Dependency array is empty to run only once on mount
 
   const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
     const now = new Date();
