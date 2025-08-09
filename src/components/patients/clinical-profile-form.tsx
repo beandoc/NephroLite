@@ -156,7 +156,7 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
                                             <Input 
                                                 type="date" 
                                                 value={field.value || ""}
-                                                onChange={(e) => handleVaccinationDateChange(index, e.target.value)}
+                                                onChange={(e) => handleVaccinationDateChange(index, e.target.value || null)}
                                                 disabled={!form.watch(`vaccinations.${index}.administered`)}
                                                 className="w-40"
                                             />

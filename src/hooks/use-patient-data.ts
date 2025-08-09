@@ -13,8 +13,8 @@ const getDefaultVaccinations = () => {
   return VACCINATION_NAMES.map(name => ({
     name: name,
     administered: false,
-    date: "",
-    nextDoseDate: ""
+    date: null,
+    nextDoseDate: null
   }));
 };
 
