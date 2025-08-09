@@ -16,29 +16,33 @@ import { format, parseISO } from 'date-fns';
 export default function PatientProfilePage() {
   const router = useRouter();
   const params = useParams();
-  const { getPatientById, isLoading: dataLoading } = usePatientData();
+  const { getPatientById } = usePatientData();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const patientId = typeof params.id === 'string' ? params.id : undefined;
 
   useEffect(() => {
-    if (patientId && !dataLoading) {
-      const fetchedPatient = getPatientById(patientId);
+    async function fetchPatient() {
+      if (!patientId) {
+        setIsLoading(false);
+        router.push('/patients?error=invalid_id');
+        return;
+      }
+
+      const fetchedPatient = await getPatientById(patientId);
       if (fetchedPatient) {
         setPatient(fetchedPatient);
       } else {
-        // Handle patient not found, maybe redirect or show error
         router.push('/patients?error=notfound');
       }
       setIsLoading(false);
-    } else if (!dataLoading && !patientId) {
-        router.push('/patients?error=invalid_id');
-        setIsLoading(false);
     }
-  }, [patientId, getPatientById, router, dataLoading]);
 
-  if (isLoading || dataLoading) {
+    fetchPatient();
+  }, [patientId, getPatientById, router]);
+
+  if (isLoading) {
     return (
       <div className="container mx-auto py-2">
         <PageHeader title="Loading Patient Profile..." />

@@ -51,7 +51,6 @@ export function usePatientData() {
         patientsData.push({ 
             id: doc.id, 
             ...data,
-            // Ensure backward compatibility for createdAt field
             createdAt: data.createdAt || data.registrationDate 
         } as Patient);
       });
@@ -74,13 +73,11 @@ export function usePatientData() {
  const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
     const counterRef = doc(db, 'counters', 'patientCounter');
     
-    // Firestore transaction to ensure atomic read and update of the counter
     const newNephroId = await runTransaction(db, async (transaction) => {
       const counterDoc = await transaction.get(counterRef);
       
       let newIdNumber = 1001; 
       if (!counterDoc.exists()) {
-        // Fallback for first-ever run: check existing patients to set a baseline
         const patientsQuery = query(collection(db, 'patients'));
         const patientsSnapshot = await getDocs(patientsQuery);
         if(!patientsSnapshot.empty) {
@@ -115,7 +112,7 @@ export function usePatientData() {
         street: patientData.address.street || "",
         city: patientData.address.city || "",
         state: patientData.address.state || "",
-        pincode: patientData.pincode || "",
+        pincode: patientData.address.pincode || "",
       },
       guardian: {
         name: patientData.guardian.relation === 'Self' ? patientData.name : patientData.guardian.name || "",
@@ -143,8 +140,19 @@ export function usePatientData() {
     return { id: docRef.id, ...newPatientData };
   }, []);
 
-  const getPatientById = useCallback((id: string): Patient | undefined => {
-    return patients.find(p => p.id === id);
+  const getPatientById = useCallback(async (id: string): Promise<Patient | undefined> => {
+    // First, try to get from the local state for speed
+    const localPatient = patients.find(p => p.id === id);
+    if(localPatient) return localPatient;
+    
+    // If not found (e.g., on initial hard load), fetch from DB
+    const patientDocRef = doc(db, 'patients', id);
+    const patientDoc = await getDoc(patientDocRef);
+    if(patientDoc.exists()) {
+        return {id: patientDoc.id, ...patientDoc.data()} as Patient;
+    }
+    
+    return undefined;
   }, [patients]);
   
   const updatePatient = useCallback(async (patientId: string, updatedData: Partial<PatientFormData & { isTracked?: boolean }>): Promise<void> => {
@@ -152,7 +160,6 @@ export function usePatientData() {
     
     const dataToUpdate: Record<string, any> = {};
 
-    // Direct properties of PatientFormData
     const patientFormKeys: Array<keyof PatientFormData> = ['name', 'dob', 'gender', 'contact', 'email'];
     patientFormKeys.forEach(key => {
         if (updatedData[key] !== undefined) {
@@ -164,7 +171,6 @@ export function usePatientData() {
     if (updatedData.guardian) dataToUpdate.guardian = updatedData.guardian;
     if (updatedData.isTracked !== undefined) dataToUpdate.isTracked = updatedData.isTracked;
 
-    // Properties nested in clinicalProfile
     if (updatedData.uhid !== undefined) dataToUpdate['clinicalProfile.aabhaNumber'] = updatedData.uhid;
     if (updatedData.whatsappNumber !== undefined) dataToUpdate['clinicalProfile.whatsappNumber'] = updatedData.whatsappNumber;
 
@@ -240,7 +246,6 @@ export function usePatientData() {
     if (data.diagnoses && data.diagnoses.length > 0) {
       existingVisit.diagnoses = data.diagnoses;
     } else if (data.diagnoses === undefined) {
-      // Do nothing, keep existing diagnoses
     } else {
        existingVisit.diagnoses = [];
     }
