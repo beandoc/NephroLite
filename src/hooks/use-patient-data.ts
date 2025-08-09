@@ -31,6 +31,9 @@ const getInitialClinicalProfile = (): Omit<ClinicalProfile, 'tags'> => ({
   bloodGroup: BLOOD_GROUPS.includes('Unknown') ? 'Unknown' : BLOOD_GROUPS[0] || "",
   drugAllergies: "",
   whatsappNumber: "",
+  hasDiabetes: false,
+  onAntiHypertensiveMedication: false,
+  onLipidLoweringMedication: false,
 });
 
 // A single sample patient for safe, one-time seeding
@@ -83,16 +86,18 @@ export function usePatientData() {
       if (querySnapshot.empty) {
         console.log("Patient collection is empty. Seeding initial sample patient...");
         try {
+          // This prevents an infinite loop by not re-triggering the listener immediately
+          // We add one document, and the listener will then pick it up on its own.
           await addDoc(collection(db, 'patients'), samplePatient);
           console.log("Sample patient seeded successfully.");
-          // The listener will pick up this new patient automatically.
         } catch (error) {
           console.error("Error seeding initial patient:", error);
-          // If seeding fails, still proceed with an empty list.
+           // If seeding fails, we still need to set loading to false.
           setPatients([]);
           setIsLoading(false);
         }
-        return; // Exit here, the listener will re-trigger with the new data.
+        // The listener will re-trigger with the new data, so we can exit here.
+        return;
       }
       
       const patientsData: Patient[] = [];
@@ -113,14 +118,15 @@ export function usePatientData() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [isLoading]);
 
   const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
     const now = new Date();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const year = String(now.getFullYear()).slice(-2);
     
-    const q = query(collection(db, 'patients'), where('nephroId', '>=', `1001/${month}${year}`), where('nephroId', '<=', `9999/${month}${year}`));
+    // Efficiently get the last patient ID for the current month/year to increment it.
+    const q = query(collection(db, 'patients'), where('nephroId', '>=', `1000/${month}${year}`), where('nephroId', '<=', `9999/${month}${year}`));
     const querySnapshot = await getDocs(q);
     const relevantPatients = querySnapshot.docs.map(doc => doc.data() as Patient);
 
@@ -130,7 +136,7 @@ export function usePatientData() {
         return !isNaN(num) && num > max ? num : max;
     }, 1000);
 
-    const newIdNumber = maxId + 1;
+    const newIdNumber = maxId === 1000 && relevantPatients.length === 0 ? 1001 : maxId + 1;
     
     const newPatientData: Omit<Patient, 'id'> = {
       nephroId: `${newIdNumber}/${month}${year}`,
@@ -177,7 +183,10 @@ export function usePatientData() {
     const aabhaNumber = updatedData.uhid;
     const whatsappNumber = updatedData.whatsappNumber;
 
-    const { uhid, whatsappNumber: whatsappNum, ...restOfData } = updatedData;
+    // Create a mutable copy to avoid modifying the original updatedData
+    const restOfData = { ...updatedData };
+    delete (restOfData as any).uhid;
+    delete (restOfData as any).whatsappNumber;
 
     const dataToUpdate: Record<string, any> = { ...restOfData };
     
@@ -185,7 +194,7 @@ export function usePatientData() {
       dataToUpdate['clinicalProfile.aabhaNumber'] = aabhaNumber;
     }
     if (whatsappNumber !== undefined) {
-      dataToUpdate['clinicalProfile.whatsappNumber'] = whatsappNum;
+      dataToUpdate['clinicalProfile.whatsappNumber'] = whatsappNumber;
     }
     
     await updateDoc(patientDocRef, dataToUpdate);

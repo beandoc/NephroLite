@@ -34,28 +34,13 @@ export function useAppointmentData(forOpdQueue: boolean = false) {
       const today_start = format(startOfDay(new Date()), 'yyyy-MM-dd');
       q = query(
         collection(db, 'appointments'), 
-        where('date', '==', today_start),
-        where('status', 'in', ['Scheduled', 'Waiting', 'Now Serving', 'Completed'])
+        where('date', '==', today_start)
       );
     } else {
       q = collection(db, 'appointments');
     }
     
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      // Seeding logic for initial data on first load if db is empty
-      if (!forOpdQueue && querySnapshot.empty && initialAppointments.length > 0) {
-        const batch = writeBatch(db);
-        initialAppointments.forEach(appt => {
-            const docRef = doc(db, 'appointments', appt.id);
-            const apptData = {...appt};
-            delete (apptData as any).id;
-            batch.set(docRef, apptData);
-        });
-        batch.commit().catch(err => {
-            console.error("Error seeding initial appointments:", err);
-        });
-      }
-      
       const appointmentsData: Appointment[] = [];
       querySnapshot.forEach((doc) => {
         appointmentsData.push({ id: doc.id, ...doc.data() } as Appointment);
@@ -74,7 +59,7 @@ export function useAppointmentData(forOpdQueue: boolean = false) {
     });
 
     return () => unsubscribe();
-  }, [forOpdQueue]);
+  }, [forOpdQueue, isLoading]);
 
   const addAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'status' | 'patientName'>, patient: Patient): Promise<Appointment> => {
     const newAppointmentData: Omit<Appointment, 'id'> = {
