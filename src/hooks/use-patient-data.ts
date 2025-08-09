@@ -47,6 +47,7 @@ const samplePatient: Omit<Patient, 'id'> = {
   address: { street: '123 Test Lane', city: 'Testville', state: 'Delhi', pincode: '110001' },
   guardian: { name: 'Guardian Test', relation: 'Spouse', contact: '9876543211' },
   registrationDate: '2024-08-23',
+  createdAt: new Date().toISOString(),
   patientStatus: 'OPD',
   isTracked: true,
   residenceType: 'Urban',
@@ -83,26 +84,28 @@ export function usePatientData() {
     
     const unsubscribe = onSnapshot(q, async (querySnapshot) => {
       // Safe, one-time seeding logic. Only runs if the collection is truly empty.
-      if (querySnapshot.empty) {
+      if (querySnapshot.empty && isLoading) { // Only seed if empty on initial load
         console.log("Patient collection is empty. Seeding initial sample patient...");
         try {
-          // This prevents an infinite loop by not re-triggering the listener immediately
-          // We add one document, and the listener will then pick it up on its own.
           await addDoc(collection(db, 'patients'), samplePatient);
           console.log("Sample patient seeded successfully.");
         } catch (error) {
           console.error("Error seeding initial patient:", error);
-           // If seeding fails, we still need to set loading to false.
-          setPatients([]);
-          setIsLoading(false);
+           setPatients([]);
+           setIsLoading(false);
         }
-        // The listener will re-trigger with the new data, so we can exit here.
         return;
       }
       
       const patientsData: Patient[] = [];
       querySnapshot.forEach((doc) => {
-        patientsData.push({ id: doc.id, ...doc.data() } as Patient);
+        const data = doc.data();
+        patientsData.push({ 
+            id: doc.id, 
+            ...data,
+            // Ensure backward compatibility for createdAt field
+            createdAt: data.createdAt || data.registrationDate 
+        } as Patient);
       });
       setPatients(patientsData);
       
@@ -122,20 +125,15 @@ export function usePatientData() {
 
  const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
     const counterRef = doc(db, 'counters', 'patientCounter');
-
     const newPatientRef = doc(collection(db, 'patients'));
 
-    // Run a transaction to ensure atomic read and write for the counter.
     const newNephroId = await runTransaction(db, async (transaction) => {
       const counterDoc = await transaction.get(counterRef);
       
-      let newIdNumber = 1001; // Default starting ID
+      let newIdNumber = 1001; 
       if (!counterDoc.exists()) {
-        console.log("Counter document does not exist. Initializing.");
-        // If the counter doesn't exist, we must initialize it.
-        // We can check the latest patient ID as a fallback just in case.
-        const allPatientsQuery = query(collection(db, 'patients'));
-        const patientsSnapshot = await transaction.get(allPatientsQuery);
+        const patientsQuery = query(collection(db, 'patients'));
+        const patientsSnapshot = await getDocs(patientsQuery);
         if(!patientsSnapshot.empty) {
            const maxId = patientsSnapshot.docs.reduce((max, p) => {
               const numPart = (p.data().nephroId || '0').split('/')[0];
@@ -156,6 +154,7 @@ export function usePatientData() {
       return `${newIdNumber}/${month}${year}`;
     });
 
+    const nowISO = new Date().toISOString();
     const newPatientData: Omit<Patient, 'id'> = {
       nephroId: newNephroId,
       name: patientData.name,
@@ -174,7 +173,8 @@ export function usePatientData() {
         relation: patientData.guardian.relation || "",
         contact: patientData.guardian.relation === 'Self' ? patientData.contact : patientData.guardian.contact || "",
       },
-      registrationDate: new Date().toISOString().split('T')[0],
+      registrationDate: nowISO.split('T')[0],
+      createdAt: nowISO,
       patientStatus: 'OPD',
       isTracked: false,
       residenceType: 'Not Set',
@@ -188,7 +188,6 @@ export function usePatientData() {
       },
     };
     
-    // Now set the new patient data outside the transaction
     await addDoc(collection(db, 'patients'), newPatientData);
     
     return { id: newPatientRef.id, ...newPatientData };
@@ -204,7 +203,6 @@ export function usePatientData() {
     const aabhaNumber = updatedData.uhid;
     const whatsappNumber = updatedData.whatsappNumber;
 
-    // Create a mutable copy to avoid modifying the original updatedData
     const restOfData = { ...updatedData };
     delete (restOfData as any).uhid;
     delete (restOfData as any).whatsappNumber;
@@ -229,9 +227,11 @@ export function usePatientData() {
     }
     
     const patient = patientDoc.data() as Patient;
+    const nowISO = new Date().toISOString();
     const newVisit: Visit = {
       id: crypto.randomUUID(),
-      date: new Date().toISOString().split('T')[0],
+      date: nowISO.split('T')[0],
+      createdAt: nowISO,
       ...visitData,
       patientGender: patient.gender,
       patientRelation: patient.guardian.relation,

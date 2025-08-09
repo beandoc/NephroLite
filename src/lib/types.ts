@@ -85,6 +85,7 @@ export type ClinicalVisitData = {
 export type Visit = {
   id: string;
   date: string; // YYYY-MM-DD
+  createdAt: string; // ISO string
   visitType: string;
   visitRemark: string;
   groupName: string;
@@ -124,6 +125,7 @@ export type Patient = {
   guardian: Guardian;
   clinicalProfile: ClinicalProfile;
   registrationDate: string; // YYYY-MM-DD
+  createdAt: string; // ISO string
   // Service-related details
   serviceName?: string;
   serviceNumber?: string;
@@ -167,6 +169,7 @@ export type Appointment = {
   patientId: string;
   patientName: string;
   date: string;
+  createdAt: string; // ISO string
   time: string;
   type: string;
   doctorName: string;

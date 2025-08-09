@@ -1,14 +1,25 @@
+
 "use client";
 
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Activity, UserPlus, Eye, CalendarPlus } from 'lucide-react';
+import { Activity, UserPlus, Eye, CalendarPlus, FileText } from 'lucide-react';
 import { usePatientData } from '@/hooks/use-patient-data';
 import { useAppointmentData } from '@/hooks/use-appointment-data';
 import { format, parseISO } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMemo } from 'react';
+
+type ActivityItem = {
+    type: 'patient' | 'appointment' | 'visit';
+    id: string;
+    description: string;
+    date: Date;
+    href: string;
+    icon: React.ElementType;
+    iconColor: string;
+}
 
 export function RecentActivity() {
     const { patients, isLoading: patientsLoading } = usePatientData();
@@ -17,23 +28,29 @@ export function RecentActivity() {
     const recentActivities = useMemo(() => {
         if (patientsLoading || appointmentsLoading) return [];
 
-        const patientActivities = patients.map(p => ({
-            type: 'patient' as const,
+        const patientActivities: ActivityItem[] = patients.map(p => ({
+            type: 'patient',
             id: p.id,
             description: `Patient ${p.name} was registered.`,
-            date: parseISO(p.registrationDate),
+            date: parseISO(p.createdAt),
             href: `/patients/${p.id}`,
+            icon: UserPlus,
+            iconColor: 'text-green-500',
         }));
 
-        const appointmentActivities = appointments.map(a => ({
-            type: 'appointment' as const,
-            id: a.id,
-            description: `Appointment for ${a.patientName} scheduled.`,
-            date: parseISO(a.date),
-            href: `/appointments`,
-        }));
+        const visitActivities: ActivityItem[] = patients.flatMap(p => 
+            p.visits.map(v => ({
+                type: 'visit' as const,
+                id: v.id,
+                description: `New ${v.visitType.toLowerCase()} visit for ${p.name}.`,
+                date: parseISO(v.createdAt),
+                href: `/patients/${p.id}?tab=visits`,
+                icon: FileText,
+                iconColor: 'text-indigo-500'
+            }))
+        );
         
-        return [...patientActivities, ...appointmentActivities]
+        return [...patientActivities, ...visitActivities]
             .sort((a, b) => b.date.getTime() - a.date.getTime())
             .slice(0, 5);
 
@@ -65,11 +82,11 @@ export function RecentActivity() {
                 {recentActivities.map(activity => (
                     <div key={`${activity.type}-${activity.id}`} className="flex items-center">
                         <div className="flex-shrink-0">
-                            {activity.type === 'patient' ? <UserPlus className="h-5 w-5 text-green-500" /> : <CalendarPlus className="h-5 w-5 text-blue-500" />}
+                           <activity.icon className={`h-5 w-5 ${activity.iconColor}`} />
                         </div>
                         <div className="ml-3 flex-grow">
                             <p className="text-sm">{activity.description}</p>
-                            <p className="text-xs text-muted-foreground">{format(activity.date, 'PPP')}</p>
+                            <p className="text-xs text-muted-foreground">{format(activity.date, 'PPP, p')}</p>
                         </div>
                         <Button asChild variant="ghost" size="sm">
                             <Link href={activity.href}><Eye className="h-4 w-4" /></Link>

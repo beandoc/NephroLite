@@ -14,6 +14,7 @@ const initialAppointments: Appointment[] = [
         patientId: "vf2dUPqYyjiiFperqjSz",
         patientName: "sachin new test",
         date: "2025-08-23",
+        createdAt: "2025-08-22T10:00:00Z",
         time: "11:00",
         type: "Follow-up",
         doctorName: "Dr. Sachin",
@@ -43,7 +44,12 @@ export function useAppointmentData(forOpdQueue: boolean = false) {
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const appointmentsData: Appointment[] = [];
       querySnapshot.forEach((doc) => {
-        appointmentsData.push({ id: doc.id, ...doc.data() } as Appointment);
+        const data = doc.data();
+        appointmentsData.push({ 
+            id: doc.id, 
+            ...data,
+            createdAt: data.createdAt || data.date,
+        } as Appointment);
       });
       setAppointments(appointmentsData);
       
@@ -61,11 +67,13 @@ export function useAppointmentData(forOpdQueue: boolean = false) {
     return () => unsubscribe();
   }, [forOpdQueue, isLoading]);
 
-  const addAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'status' | 'patientName'>, patient: Patient): Promise<Appointment> => {
+  const addAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'status' | 'patientName' | 'createdAt'>, patient: Patient): Promise<Appointment> => {
+    const nowISO = new Date().toISOString();
     const newAppointmentData: Omit<Appointment, 'id'> = {
       ...appointmentData,
       patientName: patient.name, 
       status: 'Scheduled',
+      createdAt: nowISO,
     };
     const docRef = await addDoc(collection(db, 'appointments'), newAppointmentData);
     return { id: docRef.id, ...newAppointmentData };
