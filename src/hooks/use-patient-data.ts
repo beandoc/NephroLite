@@ -45,13 +45,15 @@ export function usePatientData() {
 
   useEffect(() => {
     // Simulate loading mock data and setting the initial lastId
-    const initialPatients = MOCK_PATIENTS;
-    setPatients(initialPatients);
-    if (initialPatients.length > 0) {
-        const maxId = initialPatients.reduce((max, p) => Math.max(parseInt(p.nephroId.split('/')[0], 10), max), 1000);
-        setLastId(maxId);
-    }
-    setIsLoading(false);
+    setTimeout(() => {
+        const initialPatients = MOCK_PATIENTS;
+        setPatients(initialPatients);
+        if (initialPatients.length > 0) {
+            const maxId = initialPatients.reduce((max, p) => Math.max(parseInt(p.nephroId.split('/')[0], 10), max), 1000);
+            setLastId(maxId);
+        }
+        setIsLoading(false);
+    }, 300);
   }, []);
 
  const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {

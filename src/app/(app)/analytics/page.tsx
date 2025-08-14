@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { usePatientData } from '@/hooks/use-patient-data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -75,9 +75,14 @@ export default function AnalyticsPage() {
   const { patients, isLoading: patientsLoading } = usePatientData();
   const [tagInput, setTagInput] = useState('');
   const [selectedFilterTags, setSelectedFilterTags] = useState<string[]>([]);
+  const [clientReady, setClientReady] = useState(false);
+
+  useEffect(() => {
+    setClientReady(true);
+  }, []);
 
   const patientGroupMetrics: MetricCardProps[] = useMemo(() => {
-    if (patientsLoading) return [];
+    if (patientsLoading || !clientReady) return [];
     return [
       { title: "Peritoneal dialysis", value: patients.filter(p => p.clinicalProfile.tags.includes('PD')).length, colorClass: "border-orange-500", icon: Waves, link: "/analytics/pd-module" },
       { title: "Hemodialysis", value: patients.filter(p => p.clinicalProfile.tags.includes('HD')).length, colorClass: "border-blue-500", icon: Droplets, link: "/analytics/hd-module", disabled: true },
@@ -85,7 +90,7 @@ export default function AnalyticsPage() {
       { title: "Kidney transplant", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Transplant Prospect').length, colorClass: "border-green-600", icon: HeartPulse, link: "/analytics/transplant-module", disabled: true },
       { title: "Chronic Kidney disease", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis?.toLowerCase().startsWith('chronic kidney disease')).length, colorClass: "border-cyan-500", icon: Activity },
     ];
-  }, [patients, patientsLoading]);
+  }, [patients, patientsLoading, clientReady]);
 
   const gnModuleAnalytics: MetricCardProps[] = [
     { title: "24hr Urine Protein Graph", icon: BarChart3, description: "Track proteinuria over time.", colorClass: "border-purple-500" },
@@ -95,7 +100,7 @@ export default function AnalyticsPage() {
   ];
 
   const genderData = useMemo(() => {
-    if (patientsLoading) return [];
+    if (patientsLoading || !clientReady) return [];
     const counts = { Male: 0, Female: 0, Other: 0 };
     patients.forEach(p => {
       if (p.gender === 'Male') counts.Male++;
@@ -107,22 +112,22 @@ export default function AnalyticsPage() {
       { name: 'Female', value: counts.Female },
       { name: 'Other/Not Specified', value: counts.Other },
     ].filter(d => d.value > 0);
-  }, [patients, patientsLoading]);
+  }, [patients, patientsLoading, clientReady]);
 
   const residenceData = useMemo(() => {
-    if (patientsLoading) return [];
+    if (patientsLoading || !clientReady) return [];
     const counts: { [key: string]: number } = { Rural: 0, Urban: 0, 'Semi-Urban': 0, Other: 0, 'Not Set': 0 };
     patients.forEach(p => {
       const type = p.residenceType || 'Not Set';
       counts[type] = (counts[type] || 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value })).filter(d => d.value > 0);
-  }, [patients, patientsLoading]);
+  }, [patients, patientsLoading, clientReady]);
 
   const trackedPatients = useMemo(() => {
-    if (patientsLoading) return [];
+    if (patientsLoading || !clientReady) return [];
     return patients.filter(p => p.isTracked);
-  }, [patients, patientsLoading]);
+  }, [patients, patientsLoading, clientReady]);
 
   const handleAddFilterTag = () => {
     const newTag = tagInput.trim();
@@ -137,12 +142,12 @@ export default function AnalyticsPage() {
   };
 
   const filteredByTagsPatients = useMemo(() => {
-    if (patientsLoading || selectedFilterTags.length === 0) return patients; // Show all if no tags selected for filtering
+    if (patientsLoading || !clientReady || selectedFilterTags.length === 0) return patients; // Show all if no tags selected for filtering
     return patients.filter(patient => {
       const patientTags = patient.clinicalProfile.tags || [];
       return selectedFilterTags.every(filterTag => patientTags.includes(filterTag));
     });
-  }, [patients, patientsLoading, selectedFilterTags]);
+  }, [patients, patientsLoading, selectedFilterTags, clientReady]);
 
 
   return (

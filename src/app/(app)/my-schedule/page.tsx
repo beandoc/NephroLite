@@ -33,7 +33,9 @@ export default function MySchedulePage() {
 
   useEffect(() => {
     // Set the initial date only on the client side to avoid hydration mismatch
-    setSelectedDate(new Date());
+    if (typeof window !== 'undefined') {
+        setSelectedDate(new Date());
+    }
   }, []);
 
 
