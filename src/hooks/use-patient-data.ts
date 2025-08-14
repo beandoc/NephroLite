@@ -40,18 +40,24 @@ export function usePatientData() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // This state will track the last used ID to avoid recalculating it.
+  const [lastId, setLastId] = useState(1000);
+
   useEffect(() => {
-    // Simulate loading mock data
-    setTimeout(() => {
-      setPatients(MOCK_PATIENTS);
-      setIsLoading(false);
-    }, 500); // Simulate network delay
+    // Simulate loading mock data and setting the initial lastId
+    const initialPatients = MOCK_PATIENTS;
+    setPatients(initialPatients);
+    if (initialPatients.length > 0) {
+        const maxId = initialPatients.reduce((max, p) => Math.max(parseInt(p.nephroId.split('/')[0], 10), max), 1000);
+        setLastId(maxId);
+    }
+    setIsLoading(false);
   }, []);
 
  const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
-    
-    const maxId = patients.reduce((max, p) => Math.max(parseInt(p.nephroId.split('/')[0], 10), max), 1000);
-    const newIdNumber = maxId + 1;
+    const newIdNumber = lastId + 1;
+    setLastId(newIdNumber); // Immediately update the last used ID
+
     const now = new Date();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const year = String(now.getFullYear()).slice(-2);
@@ -95,7 +101,7 @@ export function usePatientData() {
     
     setPatients(prev => [...prev, newPatient]);
     return newPatient;
-  }, [patients]);
+  }, [lastId]);
 
   const getPatientById = useCallback((id: string): Patient | null => {
     return patients.find(p => p.id === id) || null;
