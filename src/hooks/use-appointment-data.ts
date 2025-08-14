@@ -2,94 +2,62 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, writeBatch, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import type { Appointment, Patient } from '@/lib/types';
-import { format, startOfDay, endOfDay } from 'date-fns';
+import { format, startOfDay, endOfDay, isToday, parseISO } from 'date-fns';
+import { MOCK_APPOINTMENTS } from '@/lib/mock-data'; // Import mock data
 
 export function useAppointmentData(forOpdQueue: boolean = false) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const startTime = performance.now();
-    
-    let q;
-    if (forOpdQueue) {
-      const today_start = format(startOfDay(new Date()), 'yyyy-MM-dd');
-      q = query(
-        collection(db, 'appointments'), 
-        where('date', '==', today_start)
-      );
-    } else {
-      q = collection(db, 'appointments');
-    }
-    
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const appointmentsData: Appointment[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        appointmentsData.push({ 
-            id: doc.id, 
-            ...data,
-            createdAt: data.createdAt || data.date,
-        } as Appointment);
-      });
-      setAppointments(appointmentsData);
-      
-      if (isLoading) {
-        const endTime = performance.now();
-        console.log(`[Performance] Appointment data loaded in ${(endTime - startTime).toFixed(1)}ms`);
+    // Simulate loading mock data
+    setTimeout(() => {
+      let dataToLoad = MOCK_APPOINTMENTS;
+      if (forOpdQueue) {
+        dataToLoad = MOCK_APPOINTMENTS.filter(a => isToday(parseISO(a.date)));
       }
+      setAppointments(dataToLoad);
       setIsLoading(false);
-      
-    }, (error) => {
-        console.error("Error fetching appointments: ", error);
-        setIsLoading(false);
-    });
-
-    return () => unsubscribe();
+    }, 300); // Simulate network delay
   }, [forOpdQueue]);
 
   const addAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'status' | 'patientName' | 'createdAt'>, patient: Patient): Promise<Appointment> => {
     const nowISO = new Date().toISOString();
-    const newAppointmentData: Omit<Appointment, 'id'> = {
+    const newAppointment: Appointment = {
+      id: crypto.randomUUID(),
       ...appointmentData,
       patientName: patient.name, 
       status: 'Scheduled',
       createdAt: nowISO,
     };
-    const docRef = await addDoc(collection(db, 'appointments'), newAppointmentData);
     
-    // Update patient's nextAppointmentDate
-    const patientDocRef = doc(db, 'patients', patient.id);
-    await updateDoc(patientDocRef, { nextAppointmentDate: appointmentData.date });
+    setAppointments(prev => [...prev, newAppointment]);
+    
+    // In a real app, you would also update the patient's nextAppointmentDate here.
+    // For this simulation, we will omit that step.
 
-    return { id: docRef.id, ...newAppointmentData };
+    return newAppointment;
   }, []);
 
   const updateAppointmentStatus = useCallback(async (id: string, status: Appointment['status']): Promise<void> => {
-    const appointmentDocRef = doc(db, 'appointments', id);
-    await updateDoc(appointmentDocRef, { status });
+    setAppointments(prev => prev.map(app => app.id === id ? { ...app, status } : app));
   }, []);
   
   const updateMultipleAppointmentStatuses = useCallback(async (updates: { id: string, status: Appointment['status'] }[]): Promise<void> => {
-    const batch = writeBatch(db);
-    updates.forEach(update => {
-      const appointmentDocRef = doc(db, 'appointments', update.id);
-      batch.update(appointmentDocRef, { status: update.status });
+    setAppointments(prev => {
+        let newAppointments = [...prev];
+        updates.forEach(update => {
+            newAppointments = newAppointments.map(app => 
+                app.id === update.id ? { ...app, status: update.status } : app
+            );
+        });
+        return newAppointments;
     });
-    await batch.commit();
   }, []);
 
   const updateAppointment = useCallback(async (updatedAppointmentData: Appointment): Promise<void> => {
-    const appointmentDocRef = doc(db, 'appointments', updatedAppointmentData.id);
-    const dataToUpdate = {
-        ...updatedAppointmentData,
-        date: format(new Date(updatedAppointmentData.date), 'yyyy-MM-dd') 
-    };
-    delete (dataToUpdate as Partial<Appointment>).id;
-    await updateDoc(appointmentDocRef, dataToUpdate);
+    setAppointments(prev => prev.map(app => app.id === updatedAppointmentData.id ? updatedAppointmentData : app));
   }, []);
 
   return useMemo(() => ({
