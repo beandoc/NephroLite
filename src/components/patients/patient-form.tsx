@@ -111,12 +111,16 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
   const oneHundredYearsAgo = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
 
   const relation = form.watch("guardian.relation");
+  const patientName = form.watch("name");
+  const patientContact = form.watch("contact");
+
   useEffect(() => {
     if (relation === "Self") {
-      form.setValue("guardian.name", form.getValues("name"));
-      form.setValue("guardian.contact", form.getValues("contact"));
+      form.setValue("guardian.name", patientName);
+      form.setValue("guardian.contact", patientContact);
     }
-  }, [relation, form]);
+  }, [relation, patientName, patientContact, form]);
+
 
   const handleFormSubmit = (data: PatientFormData) => {
     onSubmit(data);
