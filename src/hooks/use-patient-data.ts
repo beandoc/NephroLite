@@ -107,9 +107,9 @@ export function usePatientData() {
         pincode: patientData.address.pincode || "",
       },
       guardian: {
-        name: patientData.guardian.relation === 'Self' ? patientData.name : patientData.guardian.name || "",
+        name: patientData.guardian.relation === 'Self' ? patientData.name : (patientData.guardian.name || ""),
         relation: patientData.guardian.relation || "",
-        contact: patientData.guardian.relation === 'Self' ? patientData.contact : patientData.guardian.contact || "",
+        contact: patientData.guardian.relation === 'Self' ? patientData.contact : (patientData.guardian.contact || ""),
       },
       registrationDate: nowISO.split('T')[0],
       createdAt: nowISO,
