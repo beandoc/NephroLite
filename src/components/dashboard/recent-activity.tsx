@@ -80,7 +80,7 @@ export function RecentActivity() {
         {recentActivities.length > 0 ? (
             <div className="space-y-4">
                 {recentActivities.map(activity => (
-                    <div key={`${activity.type}-${activity.id}`} className="flex items-center">
+                    <div key={activity.id} className="flex items-center">
                         <div className="flex-shrink-0">
                            <activity.icon className={`h-5 w-5 ${activity.iconColor}`} />
                         </div>

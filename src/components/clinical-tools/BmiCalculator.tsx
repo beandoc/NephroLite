@@ -42,7 +42,7 @@ export function BmiCalculator() {
   };
 
   return (
-    <div className="space-y-4">
+    <div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -79,7 +79,7 @@ export function BmiCalculator() {
         </form>
       </Form>
       {bmiResult !== null && (
-        <Card className="bg-muted/50">
+        <Card className="bg-muted/50 mt-4">
           <CardContent className="p-4 text-center">
             <p className="text-sm text-muted-foreground">Calculated BMI</p>
             <p className="text-3xl font-bold text-primary">{bmiResult.toFixed(2)}</p>

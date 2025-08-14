@@ -92,7 +92,7 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
         <CardContent className="pt-6 space-y-3">
           {(clinicalProfile.vaccinations && clinicalProfile.vaccinations.length > 0) ? (
             clinicalProfile.vaccinations.map((vaccination, index) => (
-              <div key={index} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border-b last:border-b-0 rounded-md bg-muted/20">
+              <div key={vaccination.name} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border-b last:border-b-0 rounded-md bg-muted/20">
                 <span className="font-medium mb-1 sm:mb-0">{vaccination.name}</span>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
                   {vaccination.administered && vaccination.date ? (

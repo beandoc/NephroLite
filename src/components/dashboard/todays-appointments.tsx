@@ -25,7 +25,7 @@ import { MoreHorizontal } from "lucide-react";
 
 
 export function TodaysAppointments() {
-  const { appointments, isLoading, updateAppointmentStatus } = useAppointmentData(true); // << Use optimized hook
+  const { appointments, isLoading, updateAppointmentStatus } = useAppointmentData();
   const { admitPatient, getPatientById } = usePatientData(); // Get admitPatient function
   const { toast } = useToast();
   
@@ -33,7 +33,7 @@ export function TodaysAppointments() {
   
   // No need to filter by date anymore, the hook does it for us
   const todaysAppointments = appointments
-    .filter(app => app.status === 'Scheduled')
+    .filter(app => app.status === 'Scheduled' && isToday(parseISO(app.date)))
     .sort((a, b) => a.time.localeCompare(b.time));
 
   const handleUpdateStatus = (appointmentId: string, newStatus: Appointment['status'], patientName: string, patientId?: string) => {
