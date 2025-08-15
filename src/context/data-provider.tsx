@@ -64,35 +64,24 @@ const getInitialClinicalProfile = (): Omit<ClinicalProfile, 'tags'> => ({
   onLipidLoweringMedication: false,
 });
 
+const calculateInitialLastId = (patients: Patient[]): number => {
+    if (patients.length === 0) return 1000;
+    return patients.reduce((max, p) => {
+        const idPart = parseInt(p.nephroId.split('/')[0], 10);
+        return isNaN(idPart) ? max : Math.max(idPart, max);
+    }, 1000);
+}
+
 
 // Create the Provider component
 export const DataProvider = ({ children }: { children: React.ReactNode }) => {
   // --- STATE MANAGEMENT ---
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [lastId, setLastId] = useState(1000);
+  // Initialize state directly with mock data to prevent double renders
+  const [patients, setPatients] = useState<Patient[]>(MOCK_PATIENTS);
+  const [appointments, setAppointments] = useState<Appointment[]>(MOCK_APPOINTMENTS);
+  const [lastId, setLastId] = useState(() => calculateInitialLastId(MOCK_PATIENTS));
+  const [isLoading, setIsLoading] = useState(false); // No longer truly loading, but kept for compatibility
 
-  // --- INITIALIZATION ---
-  useEffect(() => {
-    // This effect runs only once to initialize the data store
-    setTimeout(() => {
-        const initialPatients = MOCK_PATIENTS;
-        setPatients(initialPatients);
-        
-        const initialAppointments = MOCK_APPOINTMENTS;
-        setAppointments(initialAppointments);
-
-        if (initialPatients.length > 0) {
-            const maxId = initialPatients.reduce((max, p) => {
-                const idPart = parseInt(p.nephroId.split('/')[0], 10);
-                return isNaN(idPart) ? max : Math.max(idPart, max);
-            }, 1000);
-            setLastId(maxId);
-        }
-        setIsLoading(false);
-    }, 500); // Simulate initial loading delay
-  }, []);
 
   // --- PATIENT DATA LOGIC ---
   const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
@@ -148,7 +137,12 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const getPatientById = useCallback((id: string): Patient | null => {
-    return patients.find(p => p.id === id) || null;
+    // This function now uses the stable `patients` state from the outer scope of the provider
+    // but because it's wrapped in `useMemo` below, it will always get the latest version.
+    // However, to make this explicit and safer, it should depend on `patients` state.
+    // The best practice is to pass `patients` to it if needed elsewhere, but for context consumers `currentPatient` is better.
+    const foundPatient = patients.find(p => p.id === id);
+    return foundPatient || null;
   }, [patients]);
   
   const updatePatient = useCallback((patientId: string, updatedData: Partial<PatientFormData & { isTracked?: boolean }>): void => {
@@ -175,7 +169,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const addVisitToPatient = useCallback((patientId: string, visitData: VisitFormData): void => {
-    setPatients(prev => prev.map(p => {
+    setPatients(prevPatients => prevPatients.map(p => {
       if (p.id !== patientId) return p;
       const nowISO = new Date().toISOString();
       const newVisit: Visit = {
@@ -325,3 +319,5 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 };
+
+    
