@@ -86,7 +86,7 @@ export function RecentActivity() {
                         </div>
                         <div className="ml-3 flex-grow">
                             <p className="text-sm">{activity.description}</p>
-                            <p className="text-xs text-muted-foreground">{format(activity.date, 'PPP, p')}</p>
+                            <p className="text-xs text-muted-foreground">{format(activity.date, 'PPP')}</p>
                         </div>
                         <Button asChild variant="ghost" size="sm">
                             <Link href={activity.href}><Eye className="h-4 w-4" /></Link>

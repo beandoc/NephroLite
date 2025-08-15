@@ -2,7 +2,7 @@
 import type { Patient, Appointment } from './types';
 import { format, subDays, addDays } from 'date-fns';
 
-const today = new Date();
+const today = new Date('2024-08-10T10:00:00.000Z');
 
 export const MOCK_PATIENTS: Patient[] = [
   {
@@ -15,12 +15,12 @@ export const MOCK_PATIENTS: Patient[] = [
     email: 'aarav.sharma@example.com',
     address: { street: '123 MG Road', city: 'Pune', state: 'Maharashtra', pincode: '411001' },
     guardian: { name: 'Priya Sharma', relation: 'Spouse', contact: '9876543211' },
-    registrationDate: subDays(today, 90).toISOString(),
-    createdAt: subDays(today, 90).toISOString(),
+    registrationDate: '2024-05-12',
+    createdAt: '2024-05-12T10:00:00.000Z',
     patientStatus: 'OPD',
     isTracked: true,
     residenceType: 'Urban',
-    nextAppointmentDate: addDays(today, 14).toISOString(),
+    nextAppointmentDate: '2024-08-24',
     clinicalProfile: {
       primaryDiagnosis: 'Diabetic Nephropathy',
       tags: ['Diabetes', 'CKD Stage 3', 'Hypertension', 'PD'],
@@ -48,8 +48,8 @@ export const MOCK_PATIENTS: Patient[] = [
     visits: [
         {
             id: 'visit-1-1',
-            date: subDays(today, 80).toISOString(),
-            createdAt: subDays(today, 80).toISOString(),
+            date: '2024-05-22',
+            createdAt: '2024-05-22T10:00:00.000Z',
             visitType: 'Routine',
             visitRemark: 'Initial consultation after referral.',
             groupName: 'Diabetic Nephropathy',
@@ -68,8 +68,8 @@ export const MOCK_PATIENTS: Patient[] = [
         },
         {
             id: 'visit-1-2',
-            date: subDays(today, 30).toISOString(),
-            createdAt: subDays(today, 30).toISOString(),
+            date: '2024-07-11',
+            createdAt: '2024-07-11T10:00:00.000Z',
             visitType: 'Follow-up',
             visitRemark: 'Added SGLT2 inhibitor.',
             groupName: 'Diabetic Nephropathy',
@@ -87,12 +87,12 @@ export const MOCK_PATIENTS: Patient[] = [
         }
     ],
     investigationRecords: [
-      { id: 'inv-1-1', date: subDays(today, 80).toISOString(), tests: [
+      { id: 'inv-1-1', date: '2024-05-22', tests: [
           { id: 'test-1', group: 'Biochemistry', name: 'Serum Creatinine', result: '1.5', unit: 'mg/dL', normalRange: '0.6-1.2' },
           { id: 'test-2', group: 'Biochemistry', name: 'eGFR', result: '55', unit: 'mL/min/1.73m²', normalRange: '>60' },
           { id: 'test-3', group: 'Urine Analysis', name: 'Urine for AC Ratio (mg/gm)', result: '500', unit: 'mg/gm', normalRange: '<30' }
       ]},
-      { id: 'inv-1-2', date: subDays(today, 30).toISOString(), tests: [
+      { id: 'inv-1-2', date: '2024-07-11', tests: [
           { id: 'test-4', group: 'Biochemistry', name: 'Serum Creatinine', result: '1.4', unit: 'mg/dL', normalRange: '0.6-1.2' },
           { id: 'test-5', group: 'Biochemistry', name: 'eGFR', result: '58', unit: 'mL/min/1.73m²', normalRange: '>60' },
           { id: 'test-6', group: 'Urine Analysis', name: 'Urine for AC Ratio (mg/gm)', result: '450', unit: 'mg/gm', normalRange: '<30' }
@@ -109,12 +109,12 @@ export const MOCK_PATIENTS: Patient[] = [
     email: 'isha.singh@example.com',
     address: { street: '45 Park Avenue', city: 'Delhi', state: 'Delhi', pincode: '110001' },
     guardian: { name: 'Rohan Singh', relation: 'Spouse', contact: '9988776654' },
-    registrationDate: subDays(today, 120).toISOString(),
-    createdAt: subDays(today, 120).toISOString(),
+    registrationDate: '2024-04-12',
+    createdAt: '2024-04-12T10:00:00.000Z',
     patientStatus: 'OPD',
     isTracked: false,
     residenceType: 'Urban',
-    nextAppointmentDate: addDays(today, 5).toISOString(),
+    nextAppointmentDate: '2024-08-15',
     clinicalProfile: {
       primaryDiagnosis: 'IgA Nephropathy (IgAN)',
       tags: ['Glomerulonephritis', 'IgAN'],
@@ -146,8 +146,8 @@ export const MOCK_PATIENTS: Patient[] = [
     email: 'vikram.reddy@example.com',
     address: { street: '78 Jubilee Hills', city: 'Hyderabad', state: 'Telangana', pincode: '500033' },
     guardian: { name: 'Vikram Reddy', relation: 'Self', contact: '9123456789' },
-    registrationDate: subDays(today, 45).toISOString(),
-    createdAt: subDays(today, 45).toISOString(),
+    registrationDate: '2024-06-26',
+    createdAt: '2024-06-26T10:00:00.000Z',
     patientStatus: 'IPD',
     isTracked: true,
     residenceType: 'Urban',
@@ -173,8 +173,8 @@ export const MOCK_PATIENTS: Patient[] = [
     visits: [
         {
             id: 'visit-3-1',
-            date: subDays(today, 5).toISOString(),
-            createdAt: subDays(today, 5).toISOString(),
+            date: '2024-08-05',
+            createdAt: '2024-08-05T10:00:00.000Z',
             visitType: 'Admission',
             visitRemark: 'Admitted via ER with fever and hypotension.',
             groupName: 'Infection',
@@ -193,12 +193,12 @@ export const MOCK_PATIENTS: Patient[] = [
     email: 'anjali.menon@example.com',
     address: { street: '22 Marine Drive', city: 'Kochi', state: 'Kerala', pincode: '682011' },
     guardian: { name: 'Suresh Menon', relation: 'F/O', contact: '9898989897' },
-    registrationDate: subDays(today, 200).toISOString(),
-    createdAt: subDays(today, 200).toISOString(),
+    registrationDate: '2024-01-22',
+    createdAt: '2024-01-22T10:00:00.000Z',
     patientStatus: 'OPD',
     isTracked: true,
     residenceType: 'Semi-Urban',
-    nextAppointmentDate: format(today, 'yyyy-MM-dd'),
+    nextAppointmentDate: '2024-08-10',
     clinicalProfile: {
       primaryDiagnosis: 'Lupus Nephritis (LN)',
       tags: ['Lupus', 'Glomerulonephritis'],
@@ -227,8 +227,8 @@ export const MOCK_APPOINTMENTS: Appointment[] = [
       id: 'appt-1',
       patientId: 'patient-1',
       patientName: 'Aarav Sharma',
-      date: format(addDays(today, 14), 'yyyy-MM-dd'),
-      createdAt: subDays(today, 5).toISOString(),
+      date: '2024-08-24',
+      createdAt: '2024-08-05T10:00:00.000Z',
       time: '10:00',
       type: 'Follow-up',
       doctorName: 'Dr. Sachin',
@@ -238,8 +238,8 @@ export const MOCK_APPOINTMENTS: Appointment[] = [
       id: 'appt-2',
       patientId: 'patient-2',
       patientName: 'Isha Singh',
-      date: format(addDays(today, 5), 'yyyy-MM-dd'),
-      createdAt: subDays(today, 10).toISOString(),
+      date: '2024-08-15',
+      createdAt: '2024-07-31T10:00:00.000Z',
       time: '11:30',
       type: 'Routine Checkup',
       doctorName: 'Dr. Atul',
@@ -249,8 +249,8 @@ export const MOCK_APPOINTMENTS: Appointment[] = [
       id: 'appt-3',
       patientId: 'patient-4',
       patientName: 'Anjali Menon',
-      date: format(today, 'yyyy-MM-dd'),
-      createdAt: subDays(today, 2).toISOString(),
+      date: '2024-08-10',
+      createdAt: '2024-08-08T10:00:00.000Z',
       time: '09:30',
       type: 'GN Monitoring Visit',
       doctorName: 'Dr. Parikshit',
@@ -260,8 +260,8 @@ export const MOCK_APPOINTMENTS: Appointment[] = [
       id: 'appt-4',
       patientId: 'patient-1',
       patientName: 'Aarav Sharma',
-      date: format(subDays(today, 30), 'yyyy-MM-dd'),
-      createdAt: subDays(today, 40).toISOString(),
+      date: '2024-07-11',
+      createdAt: '2024-07-01T10:00:00.000Z',
       time: '10:00',
       type: 'Follow-up',
       doctorName: 'Dr. Sachin',
@@ -271,8 +271,8 @@ export const MOCK_APPOINTMENTS: Appointment[] = [
       id: 'appt-5',
       patientId: 'patient-4',
       patientName: 'Anjali Menon',
-      date: format(today, 'yyyy-MM-dd'),
-      createdAt: subDays(today, 1).toISOString(),
+      date: '2024-08-10',
+      createdAt: '2024-08-09T10:00:00.000Z',
       time: '14:00',
       type: 'Dialysis Session',
       doctorName: 'Dr. Sachin',
@@ -282,12 +282,11 @@ export const MOCK_APPOINTMENTS: Appointment[] = [
       id: 'appt-6',
       patientId: 'patient-2',
       patientName: 'Isha Singh',
-      date: format(today, 'yyyy-MM-dd'),
-      createdAt: subDays(today, 1).toISOString(),
+      date: '2024-08-10',
+      createdAt: '2024-08-09T10:00:00.000Z',
       time: '14:30',
       type: 'Consultation',
       doctorName: 'Dr. Sachin',
       status: 'Waiting',
     },
 ];
-
