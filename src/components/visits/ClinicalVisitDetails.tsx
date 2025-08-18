@@ -71,7 +71,7 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
   const { toast } = useToast();
   const { updateVisitData } = usePatientData();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [availableDiagnoses, setAvailableDiagnoses] = useState<Diagnosis[]>([]);
+  const [availableDiagnoses, setAvailableDiagnoses] = useState<Diagnosis[]>(visit.diagnoses || []);
 
   const form = useForm<ClinicalVisitFormData>({
     resolver: zodResolver(clinicalVisitSchema),

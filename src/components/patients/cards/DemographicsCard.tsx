@@ -11,6 +11,8 @@ import { format, parseISO } from 'date-fns';
 import { usePatientData } from '@/hooks/use-patient-data';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { useAppointmentData } from '@/hooks/use-appointment-data';
+import { useMemo } from 'react';
 
 interface DemographicsCardProps {
   patient: Patient;
@@ -28,15 +30,16 @@ const DetailItem = ({ label, value, icon: Icon, className }: { label: string; va
 
 export function DemographicsCard({ patient }: DemographicsCardProps) {
   const { toast } = useToast();
-  const { admitPatient, dischargePatient, updatePatient } = usePatientData();
+  const { updatePatient } = usePatientData();
+  const { appointments } = useAppointmentData();
 
   const handleAdmitPatient = () => {
-    admitPatient(patient.id);
+    updatePatient(patient.id, { patientStatus: 'IPD' });
     toast({ title: "Patient Admitted", description: `${patient.name} is now marked as IPD.` });
   };
 
   const handleDischargePatient = () => {
-    dischargePatient(patient.id);
+    updatePatient(patient.id, { patientStatus: 'OPD' });
     toast({ title: "Patient Discharged", description: `${patient.name} has been discharged.` });
   };
   
@@ -47,6 +50,13 @@ export function DemographicsCard({ patient }: DemographicsCardProps) {
         description: `${patient.name}'s tracking status has been updated.`
     });
   }
+
+  const nextAppointment = useMemo(() => {
+    return appointments
+      .filter(a => a.patientId === patient.id && a.status === 'Scheduled' && parseISO(a.date) >= new Date())
+      .sort((a,b) => parseISO(a.date).getTime() - parseISO(b.date).getTime())[0];
+  }, [appointments, patient.id]);
+
 
   return (
     <Card className="shadow-md">
@@ -81,7 +91,7 @@ export function DemographicsCard({ patient }: DemographicsCardProps) {
         <DetailItem label="Aabha Number" value={patient.clinicalProfile.aabhaNumber} icon={Info}/>
         <DetailItem label="Blood Group" value={patient.clinicalProfile.bloodGroup} icon={Droplet}/>
         <DetailItem label="Registration Date" value={patient.registrationDate ? format(parseISO(patient.registrationDate), 'PPP') : 'N/A'} />
-        <DetailItem label="Next Appointment" value={patient.nextAppointmentDate ? format(parseISO(patient.nextAppointmentDate), 'PPP') : 'N/A'} icon={CalendarDays}/>
+        <DetailItem label="Next Appointment" value={nextAppointment ? `${format(parseISO(nextAppointment.date), 'PPP')} at ${nextAppointment.time}` : 'N/A'} icon={CalendarDays}/>
         <div className="flex flex-col space-y-1.5">
             <Label htmlFor="patient-tracking-switch" className="text-sm font-medium text-muted-foreground flex items-center">
                 <CheckCircle className="w-4 h-4 mr-2 text-primary" /> Tracked Patient

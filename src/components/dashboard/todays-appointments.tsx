@@ -26,7 +26,7 @@ import { MoreHorizontal } from "lucide-react";
 
 export function TodaysAppointments() {
   const { appointments, isLoading, updateAppointmentStatus } = useAppointmentData();
-  const { admitPatient, getPatientById } = usePatientData(); // Get admitPatient function
+  const { getPatientById, updatePatient } = usePatientData(); // Get admitPatient function
   const { toast } = useToast();
   
   const today = new Date();
@@ -46,7 +46,7 @@ export function TodaysAppointments() {
     if (newStatus === 'Admitted' && patientId) {
       const patient = getPatientById(patientId);
       if (patient && patient.patientStatus !== 'IPD') {
-        admitPatient(patientId);
+        updatePatient(patientId, { patientStatus: 'IPD' });
         toast({
           title: "Patient Admitted",
           description: `${patientName} has been admitted.`

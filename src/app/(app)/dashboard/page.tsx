@@ -6,13 +6,14 @@ import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { RecentActivity } from '@/components/dashboard/recent-activity';
 import { QuickLinks } from '@/components/dashboard/quick-links';
+import { MOCK_USER } from '@/lib/constants';
 
 export default function DashboardPage() {
   return (
     <div className="container mx-auto py-2">
       <PageHeader 
         title="Nephrology Dashboard" 
-        description="Welcome back, Dr. Sachin. Here's your overview for today."
+        description={`Welcome back, ${MOCK_USER.name}. Here's your overview for today.`}
       />
       <OverviewMetrics />
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">

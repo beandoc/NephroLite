@@ -1,6 +1,13 @@
 
 import type { DiagnosisEntry, InvestigationMaster, InvestigationPanel } from '@/lib/types';
 
+export const MOCK_USER = {
+  name: "Dr. Sachin", 
+  email: "dr.sachin@nephroconnect.com", 
+  avatarUrl: "https://placehold.co/40x40.png", 
+};
+
+
 export const GENDERS: string[] = ['Male', 'Female'];
 
 export const BLOOD_GROUPS: string[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'];

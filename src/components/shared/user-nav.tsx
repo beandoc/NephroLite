@@ -14,25 +14,62 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut, User, Settings, Bell, MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { usePatientData } from "@/hooks/use-patient-data";
+import { useMemo } from "react";
+import type { Patient, InvestigationTest } from "@/lib/types";
+import { MOCK_USER } from "@/lib/constants";
+
+const isCritical = (test: InvestigationTest): boolean => {
+  if (!test.result || !test.normalRange || test.normalRange === 'N/A') return false;
+  const resultValue = parseFloat(test.result);
+  if (isNaN(resultValue)) return false;
+  const rangeMatch = test.normalRange.match(/([\d.]+)\s*-\s*([\d.]+)/);
+  if (rangeMatch) {
+    const lowerBound = parseFloat(rangeMatch[1]);
+    const upperBound = parseFloat(rangeMatch[2]);
+    return resultValue < lowerBound || resultValue > upperBound;
+  }
+  const lowerBoundMatch = test.normalRange.match(/>\s*([\d.]+)/);
+  if (lowerBoundMatch) { return resultValue < parseFloat(lowerBoundMatch[1]); }
+  const upperBoundMatch = test.normalRange.match(/<\s*([\d.]+)/);
+  if(upperBoundMatch) { return resultValue > parseFloat(upperBoundMatch[1]); }
+  return false;
+};
 
 export function UserNav() {
-  // In a real app, user data would come from auth context or API
-  const user = {
-    name: "Dr. Sachin", 
-    email: "dr.sachin@nephroconnect.com", 
-    avatarUrl: "https://placehold.co/40x40.png", 
-  };
+  const { patients, isLoading } = usePatientData();
+
+  const criticalResultsCount = useMemo(() => {
+    if (isLoading) return 0;
+    const allCriticalResults = new Set<string>();
+    patients.forEach(patient => {
+      patient.investigationRecords?.forEach(record => {
+        record.tests.forEach(test => {
+          if (isCritical(test)) {
+            allCriticalResults.add(patient.id);
+          }
+        });
+      });
+    });
+    return allCriticalResults.size;
+  }, [patients, isLoading]);
+
+  const user = MOCK_USER;
 
   return (
     <div className="flex items-center gap-3">
       <Button variant="ghost" size="icon" className="relative rounded-full h-9 w-9">
         <Bell className="h-5 w-5" />
-        <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 min-w-4 p-0 flex items-center justify-center text-xs">3</Badge>
+        {criticalResultsCount > 0 && (
+            <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 min-w-4 p-0 flex items-center justify-center text-xs">
+                {criticalResultsCount}
+            </Badge>
+        )}
         <span className="sr-only">Notifications</span>
       </Button>
       <Button variant="ghost" size="icon" className="relative rounded-full h-9 w-9">
         <MessageSquare className="h-5 w-5" />
-        <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 min-w-4 p-0 flex items-center justify-center text-xs">5</Badge>
+        {/* Placeholder for messages */}
         <span className="sr-only">Messages</span>
       </Button>
       <DropdownMenu>

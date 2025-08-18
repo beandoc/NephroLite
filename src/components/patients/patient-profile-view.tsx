@@ -25,13 +25,11 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
   const { currentPatient } = usePatientData();
   const searchParams = useSearchParams();
   
-  // Use currentPatient to ensure we always have the latest data from the reactive hook
   const patient = currentPatient(initialPatient.id) || initialPatient;
   
   const [activeTab, setActiveTab] = useState('overview');
   
   useEffect(() => {
-    // This effect runs on the client, preventing hydration mismatch
     const tabFromUrl = searchParams.get('tab');
     if (tabFromUrl) {
       setActiveTab(tabFromUrl);
@@ -40,7 +38,7 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
     }
   }, [searchParams]);
 
-  const hasServiceDetails = patient.serviceName || patient.serviceNumber || patient.rank || patient.unitName || patient.formation;
+  const hasServiceDetails = !!(patient.serviceName || patient.serviceNumber || patient.rank || patient.unitName || patient.formation);
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
