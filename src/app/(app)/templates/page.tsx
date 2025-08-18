@@ -151,10 +151,8 @@ function EditMasterDiagnosisDialog({
     setCurrentDiagnosis(diagnosis);
   }, [diagnosis]);
 
-  if (!currentDiagnosis) return null;
-
   const handleAddClinicalName = () => {
-    if (newClinicalName && !currentDiagnosis.clinicalNames.includes(newClinicalName)) {
+    if (newClinicalName && currentDiagnosis && !currentDiagnosis.clinicalNames.includes(newClinicalName)) {
       setCurrentDiagnosis({
         ...currentDiagnosis,
         clinicalNames: [...currentDiagnosis.clinicalNames, newClinicalName],
@@ -164,10 +162,12 @@ function EditMasterDiagnosisDialog({
   };
 
   const handleRemoveClinicalName = (nameToRemove: string) => {
-    setCurrentDiagnosis({
-      ...currentDiagnosis,
-      clinicalNames: currentDiagnosis.clinicalNames.filter(name => name !== nameToRemove),
-    });
+    if(currentDiagnosis) {
+      setCurrentDiagnosis({
+        ...currentDiagnosis,
+        clinicalNames: currentDiagnosis.clinicalNames.filter(name => name !== nameToRemove),
+      });
+    }
   };
 
   const handleSave = () => {
@@ -176,6 +176,8 @@ function EditMasterDiagnosisDialog({
     }
     onOpenChange(false);
   };
+  
+  if (!currentDiagnosis) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
