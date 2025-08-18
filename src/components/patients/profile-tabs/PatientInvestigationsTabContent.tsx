@@ -209,15 +209,6 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     openDialogFromURL();
   }, [openDialogFromURL]);
   
-   const addTestsToForm = useCallback((testsToAdd: Partial<InvestigationTest>[]) => {
-    const existingTestNames = fields.map(f => f.name);
-    const newTests = testsToAdd.filter(t => !existingTestNames.includes(t.name || ''));
-    if(newTests.length > 0) {
-      append(newTests.map(t => ({...t, id: t.id!, group: t.group!, name: t.name!, result: t.result || '' })));
-    }
-    setAddTestSearchQuery('');
-  }, [append, fields]);
-
   const handleFrequentInvestigationToggle = useCallback((item: { type: 'test' | 'panel'; id: string }) => {
     let testIdsToToggle: string[] = [];
     if (item.type === 'test') {
@@ -248,6 +239,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
         });
         testIndicesToRemove.reverse().forEach(index => remove(index));
     }
+    setAddTestSearchQuery('');
   }, [fields, append, remove]);
 
   const filteredCommandItems = useMemo(() => {
@@ -313,7 +305,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                                     const testIdsInPanel = item.type === 'panel'
                                         ? INVESTIGATION_PANELS.find(p => p.id === item.id)?.testIds || []
                                         : [item.id];
-                                    const isSelected = testIdsInPanel.every(id => fields.some(f => f.id === id));
+                                    const isSelected = testIdsInPanel.length > 0 && testIdsInPanel.every(id => fields.some(f => f.id === id));
                                     
                                     return (
                                         <div key={`quick-${item.id}`} className="flex items-center space-x-2">
@@ -339,22 +331,19 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                                 />
                                 <CommandList>
                                   <CommandEmpty>No results found.</CommandEmpty>
-                                  {filteredCommandItems.panels.length > 0 && (
+                                  {addTestSearchQuery && filteredCommandItems.panels.length > 0 && (
                                     <CommandGroup heading={<div className="flex items-center"><Package className="mr-2 h-4 w-4"/>Panels</div>}>
                                       {filteredCommandItems.panels.map(panel => (
-                                        <CommandItem key={panel.id} onSelect={() => {
-                                          const tests = INVESTIGATION_MASTER_LIST.filter(t => panel.testIds.includes(t.id));
-                                          addTestsToForm(tests.map(t => ({ ...t, result: ''})));
-                                        }}>
+                                        <CommandItem key={panel.id} onSelect={() => handleFrequentInvestigationToggle(panel)}>
                                           {panel.name}
                                         </CommandItem>
                                       ))}
                                     </CommandGroup>
                                   )}
-                                  {filteredCommandItems.tests.length > 0 && (
+                                  {addTestSearchQuery && filteredCommandItems.tests.length > 0 && (
                                     <CommandGroup heading={<div className="flex items-center"><TestTube className="mr-2 h-4 w-4"/>Individual Tests</div>}>
                                       {filteredCommandItems.tests.map(test => (
-                                        <CommandItem key={test.id} onSelect={() => addTestsToForm([{...test, result: ''}])}>
+                                        <CommandItem key={test.id} onSelect={() => handleFrequentInvestigationToggle(test)}>
                                           {test.name}
                                         </CommandItem>
                                       ))}
