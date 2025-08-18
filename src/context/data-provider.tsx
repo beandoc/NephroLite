@@ -15,10 +15,8 @@ export interface DataContextType {
   addPatient: (patientData: PatientFormData) => Promise<Patient>;
   getPatientById: (id: string) => Patient | null;
   currentPatient: (id: string) => Patient | undefined;
-  updatePatient: (patientId: string, updatedData: Partial<PatientFormData & { isTracked?: boolean }>) => void;
+  updatePatient: (patientId: string, updatedData: Partial<PatientFormData & { isTracked?: boolean, patientStatus?: Patient['patientStatus'] }>) => void;
   deletePatient: (patientId: string) => void;
-  admitPatient: (patientId: string) => void;
-  dischargePatient: (patientId: string) => void;
   addVisitToPatient: (patientId: string, visitData: VisitFormData) => void;
   updateVisitData: (patientId: string, visitId: string, data: ClinicalVisitData) => void;
   addOrUpdateInvestigationRecord: (patientId: string, record: InvestigationRecord) => void;
@@ -113,7 +111,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
               contact: patientData.guardian.relation === 'Self' ? (patientData.contact || "") : (patientData.guardian.contact || ""),
           },
           registrationDate: nowISO.split('T')[0],
-          createdAt: '2024-08-10T12:00:00.000Z',
+          createdAt: nowISO,
           patientStatus: 'OPD',
           isTracked: false,
           residenceType: 'Not Set',
@@ -137,7 +135,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     return foundPatient || null;
   }, [patients]);
   
-  const updatePatient = useCallback((patientId: string, updatedData: Partial<PatientFormData & { isTracked?: boolean }>): void => {
+  const updatePatient = useCallback((patientId: string, updatedData: Partial<PatientFormData & { isTracked?: boolean, patientStatus?: Patient['patientStatus'] }>): void => {
     setPatients(prev => prev.map(p => {
         if (p.id !== patientId) return p;
         const updatedPatient = { ...p };
@@ -152,6 +150,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
         if (updatedData.isTracked !== undefined) updatedPatient.isTracked = updatedData.isTracked;
         if (updatedData.uhid !== undefined) updatedPatient.clinicalProfile.aabhaNumber = updatedData.uhid;
         if (updatedData.whatsappNumber !== undefined) updatedPatient.clinicalProfile.whatsappNumber = updatedData.whatsappNumber;
+        if (updatedData.patientStatus !== undefined) updatedPatient.patientStatus = updatedData.patientStatus;
         return updatedPatient;
     }));
   }, [patients]);
@@ -220,16 +219,9 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
 
   const deletePatient = useCallback((patientId: string): void => {
     setPatients(prev => prev.filter(p => p.id !== patientId));
-  }, [patients]);
+    setAppointments(prev => prev.filter(a => a.patientId !== patientId));
+  }, [patients, appointments]);
 
-  const admitPatient = useCallback((patientId: string): void => {
-    setPatients(prev => prev.map(p => p.id === patientId ? { ...p, patientStatus: 'IPD' } : p));
-  }, [patients]);
-
-  const dischargePatient = useCallback((patientId: string): void => {
-    setPatients(prev => prev.map(p => p.id === patientId ? { ...p, patientStatus: 'OPD' } : p));
-  }, [patients]);
-  
   const currentPatient = useCallback((id: string): Patient | undefined => {
     return patients.find(p => p.id === id);
   }, [patients]);
@@ -242,7 +234,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
       ...appointmentData,
       patientName: patient.name,
       status: 'Scheduled',
-      createdAt: '2024-08-10T12:00:00.000Z',
+      createdAt: nowISO,
     };
     setAppointments(prev => [...prev, newAppointment]);
     return newAppointment;
@@ -274,8 +266,6 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     getPatientById,
     updatePatient,
     deletePatient,
-    admitPatient,
-    dischargePatient,
     addVisitToPatient,
     updateVisitData,
     addOrUpdateInvestigationRecord,
@@ -294,8 +284,6 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     getPatientById, 
     updatePatient, 
     deletePatient, 
-    admitPatient, 
-    dischargePatient, 
     addVisitToPatient, 
     updateVisitData, 
     addOrUpdateInvestigationRecord, 
