@@ -325,7 +325,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                                 <CommandInput 
                                     placeholder="Search for tests or panels..."
                                     value={addTestSearchQuery}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddTestSearchQuery(e.target.value)}
+                                    onChangeCapture={(e: React.ChangeEvent<HTMLInputElement>) => setAddTestSearchQuery(e.target.value)}
                                 />
                                 <CommandList>
                                   <CommandEmpty>No results found.</CommandEmpty>
