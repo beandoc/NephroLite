@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -56,7 +56,6 @@ const templateFormSchema = z.object({
 
 type TemplateFormData = z.infer<typeof templateFormSchema>;
 
-// Schema for adding/editing a master diagnosis
 const masterDiagnosisSchema = z.object({
     icdCode: z.string().min(1, "ICD-10 code is required."),
     name: z.string().min(1, "Primary clinical name is required."),
@@ -64,7 +63,6 @@ const masterDiagnosisSchema = z.object({
 });
 type MasterDiagnosisFormData = z.infer<typeof masterDiagnosisSchema>;
 
-// Component for Adding a new Master Diagnosis
 function AddMasterDiagnosisDialog({
   isOpen,
   onOpenChange,
@@ -135,7 +133,6 @@ function AddMasterDiagnosisDialog({
   );
 }
 
-// Component for the Master Diagnosis Edit Dialog
 function EditMasterDiagnosisDialog({
   diagnosis,
   isOpen,
@@ -240,7 +237,6 @@ export default function TemplatesPage() {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { toast } = useToast();
 
-  // State for master diagnosis list and dialogs
   const [masterDiagnoses, setMasterDiagnoses] = useState<DiagnosisEntry[]>(MOCK_DIAGNOSES);
   const [isEditMasterDiagOpen, setIsEditMasterDiagOpen] = useState(false);
   const [isAddMasterDiagOpen, setIsAddMasterDiagOpen] = useState(false);
@@ -327,9 +323,8 @@ export default function TemplatesPage() {
   const handleAddDiagnosis = (diagnosisId: string) => {
     const diagnosisToAdd = masterDiagnoses.find(d => d.id === diagnosisId);
     if (diagnosisToAdd) {
-        // Here we map all clinical names under that one master diagnosis entry
         const diagnosesToAppend: Diagnosis[] = diagnosisToAdd.clinicalNames.map(name => ({
-            id: `${diagnosisToAdd.id}-${name.replace(/\s/g, "")}`, // Create a more unique ID
+            id: `${diagnosisToAdd.id}-${name.replace(/\s/g, "")}`,
             name: name,
             icdCode: diagnosisToAdd.icdCode,
             icdName: diagnosisToAdd.icdName,
@@ -343,7 +338,7 @@ export default function TemplatesPage() {
         });
 
         toast({ title: "Diagnoses Added", description: `Added options for "${diagnosisToAdd.name}" to the template.` });
-        setIsPopoverOpen(false); // Close popover after selection
+        setIsPopoverOpen(false);
     }
   };
 
@@ -364,13 +359,12 @@ export default function TemplatesPage() {
 
   const handleAddNewMasterDiagnosis = (data: MasterDiagnosisFormData) => {
     const newDiagnosis: DiagnosisEntry = {
-        id: data.icdCode, // Use ICD code as a unique ID for new entries
+        id: data.icdCode,
         icdCode: data.icdCode,
         name: data.name,
         icdName: data.icdName,
-        clinicalNames: [data.name], // Start with the primary name
+        clinicalNames: [data.name],
     };
-    // Check if it already exists
     if(masterDiagnoses.some(d => d.id === newDiagnosis.id)) {
         toast({ title: "Error", description: `Diagnosis with ICD-10 code ${newDiagnosis.icdCode} already exists.`, variant: "destructive" });
         return;
