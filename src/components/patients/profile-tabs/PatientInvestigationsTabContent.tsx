@@ -334,7 +334,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                                   {addTestSearchQuery && filteredCommandItems.panels.length > 0 && (
                                     <CommandGroup heading={<div className="flex items-center"><Package className="mr-2 h-4 w-4"/>Panels</div>}>
                                       {filteredCommandItems.panels.map(panel => (
-                                        <CommandItem key={panel.id} onSelect={() => handleFrequentInvestigationToggle({type: 'panel', id: panel.id})}>
+                                        <CommandItem key={panel.id} onSelect={() => handleFrequentInvestigationToggle({ type: 'panel', id: panel.id })}>
                                           {panel.name}
                                         </CommandItem>
                                       ))}
@@ -343,7 +343,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                                   {addTestSearchQuery && filteredCommandItems.tests.length > 0 && (
                                     <CommandGroup heading={<div className="flex items-center"><TestTube className="mr-2 h-4 w-4"/>Individual Tests</div>}>
                                       {filteredCommandItems.tests.map(test => (
-                                        <CommandItem key={test.id} onSelect={() => handleFrequentInvestigationToggle({type: 'test', id: test.id})}>
+                                        <CommandItem key={test.id} onSelect={() => handleFrequentInvestigationToggle({ type: 'test', id: test.id })}>
                                           {test.name}
                                         </CommandItem>
                                       ))}
