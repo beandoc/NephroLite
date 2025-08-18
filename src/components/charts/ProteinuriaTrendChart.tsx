@@ -27,8 +27,8 @@ const medicationCategories: Record<string, { drugs: string[], color: string }> =
 
 const CustomLegend = ({ periods }: { periods: any[] }) => (
     <div className="flex justify-center items-center flex-wrap gap-x-4 gap-y-1 mt-2 text-sm">
-      {periods.map(period => (
-        <div key={period.name} className="flex items-center gap-1">
+      {periods.map((period, index) => (
+        <div key={`${period.name}-${index}`} className="flex items-center gap-1">
           <div className="w-3 h-3" style={{ backgroundColor: period.color }} />
           <span>{period.name} Period</span>
         </div>
