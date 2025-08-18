@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -239,7 +238,6 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
         });
         testIndicesToRemove.reverse().forEach(index => remove(index));
     }
-    setAddTestSearchQuery('');
   }, [fields, append, remove]);
 
   const filteredCommandItems = useMemo(() => {
