@@ -76,71 +76,63 @@ const calculateInitialLastId = (patients: Patient[]): number => {
 // Create the Provider component
 export const DataProvider = ({ children }: { children: React.ReactNode }) => {
   // --- STATE MANAGEMENT ---
-  // Initialize state directly with mock data to prevent double renders
   const [patients, setPatients] = useState<Patient[]>(MOCK_PATIENTS);
   const [appointments, setAppointments] = useState<Appointment[]>(MOCK_APPOINTMENTS);
   const [lastId, setLastId] = useState(() => calculateInitialLastId(MOCK_PATIENTS));
-  const [isLoading, setIsLoading] = useState(false); // No longer truly loading, but kept for compatibility
+  const [isLoading, setIsLoading] = useState(false);
 
 
   // --- PATIENT DATA LOGIC ---
   const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
-    return new Promise(resolve => {
-        setLastId(prevId => {
-            const newIdNumber = prevId + 1;
-            const now = new Date();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const year = String(now.getFullYear()).slice(-2);
-            const newNephroId = `${newIdNumber}/${month}${year}`;
-            const nowISO = new Date().toISOString();
+      const newIdNumber = lastId + 1;
+      setLastId(newIdNumber);
+      
+      const now = new Date();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = String(now.getFullYear()).slice(-2);
+      const newNephroId = `${newIdNumber}/${month}${year}`;
+      const nowISO = new Date().toISOString();
 
-            const newPatient: Patient = {
-                id: crypto.randomUUID(),
-                nephroId: newNephroId,
-                name: patientData.name,
-                dob: patientData.dob,
-                gender: patientData.gender,
-                contact: patientData.contact || "",
-                email: patientData.email || "",
-                address: {
-                    street: patientData.address.street || "",
-                    city: patientData.address.city || "",
-                    state: patientData.address.state || "",
-                    pincode: patientData.address.pincode || "",
-                },
-                guardian: {
-                    name: patientData.guardian.relation === 'Self' ? patientData.name : (patientData.guardian.name || ""),
-                    relation: patientData.guardian.relation || "",
-                    contact: patientData.guardian.relation === 'Self' ? (patientData.contact || "") : (patientData.guardian.contact || ""),
-                },
-                registrationDate: nowISO.split('T')[0],
-                createdAt: nowISO,
-                patientStatus: 'OPD',
-                isTracked: false,
-                residenceType: 'Not Set',
-                visits: [],
-                investigationRecords: [],
-                nextAppointmentDate: "",
-                clinicalProfile: {
-                    ...getInitialClinicalProfile(),
-                    tags: [],
-                    whatsappNumber: patientData.whatsappNumber || '',
-                    aabhaNumber: patientData.uhid || '',
-                },
-            };
-            
-            setPatients(prev => [...prev, newPatient]);
-            resolve(newPatient);
-            return newIdNumber;
-        });
-    });
-  }, []);
+      const newPatient: Patient = {
+          id: crypto.randomUUID(),
+          nephroId: newNephroId,
+          name: patientData.name,
+          dob: patientData.dob,
+          gender: patientData.gender,
+          contact: patientData.contact || "",
+          email: patientData.email || "",
+          address: {
+              street: patientData.address.street || "",
+              city: patientData.address.city || "",
+              state: patientData.address.state || "",
+              pincode: patientData.address.pincode || "",
+          },
+          guardian: {
+              name: patientData.guardian.relation === 'Self' ? patientData.name : (patientData.guardian.name || ""),
+              relation: patientData.guardian.relation || "",
+              contact: patientData.guardian.relation === 'Self' ? (patientData.contact || "") : (patientData.guardian.contact || ""),
+          },
+          registrationDate: nowISO.split('T')[0],
+          createdAt: '2024-08-10T12:00:00.000Z',
+          patientStatus: 'OPD',
+          isTracked: false,
+          residenceType: 'Not Set',
+          visits: [],
+          investigationRecords: [],
+          nextAppointmentDate: "",
+          clinicalProfile: {
+              ...getInitialClinicalProfile(),
+              tags: [],
+              whatsappNumber: patientData.whatsappNumber || '',
+              aabhaNumber: patientData.uhid || '',
+          },
+      };
+      
+      setPatients(prev => [...prev, newPatient]);
+      return newPatient;
+  }, [lastId]);
 
   const getPatientById = useCallback((id: string): Patient | null => {
-    // This function now uses the stable `patients` state from the outer scope of the provider
-    // but because it's wrapped in `useMemo` below, it will always get the latest version.
-    // However, to make this explicit and safer, it should depend on `patients` state.
-    // The best practice is to pass `patients` to it if needed elsewhere, but for context consumers `currentPatient` is better.
     const foundPatient = patients.find(p => p.id === id);
     return foundPatient || null;
   }, [patients]);
@@ -162,11 +154,11 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
         if (updatedData.whatsappNumber !== undefined) updatedPatient.clinicalProfile.whatsappNumber = updatedData.whatsappNumber;
         return updatedPatient;
     }));
-  }, []);
+  }, [patients]);
 
   const updateClinicalProfile = useCallback((patientId: string, clinicalProfileData: ClinicalProfile): void => {
     setPatients(prev => prev.map(p => p.id === patientId ? { ...p, clinicalProfile: clinicalProfileData } : p));
-  }, []);
+  }, [patients]);
 
   const addVisitToPatient = useCallback((patientId: string, visitData: VisitFormData): void => {
     setPatients(prevPatients => prevPatients.map(p => {
@@ -191,7 +183,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
       const newPomr = p.clinicalProfile.pomr ? `${p.clinicalProfile.pomr}\n${visitRemarkEntry}` : visitRemarkEntry;
       return { ...p, visits: newVisits, clinicalProfile: { ...p.clinicalProfile, tags: newTags, primaryDiagnosis: newPrimaryDiagnosis, pomr: newPomr }};
     }));
-  }, []);
+  }, [patients]);
 
   const updateVisitData = useCallback((patientId: string, visitId: string, data: ClinicalVisitData): void => {
     setPatients(prev => prev.map(p => {
@@ -206,7 +198,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
         });
         return { ...p, visits: updatedVisits };
     }));
-  }, []);
+  }, [patients]);
   
   const addOrUpdateInvestigationRecord = useCallback((patientId: string, record: InvestigationRecord): void => {
     setPatients(prev => prev.map(p => {
@@ -217,26 +209,26 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
         else { record.id = record.id || crypto.randomUUID(); records.push(record); }
         return { ...p, investigationRecords: [...records] };
     }));
-  }, []);
+  }, [patients]);
   
   const deleteInvestigationRecord = useCallback((patientId: string, recordId: string): void => {
     setPatients(prev => prev.map(p => {
         if (p.id !== patientId) return p;
         return { ...p, investigationRecords: (p.investigationRecords || []).filter(r => r.id !== recordId) };
     }));
-  }, []);
+  }, [patients]);
 
   const deletePatient = useCallback((patientId: string): void => {
     setPatients(prev => prev.filter(p => p.id !== patientId));
-  }, []);
+  }, [patients]);
 
   const admitPatient = useCallback((patientId: string): void => {
     setPatients(prev => prev.map(p => p.id === patientId ? { ...p, patientStatus: 'IPD' } : p));
-  }, []);
+  }, [patients]);
 
   const dischargePatient = useCallback((patientId: string): void => {
     setPatients(prev => prev.map(p => p.id === patientId ? { ...p, patientStatus: 'OPD' } : p));
-  }, []);
+  }, [patients]);
   
   const currentPatient = useCallback((id: string): Patient | undefined => {
     return patients.find(p => p.id === id);
@@ -250,15 +242,15 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
       ...appointmentData,
       patientName: patient.name,
       status: 'Scheduled',
-      createdAt: nowISO,
+      createdAt: '2024-08-10T12:00:00.000Z',
     };
     setAppointments(prev => [...prev, newAppointment]);
     return newAppointment;
-  }, []);
+  }, [appointments]);
 
   const updateAppointmentStatus = useCallback(async (id: string, status: Appointment['status']): Promise<void> => {
     setAppointments(prev => prev.map(app => app.id === id ? { ...app, status } : app));
-  }, []);
+  }, [appointments]);
 
   const updateMultipleAppointmentStatuses = useCallback(async (updates: { id: string, status: Appointment['status'] }[]): Promise<void> => {
     setAppointments(prev => {
@@ -268,11 +260,11 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
         });
         return newAppointments;
     });
-  }, []);
+  }, [appointments]);
 
   const updateAppointment = useCallback(async (updatedAppointmentData: Appointment): Promise<void> => {
     setAppointments(prev => prev.map(app => app.id === updatedAppointmentData.id ? updatedAppointmentData : app));
-  }, []);
+  }, [appointments]);
 
   // --- PROVIDER VALUE ---
   const value = useMemo(() => ({
@@ -319,5 +311,3 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 };
-
-    

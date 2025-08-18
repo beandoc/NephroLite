@@ -2,7 +2,7 @@
 "use client";
 
 import { useToast } from "@/hooks/use-toast";
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Stethoscope, Pill, PlusCircle } from "lucide-react";
@@ -55,7 +55,7 @@ export const PatientDiagnosisRx = ({ patient: initialPatient }: PatientDiagnosis
           <Card key={item.id} className="shadow-sm">
             <CardHeader className="pb-3 pt-4">
               <CardTitle className="text-md font-semibold flex items-center"><Stethoscope className="w-5 h-5 mr-2 text-primary"/>{item.diagnosis}</CardTitle>
-              <CardDescription>{format(new Date(item.date), 'PPP')} - Visit with {item.doctor}</CardDescription>
+              <CardDescription>{format(parseISO(item.date), 'PPP')} - Visit with {item.doctor}</CardDescription>
             </CardHeader>
             <CardContent className="pb-4">
               <p className="text-sm font-medium flex items-center text-muted-foreground"><Pill className="w-4 h-4 mr-2 text-primary"/>Medication:</p>
