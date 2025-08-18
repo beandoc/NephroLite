@@ -4,7 +4,7 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord, Appointment } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
-import { VACCINATION_NAMES } from '@/lib/constants';
+import { VACCINATION_NAMES, MOCK_USER } from '@/lib/constants';
 import { MOCK_PATIENTS, MOCK_APPOINTMENTS } from '@/lib/mock-data';
 
 // Define the shape of the context data
@@ -153,11 +153,11 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
         if (updatedData.patientStatus !== undefined) updatedPatient.patientStatus = updatedData.patientStatus;
         return updatedPatient;
     }));
-  }, [patients]);
+  }, []);
 
   const updateClinicalProfile = useCallback((patientId: string, clinicalProfileData: ClinicalProfile): void => {
     setPatients(prev => prev.map(p => p.id === patientId ? { ...p, clinicalProfile: clinicalProfileData } : p));
-  }, [patients]);
+  }, []);
 
   const addVisitToPatient = useCallback((patientId: string, visitData: VisitFormData): void => {
     setPatients(prevPatients => prevPatients.map(p => {
@@ -182,7 +182,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
       const newPomr = p.clinicalProfile.pomr ? `${p.clinicalProfile.pomr}\n${visitRemarkEntry}` : visitRemarkEntry;
       return { ...p, visits: newVisits, clinicalProfile: { ...p.clinicalProfile, tags: newTags, primaryDiagnosis: newPrimaryDiagnosis, pomr: newPomr }};
     }));
-  }, [patients]);
+  }, []);
 
   const updateVisitData = useCallback((patientId: string, visitId: string, data: ClinicalVisitData): void => {
     setPatients(prev => prev.map(p => {
@@ -197,7 +197,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
         });
         return { ...p, visits: updatedVisits };
     }));
-  }, [patients]);
+  }, []);
   
   const addOrUpdateInvestigationRecord = useCallback((patientId: string, record: InvestigationRecord): void => {
     setPatients(prev => prev.map(p => {
@@ -208,19 +208,19 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
         else { record.id = record.id || crypto.randomUUID(); records.push(record); }
         return { ...p, investigationRecords: [...records] };
     }));
-  }, [patients]);
+  }, []);
   
   const deleteInvestigationRecord = useCallback((patientId: string, recordId: string): void => {
     setPatients(prev => prev.map(p => {
         if (p.id !== patientId) return p;
         return { ...p, investigationRecords: (p.investigationRecords || []).filter(r => r.id !== recordId) };
     }));
-  }, [patients]);
+  }, []);
 
   const deletePatient = useCallback((patientId: string): void => {
     setPatients(prev => prev.filter(p => p.id !== patientId));
     setAppointments(prev => prev.filter(a => a.patientId !== patientId));
-  }, [patients, appointments]);
+  }, []);
 
   const currentPatient = useCallback((id: string): Patient | undefined => {
     return patients.find(p => p.id === id);
@@ -238,11 +238,11 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     };
     setAppointments(prev => [...prev, newAppointment]);
     return newAppointment;
-  }, [appointments]);
+  }, []);
 
   const updateAppointmentStatus = useCallback(async (id: string, status: Appointment['status']): Promise<void> => {
     setAppointments(prev => prev.map(app => app.id === id ? { ...app, status } : app));
-  }, [appointments]);
+  }, []);
 
   const updateMultipleAppointmentStatuses = useCallback(async (updates: { id: string, status: Appointment['status'] }[]): Promise<void> => {
     setAppointments(prev => {
@@ -252,11 +252,11 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
         });
         return newAppointments;
     });
-  }, [appointments]);
+  }, []);
 
   const updateAppointment = useCallback(async (updatedAppointmentData: Appointment): Promise<void> => {
     setAppointments(prev => prev.map(app => app.id === updatedAppointmentData.id ? updatedAppointmentData : app));
-  }, [appointments]);
+  }, []);
 
   // --- PROVIDER VALUE ---
   const value = useMemo(() => ({
