@@ -18,7 +18,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Notebook, Edit, Trash2, MoreVertical, ChevronsUpDown, Package, TestTube, Star, Search } from 'lucide-react';
+import { PlusCircle, Notebook, Edit, Trash2, MoreVertical, ChevronsUpDown, Package, TestTube, Star, Search, AlertTriangle } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -60,6 +60,35 @@ const NARRATIVE_TEST_NAMES = [
   'Peripheral Blood Smear (PBS)'
 ];
 
+const isCritical = (test: InvestigationTest): boolean => {
+  if (!test.result || !test.normalRange || test.normalRange === 'N/A') return false;
+
+  const resultValue = parseFloat(test.result);
+  if (isNaN(resultValue)) return false; 
+
+  const rangeMatch = test.normalRange.match(/([\d.]+)\s*-\s*([\d.]+)/);
+  if (rangeMatch) {
+    const lowerBound = parseFloat(rangeMatch[1]);
+    const upperBound = parseFloat(rangeMatch[2]);
+    return resultValue < lowerBound || resultValue > upperBound;
+  }
+  
+  const lowerBoundMatch = test.normalRange.match(/>\s*([\d.]+)/);
+  if (lowerBoundMatch) {
+      const lowerBound = parseFloat(lowerBoundMatch[1]);
+      return resultValue <= lowerBound;
+  }
+
+  const upperBoundMatch = test.normalRange.match(/<\s*([\d.]+)/);
+  if(upperBoundMatch) {
+      const upperBound = parseFloat(upperBoundMatch[1]);
+      return resultValue >= upperBound;
+  }
+
+  return false;
+};
+
+
 export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigationsTabContentProps) => {
   const { toast } = useToast();
   const router = useRouter();
@@ -68,6 +97,8 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
 
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isCriticalResultDialogOpen, setIsCriticalResultDialogOpen] = useState(false);
+  const [criticalResultsFound, setCriticalResultsFound] = useState<InvestigationTest[]>([]);
   const [recordToDelete, setRecordToDelete] = useState<InvestigationRecord | null>(null);
   const [addTestSearchQuery, setAddTestSearchQuery] = useState('');
 
@@ -123,6 +154,14 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     await addOrUpdateInvestigationRecord(patientId, recordToSave);
     toast({ title: "Investigation Saved", description: `Record for ${data.date} has been saved.` });
     setIsFormDialogOpen(false);
+    
+    // Check for critical results after saving
+    const criticals = recordToSave.tests.filter(isCritical);
+    if(criticals.length > 0) {
+        setCriticalResultsFound(criticals);
+        setIsCriticalResultDialogOpen(true);
+    }
+
   }, [patientId, addOrUpdateInvestigationRecord, toast]);
 
   const handleDeleteRecord = useCallback(async () => {
@@ -397,6 +436,32 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
         </AlertDialogContent>
       </AlertDialog>
 
+       <AlertDialog open={isCriticalResultDialogOpen} onOpenChange={setIsCriticalResultDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center"><AlertTriangle className="mr-2 h-6 w-6 text-destructive"/>Critical Results Found</AlertDialogTitle>
+            <AlertDialogDescription>
+              The following investigation results are outside their normal range and may require immediate attention.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="my-4">
+              <ul className="space-y-2 rounded-md border p-2">
+                {criticalResultsFound.map(test => (
+                    <li key={test.id} className="text-sm">
+                        <span className="font-semibold">{test.name}:</span>
+                        <span className="ml-2 font-bold text-destructive">{test.result}</span>
+                        <span className="ml-1 text-xs text-muted-foreground">({test.unit})</span>
+                        <span className="ml-2 text-xs text-muted-foreground">Normal: {test.normalRange}</span>
+                    </li>
+                ))}
+              </ul>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setIsCriticalResultDialogOpen(false)}>Acknowledge</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       {sortedRecords.length === 0 ? (
          <Card className="flex items-center justify-center h-40 border-dashed">
@@ -404,61 +469,70 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
           </Card>
       ) : (
         <div className="space-y-6">
-          {sortedRecords.map(record => (
-            <Card key={record.id} className="shadow-md">
-              <CardHeader className="bg-muted/30">
-                <CardTitle className="font-headline text-lg flex items-center justify-between">
-                  <span>Investigations on: {format(parseISO(record.date), 'PPP')}</span>
-                   <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleOpenDialogForEdit(record)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          <span>Edit Record</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => { setRecordToDelete(record); setIsDeleteDialogOpen(true); }} className="text-destructive focus:text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          <span>Delete Record</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                </CardTitle>
-                {record.notes && <CardDescription className="pt-1">{record.notes}</CardDescription>}
-              </CardHeader>
-              <CardContent className="pt-4 px-0 sm:px-6">
-                {record.tests.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[150px]">Group</TableHead>
-                        <TableHead>Test Name</TableHead>
-                        <TableHead>Result</TableHead>
-                        <TableHead className="w-[100px]">Unit</TableHead>
-                        <TableHead>Normal Range</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {record.tests.map(test => (
-                        <TableRow key={test.id}>
-                          <TableCell><Badge variant="outline">{test.group}</Badge></TableCell>
-                          <TableCell className="font-medium">{test.name}</TableCell>
-                          <TableCell>{test.result}</TableCell>
-                          <TableCell>{test.unit || 'N/A'}</TableCell>
-                          <TableCell>{test.normalRange || 'N/A'}</TableCell>
+          {sortedRecords.map(record => {
+            const hasCritical = record.tests.some(isCritical);
+            return (
+                <Card key={record.id} className="shadow-md">
+                <CardHeader className={hasCritical ? "bg-red-50" : "bg-muted/30"}>
+                    <CardTitle className="font-headline text-lg flex items-center justify-between">
+                    <span className="flex items-center">
+                        {hasCritical && <AlertTriangle className="mr-2 h-5 w-5 text-destructive"/>}
+                        Investigations on: {format(parseISO(record.date), 'PPP')}
+                    </span>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                            <MoreVertical className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleOpenDialogForEdit(record)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            <span>Edit Record</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { setRecordToDelete(record); setIsDeleteDialogOpen(true); }} className="text-destructive focus:text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            <span>Delete Record</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                        </DropdownMenu>
+                    </CardTitle>
+                    {record.notes && <CardDescription className="pt-1">{record.notes}</CardDescription>}
+                </CardHeader>
+                <CardContent className="pt-4 px-0 sm:px-6">
+                    {record.tests.length > 0 ? (
+                    <Table>
+                        <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-[150px]">Group</TableHead>
+                            <TableHead>Test Name</TableHead>
+                            <TableHead>Result</TableHead>
+                            <TableHead className="w-[100px]">Unit</TableHead>
+                            <TableHead>Normal Range</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <p className="text-muted-foreground text-sm">No specific tests listed for this record date.</p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                        </TableHeader>
+                        <TableBody>
+                        {record.tests.map(test => {
+                            const critical = isCritical(test);
+                            return (
+                                <TableRow key={test.id}>
+                                <TableCell><Badge variant="outline">{test.group}</Badge></TableCell>
+                                <TableCell className="font-medium">{test.name}</TableCell>
+                                <TableCell className={critical ? "font-bold text-destructive" : ""}>{test.result}</TableCell>
+                                <TableCell>{test.unit || 'N/A'}</TableCell>
+                                <TableCell>{test.normalRange || 'N/A'}</TableCell>
+                                </TableRow>
+                            );
+                        })}
+                        </TableBody>
+                    </Table>
+                    ) : (
+                    <p className="text-muted-foreground text-sm">No specific tests listed for this record date.</p>
+                    )}
+                </CardContent>
+                </Card>
+            );
+          })}
         </div>
       )}
     </>
