@@ -3,11 +3,11 @@
 
 import { useEffect, useMemo } from 'react';
 import { useAppointmentData } from '@/hooks/use-appointment-data';
+import { isToday, parseISO } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, PlayCircle, Loader2 } from 'lucide-react';
+import { User, Users, Clock, PlayCircle, Loader2, CheckCircle, Hospital } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
 
 const anonymizeName = (name: string) => {
     if (!name || name.length < 2) return "******";
@@ -16,89 +16,124 @@ const anonymizeName = (name: string) => {
 
 export default function PublicOpdDisplay() {
     const { toast } = useToast();
-    const { appointments, isLoading: appointmentsLoading } = useAppointmentData(true);
+    const { appointments, isLoading: appointmentsLoading } = useAppointmentData();
 
+    // Auto-refresh data every 15 seconds by showing a toast, mimicking a data refresh poll
     useEffect(() => {
         const interval = setInterval(() => {
-            // This is a placeholder for a potential refetch.
-            // onSnapshot in the hook handles real-time updates.
-             toast({ title: "Status refreshed", duration: 1500 });
-        }, 10000); // Refresh data every 10 seconds
+            toast({ title: "Status refreshed", duration: 1500 });
+        }, 15000); // 15 seconds
 
         return () => clearInterval(interval);
     }, [toast]);
 
-    const { nowServing, waitingList, nowServingQueueNumber } = useMemo(() => {
-        if (appointmentsLoading) return { nowServing: null, waitingList: [], nowServingQueueNumber: 0 };
+    const { nowServing, waitingList, recentlyCompleted, admittedToday } = useMemo(() => {
+        if (appointmentsLoading) return { nowServing: null, waitingList: [], recentlyCompleted: [], admittedToday: [] };
 
-        const nowServing = appointments.find(app => app.status === 'Now Serving') || null;
+        const todaysAppointments = appointments.filter(app => {
+            try { return isToday(parseISO(app.date)); } catch { return false; }
+        });
 
-        const waitingList = appointments
+        const nowServing = todaysAppointments.find(app => app.status === 'Now Serving') || null;
+        
+        const waitingList = todaysAppointments
             .filter(app => app.status === 'Waiting')
             .sort((a, b) => a.time.localeCompare(b.time));
 
-        const completedOrServing = appointments
-            .filter(app => app.status === 'Completed' || app.status === 'Now Serving')
-            .sort((a,b) => a.time.localeCompare(b.time));
+        const recentlyCompleted = todaysAppointments
+            .filter(app => app.status === 'Completed')
+            .sort((a,b) => b.createdAt.localeCompare(a.createdAt))
+            .slice(0, 5); // Show last 5 completed
 
-        const nowServingQueueNumber = completedOrServing.findIndex(app => app.id === nowServing?.id) + 1;
+        const admittedToday = todaysAppointments
+            .filter(app => app.status === 'Admitted')
+            .sort((a,b) => b.createdAt.localeCompare(a.createdAt))
+            .slice(0, 5);
 
-        return { nowServing, waitingList, nowServingQueueNumber };
+        return { nowServing, waitingList, recentlyCompleted, admittedToday };
     }, [appointments, appointmentsLoading]);
 
-     if (appointmentsLoading) {
+
+    if (appointmentsLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <Loader2 className="h-16 w-16 animate-spin text-primary" />
             </div>
         );
     }
-
+    
     return (
-        <div className="p-4 bg-slate-100 min-h-screen">
-            <header className="text-center py-4 border-b-2 border-slate-300 mb-6">
-                <h1 className="text-4xl font-extrabold text-primary tracking-tight">OPD Waiting Room Display</h1>
-                <p className="text-xl text-muted-foreground mt-1">{format(new Date(), 'PPP')}</p>
+        <div className="max-w-7xl mx-auto p-4 space-y-6">
+             <header className="text-center space-y-2 mb-8">
+                <h1 className="text-4xl md:text-5xl font-extrabold text-primary tracking-tight">Outpatient Department Queue</h1>
+                <p className="text-muted-foreground text-lg">Live Waiting Room Status</p>
             </header>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-1 shadow-xl border-4 border-green-500">
-                    <CardHeader className="text-center bg-green-500 text-white p-4">
-                        <CardTitle className="text-3xl font-bold flex items-center justify-center gap-2">
-                           <PlayCircle className="w-8 h-8"/> NOW SERVING
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <Card className="shadow-xl border-4 border-green-500 bg-green-50 animate-pulse">
+                     <CardHeader className="text-center pb-2">
+                        <CardTitle className="text-3xl font-bold text-green-800 flex items-center justify-center gap-3">
+                           <PlayCircle className="w-10 h-10"/>Now Serving
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="flex items-center justify-center text-center h-56">
-                        {nowServing && nowServingQueueNumber > 0 ? (
-                            <p className="text-8xl font-black text-green-700">{nowServingQueueNumber}</p>
+                    <CardContent className="text-center py-6">
+                        {nowServing ? (
+                             <p className="text-6xl md:text-8xl font-black text-green-700">{nowServing.patientName}</p>
                         ) : (
-                            <p className="text-4xl font-bold text-muted-foreground">--</p>
+                            <p className="text-4xl text-green-600">--</p>
                         )}
                     </CardContent>
                 </Card>
-
-                <Card className="lg:col-span-2 shadow-lg">
-                    <CardHeader className="text-center bg-slate-200 p-4">
-                         <CardTitle className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
-                            <Users className="w-8 h-8"/> WAITING LIST
-                        </CardTitle>
+                
+                <Card className="shadow-lg border-2 border-primary">
+                    <CardHeader className="text-center pb-2">
+                        <CardTitle className="text-2xl font-bold text-primary flex items-center justify-center gap-2"><Users className="w-8 h-8"/>Waiting List</CardTitle>
                     </CardHeader>
-                    <CardContent className="p-4">
+                    <CardContent>
                         {waitingList.length > 0 ? (
-                            <ul className="space-y-3">
-                                {waitingList.slice(0, 5).map((app, index) => (
-                                    <li key={app.id} className="flex items-center justify-between p-3 rounded-lg text-2xl font-semibold bg-slate-100">
-                                        <span className="text-primary w-16">{nowServingQueueNumber > 0 ? nowServingQueueNumber + index + 1 : index + 1}</span>
-                                        <span>{anonymizeName(app.patientName)}</span>
-                                        <span className="text-muted-foreground">{app.time}</span>
+                            <ul className="space-y-3 py-2">
+                                {waitingList.slice(0, 8).map((app, index) => (
+                                    <li key={app.id} className="flex items-center p-3 rounded-lg text-xl bg-blue-50 border-blue-200 border-2">
+                                        <span className="font-bold text-primary mr-4">{index + 1}.</span>
+                                        <span className="font-semibold">{anonymizeName(app.patientName)}</span>
                                     </li>
                                 ))}
+                                {waitingList.length > 8 && <li className="text-center text-muted-foreground pt-2">...and more</li>}
                             </ul>
                         ) : (
-                             <div className="flex items-center justify-center h-56">
-                                <p className="text-2xl text-muted-foreground">The waiting list is currently empty.</p>
-                            </div>
+                            <p className="text-center text-muted-foreground py-16">The waiting list is currently empty.</p>
                         )}
+                    </CardContent>
+                </Card>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6">
+                <Card className="shadow-md">
+                    <CardHeader>
+                        <CardTitle className="text-xl font-bold flex items-center"><CheckCircle className="mr-2 h-6 w-6 text-slate-500"/>Recently Completed</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {recentlyCompleted.length > 0 ? (
+                            <ul className="space-y-2">
+                                {recentlyCompleted.map(app => (
+                                    <li key={app.id} className="p-2 rounded-md bg-slate-100 text-slate-600">{anonymizeName(app.patientName)}</li>
+                                ))}
+                            </ul>
+                        ) : <p className="text-muted-foreground text-center py-8">No recent consultations.</p>}
+                    </CardContent>
+                </Card>
+                <Card className="shadow-md">
+                    <CardHeader>
+                        <CardTitle className="text-xl font-bold flex items-center"><Hospital className="mr-2 h-6 w-6 text-red-500"/>Admitted Today</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                       {admittedToday.length > 0 ? (
+                            <ul className="space-y-2">
+                                {admittedToday.map(app => (
+                                    <li key={app.id} className="p-2 rounded-md bg-red-50 text-red-700">{anonymizeName(app.patientName)}</li>
+                                ))}
+                            </ul>
+                        ) : <p className="text-muted-foreground text-center py-8">No admissions today.</p>}
                     </CardContent>
                 </Card>
             </div>
