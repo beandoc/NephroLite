@@ -323,9 +323,9 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                             <h4 className="text-sm font-medium mb-2 flex items-center"><Search className="mr-2 h-4 w-4 text-sky-500"/>Add More Tests or Panels</h4>
                             <Command shouldFilter={false} className="border rounded-md">
                                 <CommandInput 
-                                    placeholder="Search for tests or panels..." 
+                                    placeholder="Search for tests or panels..."
                                     value={addTestSearchQuery}
-                                    onValueChange={setAddTestSearchQuery}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddTestSearchQuery(e.target.value)}
                                 />
                                 <CommandList>
                                   <CommandEmpty>No results found.</CommandEmpty>
