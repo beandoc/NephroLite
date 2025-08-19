@@ -292,7 +292,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
               <Card>
                 <CardHeader>
                   <CardTitle className="text-md font-semibold">Test Results</CardTitle>
-                  <CardDescription>Add tests or panels using the search box below, then enter the results.</CardDescription>
+                  <CardDescription>Add tests or panels using the quick options or the search box below, then enter the results.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
@@ -320,10 +320,10 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                         </div>
 
                          <div>
-                            <h4 className="text-sm font-medium mb-2 flex items-center"><Search className="mr-2 h-4 w-4 text-sky-500"/>Add More Tests or Panels</h4>
+                            <Label className="text-sm font-medium mb-2 flex items-center mt-4"><Search className="mr-2 h-4 w-4 text-sky-500"/>Add Other Tests or Panels</Label>
                             <Command shouldFilter={false} className="border rounded-md">
                                 <CommandInput 
-                                    placeholder="Search for tests or panels..."
+                                    placeholder="Search to add any test or panel from the database..."
                                     value={addTestSearchQuery}
                                     onChangeCapture={(e: React.ChangeEvent<HTMLInputElement>) => setAddTestSearchQuery(e.target.value)}
                                 />

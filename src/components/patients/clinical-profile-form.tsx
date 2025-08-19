@@ -63,17 +63,17 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
   
   const handleVaccinationDateChange = (index: number, dateStr: string | null) => {
     const vaccine = fields[index];
-    let nextDoseDate: string | null = null;
+    let nextDoseDateUpdate: string | null = vaccine.nextDoseDate; // Preserve manual entry by default
     
     if (dateStr) {
         const adminDate = parseISO(dateStr);
-        if (vaccine.name === 'Hepatitis B') {
-            // This is a simplified logic. A real scenario would need to track dose number.
-            // Assuming this is the first dose for simplicity.
-            nextDoseDate = format(addMonths(adminDate, 1), 'yyyy-MM-dd');
-        } else if (vaccine.name === 'Pneumococcal') {
-            // Simplified: assumes PCV13 is given, next is PPSV23
-            nextDoseDate = format(addMonths(adminDate, 2), 'yyyy-MM-dd');
+         // Only auto-calculate if next dose is not already set manually
+        if (!vaccine.nextDoseDate) {
+            if (vaccine.name === 'Hepatitis B') {
+                nextDoseDateUpdate = format(addMonths(adminDate, 1), 'yyyy-MM-dd');
+            } else if (vaccine.name === 'Pneumococcal') {
+                nextDoseDateUpdate = format(addMonths(adminDate, 2), 'yyyy-MM-dd');
+            }
         }
     }
 
@@ -81,7 +81,7 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
         ...vaccine,
         date: dateStr,
         administered: !!dateStr,
-        nextDoseDate: nextDoseDate,
+        nextDoseDate: nextDoseDateUpdate,
     });
   };
 
@@ -122,11 +122,11 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
             <Card>
                 <CardHeader>
                     <CardTitle className="font-headline flex items-center"><Syringe className="w-5 h-5 mr-2 text-primary"/>Vaccination Status</CardTitle>
-                    <CardDescription>Mark vaccines as administered and set the date. Next dose will be calculated.</CardDescription>
+                    <CardDescription>Mark vaccines as administered and set the date. Next dose can be set manually.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                      {fields.map((vaccine, index) => (
-                        <div key={vaccine.id} className="grid grid-cols-[1fr_auto_auto] items-center gap-4 p-3 border rounded-md">
+                        <div key={vaccine.id} className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] items-center gap-4 p-3 border rounded-md">
                            <FormField
                                 control={form.control}
                                 name={`vaccinations.${index}.administered`}
@@ -152,25 +152,36 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
                                 name={`vaccinations.${index}.date`}
                                 render={({ field }) => (
                                     <FormItem>
+                                        <FormLabel className="text-xs text-muted-foreground sr-only">Administered Date</FormLabel>
                                         <FormControl>
                                             <Input 
                                                 type="date" 
                                                 value={field.value || ""}
                                                 onChange={(e) => handleVaccinationDateChange(index, e.target.value || null)}
                                                 disabled={!form.watch(`vaccinations.${index}.administered`)}
-                                                className="w-40"
+                                                className="w-full md:w-40"
                                             />
                                         </FormControl>
                                     </FormItem>
                                 )}
                             />
-                             <div>
-                                {vaccine.nextDoseDate && (
-                                    <p className="text-sm text-muted-foreground">
-                                        Next Dose: {format(parseISO(vaccine.nextDoseDate), 'PPP')}
-                                    </p>
+                             <FormField
+                                control={form.control}
+                                name={`vaccinations.${index}.nextDoseDate`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                         <FormLabel className="text-xs text-muted-foreground sr-only">Next Dose Date</FormLabel>
+                                        <FormControl>
+                                            <Input 
+                                                type="date" 
+                                                value={field.value || ""}
+                                                onChange={(e) => update(index, {...vaccine, nextDoseDate: e.target.value || null})}
+                                                className="w-full md:w-40"
+                                            />
+                                        </FormControl>
+                                    </FormItem>
                                 )}
-                            </div>
+                            />
                         </div>
                      ))}
                 </CardContent>
