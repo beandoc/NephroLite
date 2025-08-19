@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { InvestigationDatabase } from '@/components/investigations/investigation-database';
 
 const diagnosisSchema = z.object({
   id: z.string(),
@@ -379,234 +380,239 @@ export default function TemplatesPage() {
 
   return (
     <div className="container mx-auto py-2">
-      <PageHeader title="Clinical Template Management" description="Create, edit, and manage clinical templates linked to diagnoses for various report types." />
+      <PageHeader title="Clinical Template &amp; Database Management" description="Create, edit, and manage clinical templates, diagnoses, and investigations." />
 
-      <Card className="mt-6 mb-8">
-        <CardHeader>
-          <CardTitle className="font-headline">Template Editor</CardTitle>
-          <CardDescription>Select an existing template to edit, or fill out the form to create a new one. A template name (e.g., 'Chronic Kidney Disease') can be mapped to multiple specific ICD-10 diagnoses.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="md:col-span-1 space-y-4">
-              <h3 className="text-lg font-semibold">Load or Create</h3>
-              <Select onValueChange={handleSelectTemplate} value={selectedTemplate || ""}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Load an existing template..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.keys(templates).map(name => (
-                    <SelectItem key={name} value={name}>{name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-               <Button onClick={handleCreateNew} variant="outline" className="w-full">Create New Template</Button>
-            </div>
-            
-            <div className="md:col-span-2">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSaveTemplate)} className="space-y-6 p-4 border rounded-lg">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="templateName" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="text-base font-bold">Template Name</FormLabel>
-                            <FormControl><Input placeholder="e.g., IgA Nephropathy" {...field} /></FormControl>
-                            <FormDescription>The broad clinical diagnosis name for this template.</FormDescription>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                     <FormField control={form.control} name="templateType" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="text-base font-bold">Template Type</FormLabel>
-                             <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                    <SelectItem value="Opinion Report">Opinion Report</SelectItem>
-                                    <SelectItem value="Discharge Summary">Discharge Summary</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                  </div>
+      <div className="space-y-8 mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline">Template Editor</CardTitle>
+            <CardDescription>Select an existing template to edit, or fill out the form to create a new one. A template name (e.g., 'Chronic Kidney Disease') can be mapped to multiple specific ICD-10 diagnoses.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="md:col-span-1 space-y-4">
+                <h3 className="text-lg font-semibold">Load or Create</h3>
+                <Select onValueChange={handleSelectTemplate} value={selectedTemplate || ""}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Load an existing template..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(templates).map(name => (
+                      <SelectItem key={name} value={name}>{name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleCreateNew} variant="outline" className="w-full">Create New Template</Button>
+              </div>
+              
+              <div className="md:col-span-2">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSaveTemplate)} className="space-y-6 p-4 border rounded-lg">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <FormField control={form.control} name="templateName" render={({ field }) => (
+                          <FormItem>
+                              <FormLabel className="text-base font-bold">Template Name</FormLabel>
+                              <FormControl><Input placeholder="e.g., IgA Nephropathy" {...field} /></FormControl>
+                              <FormDescription>The broad clinical diagnosis name for this template.</FormDescription>
+                              <FormMessage />
+                          </FormItem>
+                      )} />
+                      <FormField control={form.control} name="templateType" render={({ field }) => (
+                          <FormItem>
+                              <FormLabel className="text-base font-bold">Template Type</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                  <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
+                                  <SelectContent>
+                                      <SelectItem value="Opinion Report">Opinion Report</SelectItem>
+                                      <SelectItem value="Discharge Summary">Discharge Summary</SelectItem>
+                                  </SelectContent>
+                              </Select>
+                              <FormMessage />
+                          </FormItem>
+                      )} />
+                    </div>
 
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-md">Mapped ICD-10 Diagnoses</CardTitle>
-                      <CardDescription>Add specific ICD-10 diagnoses that fall under this template's clinical category.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={isPopoverOpen}
-                            className="w-full justify-between"
-                          >
-                            Click on a diagnosis to add...
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                           <Command>
-                            <CommandInput placeholder="Search diagnosis..." />
-                            <CommandList>
-                                <CommandEmpty>No diagnosis found.</CommandEmpty>
-                                <CommandGroup>
-                                  {masterDiagnoses.map((diagnosis) => (
-                                    <CommandItem
-                                      key={diagnosis.id}
-                                      value={`${diagnosis.name} ${diagnosis.icdCode}`}
-                                      onSelect={() => handleAddDiagnosis(diagnosis.id)}
-                                    >
-                                      {diagnosis.name} ({diagnosis.icdCode})
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      
-                      <div className="space-y-2 pt-2">
-                        {diagnosisFields.length > 0 ? (
-                          diagnosisFields.map((field, index) => (
-                            <div key={field.id} className="flex items-center justify-between p-2 border rounded-md bg-muted/50">
-                              <p className="text-sm">
-                                <span className="font-semibold">{field.name}</span>
-                                <Badge variant="secondary" className="ml-2">{field.icdCode}</Badge>
-                              </p>
-                              <Button type="button" variant="ghost" size="icon" className="text-destructive h-6 w-6" onClick={() => removeDiagnosis(index)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-sm text-muted-foreground text-center py-2">No diagnoses mapped yet.</p>
-                        )}
-                      </div>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-md">Mapped ICD-10 Diagnoses</CardTitle>
+                        <CardDescription>Add specific ICD-10 diagnoses that fall under this template's clinical category.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={isPopoverOpen}
+                              className="w-full justify-between"
+                            >
+                              Click on a diagnosis to add...
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Command>
+                              <CommandInput placeholder="Search diagnosis..." />
+                              <CommandList>
+                                  <CommandEmpty>No diagnosis found.</CommandEmpty>
+                                  <CommandGroup>
+                                    {masterDiagnoses.map((diagnosis) => (
+                                      <CommandItem
+                                        key={diagnosis.id}
+                                        value={`${diagnosis.name} ${diagnosis.icdCode}`}
+                                        onSelect={() => handleAddDiagnosis(diagnosis.id)}
+                                      >
+                                        {diagnosis.name} ({diagnosis.icdCode})
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        
+                        <div className="space-y-2 pt-2">
+                          {diagnosisFields.length > 0 ? (
+                            diagnosisFields.map((field, index) => (
+                              <div key={field.id} className="flex items-center justify-between p-2 border rounded-md bg-muted/50">
+                                <p className="text-sm">
+                                  <span className="font-semibold">{field.name}</span>
+                                  <Badge variant="secondary" className="ml-2">{field.icdCode}</Badge>
+                                </p>
+                                <Button type="button" variant="ghost" size="icon" className="text-destructive h-6 w-6" onClick={() => removeDiagnosis(index)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-sm text-muted-foreground text-center py-2">No diagnoses mapped yet.</p>
+                          )}
+                        </div>
 
-                       <FormMessage>{form.formState.errors.diagnoses?.message || form.formState.errors.diagnoses?.root?.message}</FormMessage>
-                    </CardContent>
-                  </Card>
-                  
-                  <FormField control={form.control} name="history" render={({ field }) => (<FormItem><FormLabel>History / Summary Template</FormLabel><FormControl><Textarea rows={4} placeholder="Default history text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                        <FormMessage>{form.formState.errors.diagnoses?.message || form.formState.errors.diagnoses?.root?.message}</FormMessage>
+                      </CardContent>
+                    </Card>
+                    
+                    <FormField control={form.control} name="history" render={({ field }) => (<FormItem><FormLabel>History / Summary Template</FormLabel><FormControl><Textarea rows={4} placeholder="Default history text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
 
-                  <div className="space-y-4">
-                    <FormField control={form.control} name="generalExamination" render={({ field }) => (<FormItem><FormLabel>General Examination</FormLabel><FormControl><Textarea rows={2} placeholder="Default general examination findings..." {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="systemicExamination" render={({ field }) => (<FormItem><FormLabel>Systemic Examination</FormLabel><FormControl><Textarea rows={2} placeholder="Default systemic examination findings..." {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  </div>
+                    <div className="space-y-4">
+                      <FormField control={form.control} name="generalExamination" render={({ field }) => (<FormItem><FormLabel>General Examination</FormLabel><FormControl><Textarea rows={2} placeholder="Default general examination findings..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                      <FormField control={form.control} name="systemicExamination" render={({ field }) => (<FormItem><FormLabel>Systemic Examination</FormLabel><FormControl><Textarea rows={2} placeholder="Default systemic examination findings..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    </div>
 
-                  <Card>
-                    <CardHeader><CardTitle className="text-md">Default Medications</CardTitle></CardHeader>
-                    <CardContent>
-                      <Table>
-                        <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Dosage</TableHead><TableHead>Freq.</TableHead><TableHead>Instr.</TableHead><TableHead>Del</TableHead></TableRow></TableHeader>
-                        <TableBody>
-                          {medicationFields.map((field, index) => (
-                            <TableRow key={field.id}>
-                              <TableCell><FormField control={form.control} name={`medications.${index}.name`} render={({ field }) => <Input placeholder="Name" {...field} />} /></TableCell>
-                              <TableCell><FormField control={form.control} name={`medications.${index}.dosage`} render={({ field }) => <Input placeholder="Dosage" {...field} />} /></TableCell>
-                              <TableCell><FormField control={form.control} name={`medications.${index}.frequency`} render={({ field }) => <Input placeholder="Freq." {...field} />} /></TableCell>
-                              <TableCell><FormField control={form.control} name={`medications.${index}.instructions`} render={({ field }) => <Input placeholder="Instructions" {...field} />} /></TableCell>
-                              <TableCell><Button type="button" variant="destructive" size="icon" onClick={() => removeMedication(index)}><Trash2 className="h-4 w-4" /></Button></TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                      <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendMedication({ id: crypto.randomUUID(), name: "", dosage: "", frequency: "", instructions: "" })}>
-                        <PlusCircle className="mr-2 h-4 w-4"/>Add Medication
-                      </Button>
-                    </CardContent>
-                  </Card>
+                    <Card>
+                      <CardHeader><CardTitle className="text-md">Default Medications</CardTitle></CardHeader>
+                      <CardContent>
+                        <Table>
+                          <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Dosage</TableHead><TableHead>Freq.</TableHead><TableHead>Instr.</TableHead><TableHead>Del</TableHead></TableRow></TableHeader>
+                          <TableBody>
+                            {medicationFields.map((field, index) => (
+                              <TableRow key={field.id}>
+                                <TableCell><FormField control={form.control} name={`medications.${index}.name`} render={({ field }) => <Input placeholder="Name" {...field} />} /></TableCell>
+                                <TableCell><FormField control={form.control} name={`medications.${index}.dosage`} render={({ field }) => <Input placeholder="Dosage" {...field} />} /></TableCell>
+                                <TableCell><FormField control={form.control} name={`medications.${index}.frequency`} render={({ field }) => <Input placeholder="Freq." {...field} />} /></TableCell>
+                                <TableCell><FormField control={form.control} name={`medications.${index}.instructions`} render={({ field }) => <Input placeholder="Instructions" {...field} />} /></TableCell>
+                                <TableCell><Button type="button" variant="destructive" size="icon" onClick={() => removeMedication(index)}><Trash2 className="h-4 w-4" /></Button></TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                        <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendMedication({ id: crypto.randomUUID(), name: "", dosage: "", frequency: "", instructions: "" })}>
+                          <PlusCircle className="mr-2 h-4 w-4"/>Add Medication
+                        </Button>
+                      </CardContent>
+                    </Card>
 
-                  <Card className="bg-muted/50">
-                    <CardHeader>
-                        <CardTitle className="font-headline flex items-center"><Microscope className="mr-2 h-5 w-5 text-primary"/>Investigation Report Fields</CardTitle>
-                        <CardDescription>These fields are available for all template types.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <FormField control={form.control} name="usgReport" render={({ field }) => (<FormItem><FormLabel>USG Report Template</FormLabel><FormControl><Textarea rows={4} placeholder="Default USG report text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
-                      <FormField control={form.control} name="kidneyBiopsyReport" render={({ field }) => (<FormItem><FormLabel>Kidney Biopsy Report Template</FormLabel><FormControl><Textarea rows={6} placeholder="Default kidney biopsy report text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    </CardContent>
-                  </Card>
-                  
-                  {templateType === 'Discharge Summary' && (
                     <Card className="bg-muted/50">
-                        <CardHeader>
-                            <CardTitle className="font-headline flex items-center"><Activity className="mr-2 h-5 w-5 text-primary"/>Discharge Summary Fields</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <FormField control={form.control} name="dischargeInstructions" render={({ field }) => (<FormItem><FormLabel>Discharge Instructions</FormLabel><FormControl><Textarea rows={4} placeholder="Default discharge instructions..." {...field} /></FormControl><FormMessage /></FormItem>)} />
-                        </CardContent>
+                      <CardHeader>
+                          <CardTitle className="font-headline flex items-center"><Microscope className="mr-2 h-5 w-5 text-primary"/>Investigation Report Fields</CardTitle>
+                          <CardDescription>These fields are available for all template types.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <FormField control={form.control} name="usgReport" render={({ field }) => (<FormItem><FormLabel>USG Report Template</FormLabel><FormControl><Textarea rows={4} placeholder="Default USG report text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                        <FormField control={form.control} name="kidneyBiopsyReport" render={({ field }) => (<FormItem><FormLabel>Kidney Biopsy Report Template</FormLabel><FormControl><Textarea rows={6} placeholder="Default kidney biopsy report text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                      </CardContent>
                     </Card>
-                  )}
+                    
+                    {templateType === 'Discharge Summary' && (
+                      <Card className="bg-muted/50">
+                          <CardHeader>
+                              <CardTitle className="font-headline flex items-center"><Activity className="mr-2 h-5 w-5 text-primary"/>Discharge Summary Fields</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                              <FormField control={form.control} name="dischargeInstructions" render={({ field }) => (<FormItem><FormLabel>Discharge Instructions</FormLabel><FormControl><Textarea rows={4} placeholder="Default discharge instructions..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                          </CardContent>
+                      </Card>
+                    )}
 
-                  {templateType === 'Opinion Report' && (
-                     <Card className="bg-muted/50">
-                        <CardHeader>
-                            <CardTitle className="font-headline flex items-center"><FileText className="mr-2 h-5 w-5 text-primary"/>Opinion Report Fields</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <FormField control={form.control} name="opinionText" render={({ field }) => (<FormItem><FormLabel>Opinion Text</FormLabel><FormControl><Textarea rows={4} placeholder="Default opinion text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
-                            <FormField control={form.control} name="recommendations" render={({ field }) => (<FormItem><FormLabel>Recommendations</FormLabel><FormControl><Textarea rows={4} placeholder="Default recommendations..." {...field} /></FormControl><FormMessage /></FormItem>)} />
-                        </CardContent>
-                    </Card>
-                  )}
-                  
-                  <Button type="submit" className="w-full">
-                    <Save className="mr-2 h-4 w-4" /> Save Template
-                  </Button>
-                </form>
-              </Form>
+                    {templateType === 'Opinion Report' && (
+                      <Card className="bg-muted/50">
+                          <CardHeader>
+                              <CardTitle className="font-headline flex items-center"><FileText className="mr-2 h-5 w-5 text-primary"/>Opinion Report Fields</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                              <FormField control={form.control} name="opinionText" render={({ field }) => (<FormItem><FormLabel>Opinion Text</FormLabel><FormControl><Textarea rows={4} placeholder="Default opinion text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                              <FormField control={form.control} name="recommendations" render={({ field }) => (<FormItem><FormLabel>Recommendations</FormLabel><FormControl><Textarea rows={4} placeholder="Default recommendations..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                          </CardContent>
+                      </Card>
+                    )}
+                    
+                    <Button type="submit" className="w-full">
+                      <Save className="mr-2 h-4 w-4" /> Save Template
+                    </Button>
+                  </form>
+                </Form>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle className="font-headline">ICD-10 Diagnosis Master List</CardTitle>
-              <CardDescription>This is the central database of all available diagnoses.</CardDescription>
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="font-headline">ICD-10 Diagnosis Master List</CardTitle>
+                <CardDescription>This is the central database of all available diagnoses.</CardDescription>
+              </div>
+              <Button variant="outline" onClick={() => setIsAddMasterDiagOpen(true)}>
+                  <PlusCircle className="mr-2 h-4 w-4"/>Add New Diagnosis
+              </Button>
             </div>
-            <Button variant="outline" onClick={() => setIsAddMasterDiagOpen(true)}>
-                <PlusCircle className="mr-2 h-4 w-4"/>Add New Diagnosis
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-96">
-            <Table>
-              <TableHeader className="sticky top-0 bg-card">
-                <TableRow>
-                  <TableHead>ICD-10 Code</TableHead>
-                  <TableHead>Primary Clinical Name</TableHead>
-                  <TableHead>Full ICD-10 Description</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {masterDiagnoses.sort((a,b) => a.icdCode.localeCompare(b.icdCode)).map(d => (
-                  <TableRow key={d.id}>
-                    <TableCell><Badge variant="secondary">{d.icdCode}</Badge></TableCell>
-                    <TableCell className="font-medium">{d.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{d.icdName}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="outline" size="sm" onClick={() => handleEditMasterDiagnosis(d)}>
-                        <Pencil className="h-4 w-4 mr-2" />
-                        Edit Names
-                      </Button>
-                    </TableCell>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-96">
+              <Table>
+                <TableHeader className="sticky top-0 bg-card">
+                  <TableRow>
+                    <TableHead>ICD-10 Code</TableHead>
+                    <TableHead>Primary Clinical Name</TableHead>
+                    <TableHead>Full ICD-10 Description</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {masterDiagnoses.sort((a,b) => a.icdCode.localeCompare(b.icdCode)).map(d => (
+                    <TableRow key={d.id}>
+                      <TableCell><Badge variant="secondary">{d.icdCode}</Badge></TableCell>
+                      <TableCell className="font-medium">{d.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{d.icdName}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="outline" size="sm" onClick={() => handleEditMasterDiagnosis(d)}>
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit Names
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        <InvestigationDatabase />
+      </div>
+
 
       <AddMasterDiagnosisDialog 
         isOpen={isAddMasterDiagOpen}

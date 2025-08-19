@@ -2,10 +2,11 @@
 "use client";
 
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
-import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord, Appointment } from '@/lib/types';
+import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord, Appointment, InvestigationMaster, InvestigationPanel } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { VACCINATION_NAMES, MOCK_USER } from '@/lib/constants';
 import { MOCK_PATIENTS, MOCK_APPOINTMENTS } from '@/lib/mock-data';
+import { INVESTIGATION_MASTER_LIST, INVESTIGATION_PANELS } from '@/lib/constants';
 
 // Define the shape of the context data
 export interface DataContextType {
@@ -29,6 +30,14 @@ export interface DataContextType {
   updateAppointmentStatus: (id: string, status: Appointment['status']) => Promise<void>;
   updateMultipleAppointmentStatuses: (updates: { id: string, status: Appointment['status'] }[]) => Promise<void>;
   updateAppointment: (updatedAppointmentData: Appointment) => Promise<void>;
+
+  // Investigation Database
+  investigationMasterList: InvestigationMaster[];
+  investigationPanels: InvestigationPanel[];
+  addOrUpdateInvestigation: (investigation: InvestigationMaster) => void;
+  deleteInvestigation: (investigationId: string) => void;
+  addOrUpdatePanel: (panel: InvestigationPanel) => void;
+  deletePanel: (panelId: string) => void;
 }
 
 // Create the context
@@ -76,6 +85,8 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
   // --- STATE MANAGEMENT ---
   const [patients, setPatients] = useState<Patient[]>(MOCK_PATIENTS);
   const [appointments, setAppointments] = useState<Appointment[]>(MOCK_APPOINTMENTS);
+  const [investigationMasterList, setInvestigationMasterList] = useState<InvestigationMaster[]>(INVESTIGATION_MASTER_LIST);
+  const [investigationPanels, setInvestigationPanels] = useState<InvestigationPanel[]>(INVESTIGATION_PANELS);
   const [lastId, setLastId] = useState(() => calculateInitialLastId(MOCK_PATIENTS));
   const [isLoading, setIsLoading] = useState(false);
 
@@ -258,6 +269,44 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     setAppointments(prev => prev.map(app => app.id === updatedAppointmentData.id ? updatedAppointmentData : app));
   }, []);
 
+  // --- INVESTIGATION DATABASE LOGIC ---
+  const addOrUpdateInvestigation = useCallback((investigation: InvestigationMaster) => {
+    setInvestigationMasterList(prev => {
+      const index = prev.findIndex(item => item.id === investigation.id);
+      if (index > -1) {
+        const newList = [...prev];
+        newList[index] = investigation;
+        return newList;
+      }
+      return [...prev, { ...investigation, id: investigation.id || crypto.randomUUID() }];
+    });
+  }, []);
+
+  const deleteInvestigation = useCallback((investigationId: string) => {
+    setInvestigationMasterList(prev => prev.filter(item => item.id !== investigationId));
+    // Also remove from any panels
+    setInvestigationPanels(prev => prev.map(panel => ({
+      ...panel,
+      testIds: panel.testIds.filter(id => id !== investigationId)
+    })));
+  }, []);
+
+  const addOrUpdatePanel = useCallback((panel: InvestigationPanel) => {
+    setInvestigationPanels(prev => {
+      const index = prev.findIndex(item => item.id === panel.id);
+      if (index > -1) {
+        const newList = [...prev];
+        newList[index] = panel;
+        return newList;
+      }
+      return [...prev, { ...panel, id: panel.id || crypto.randomUUID() }];
+    });
+  }, []);
+
+  const deletePanel = useCallback((panelId: string) => {
+    setInvestigationPanels(prev => prev.filter(item => item.id !== panelId));
+  }, []);
+
   // --- PROVIDER VALUE ---
   const value = useMemo(() => ({
     patients,
@@ -276,7 +325,13 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     addAppointment,
     updateAppointmentStatus,
     updateMultipleAppointmentStatuses,
-    updateAppointment
+    updateAppointment,
+    investigationMasterList,
+    investigationPanels,
+    addOrUpdateInvestigation,
+    deleteInvestigation,
+    addOrUpdatePanel,
+    deletePanel,
   }), [
     patients, 
     isLoading, 
@@ -294,7 +349,13 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     addAppointment,
     updateAppointmentStatus,
     updateMultipleAppointmentStatuses,
-    updateAppointment
+    updateAppointment,
+    investigationMasterList,
+    investigationPanels,
+    addOrUpdateInvestigation,
+    deleteInvestigation,
+    addOrUpdatePanel,
+    deletePanel,
   ]);
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

@@ -10,7 +10,7 @@ export function usePatientData() {
   if (!context) {
     throw new Error('usePatientData must be used within a DataProvider');
   }
-  // We only return the patient-related parts of the context.
+  // We return all patient and investigation database related parts of the context.
   const {
     patients,
     isLoading,
@@ -24,6 +24,12 @@ export function usePatientData() {
     deleteInvestigationRecord,
     updateClinicalProfile,
     currentPatient,
+    investigationMasterList,
+    investigationPanels,
+    addOrUpdateInvestigation,
+    deleteInvestigation,
+    addOrUpdatePanel,
+    deletePanel,
   } = context;
 
   return {
@@ -39,5 +45,11 @@ export function usePatientData() {
     deleteInvestigationRecord,
     updateClinicalProfile,
     currentPatient,
+    investigationMasterList,
+    investigationPanels,
+    addOrUpdateInvestigation,
+    deleteInvestigation,
+    addOrUpdatePanel,
+    deletePanel,
   };
 }
