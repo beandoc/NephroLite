@@ -60,7 +60,7 @@ export async function searchNotifications(input: {query: string, visits: VisitWi
       `.replace(/\s+/g, ' ').trim(),
   }));
 
-  const flowInput = {
+  const flowInput: SearchNotificationsInput = {
     query: input.query,
     visits: searchableVisits,
   };
