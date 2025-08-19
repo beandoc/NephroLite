@@ -26,6 +26,8 @@ interface SearchResult {
     relevantText: string;
 }
 
+type VisitWithPatientName = Visit & { patientName: string };
+
 export default function CommunicationPage() {
     const { toast } = useToast();
     const { patients, isLoading: patientsLoading } = usePatientData();
@@ -41,7 +43,7 @@ export default function CommunicationPage() {
     const [isGeneratingMessage, setIsGeneratingMessage] = useState(false);
     const [generatedMessage, setGeneratedMessage] = useState('');
 
-    const allVisits = useMemo(() => {
+    const allVisits: VisitWithPatientName[] = useMemo(() => {
         if (patientsLoading) return [];
         return patients.flatMap(p => 
             (p.visits || []).map(v => ({...v, patientName: p.name, patientId: p.id }))
