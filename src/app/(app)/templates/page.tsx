@@ -535,7 +535,7 @@ export default function TemplatesPage() {
                     <Card className="bg-muted/50">
                         <CardHeader>
                             <CardTitle className="font-headline flex items-center"><Activity className="mr-2 h-5 w-5 text-primary"/>Discharge Summary Fields</CardTitle>
-                        </Header>
+                        </CardHeader>
                         <CardContent className="space-y-4">
                             <FormField control={form.control} name="dischargeInstructions" render={({ field }) => (<FormItem><FormLabel>Discharge Instructions</FormLabel><FormControl><Textarea rows={4} placeholder="Default discharge instructions..." {...field} /></FormControl><FormMessage /></FormItem>)} />
                         </CardContent>
@@ -546,7 +546,7 @@ export default function TemplatesPage() {
                      <Card className="bg-muted/50">
                         <CardHeader>
                             <CardTitle className="font-headline flex items-center"><FileText className="mr-2 h-5 w-5 text-primary"/>Opinion Report Fields</CardTitle>
-                        </Header>
+                        </CardHeader>
                         <CardContent className="space-y-4">
                             <FormField control={form.control} name="opinionText" render={({ field }) => (<FormItem><FormLabel>Opinion Text</FormLabel><FormControl><Textarea rows={4} placeholder="Default opinion text..." {...field} /></FormControl><FormMessage /></FormItem>)} />
                             <FormField control={form.control} name="recommendations" render={({ field }) => (<FormItem><FormLabel>Recommendations</FormLabel><FormControl><Textarea rows={4} placeholder="Default recommendations..." {...field} /></FormControl><FormMessage /></FormItem>)} />
@@ -623,3 +623,4 @@ export default function TemplatesPage() {
   );
 }
 
+    
