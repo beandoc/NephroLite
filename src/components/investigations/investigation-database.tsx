@@ -248,7 +248,7 @@ export function InvestigationDatabase() {
                 <FormField control={panelForm.control} name="group" render={({ field }) => (
                    <FormItem>
                     <FormLabel>Group</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
                       <FormControl><SelectTrigger><SelectValue placeholder="Select group..." /></SelectTrigger></FormControl>
                       <SelectContent>{INVESTIGATION_GROUPS.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
                     </Select>
