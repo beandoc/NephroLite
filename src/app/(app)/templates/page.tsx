@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -14,7 +15,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Save, Trash2, PlusCircle, FileText, Activity, Microscope, ChevronsUpDown, Pencil } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { DIAGNOSIS_TEMPLATES, MOCK_DIAGNOSES } from '@/lib/constants';
+import { MOCK_DIAGNOSES } from '@/lib/constants';
 import type { DiagnosisTemplate, Diagnosis, Medication, DiagnosisEntry } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { InvestigationDatabase } from '@/components/investigations/investigation-database';
+import { usePatientData } from '@/hooks/use-patient-data';
 
 const diagnosisSchema = z.object({
   id: z.string(),
@@ -236,15 +238,32 @@ function EditMasterDiagnosisDialog({
 
 
 export default function TemplatesPage() {
-  const [templates, setTemplates] = useState<Record<string, DiagnosisTemplate>>(DIAGNOSIS_TEMPLATES);
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const { toast } = useToast();
+    const { 
+        investigationMasterList, 
+        investigationPanels, 
+        addOrUpdateInvestigation, 
+        deleteInvestigation,
+        addOrUpdatePanel,
+        deletePanel
+    } = usePatientData();
+    
+    const [templates, setTemplates] = useState<Record<string, DiagnosisTemplate>>({}); // Start with empty, will be loaded
+    const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+    const { toast } = useToast();
 
-  const [masterDiagnoses, setMasterDiagnoses] = useState<DiagnosisEntry[]>(MOCK_DIAGNOSES);
-  const [isEditMasterDiagOpen, setIsEditMasterDiagOpen] = useState(false);
-  const [isAddMasterDiagOpen, setIsAddMasterDiagOpen] = useState(false);
-  const [selectedMasterDiag, setSelectedMasterDiag] = useState<DiagnosisEntry | null>(null);
+    const [masterDiagnoses, setMasterDiagnoses] = useState<DiagnosisEntry[]>(MOCK_DIAGNOSES);
+    const [isEditMasterDiagOpen, setIsEditMasterDiagOpen] = useState(false);
+    const [isAddMasterDiagOpen, setIsAddMasterDiagOpen] = useState(false);
+    const [selectedMasterDiag, setSelectedMasterDiag] = useState<DiagnosisEntry | null>(null);
+    
+    // In a real app, you'd fetch templates from a DB. For now, we load from constants.
+    useEffect(() => {
+        // This simulates loading templates.
+        // In a real app, this would be an API call.
+        const loadedTemplates = JSON.parse(JSON.stringify(DIAGNOSIS_TEMPLATES));
+        setTemplates(loadedTemplates);
+    }, []);
 
 
   const form = useForm<TemplateFormData>({
@@ -567,50 +586,8 @@ export default function TemplatesPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle className="font-headline">ICD-10 Diagnosis Master List</CardTitle>
-                <CardDescription>This is the central database of all available diagnoses.</CardDescription>
-              </div>
-              <Button variant="outline" onClick={() => setIsAddMasterDiagOpen(true)}>
-                  <PlusCircle className="mr-2 h-4 w-4"/>Add New Diagnosis
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-96">
-              <Table>
-                <TableHeader className="sticky top-0 bg-card">
-                  <TableRow>
-                    <TableHead>ICD-10 Code</TableHead>
-                    <TableHead>Primary Clinical Name</TableHead>
-                    <TableHead>Full ICD-10 Description</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {masterDiagnoses.sort((a,b) => a.icdCode.localeCompare(b.icdCode)).map(d => (
-                    <TableRow key={d.id}>
-                      <TableCell><Badge variant="secondary">{d.icdCode}</Badge></TableCell>
-                      <TableCell className="font-medium">{d.name}</TableCell>
-                      <TableCell className="text-muted-foreground">{d.icdName}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="outline" size="sm" onClick={() => handleEditMasterDiagnosis(d)}>
-                          <Pencil className="h-4 w-4 mr-2" />
-                          Edit Names
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-
         <InvestigationDatabase />
+
       </div>
 
 
