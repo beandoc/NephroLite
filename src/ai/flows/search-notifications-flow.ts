@@ -12,9 +12,20 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import type { Visit } from '@/lib/types';
 
+// Define a more specific type for visits that includes the patient's name.
+type VisitWithPatientName = Visit & { patientName: string };
+
+const SearchableVisitSchema = z.object({
+    patientId: z.string(),
+    patientName: z.string(),
+    visitId: z.string(),
+    visitDate: z.string(),
+    note: z.string(),
+});
+
 const SearchNotificationsInputSchema = z.object({
   query: z.string().describe("The user's search query."),
-  visits: z.array(z.any()).describe("An array of all patient visit objects to search through."),
+  visits: z.array(SearchableVisitSchema).describe("An array of searchable patient visit objects."),
 });
 export type SearchNotificationsInput = z.infer<typeof SearchNotificationsInputSchema>;
 
@@ -31,7 +42,7 @@ const SearchNotificationsOutputSchema = z.object({
 });
 export type SearchNotificationsOutput = z.infer<typeof SearchNotificationsOutputSchema>;
 
-export async function searchNotifications(input: {query: string, visits: Visit[]}): Promise<SearchNotificationsOutput> {
+export async function searchNotifications(input: {query: string, visits: VisitWithPatientName[]}): Promise<SearchNotificationsOutput> {
   
   // To avoid passing massive amounts of data, we'll extract relevant text from visits.
   const searchableVisits = input.visits.map(visit => ({
