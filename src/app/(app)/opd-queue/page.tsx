@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation';
 import type { Appointment } from '@/lib/types';
 
 export default function OpdQueuePage() {
-  const { appointments, isLoading, updateMultipleAppointmentStatuses } = useAppointmentData(true); // <<<< Ask for OPD Queue specific data
+  const { appointments, isLoading, updateMultipleAppointmentStatuses } = useAppointmentData();
   const { toast } = useToast();
   const router = useRouter();
 
