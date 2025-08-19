@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -306,7 +307,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                                     const isSelected = testIdsInPanel.length > 0 && testIdsInPanel.every(id => fields.some(f => f.id === id));
                                     
                                     return (
-                                        <div key={`quick-${item.id}`} className="flex items-center space-x-2">
+                                        <div key={`quick-${item.type}-${item.id}`} className="flex items-center space-x-2">
                                             <Checkbox
                                                 id={`quick-chk-${item.id}`}
                                                 checked={isSelected}
