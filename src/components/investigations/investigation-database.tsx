@@ -210,14 +210,14 @@ export function InvestigationDatabase() {
               <FormField control={investigationForm.control} name="unit" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Unit (Optional)</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
+                  <FormControl><Input {...field} value={field.value || ''} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={investigationForm.control} name="normalRange" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Normal Range (Optional)</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
+                  <FormControl><Input {...field} value={field.value || ''} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
