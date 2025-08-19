@@ -30,7 +30,7 @@ import { format, parseISO } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GENDERS, INDIAN_STATES, RELATIONSHIPS } from "@/lib/constants";
-import type { PatientFormData, Patient } from "@/lib/types";
+import type { Patient } from "@/lib/types";
 import { useEffect } from 'react';
 
 const patientFormSchema = z.object({
@@ -53,6 +53,8 @@ const patientFormSchema = z.object({
     contact: z.string().optional(),
   }),
 });
+
+export type PatientFormData = z.infer<typeof patientFormSchema>;
 
 const defaultFormValues: PatientFormData = {
   name: "",
