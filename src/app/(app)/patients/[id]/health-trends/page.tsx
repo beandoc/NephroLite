@@ -135,7 +135,7 @@ export default function PatientHealthTrendsPage() {
         totalCholesterol: latestTotalCholesterol?.value || null,
         hdlCholesterol: latestHdlCholesterol?.value || null,
         systolicBP: latestSystolicBP ? parseFloat(latestSystolicBP) : null,
-        date: latestDate ? format(parseISO(latestDate), 'PPP') : undefined,
+        date: latestDate,
     }
   }, [patient]);
 
@@ -219,7 +219,7 @@ export default function PatientHealthTrendsPage() {
     },
     { 
         title: "10-Year ASCVD Risk (PREVENT)", 
-        value: preventScore !== null ? `${preventScore.tenYearRisk.toFixed(1)}%` : "N/A", 
+        value: preventScore?.tenYearRisk !== null && preventScore?.tenYearRisk !== undefined ? `${preventScore.tenYearRisk.toFixed(1)}%` : "N/A",
         riskLevel: getPreventRiskLevel(preventScore?.tenYearRisk ?? null), 
         lastDataDate: latestLabData.date, 
         missingData: getPreventMissingData(),
