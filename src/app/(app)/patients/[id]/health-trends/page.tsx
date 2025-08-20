@@ -84,7 +84,7 @@ export default function PatientHealthTrendsPage() {
   }, [patientId, getPatientById, dataLoading]);
   
   const latestLabData = useMemo(() => {
-    if (!patient?.investigationRecords) return { eGFR: null, UACR: null, totalCholesterol: null, hdlCholesterol: null, systolicBP: null, date: null };
+    if (!patient?.investigationRecords) return { eGFR: null, UACR: null, totalCholesterol: null, hdlCholesterol: null, systolicBP: null, date: undefined };
     
     const allTests = patient.investigationRecords
       .flatMap(rec => rec.tests.map(test => ({ ...test, date: rec.date })))
