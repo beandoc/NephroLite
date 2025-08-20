@@ -15,7 +15,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Save, Trash2, PlusCircle, FileText, Activity, Microscope, ChevronsUpDown, Pencil } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { MOCK_DIAGNOSES } from '@/lib/constants';
+import { MOCK_DIAGNOSES, DIAGNOSIS_TEMPLATES } from '@/lib/constants';
 import type { DiagnosisTemplate, Diagnosis, Medication, DiagnosisEntry } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
