@@ -1,5 +1,5 @@
 
-import type { DiagnosisEntry, InvestigationMaster, InvestigationPanel } from '@/lib/types';
+import type { DiagnosisEntry, InvestigationMaster, InvestigationPanel } from './types';
 
 export const MOCK_USER = {
   name: "Dr. Sachin", 
@@ -190,9 +190,9 @@ export const MOCK_DIAGNOSES: DiagnosisEntry[] = [
     { id: 'N40', name: 'Hyperplasia of prostate', icdName: 'Hyperplasia of prostate', icdCode: 'N40', clinicalNames: ['Hyperplasia of prostate', 'BPH'] },
 ];
 
-export const INVESTIGATION_GROUPS: string[] = [
+export const INVESTIGATION_GROUPS = [
   'Hematological', 'Biochemistry', 'Radiology', 'Pathology', 'Special Investigations', 'Urine Analysis', 'Serology', 'Microbiology'
-];
+] as const;
 
 export const INVESTIGATION_MASTER_LIST: InvestigationMaster[] = [
   // Hematological
