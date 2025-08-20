@@ -76,7 +76,7 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
   const form = useForm<ClinicalVisitFormData>({
     resolver: zodResolver(clinicalVisitSchema),
     defaultValues: {
-      diagnosis: visit.diagnoses?.[0] || { id: "", name: "", icdCode: "", icdName: "" },
+      diagnosis: (visit.diagnoses && visit.diagnoses[0]) ? visit.diagnoses[0] : { id: "", name: "", icdCode: "", icdName: "" },
       medications: visit.clinicalData?.medications?.map(m => ({ ...m, id: m.id || crypto.randomUUID() })) || [],
       history: visit.clinicalData?.history || "",
       height: visit.clinicalData?.height || "",
