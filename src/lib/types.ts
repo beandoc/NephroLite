@@ -1,4 +1,6 @@
 
+import { z } from 'zod';
+
 export type Address = {
   street?: string;
   city?: string;
@@ -13,32 +15,36 @@ export type Guardian = {
   contact?: string;
 };
 
-export type Vaccination = {
-  name: string;
-  administered: boolean;
-  date?: string | null; // YYYY-MM-DD
-  nextDoseDate?: string | null; // YYYY-MM-DD
-};
+export const vaccinationSchema = z.object({
+    name: z.string(),
+    administered: z.boolean(),
+    date: z.string().optional().nullable(),
+    nextDoseDate: z.string().optional().nullable(),
+});
 
-export type ClinicalProfile = {
-  primaryDiagnosis?: string;
-  tags: string[];
-  nutritionalStatus?: string;
-  disability?: string;
-  subspecialityFollowUp?: string;
-  smokingStatus?: string; // 'Yes', 'No', 'NIL'
-  alcoholConsumption?: string; // 'Yes', 'No', 'NIL'
-  vaccinations: Vaccination[];
-  pomr?: string; // Problem Oriented Medical Record
-  aabhaNumber?: string;
-  bloodGroup?: string;
-  drugAllergies?: string;
-  whatsappNumber?: string;
-  // Fields for PREVENT calculator
-  hasDiabetes?: boolean;
-  onAntiHypertensiveMedication?: boolean;
-  onLipidLoweringMedication?: boolean;
-};
+export type Vaccination = z.infer<typeof vaccinationSchema>;
+
+export const clinicalProfileSchema = z.object({
+  primaryDiagnosis: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  nutritionalStatus: z.string().optional(),
+  disability: z.string().optional(),
+  subspecialityFollowUp: z.string().optional(),
+  smokingStatus: z.string().optional(),
+  alcoholConsumption: z.string().optional(),
+  pomr: z.string().optional(),
+  aabhaNumber: z.string().optional(),
+  bloodGroup: z.string().optional(),
+  drugAllergies: z.string().optional(),
+  whatsappNumber: z.string().optional(),
+  vaccinations: z.array(vaccinationSchema),
+  hasDiabetes: z.boolean().optional(),
+  onAntiHypertensiveMedication: z.boolean().optional(),
+  onLipidLoweringMedication: z.boolean().optional(),
+});
+
+export type ClinicalProfile = z.infer<typeof clinicalProfileSchema>;
+
 
 export type Diagnosis = {
   id: string;

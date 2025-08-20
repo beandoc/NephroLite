@@ -5,6 +5,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import type { ClinicalProfile, Vaccination } from "@/lib/types";
+import { clinicalProfileSchema } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -17,32 +18,6 @@ import { PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, B
 import { Save, Syringe, HeartPulse } from "lucide-react";
 import { format, parseISO, addMonths } from 'date-fns';
 
-const vaccinationSchema = z.object({
-    name: z.string(),
-    administered: z.boolean(),
-    date: z.string().optional().nullable(),
-    nextDoseDate: z.string().optional().nullable(),
-});
-
-const clinicalProfileSchema = z.object({
-  primaryDiagnosis: z.string().optional(),
-  nutritionalStatus: z.string().optional(),
-  disability: z.string().optional(),
-  subspecialityFollowUp: z.string().optional(),
-  smokingStatus: z.string().optional(),
-  alcoholConsumption: z.string().optional(),
-  drugAllergies: z.string().optional(),
-  pomr: z.string().optional(),
-  aabhaNumber: z.string().optional(),
-  bloodGroup: z.string().optional(),
-  whatsappNumber: z.string().optional(),
-  vaccinations: z.array(vaccinationSchema),
-  hasDiabetes: z.boolean(),
-  onAntiHypertensiveMedication: z.boolean(),
-  onLipidLoweringMedication: z.boolean(),
-  tags: z.array(z.string()).optional(), // Not edited here, but needed for type
-});
-
 interface ClinicalProfileFormProps {
   onSubmit: (data: ClinicalProfile) => void;
   isSubmitting?: boolean;
@@ -53,7 +28,12 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
   
   const form = useForm<ClinicalProfile>({
     resolver: zodResolver(clinicalProfileSchema),
-    defaultValues: existingProfileData,
+    defaultValues: {
+      ...existingProfileData,
+      hasDiabetes: existingProfileData.hasDiabetes ?? false,
+      onAntiHypertensiveMedication: existingProfileData.onAntiHypertensiveMedication ?? false,
+      onLipidLoweringMedication: existingProfileData.onLipidLoweringMedication ?? false,
+    },
   });
 
   const { fields, update } = useFieldArray({
