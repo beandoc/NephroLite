@@ -152,14 +152,14 @@ export function EgfrTrendChart({ patient }: EgfrTrendChartProps) {
             <ChartTooltipContent 
                 indicator="dot" 
                 labelFormatter={(label) => format(parseISO(label), 'PPP')} 
-                payloadFormatter={(payloadItem: any) => {
-                    const { name, value, payload } = payloadItem;
+                formatter={(value, name, item) => {
+                    const { payload } = item;
                     if (name === "egfr") {
                        return (
                         <div className="flex items-center gap-2">
                             <div className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: 'hsl(var(--chart-1))'}} />
                             <div>
-                                <div className="font-semibold">{value.toFixed(0)} <span className="text-muted-foreground text-xs">mL/min</span></div>
+                                <div className="font-semibold">{Number(value).toFixed(0)} <span className="text-muted-foreground text-xs">mL/min</span></div>
                                 <div className="text-xs text-muted-foreground">eGFR {payload.egfr_calculated && "(Calculated)"}</div>
                             </div>
                         </div>
@@ -170,7 +170,7 @@ export function EgfrTrendChart({ patient }: EgfrTrendChartProps) {
                              <div className="flex items-center gap-2">
                                 <div className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: 'hsl(var(--chart-2))'}} />
                                 <div>
-                                    <div className="font-semibold">{value.toFixed(2)} <span className="text-muted-foreground text-xs">mg/dL</span></div>
+                                    <div className="font-semibold">{Number(value).toFixed(2)} <span className="text-muted-foreground text-xs">mg/dL</span></div>
                                     <div className="text-xs text-muted-foreground">Creatinine</div>
                                 </div>
                             </div>
