@@ -40,6 +40,12 @@ export function BmiCalculator() {
     const bmi = data.weight / (heightInMeters * heightInMeters);
     setBmiResult(bmi);
   };
+  
+  // This effect will clear the result if any form value changes
+  const watchedFields = form.watch();
+  React.useEffect(() => {
+    setBmiResult(null);
+  }, [watchedFields]);
 
   return (
     <div>
@@ -53,7 +59,7 @@ export function BmiCalculator() {
                 <FormItem>
                   <FormLabel>Height (cm)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g., 175" {...field} onChange={e => { field.onChange(e.target.value); setBmiResult(null); }} />
+                    <Input type="number" placeholder="e.g., 175" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -66,7 +72,7 @@ export function BmiCalculator() {
                 <FormItem>
                   <FormLabel>Weight (kg)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g., 70" {...field} onChange={e => { field.onChange(e.target.value); setBmiResult(null); }}/>
+                    <Input type="number" placeholder="e.g., 70" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

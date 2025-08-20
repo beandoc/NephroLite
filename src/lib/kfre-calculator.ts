@@ -92,8 +92,8 @@ export function calculateKfre(input: KFRE_Input): KFRE_Output {
 
 // Helper function to calculate eGFR from creatinine (based on CKD-EPI 2021)
 // Exported so it can be used in other parts of the app, like the health trends page.
-export const calculateEgfrFromCreatinine = (creatinine: number, age: number, gender: 'Male' | 'Female'): number | null => {
-    if (!creatinine || !age || !gender) return null;
+export const calculateEgfrFromCreatinine = (creatinine: number, age: number, gender: string): number | null => {
+    if (!creatinine || !age || !gender || !['Male', 'Female'].includes(gender)) return null;
     const kappa = gender === 'Female' ? 0.7 : 0.9;
     const alpha = gender === 'Female' ? -0.241 : -0.302; // Updated alpha values for 2021
     const genderCoefficient = gender === 'Female' ? 1.012 : 1;

@@ -31,7 +31,6 @@ import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GENDERS, INDIAN_STATES, RELATIONSHIPS } from "@/lib/constants";
 import type { Patient } from "@/lib/types";
-import { useEffect } from 'react';
 
 const patientFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -116,7 +115,7 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
   const patientName = form.watch("name");
   const patientContact = form.watch("contact");
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (relation === "Self") {
       form.setValue("guardian.name", patientName);
       form.setValue("guardian.contact", patientContact);

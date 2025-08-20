@@ -13,6 +13,7 @@ import { CalendarDays, User, Clock, Stethoscope, Eye, CheckCircle, XCircle, Load
 import { Badge } from '@/components/ui/badge';
 import type { Appointment } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useMemo } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,10 +32,12 @@ export function TodaysAppointments() {
   
   const today = new Date();
   
-  // No need to filter by date anymore, the hook does it for us
-  const todaysAppointments = appointments
-    .filter(app => app.status === 'Scheduled' && isToday(parseISO(app.date)))
-    .sort((a, b) => a.time.localeCompare(b.time));
+  const todaysAppointments = useMemo(() => {
+    return appointments
+      .filter(app => app.status === 'Scheduled' && isToday(parseISO(app.date)))
+      .sort((a, b) => a.time.localeCompare(b.time));
+  }, [appointments]);
+
 
   const handleUpdateStatus = (appointmentId: string, newStatus: Appointment['status'], patientName: string, patientId?: string) => {
     updateAppointmentStatus(appointmentId, newStatus);

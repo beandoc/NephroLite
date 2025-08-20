@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useAppointmentData } from '@/hooks/use-appointment-data';
 import { isToday, parseISO } from 'date-fns';
