@@ -23,7 +23,7 @@ import { usePatientData } from '@/hooks/use-patient-data';
 const investigationSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, 'Test name is required.'),
-  group: z.string().min(1, 'Group is required.'),
+  group: z.enum(INVESTIGATION_GROUPS, { required_error: 'Group is required.' }),
   unit: z.string().optional(),
   normalRange: z.string().optional(),
 });
@@ -33,7 +33,7 @@ type InvestigationFormData = z.infer<typeof investigationSchema>;
 const panelSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, 'Panel name is required.'),
-  group: z.string().min(1, 'Group is required.'),
+  group: z.enum(INVESTIGATION_GROUPS, { required_error: 'Group is required.' }),
   testIds: z.array(z.object({ id: z.string() })).min(1, 'At least one test must be selected.'),
 });
 
@@ -67,21 +67,22 @@ export function InvestigationDatabase() {
       testIds: [],
     }
   });
-
+  
   const { fields: panelTestFields, append: appendTest, remove: removeTest } = useFieldArray({
     control: panelForm.control,
     name: "testIds"
   });
 
+
   const handleOpenInvestigationDialog = (inv?: InvestigationMaster) => {
     setEditingInvestigation(inv || null);
-    investigationForm.reset(inv || { name: '', group: '', unit: '', normalRange: '' });
+    investigationForm.reset(inv || { name: '', unit: '', normalRange: '' });
     setIsInvestigationDialogOpen(true);
   };
 
   const handleOpenPanelDialog = (panel?: InvestigationPanel) => {
     setEditingPanel(panel || null);
-    panelForm.reset(panel ? { ...panel, testIds: panel.testIds.map(id => ({id})) } : { name: '', group: '', testIds: [] });
+    panelForm.reset(panel ? { ...panel, testIds: panel.testIds.map(id => ({id})) } : { name: '', testIds: [] });
     setIsPanelDialogOpen(true);
   };
 
@@ -249,7 +250,7 @@ export function InvestigationDatabase() {
                 <FormField control={panelForm.control} name="group" render={({ field }) => (
                    <FormItem>
                     <FormLabel>Group</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                       <FormControl><SelectTrigger><SelectValue placeholder="Select group..." /></SelectTrigger></FormControl>
                       <SelectContent>{INVESTIGATION_GROUPS.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
                     </Select>
