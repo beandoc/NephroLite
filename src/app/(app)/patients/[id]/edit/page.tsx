@@ -3,11 +3,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { PatientForm, type PatientFormData } from '@/components/patients/patient-form';
+import { PatientForm } from '@/components/patients/patient-form';
 import { PageHeader } from '@/components/shared/page-header';
 import { usePatientData } from '@/hooks/use-patient-data';
 import { useToast } from "@/hooks/use-toast";
-import type { Patient, ClinicalProfile } from '@/lib/types';
+import type { Patient, ClinicalProfile, PatientFormData } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ClinicalProfileForm } from '@/components/patients/clinical-profile-form';
 
