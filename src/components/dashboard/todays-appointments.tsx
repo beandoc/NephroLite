@@ -13,7 +13,7 @@ import { CalendarDays, User, Clock, Stethoscope, Eye, CheckCircle, XCircle, Load
 import { Badge } from '@/components/ui/badge';
 import type { Appointment } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,9 +29,12 @@ export function TodaysAppointments() {
   const { appointments, isLoading, updateAppointmentStatus } = useAppointmentData();
   const { getPatientById, updatePatient } = usePatientData(); // Get admitPatient function
   const { toast } = useToast();
-  
-  const today = new Date();
-  
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const todaysAppointments = useMemo(() => {
     return appointments
       .filter(app => app.status === 'Scheduled' && isToday(parseISO(app.date)))
@@ -109,7 +112,7 @@ export function TodaysAppointments() {
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle className="font-headline">Today's Check-In</CardTitle>
-          <div className="text-sm text-muted-foreground">{format(today, 'MMM d, yyyy')}</div>
+          <div className="text-sm text-muted-foreground">{isClient ? format(new Date(), 'MMM d, yyyy') : <Skeleton className="h-4 w-24" />}</div>
         </div>
          <CardDescription>Move scheduled patients to the OPD queue.</CardDescription>
       </CardHeader>
