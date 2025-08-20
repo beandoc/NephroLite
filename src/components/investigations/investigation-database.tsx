@@ -34,7 +34,7 @@ const panelSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, 'Panel name is required.'),
   group: z.string().min(1, 'Group is required.'),
-  testIds: z.array(z.string()).min(1, 'At least one test must be selected.'),
+  testIds: z.array(z.object({ id: z.string() })).min(1, 'At least one test must be selected.'),
 });
 
 type PanelFormData = z.infer<typeof panelSchema>;
@@ -68,7 +68,7 @@ export function InvestigationDatabase() {
     }
   });
 
-  const { fields: panelTestFields, replace: replacePanelTests } = useFieldArray({
+  const { fields: panelTestFields, append: appendTest, remove: removeTest } = useFieldArray({
     control: panelForm.control,
     name: "testIds"
   });
@@ -81,7 +81,7 @@ export function InvestigationDatabase() {
 
   const handleOpenPanelDialog = (panel?: InvestigationPanel) => {
     setEditingPanel(panel || null);
-    panelForm.reset(panel || { name: '', group: '', testIds: [] });
+    panelForm.reset(panel ? { ...panel, testIds: panel.testIds.map(id => ({id})) } : { name: '', group: '', testIds: [] });
     setIsPanelDialogOpen(true);
   };
 
@@ -99,6 +99,7 @@ export function InvestigationDatabase() {
     const panelToSave: InvestigationPanel = {
       ...data,
       id: editingPanel?.id || data.name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now(),
+      testIds: data.testIds.map(item => item.id),
     };
     addOrUpdatePanel(panelToSave);
     toast({ title: `Panel ${editingPanel ? 'Updated' : 'Added'}` });
@@ -259,7 +260,7 @@ export function InvestigationDatabase() {
               <FormField
                 control={panelForm.control}
                 name="testIds"
-                render={({ field }) => (
+                render={() => (
                   <FormItem>
                     <FormLabel>Select Tests</FormLabel>
                      <ScrollArea className="h-64 w-full rounded-md border p-4">
@@ -272,11 +273,19 @@ export function InvestigationDatabase() {
                               <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
                                 <FormControl>
                                   <Checkbox
-                                    checked={field.value?.includes(item.id)}
+                                    checked={field.value?.some(v => v.id === item.id)}
                                     onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([...(field.value || []), item.id])
-                                        : field.onChange(field.value?.filter((value) => value !== item.id));
+                                      const currentIds = field.value?.map(v => v.id) || [];
+                                      if (checked) {
+                                        if (!currentIds.includes(item.id)) {
+                                          appendTest({ id: item.id });
+                                        }
+                                      } else {
+                                        const indexToRemove = field.value?.findIndex(v => v.id === item.id);
+                                        if (indexToRemove !== -1 && indexToRemove !== undefined) {
+                                          removeTest(indexToRemove);
+                                        }
+                                      }
                                     }}
                                   />
                                 </FormControl>
