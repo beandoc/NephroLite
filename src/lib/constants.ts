@@ -8,11 +8,11 @@ export const MOCK_USER = {
 };
 
 
-export const GENDERS: string[] = ['Male', 'Female'];
+export const GENDERS = ['Male', 'Female'] as const;
 
-export const BLOOD_GROUPS: string[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'];
+export const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'] as const;
 
-export const INDIAN_STATES: string[] = [
+export const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
   'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
   'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
@@ -20,17 +20,17 @@ export const INDIAN_STATES: string[] = [
   'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
   'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu',
   'Lakshadweep', 'Delhi', 'Puducherry', 'Ladakh', 'Jammu and Kashmir'
-];
+] as const;
 
-export const RELATIONSHIPS: string[] = [
+export const RELATIONSHIPS = [
   'Self', 'Parent', 'Spouse', 'Sibling', 'Child', 'Guardian', 'Friend', 'Other',
   'F/O', 'S/O', 'W/O', 'M/O', 'D/O'
-];
+] as const;
 
 export const MALE_IMPLYING_RELATIONS = ['F/O', 'S/O'];
 export const FEMALE_IMPLYING_RELATIONS = ['W/O', 'M/O', 'D/O'];
 
-export const PRIMARY_DIAGNOSIS_OPTIONS: string[] = [
+export const PRIMARY_DIAGNOSIS_OPTIONS = [
   'Chronic Kidney Disease (CKD)',
   'Acute Kidney Injury (AKI)',
   'Glomerulonephritis',
@@ -54,18 +54,18 @@ export const PRIMARY_DIAGNOSIS_OPTIONS: string[] = [
   'Potential Kidney Donor',
   'Other',
   'Not Set',
-];
+] as const;
 
-export const NUTRITIONAL_STATUSES: string[] = [
+export const NUTRITIONAL_STATUSES = [
   'Well-nourished',
   'Mild malnutrition',
   'Moderate malnutrition',
   'Severe malnutrition',
   'Obese',
   'Not Set',
-];
+] as const;
 
-export const DISABILITY_PROFILES: string[] = [
+export const DISABILITY_PROFILES = [
   'None',
   'Mild physical disability',
   'Moderate physical disability',
@@ -75,9 +75,9 @@ export const DISABILITY_PROFILES: string[] = [
   'Hearing impairment',
   'Other',
   'Not Set',
-];
+] as const;
 
-export const APPOINTMENT_TYPES: string[] = [
+export const APPOINTMENT_TYPES = [
   'Routine Checkup',
   'Follow-up',
   'Dialysis Session',
@@ -86,41 +86,41 @@ export const APPOINTMENT_TYPES: string[] = [
   'Lab Results Review',
   'Transplant Evaluation',
   'GN Monitoring Visit',
-];
+] as const;
 
 
-export const APPOINTMENT_STATUSES: Array<'Scheduled' | 'Completed' | 'Cancelled' | 'Waiting' | 'Not Showed' | 'Admitted' | 'Now Serving'> =
-  ['Scheduled', 'Completed', 'Cancelled', 'Waiting', 'Not Showed', 'Admitted', 'Now Serving'];
+export const APPOINTMENT_STATUSES =
+  ['Scheduled', 'Completed', 'Cancelled', 'Waiting', 'Not Showed', 'Admitted', 'Now Serving'] as const;
 
-export const MOCK_DOCTORS: string[] = [
+export const MOCK_DOCTORS = [
   'Dr. Sachin',
   'Dr. Atul',
   'Dr. Parikshit',
-];
+] as const;
 
-export const TIME_SLOTS: string[] = [
+export const TIME_SLOTS = [
   "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
   "12:00", "12:30", "14:00", "14:30", "15:00", "15:30",
   "16:00", "16:30", "17:00",
-];
+] as const;
 
-export const YES_NO_UNKNOWN_OPTIONS: Array<'Yes' | 'No' | 'Unknown'> = ['Yes', 'No', 'Unknown'];
+export const YES_NO_UNKNOWN_OPTIONS = ['Yes', 'No', 'Unknown'] as const;
 
 
-export const VACCINATION_NAMES: string[] = [
+export const VACCINATION_NAMES = [
   'Hepatitis B', 'Pneumococcal', 'Influenza', 'Covid', 'Varicella'
-];
+] as const;
 
-export const VISIT_TYPES: string[] = [
+export const VISIT_TYPES = [
   "Routine", "Emergency", "Proxy", "Missed", "Admission"
-];
+] as const;
 
-export const PATIENT_GROUP_NAMES: string[] = [
+export const PATIENT_GROUP_NAMES = [
   "Peritoneal Dialysis", "Chronic Kidney disease", "Hemodialysis",
   "Glomerulonephritis", "Kidney transplant", "ADPKD", "Misc", "Infection"
-];
+] as const;
 
-export const RESIDENCE_TYPES: Array<'Rural' | 'Urban' | 'Semi-Urban' | 'Other' | 'Not Set'> = ['Rural', 'Urban', 'Semi-Urban', 'Other', 'Not Set'];
+export const RESIDENCE_TYPES = ['Rural', 'Urban', 'Semi-Urban', 'Other', 'Not Set'] as const;
 
 export const MOCK_DIAGNOSES: DiagnosisEntry[] = [
     { id: 'I10', name: 'Hypertension', icdName: 'Essential (primary) hypertension', icdCode: 'I10', clinicalNames: ['Hypertension', 'High Blood Pressure'] },

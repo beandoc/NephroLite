@@ -17,27 +17,9 @@ import { PlusCircle, Edit, Trash2, Beaker, PackagePlus, FileBox } from 'lucide-r
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { InvestigationMaster, InvestigationPanel } from '@/lib/types';
+import { investigationSchema, panelSchema, type InvestigationFormData, type PanelFormData } from '@/lib/schemas';
 import { INVESTIGATION_GROUPS } from '@/lib/constants';
 import { usePatientData } from '@/hooks/use-patient-data';
-
-const investigationSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1, 'Test name is required.'),
-  group: z.enum(INVESTIGATION_GROUPS, { required_error: 'Group is required.' }),
-  unit: z.string().optional(),
-  normalRange: z.string().optional(),
-});
-
-type InvestigationFormData = z.infer<typeof investigationSchema>;
-
-const panelSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1, 'Panel name is required.'),
-  group: z.enum(INVESTIGATION_GROUPS, { required_error: 'Group is required.' }),
-  testIds: z.array(z.object({ id: z.string() })).min(1, 'At least one test must be selected.'),
-});
-
-type PanelFormData = z.infer<typeof panelSchema>;
 
 
 export function InvestigationDatabase() {
@@ -68,7 +50,7 @@ export function InvestigationDatabase() {
     }
   });
   
-  const { fields: panelTestFields, append: appendTest, remove: removeTest } = useFieldArray({
+  const { append: appendTest, remove: removeTest } = useFieldArray({
     control: panelForm.control,
     name: "testIds"
   });
@@ -261,40 +243,31 @@ export function InvestigationDatabase() {
               <FormField
                 control={panelForm.control}
                 name="testIds"
-                render={() => (
+                render={({ field: { value, onChange } }) => (
                   <FormItem>
                     <FormLabel>Select Tests</FormLabel>
                      <ScrollArea className="h-64 w-full rounded-md border p-4">
-                        {investigationMasterList.map((item) => (
-                          <FormField
-                            key={item.id}
-                            control={panelForm.control}
-                            name="testIds"
-                            render={({ field }) => (
-                              <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
-                                <FormControl>
+                        {investigationMasterList.map((item) => {
+                            const isChecked = value?.some(v => v.id === item.id);
+                            return (
+                                <div key={item.id} className="flex flex-row items-start space-x-3 space-y-0 mb-2">
                                   <Checkbox
-                                    checked={field.value?.some(v => v.id === item.id)}
+                                    checked={isChecked}
                                     onCheckedChange={(checked) => {
-                                      const currentIds = field.value?.map(v => v.id) || [];
+                                      const currentIds = value?.map(v => v.id) || [];
                                       if (checked) {
                                         if (!currentIds.includes(item.id)) {
-                                          appendTest({ id: item.id });
+                                          onChange([...(value || []), {id: item.id}]);
                                         }
                                       } else {
-                                        const indexToRemove = field.value?.findIndex(v => v.id === item.id);
-                                        if (indexToRemove !== -1 && indexToRemove !== undefined) {
-                                          removeTest(indexToRemove);
-                                        }
+                                        onChange((value || []).filter(v => v.id !== item.id));
                                       }
                                     }}
                                   />
-                                </FormControl>
-                                <FormLabel className="font-normal">{item.name}</FormLabel>
-                              </FormItem>
-                            )}
-                          />
-                        ))}
+                                <label className="font-normal">{item.name}</label>
+                              </div>
+                            )
+                        })}
                       </ScrollArea>
                     <FormMessage />
                   </FormItem>

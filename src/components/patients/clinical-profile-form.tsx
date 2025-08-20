@@ -3,9 +3,8 @@
 
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import type { ClinicalProfile, Vaccination } from "@/lib/types";
-import { clinicalProfileSchema } from "@/lib/types";
+import type { ClinicalProfile } from "@/lib/types";
+import { clinicalProfileSchema } from "@/lib/schemas";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
