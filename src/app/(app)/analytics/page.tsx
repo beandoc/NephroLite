@@ -144,7 +144,7 @@ export default function AnalyticsPage() {
   const filteredByTagsPatients = useMemo(() => {
     if (patientsLoading || !clientReady || selectedFilterTags.length === 0) return patients; // Show all if no tags selected for filtering
     return patients.filter(patient => {
-      const patientTags = patient.clinicalProfile.tags || [];
+      const patientTags = patient.clinicalProfile?.tags || [];
       return selectedFilterTags.every(filterTag => patientTags.includes(filterTag));
     });
   }, [patients, patientsLoading, selectedFilterTags, clientReady]);
@@ -304,7 +304,7 @@ export default function AnalyticsPage() {
                                     <TableCell>{p.nephroId}</TableCell>
                                     <TableCell>
                                         <div className="flex flex-wrap gap-1">
-                                            {(p.clinicalProfile.tags || []).map(tag => <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>)}
+                                            {(p.clinicalProfile?.tags || []).map(tag => <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>)}
                                         </div>
                                     </TableCell>
                                 </TableRow>
