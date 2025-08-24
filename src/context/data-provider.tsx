@@ -7,6 +7,7 @@ import { format, parseISO } from 'date-fns';
 import { VACCINATION_NAMES, MOCK_USER } from '@/lib/constants';
 import { MOCK_PATIENTS, MOCK_APPOINTMENTS } from '@/lib/mock-data';
 import { INVESTIGATION_MASTER_LIST, INVESTIGATION_PANELS } from '@/lib/constants';
+import { getDefaultVaccinations } from '@/lib/data-helpers';
 
 // Define the shape of the context data
 export interface DataContextType {
@@ -44,7 +45,7 @@ export interface DataContextType {
 export const DataContext = createContext<DataContextType | undefined>(undefined);
 
 // Helper function to safely get data from localStorage
-const getFromLocalStorage = <T>(key: string, fallback: T): T => {
+const getFromLocalStorage = <T,>(key: string, fallback: T): T => {
     if (typeof window === 'undefined') {
         return fallback;
     }
@@ -59,28 +60,6 @@ const getFromLocalStorage = <T>(key: string, fallback: T): T => {
 
 
 // Helper functions for patient data management
-const getDefaultVaccinations = (): Vaccination[] => {
-  const vaccineSchedules: Record<typeof VACCINATION_NAMES[number], number> = {
-    'Hepatitis B': 4,
-    'Pneumococcal': 2,
-    'Influenza': 1,
-    'Covid': 2,
-    'Varicella': 2,
-  };
-
-  return VACCINATION_NAMES.map(name => ({
-    name: name,
-    totalDoses: vaccineSchedules[name] || 1,
-    nextDoseDate: null,
-    doses: Array.from({ length: vaccineSchedules[name] || 1 }, (_, i): Dose => ({
-      id: `${name.replace(/\s/g, '')}-${i + 1}`,
-      doseNumber: i + 1,
-      administered: false,
-      date: null,
-    }))
-  }));
-};
-
 const getInitialClinicalProfile = (): Omit<ClinicalProfile, 'tags'> => ({
   primaryDiagnosis: "Not Set",
   nutritionalStatus: "Not Set",
@@ -213,7 +192,17 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const updateClinicalProfile = useCallback((patientId: string, clinicalProfileData: ClinicalProfile): void => {
-    setPatients(prev => prev.map(p => p.id === patientId ? { ...p, clinicalProfile: clinicalProfileData } : p));
+    setPatients(prev => prev.map(p => {
+        if (p.id !== patientId) return p;
+        // Ensure that vaccinations are initialized if they don't exist.
+        const profileWithVaccinations = {
+            ...clinicalProfileData,
+            vaccinations: clinicalProfileData.vaccinations && clinicalProfileData.vaccinations.length > 0
+                ? clinicalProfileData.vaccinations
+                : getDefaultVaccinations(),
+        };
+        return { ...p, clinicalProfile: profileWithVaccinations };
+    }));
   }, []);
 
   const addVisitToPatient = useCallback((patientId: string, visitData: VisitFormData): void => {

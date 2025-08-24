@@ -5,12 +5,13 @@ import type { Patient, Vaccination } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Stethoscope, ShieldQuestion, Leaf, Accessibility, Cigarette, Wine, ShieldAlert, PencilLine, TagsIcon, Syringe, HeartPulse, CheckCircle, XCircle, HelpingHand, CalendarClock, AlertCircle } from 'lucide-react';
+import { Stethoscope, ShieldQuestion, Leaf, Accessibility, Cigarette, Wine, ShieldAlert, PencilLine, TagsIcon, Syringe, HeartPulse, CheckCircle, XCircle, HelpingHand, CalendarClock, AlertCircle, PlusCircle } from 'lucide-react';
 import { format, parseISO, isPast } from 'date-fns';
 import { usePatientData } from '@/hooks/use-patient-data';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { getDefaultVaccinations } from '@/lib/data-helpers';
 
 interface ClinicalProfileCardProps {
   patient: Patient;
@@ -37,7 +38,8 @@ const POMRDisplay = ({ pomrText }: { pomrText?: string }) => {
 };
 
 const getVaccineStatus = (vaccine: Vaccination) => {
-    const administeredDoses = (vaccine.doses || []).filter(d => d.administered).length;
+    if (!vaccine.doses) return { text: 'Unknown', color: 'bg-muted-foreground', icon: AlertCircle };
+    const administeredDoses = vaccine.doses.filter(d => d.administered).length;
     if(administeredDoses === vaccine.totalDoses) {
         return { text: 'Completed', color: 'bg-green-600', icon: CheckCircle };
     }
@@ -65,6 +67,19 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
     toast({
         title: "Risk Factor Updated",
         description: `Patient's ${factor.replace(/([A-Z])/g, ' $1').toLowerCase()} status has been updated.`,
+    });
+  };
+  
+  const handleInitializeVaccinations = () => {
+    const defaultVaccinations = getDefaultVaccinations();
+    const updatedProfile = {
+        ...clinicalProfile,
+        vaccinations: defaultVaccinations,
+    };
+    updateClinicalProfile(patient.id, updatedProfile);
+    toast({
+        title: "Vaccination Schedule Initialized",
+        description: "You can now edit the patient's vaccination records.",
     });
   };
 
@@ -161,7 +176,12 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
               )
             })
           ) : (
-            <p className="text-muted-foreground text-center py-4 md:col-span-2">No vaccination data recorded.</p>
+            <div className="text-muted-foreground text-center py-4 md:col-span-2">
+                <p>No vaccination data recorded for this patient.</p>
+                <Button variant="link" onClick={handleInitializeVaccinations} className="mt-2">
+                    <PlusCircle className="mr-2 h-4 w-4"/>Initialize Vaccination Schedule
+                </Button>
+            </div>
           )}
         </CardContent>
       </Card>

@@ -16,6 +16,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS } from "@/lib/constants";
 import { Save, Syringe, HeartPulse } from "lucide-react";
 import { format, parseISO, addMonths } from 'date-fns';
+import { getDefaultVaccinations } from "@/lib/data-helpers";
+import { useEffect } from "react";
 
 interface ClinicalProfileFormProps {
   onSubmit: (data: ClinicalProfile) => void;
@@ -36,11 +38,19 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
     },
   });
 
-  const { fields, update } = useFieldArray({
+  const { fields, update, replace } = useFieldArray({
     control: form.control,
     name: "vaccinations",
   });
   
+  // This effect ensures that if a patient record has no vaccination data,
+  // the form is populated with the default schedule upon opening the edit page.
+  useEffect(() => {
+    if (!existingProfileData.vaccinations || existingProfileData.vaccinations.length === 0) {
+      replace(getDefaultVaccinations());
+    }
+  }, [existingProfileData.vaccinations, replace]);
+
   const handleAdministeredDateChange = (vaccineIndex: number, doseIndex: number, dateStr: string | null) => {
     const vaccine = fields[vaccineIndex];
     const newDoses = [...(vaccine.doses || [])];
