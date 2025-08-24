@@ -29,10 +29,10 @@ export function OrderInvestigationsDialog({ isOpen, onOpenChange, selectedTestId
   const filteredPatients = useMemo(() => {
     if (isLoading) return [];
     const lowercasedQuery = searchQuery.toLowerCase();
-    return patients.filter(p =>
-      p.name.toLowerCase().includes(lowercasedQuery) ||
-      p.nephroId.toLowerCase().includes(lowercasedQuery)
-    );
+    return patients.filter(p => {
+        const fullName = [p.firstName, p.lastName].filter(Boolean).join(' ').toLowerCase();
+        return fullName.includes(lowercasedQuery) || p.nephroId.toLowerCase().includes(lowercasedQuery);
+    });
   }, [searchQuery, patients, isLoading]);
 
   const handleConfirm = () => {
@@ -45,6 +45,10 @@ export function OrderInvestigationsDialog({ isOpen, onOpenChange, selectedTestId
     router.push(`/patients/${selectedPatientId}?tab=investigations&date=${dateString}&tests=${testIdsQuery}`);
     onOpenChange(false);
   };
+  
+  const getPatientName = (patient: Patient) => {
+    return [patient.firstName, patient.lastName].filter(Boolean).join(' ');
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -73,7 +77,7 @@ export function OrderInvestigationsDialog({ isOpen, onOpenChange, selectedTestId
                                             onClick={() => setSelectedPatientId(p.id)}
                                         >
                                             <div>
-                                                <p className="font-semibold">{p.name}</p>
+                                                <p className="font-semibold">{getPatientName(p)}</p>
                                                 <p className="text-xs text-muted-foreground">{p.nephroId}</p>
                                             </div>
                                         </Button>
