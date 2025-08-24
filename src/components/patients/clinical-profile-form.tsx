@@ -12,10 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
 import { PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS } from "@/lib/constants";
 import { Save, Syringe, HeartPulse } from "lucide-react";
-import { format, parseISO, addMonths } from 'date-fns';
 import { getDefaultVaccinations } from "@/lib/data-helpers";
 import { useEffect } from "react";
 
@@ -34,7 +32,9 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
       hasDiabetes: existingProfileData.hasDiabetes ?? false,
       onAntiHypertensiveMedication: existingProfileData.onAntiHypertensiveMedication ?? false,
       onLipidLoweringMedication: existingProfileData.onLipidLoweringMedication ?? false,
-      vaccinations: existingProfileData.vaccinations || [],
+      vaccinations: (existingProfileData.vaccinations && existingProfileData.vaccinations.length > 0)
+        ? existingProfileData.vaccinations
+        : getDefaultVaccinations(),
     },
   });
 
@@ -51,9 +51,12 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
     }
   }, [existingProfileData.vaccinations, replace]);
 
+
   const handleAdministeredDateChange = (vaccineIndex: number, doseIndex: number, dateStr: string | null) => {
     const vaccine = fields[vaccineIndex];
-    const newDoses = [...(vaccine.doses || [])];
+    if (!vaccine || !vaccine.doses) return;
+
+    const newDoses = [...vaccine.doses];
     newDoses[doseIndex] = { ...newDoses[doseIndex], date: dateStr, administered: !!dateStr };
     
     update(vaccineIndex, {
@@ -61,6 +64,7 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
       doses: newDoses,
     });
   };
+
 
   return (
     <Form {...form}>
