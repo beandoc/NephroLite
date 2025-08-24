@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
-import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord, Appointment, InvestigationMaster, InvestigationPanel } from '@/lib/types';
+import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord, Appointment, InvestigationMaster, InvestigationPanel, Vaccination } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { VACCINATION_NAMES, MOCK_USER } from '@/lib/constants';
 import { MOCK_PATIENTS, MOCK_APPOINTMENTS } from '@/lib/mock-data';
@@ -44,12 +44,25 @@ export interface DataContextType {
 export const DataContext = createContext<DataContextType | undefined>(undefined);
 
 // Helper functions for patient data management
-const getDefaultVaccinations = () => {
+const getDefaultVaccinations = (): Vaccination[] => {
+  const vaccineSchedules: Record<string, number> = {
+    'Hepatitis B': 4,
+    'Pneumococcal': 2,
+    'Influenza': 1,
+    'Covid': 2,
+    'Varicella': 2,
+  };
+
   return VACCINATION_NAMES.map(name => ({
     name: name,
-    administered: false,
-    date: null,
-    nextDoseDate: null
+    totalDoses: vaccineSchedules[name] || 1,
+    nextDoseDate: null,
+    doses: Array.from({ length: vaccineSchedules[name] || 1 }, (_, i) => ({
+      id: `${name.replace(/\s/g, '')}-${i + 1}`,
+      doseNumber: i + 1,
+      administered: false,
+      date: null,
+    }))
   }));
 };
 

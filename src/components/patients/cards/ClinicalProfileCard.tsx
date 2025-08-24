@@ -1,11 +1,11 @@
 
 "use client";
 
-import type { Patient } from '@/lib/types';
+import type { Patient, Vaccination } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Stethoscope, ShieldQuestion, Leaf, Accessibility, Cigarette, Wine, ShieldAlert, PencilLine, TagsIcon, Syringe, HeartPulse, CheckCircle, XCircle, HelpingHand } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { Stethoscope, ShieldQuestion, Leaf, Accessibility, Cigarette, Wine, ShieldAlert, PencilLine, TagsIcon, Syringe, HeartPulse, CheckCircle, XCircle, HelpingHand, CalendarClock, AlertCircle } from 'lucide-react';
+import { format, parseISO, isPast } from 'date-fns';
 
 interface ClinicalProfileCardProps {
   patient: Patient;
@@ -30,6 +30,21 @@ const POMRDisplay = ({ pomrText }: { pomrText?: string }) => {
 
   return <div className="text-base prose prose-sm max-w-none">{paragraphs}</div>;
 };
+
+const getVaccineStatus = (vaccine: Vaccination) => {
+    const administeredDoses = vaccine.doses.filter(d => d.administered).length;
+    if(administeredDoses === vaccine.totalDoses) {
+        return { text: 'Completed', color: 'bg-green-600', icon: CheckCircle };
+    }
+    if (vaccine.nextDoseDate && isPast(parseISO(vaccine.nextDoseDate))) {
+         return { text: 'Overdue', color: 'bg-destructive', icon: AlertCircle };
+    }
+    if (administeredDoses > 0) {
+        return { text: 'In Progress', color: 'bg-amber-500', icon: CalendarClock };
+    }
+    return { text: 'Pending', color: 'bg-muted-foreground', icon: CalendarClock };
+}
+
 
 export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
   const { clinicalProfile } = patient;
@@ -89,31 +104,35 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
         <CardHeader className="bg-muted/30">
           <CardTitle className="font-headline text-xl flex items-center"><Syringe className="w-6 h-6 mr-3 text-primary"/>Vaccination Status</CardTitle>
         </CardHeader>
-        <CardContent className="pt-6 space-y-3">
+        <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           {(clinicalProfile.vaccinations && clinicalProfile.vaccinations.length > 0) ? (
-            clinicalProfile.vaccinations.map((vaccination, index) => (
-              <div key={vaccination.name} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border-b last:border-b-0 rounded-md bg-muted/20">
-                <span className="font-medium mb-1 sm:mb-0">{vaccination.name}</span>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
-                  {vaccination.administered && vaccination.date ? (
-                    <>
-                      <Badge variant="default" className="bg-green-600 hover:bg-green-700 whitespace-nowrap">
-                        Administered on {format(parseISO(vaccination.date), 'PPP')}
-                      </Badge>
-                      {vaccination.nextDoseDate && (
-                        <Badge variant="outline" className="whitespace-nowrap">
-                          Next Dose: {format(parseISO(vaccination.nextDoseDate), 'PPP')}
+            clinicalProfile.vaccinations.map((vaccine, index) => {
+              const administeredDoses = vaccine.doses.filter(d => d.administered).length;
+              const status = getVaccineStatus(vaccine);
+              return (
+                <div key={vaccine.name} className="p-4 border rounded-lg space-y-2 bg-muted/20">
+                    <div className="flex justify-between items-start">
+                        <h4 className="font-semibold">{vaccine.name}</h4>
+                        <Badge variant="secondary" className={`${status.color} text-primary-foreground`}>
+                            <status.icon className="w-3 h-3 mr-1.5"/>{status.text}
                         </Badge>
-                      )}
-                    </>
-                  ) : (
-                    <Badge variant="destructive" className="whitespace-nowrap">Not Administered</Badge>
-                  )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                        {administeredDoses} of {vaccine.totalDoses} dose(s) administered.
+                    </p>
+                    <ul className="text-xs list-disc pl-5 space-y-1">
+                        {vaccine.doses.map(dose => (
+                            <li key={dose.doseNumber}>
+                                Dose {dose.doseNumber}: {dose.administered && dose.date ? `Given on ${format(parseISO(dose.date), 'PPP')}` : 'Pending'}
+                            </li>
+                        ))}
+                    </ul>
+                    {vaccine.nextDoseDate && <p className="text-xs text-primary font-medium mt-1">Next Dose Due: {format(parseISO(vaccine.nextDoseDate), 'PPP')}</p>}
                 </div>
-              </div>
-            ))
+              )
+            })
           ) : (
-            <p className="text-muted-foreground text-center py-4">No vaccination data recorded.</p>
+            <p className="text-muted-foreground text-center py-4 md:col-span-2">No vaccination data recorded.</p>
           )}
         </CardContent>
       </Card>

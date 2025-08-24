@@ -32,6 +32,7 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
       hasDiabetes: existingProfileData.hasDiabetes ?? false,
       onAntiHypertensiveMedication: existingProfileData.onAntiHypertensiveMedication ?? false,
       onLipidLoweringMedication: existingProfileData.onLipidLoweringMedication ?? false,
+      vaccinations: existingProfileData.vaccinations || [],
     },
   });
 
@@ -40,27 +41,16 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
     name: "vaccinations",
   });
   
-  const handleVaccinationDateChange = (index: number, dateStr: string | null) => {
-    const vaccine = fields[index];
+  const handleAdministeredDateChange = (vaccineIndex: number, doseIndex: number, dateStr: string | null) => {
+    const vaccine = fields[vaccineIndex];
+    const newDoses = [...vaccine.doses];
+    newDoses[doseIndex] = { ...newDoses[doseIndex], date: dateStr, administered: !!dateStr };
     
-    // Automatically check the box if a date is entered
-    const isNowAdministered = !!dateStr;
-
-    update(index, {
-        ...vaccine,
-        date: dateStr,
-        administered: isNowAdministered,
+    update(vaccineIndex, {
+      ...vaccine,
+      doses: newDoses,
     });
   };
-
-  const handleNextDoseDateChange = (index: number, dateStr: string | null) => {
-    const vaccine = fields[index];
-     update(index, {
-        ...vaccine,
-        nextDoseDate: dateStr,
-    });
-  }
-
 
   return (
     <Form {...form}>
@@ -98,67 +88,56 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
             <Card>
                 <CardHeader>
                     <CardTitle className="font-headline flex items-center"><Syringe className="w-5 h-5 mr-2 text-primary"/>Vaccination Status</CardTitle>
-                    <CardDescription>Mark vaccines as administered and set the date. Next dose can be set manually.</CardDescription>
+                    <CardDescription>Manage vaccination records and upcoming doses.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                     {fields.map((vaccine, index) => (
-                        <div key={vaccine.id} className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] items-end gap-4 p-3 border rounded-md">
-                           <FormField
-                                control={form.control}
-                                name={`vaccinations.${index}.administered`}
-                                render={({ field }) => (
-                                    <FormItem className="flex items-center space-x-3 space-y-0 pt-8">
-                                        <FormControl>
-                                            <Checkbox
-                                                checked={field.value}
-                                                onCheckedChange={(checked) => {
-                                                    field.onChange(checked);
-                                                    if (!checked) {
-                                                       // Clear the date if unchecked
-                                                       handleVaccinationDateChange(index, null);
-                                                    }
-                                                }}
-                                            />
-                                        </FormControl>
-                                        <FormLabel className="font-medium">{vaccine.name}</FormLabel>
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name={`vaccinations.${index}.date`}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Administered Date</FormLabel>
-                                        <FormControl>
-                                            <Input 
-                                                type="date" 
-                                                value={field.value || ""}
-                                                onChange={(e) => handleVaccinationDateChange(index, e.target.value || null)}
-                                                className="w-full md:w-40"
-                                            />
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                            />
+                <CardContent className="space-y-4">
+                     {fields.map((vaccine, vaccineIndex) => (
+                        <Card key={vaccine.id} className="p-4 bg-muted/30">
+                          <div className="flex justify-between items-center mb-4">
+                            <h4 className="font-semibold">{vaccine.name}</h4>
                              <FormField
                                 control={form.control}
-                                name={`vaccinations.${index}.nextDoseDate`}
+                                name={`vaccinations.${vaccineIndex}.nextDoseDate`}
                                 render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Next Dose Date</FormLabel>
+                                    <FormItem className="flex items-center gap-2">
+                                        <FormLabel className="text-sm whitespace-nowrap">Next Dose Due:</FormLabel>
                                         <FormControl>
                                             <Input 
-                                                type="date" 
+                                                type="date"
+                                                className="w-auto"
                                                 value={field.value || ""}
-                                                onChange={(e) => handleNextDoseDateChange(index, e.target.value || null)}
-                                                className="w-full md:w-40"
+                                                onChange={(e) => field.onChange(e.target.value || null)}
                                             />
                                         </FormControl>
                                     </FormItem>
                                 )}
                             />
-                        </div>
+                          </div>
+                          <div className="space-y-3">
+                            {vaccine.doses.map((dose, doseIndex) => (
+                               <div key={dose.id} className="grid grid-cols-[1fr_auto] items-end gap-4 p-2 border-t">
+                                    <p className="font-medium text-sm pt-4">Dose {dose.doseNumber}</p>
+                                    <FormField
+                                        control={form.control}
+                                        name={`vaccinations.${vaccineIndex}.doses.${doseIndex}.date`}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Administered Date</FormLabel>
+                                                <FormControl>
+                                                    <Input 
+                                                        type="date" 
+                                                        value={field.value || ""}
+                                                        onChange={(e) => handleAdministeredDateChange(vaccineIndex, doseIndex, e.target.value || null)}
+                                                        className="w-full md:w-40"
+                                                    />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            ))}
+                          </div>
+                        </Card>
                      ))}
                 </CardContent>
             </Card>

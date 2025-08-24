@@ -13,7 +13,8 @@ import {
   diagnosisEntrySchema,
   investigationSchema,
   panelSchema,
-  diagnosisSchema
+  diagnosisSchema,
+  vaccinationSchema,
 } from './schemas';
 
 // Address and Guardian types are simple and don't need Zod schemas unless they have complex validation.
@@ -35,7 +36,8 @@ export type Guardian = {
 export type Patient = z.infer<typeof patientSchema>;
 export type PatientFormData = z.infer<typeof patientFormDataSchema>;
 export type ClinicalProfile = z.infer<typeof clinicalProfileSchema>;
-export type Vaccination = z.infer<typeof clinicalProfileSchema.shape.vaccinations.element>;
+export type Vaccination = z.infer<typeof vaccinationSchema>;
+export type Dose = z.infer<typeof vaccinationSchema.shape.doses.element>;
 export type InvestigationMaster = z.infer<typeof investigationMasterSchema>;
 export type InvestigationPanel = z.infer<typeof investigationPanelSchema>;
 export type VisitFormData = z.infer<typeof visitFormDataSchema>;
