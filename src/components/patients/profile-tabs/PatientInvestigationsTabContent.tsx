@@ -173,6 +173,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
   }, [recordToDelete, patientId, deleteInvestigationRecord, toast]);
   
   const addTestsFromMaster = useCallback((testIds: string[], date: string) => {
+    if (isFormDialogOpen) return;
     const testsToLog = INVESTIGATION_MASTER_LIST.filter(t => testIds.includes(t.id));
       
     form.reset({
@@ -190,20 +191,21 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     });
     setAddTestSearchQuery('');
     setIsFormDialogOpen(true);
-  }, [form]);
+  }, [form, isFormDialogOpen]);
 
   useEffect(() => {
     const dateParam = searchParams.get('date');
     const testsParam = searchParams.get('tests');
+    const tabParam = searchParams.get('tab');
     
-    if (dateParam && testsParam) {
+    if (tabParam === 'investigations' && dateParam && testsParam && !isFormDialogOpen) {
       const testIds = testsParam.split(',');
       addTestsFromMaster(testIds, dateParam);
       // Clean up URL params after use
       const currentPath = window.location.pathname;
-      router.replace(currentPath, { scroll: false });
+      router.replace(`${currentPath}?tab=investigations`, { scroll: false });
     }
-  }, [searchParams, addTestsFromMaster, router]);
+  }, [searchParams, addTestsFromMaster, router, isFormDialogOpen]);
   
   const handleFrequentInvestigationToggle = useCallback((item: { type: 'test' | 'panel'; id: string }) => {
     let testIdsToToggle: string[] = [];
