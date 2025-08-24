@@ -47,7 +47,6 @@ const navItems: NavItem[] = [
   { href: "/appointments", label: "Appointments", icon: CalendarDays, matchStartsWith: true },
   { href: "/investigations", label: "Browse Investigations", icon: Beaker, matchStartsWith: true },
   { href: "/lab-results", label: "Lab Results", icon: FlaskConical, matchStartsWith: true },
-  { href: "/search", label: "Advanced Search", icon: SearchCheck },
   { href: "/clinical-tools", label: "Clinical Tools", icon: Stethoscope },
   { href: "/communication", label: "Communication", icon: MessageCircle },
   { href: "/documents", label: "Documents", icon: FileText, disabled: true },
