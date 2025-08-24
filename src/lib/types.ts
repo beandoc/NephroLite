@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 import { 
   patientSchema,
@@ -10,7 +11,7 @@ import {
   diagnosisTemplateSchema,
   appointmentSchema,
   visitSchema,
-  diagnosisEntrySchema,
+  masterDiagnosisSchema,
   investigationSchema,
   panelSchema,
   diagnosisSchema,
@@ -45,7 +46,7 @@ export type VisitFormData = z.infer<typeof visitFormDataSchema>;
 export type DiagnosisTemplate = z.infer<typeof diagnosisTemplateSchema>;
 export type Appointment = z.infer<typeof appointmentSchema>;
 export type Visit = z.infer<typeof visitSchema>;
-export type DiagnosisEntry = z.infer<typeof diagnosisEntrySchema>;
+export type MasterDiagnosis = z.infer<typeof masterDiagnosisSchema>;
 export type InvestigationFormData = z.infer<typeof investigationSchema>;
 export type PanelFormData = z.infer<typeof panelSchema>;
 

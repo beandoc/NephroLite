@@ -1,5 +1,6 @@
 
-import type { DiagnosisEntry, InvestigationMaster, InvestigationPanel } from './types';
+
+import type { MasterDiagnosis, InvestigationMaster, InvestigationPanel } from './types';
 
 export const MOCK_USER = {
   name: "Dr. Sachin", 
@@ -122,72 +123,41 @@ export const PATIENT_GROUP_NAMES = [
 
 export const RESIDENCE_TYPES = ['Rural', 'Urban', 'Semi-Urban', 'Other', 'Not Set'] as const;
 
-export const MOCK_DIAGNOSES: DiagnosisEntry[] = [
-    { id: 'I10', name: 'Hypertension', icdName: 'Essential (primary) hypertension', icdCode: 'I10', clinicalNames: ['Hypertension', 'High Blood Pressure'] },
-    { id: 'E11.9', name: 'Type 2 Diabetes Mellitus', icdName: 'Type 2 diabetes mellitus without complications', icdCode: 'E11.9', clinicalNames: ['Type 2 Diabetes Mellitus', 'T2DM'] },
-    { id: 'N18.3', name: 'Chronic Kidney Disease, Stage 3', icdName: 'Chronic kidney disease, stage 3 (moderate)', icdCode: 'N18.3', clinicalNames: ['Chronic Kidney Disease, Stage 3', 'CKD Stage 3'] },
-    { id: 'N02.8', name: 'IgA Nephropathy', icdName: 'IgA nephropathy', icdCode: 'N02.8', clinicalNames: ['IgA Nephropathy', 'Berger\'s Disease'] },
-    { id: 'N00', name: 'Acute nephritic syndrome', icdName: 'Acute nephritic syndrome', icdCode: 'N00', clinicalNames: ['Acute nephritic syndrome'] },
-    { id: 'N00.0', name: 'Acute nephritic syndrome, minor glomerular abnormality', icdName: 'Acute nephritic syndrome, minor glomerular abnormality', icdCode: 'N00.0', clinicalNames: ['Acute nephritic syndrome, minor glomerular abnormality'] },
-    { id: 'N00.1', name: 'Acute nephritic syndrome, focal and segmental glomerular lesions', icdName: 'Acute nephritic syndrome, focal and segmental glomerular lesions', icdCode: 'N00.1', clinicalNames: ['Acute nephritic syndrome, focal and segmental glomerular lesions'] },
-    { id: 'N00.2', name: 'Acute nephritic syndrome, diffuse membranous glomerulonephritis', icdName: 'Acute nephritic syndrome, diffuse membranous glomerulonephritis', icdCode: 'N00.2', clinicalNames: ['Acute nephritic syndrome, diffuse membranous glomerulonephritis'] },
-    { id: 'N00.3', name: 'Acute nephritic syndrome, diffuse mesangial proliferative glomerulonephritis', icdName: 'Acute nephritic syndrome, diffuse mesangial proliferative glomerulonephritis', icdCode: 'N00.3', clinicalNames: ['Acute nephritic syndrome, diffuse mesangial proliferative glomerulonephritis'] },
-    { id: 'N00.4', name: 'Acute nephritic syndrome, diffuse endocapillary proliferative glomerulonephritis', icdName: 'Acute nephritic syndrome, diffuse endocapillary proliferative glomerulonephritis', icdCode: 'N00.4', clinicalNames: ['Acute nephritic syndrome, diffuse endocapillary proliferative glomerulonephritis'] },
-    { id: 'N00.5', name: 'Acute nephritic syndrome, diffuse mesangiocapillary glomerulonephritis', icdName: 'Acute nephritic syndrome, diffuse mesangiocapillary glomerulonephritis', icdCode: 'N00.5', clinicalNames: ['Acute nephritic syndrome, diffuse mesangiocapillary glomerulonephritis'] },
-    { id: 'N00.6', name: 'Acute nephritic syndrome, dense deposit disease', icdName: 'Acute nephritic syndrome, dense deposit disease', icdCode: 'N00.6', clinicalNames: ['Acute nephritic syndrome, dense deposit disease'] },
-    { id: 'N00.7', name: 'Acute nephritic syndrome, diffuse crescentic glomerulonephritis', icdName: 'Acute nephritic syndrome, diffuse crescentic glomerulonephritis', icdCode: 'N00.7', clinicalNames: ['Acute nephritic syndrome, diffuse crescentic glomerulonephritis'] },
-    { id: 'N00.8', name: 'Acute nephritic syndrome, other', icdName: 'Acute nephritic syndrome, other', icdCode: 'N00.8', clinicalNames: ['Acute nephritic syndrome, other'] },
-    { id: 'N00.9', name: 'Acute nephritic syndrome, unspecified', icdName: 'Acute nephritic syndrome, unspecified', icdCode: 'N00.9', clinicalNames: ['Acute nephritic syndrome, unspecified'] },
-    { id: 'N01', name: 'Rapidly progressive nephritic syndrome', icdName: 'Rapidly progressive nephritic syndrome', icdCode: 'N01', clinicalNames: ['Rapidly progressive nephritic syndrome'] },
-    { id: 'N01.0', name: 'Rapidly progressive nephritic syndrome, minor glomerular abnormality', icdName: 'Rapidly progressive nephritic syndrome, minor glomerular abnormality', icdCode: 'N01.0', clinicalNames: ['Rapidly progressive nephritic syndrome, minor glomerular abnormality'] },
-    { id: 'N01.1', name: 'Rapidly progressive nephritic syndrome, focal and segmental glomerular lesions', icdName: 'Rapidly progressive nephritic syndrome, focal and segmental glomerular lesions', icdCode: 'N01.1', clinicalNames: ['Rapidly progressive nephritic syndrome, focal and segmental glomerular lesions'] },
-    { id: 'N01.2', name: 'Rapidly progressive nephritic syndrome, diffuse membranous glomerulonephritis', icdName: 'Rapidly progressive nephritic syndrome, diffuse membranous glomerulonephritis', icdCode: 'N01.2', clinicalNames: ['Rapidly progressive nephritic syndrome, diffuse membranous glomerulonephritis'] },
-    { id: 'N01.3', name: 'Rapidly progressive nephritic syndrome, diffuse mesangial proliferative glomerulonephritis', icdName: 'Rapidly progressive nephritic syndrome, diffuse mesangial proliferative glomerulonephritis', icdCode: 'N01.3', clinicalNames: ['Rapidly progressive nephritic syndrome, diffuse mesangial proliferative glomerulonephritis'] },
-    { id: 'N01.4', name: 'Rapidly progressive nephritic syndrome, diffuse endocapillary proliferative glomerulonephritis', icdName: 'Rapidly progressive nephritic syndrome, diffuse endocapillary proliferative glomerulonephritis', icdCode: 'N01.4', clinicalNames: ['Rapidly progressive nephritic syndrome, diffuse endocapillary proliferative glomerulonephritis'] },
-    { id: 'N01.5', name: 'Rapidly progressive nephritic syndrome, diffuse mesangiocapillary glomerulonephritis', icdName: 'Rapidly progressive nephritic syndrome, diffuse mesangiocapillary glomerulonephritis', icdCode: 'N01.5', clinicalNames: ['Rapidly progressive nephritic syndrome, diffuse mesangiocapillary glomerulonephritis'] },
-    { id: 'N01.6', name: 'Rapidly progressive nephritic syndrome, dense deposit disease', icdName: 'Rapidly progressive nephritic syndrome, dense deposit disease', icdCode: 'N01.6', clinicalNames: ['Rapidly progressive nephritic syndrome, dense deposit disease'] },
-    { id: 'N01.7', name: 'Rapidly progressive nephritic syndrome, diffuse crescentic glomerulonephritis', icdName: 'Rapidly progressive nephritic syndrome, diffuse crescentic glomerulonephritis', icdCode: 'N01.7', clinicalNames: ['Rapidly progressive nephritic syndrome, diffuse crescentic glomerulonephritis'] },
-    { id: 'N01.8', name: 'Rapidly progressive nephritic syndrome, other', icdName: 'Rapidly progressive nephritic syndrome, other', icdCode: 'N01.8', clinicalNames: ['Rapidly progressive nephritic syndrome, other'] },
-    { id: 'N01.9', name: 'Rapidly progressive nephritic syndrome, unspecified', icdName: 'Rapidly progressive nephritic syndrome, unspecified', icdCode: 'N01.9', clinicalNames: ['Rapidly progressive nephritic syndrome, unspecified'] },
-    { id: 'N02', name: 'Recurrent and persistent haematuria', icdName: 'Recurrent and persistent haematuria', icdCode: 'N02', clinicalNames: ['Recurrent and persistent haematuria'] },
-    { id: 'N18.1', name: 'CKD Stage 1', icdName: 'Chronic kidney disease, stage 1', icdCode: 'N18.1', clinicalNames: ['CKD Stage 1'] },
-    { id: 'N18.2', name: 'CKD Stage 2', icdName: 'Chronic kidney disease, stage 2 (mild)', icdCode: 'N18.2', clinicalNames: ['CKD Stage 2'] },
-    { id: 'N18.4', name: 'CKD Stage 4', icdName: 'Chronic kidney disease, stage 4 (severe)', icdCode: 'N18.4', clinicalNames: ['CKD Stage 4'] },
-    { id: 'N18.5', name: 'CKD Stage 5', icdName: 'Chronic kidney disease, stage 5', icdCode: 'N18.5', clinicalNames: ['CKD Stage 5'] },
-    { id: 'N18.6', name: 'End-stage renal disease', icdName: 'End-stage renal disease', icdCode: 'N18.6', clinicalNames: ['End-stage renal disease', 'ESRD'] },
-    { id: 'N32.9', name: 'Bladder disorder, unspecified', icdName: 'Bladder disorder, unspecified', icdCode: 'N32.9', clinicalNames: ['Bladder disorder, unspecified'] },
-    { id: 'N33', name: 'Bladder disorders in diseases classified elsewhere', icdName: 'Bladder disorders in diseases classified elsewhere', icdCode: 'N33', clinicalNames: ['Bladder disorders in diseases classified elsewhere'] },
-    { id: 'N33.0', name: 'Tuberculous cystitis', icdName: 'Tuberculous cystitis (A18.1+)', icdCode: 'N33.0', clinicalNames: ['Tuberculous cystitis'] },
-    { id: 'N33.8', name: 'Bladder disorders in other diseases classified elsewhere', icdName: 'Bladder disorders in other diseases classified elsewhere', icdCode: 'N33.8', clinicalNames: ['Bladder disorders in other diseases classified elsewhere'] },
-    { id: 'N34', name: 'Urethritis and urethral syndrome', icdName: 'Urethritis and urethral syndrome', icdCode: 'N34', clinicalNames: ['Urethritis and urethral syndrome'] },
-    { id: 'N34.0', name: 'Urethral abscess', icdName: 'Urethral abscess', icdCode: 'N34.0', clinicalNames: ['Urethral abscess'] },
-    { id: 'N34.1', name: 'Nonspecific urethritis', icdName: 'Nonspecific urethritis', icdCode: 'N34.1', clinicalNames: ['Nonspecific urethritis'] },
-    { id: 'N34.2', name: 'Other urethritis', icdName: 'Other urethritis', icdCode: 'N34.2', clinicalNames: ['Other urethritis'] },
-    { id: 'N34.3', name: 'Urethral syndrome, unspecified', icdName: 'Urethral syndrome, unspecified', icdCode: 'N34.3', clinicalNames: ['Urethral syndrome, unspecified'] },
-    { id: 'N35', name: 'Urethral stricture', icdName: 'Urethral stricture', icdCode: 'N35', clinicalNames: ['Urethral stricture'] },
-    { id: 'N35.0', name: 'Post-traumatic urethral stricture', icdName: 'Post-traumatic urethral stricture', icdCode: 'N35.0', clinicalNames: ['Post-traumatic urethral stricture'] },
-    { id: 'N35.1', name: 'Postinfective urethral stricture, not elsewhere classified', icdName: 'Postinfective urethral stricture, not elsewhere classified', icdCode: 'N35.1', clinicalNames: ['Postinfective urethral stricture, not elsewhere classified'] },
-    { id: 'N35.8', name: 'Other urethral stricture', icdName: 'Other urethral stricture', icdCode: 'N35.8', clinicalNames: ['Other urethral stricture'] },
-    { id: 'N35.9', name: 'Urethral stricture, unspecified', icdName: 'Urethral stricture, unspecified', icdCode: 'N35.9', clinicalNames: ['Urethral stricture, unspecified'] },
-    { id: 'N36', name: 'Other disorders of urethra', icdName: 'Other disorders of urethra', icdCode: 'N36', clinicalNames: ['Other disorders of urethra'] },
-    { id: 'N36.0', name: 'Urethral fistula', icdName: 'Urethral fistula', icdCode: 'N36.0', clinicalNames: ['Urethral fistula'] },
-    { id: 'N36.1', name: 'Urethral diverticulum', icdName: 'Urethral diverticulum', icdCode: 'N36.1', clinicalNames: ['Urethral diverticulum'] },
-    { id: 'N36.2', name: 'Urethral caruncle', icdName: 'Urethral caruncle', icdCode: 'N36.2', clinicalNames: ['Urethral caruncle'] },
-    { id: 'N36.3', name: 'Prolapsed urethral mucosa', icdName: 'Prolapsed urethral mucosa', icdCode: 'N36.3', clinicalNames: ['Prolapsed urethral mucosa'] },
-    { id: 'N36.8', name: 'Other specified disorders of urethra', icdName: 'Other specified disorders of urethra', icdCode: 'N36.8', clinicalNames: ['Other specified disorders of urethra'] },
-    { id: 'N36.9', name: 'Urethral disorder, unspecified', icdName: 'Urethral disorder, unspecified', icdCode: 'N36.9', clinicalNames: ['Urethral disorder, unspecified'] },
-    { id: 'N37', name: 'Urethral disorders in diseases classified elsewhere', icdName: 'Urethral disorders in diseases classified elsewhere', icdCode: 'N37', clinicalNames: ['Urethral disorders in diseases classified elsewhere'] },
-    { id: 'N37.0', name: 'Urethritis in diseases classified elsewhere', icdName: 'Urethritis in diseases classified elsewhere', icdCode: 'N37.0', clinicalNames: ['Urethritis in diseases classified elsewhere'] },
-    { id: 'N37.8', name: 'Other urethral disorders in diseases classified elsewhere', icdName: 'Other urethral disorders in diseases classified elsewhere', icdCode: 'N37.8', clinicalNames: ['Other urethral disorders in diseases classified elsewhere'] },
-    { id: 'N39', name: 'Other disorders of urinary system', icdName: 'Other disorders of urinary system', icdCode: 'N39', clinicalNames: ['Other disorders of urinary system'] },
-    { id: 'N39.0', name: 'Urinary tract infection, site not specified', icdName: 'Urinary tract infection, site not specified', icdCode: 'N39.0', clinicalNames: ['Urinary tract infection, site not specified', 'UTI'] },
-    { id: 'N39.1', name: 'Persistent proteinuria, unspecified', icdName: 'Persistent proteinuria, unspecified', icdCode: 'N39.1', clinicalNames: ['Persistent proteinuria, unspecified'] },
-    { id: 'N39.2', name: 'Orthostatic proteinuria, unspecified', icdName: 'Orthostatic proteinuria, unspecified', icdCode: 'N39.2', clinicalNames: ['Orthostatic proteinuria, unspecified'] },
-    { id: 'N39.3', name: 'Stress incontinence', icdName: 'Stress incontinence', icdCode: 'N39.3', clinicalNames: ['Stress incontinence'] },
-    { id: 'N39.4', name: 'Other specified urinary incontinence', icdName: 'Other specified urinary incontinence', icdCode: 'N39.4', clinicalNames: ['Other specified urinary incontinence'] },
-    { id: 'N39.8', name: 'Other specified disorders of urinary system', icdName: 'Other specified disorders of urinary system', icdCode: 'N39.8', clinicalNames: ['Other specified disorders of urinary system'] },
-    { id: 'N39.9', name: 'Disorder of urinary system, unspecified', icdName: 'Disorder of urinary system, unspecified', icdCode: 'N39.9', clinicalNames: ['Disorder of urinary system, unspecified'] },
-    { id: 'N40', name: 'Hyperplasia of prostate', icdName: 'Hyperplasia of prostate', icdCode: 'N40', clinicalNames: ['Hyperplasia of prostate', 'BPH'] },
+export const MOCK_DIAGNOSES: MasterDiagnosis[] = [
+    { 
+        id: 'hypertension', 
+        clinicalDiagnosis: 'Hypertension', 
+        icdMappings: [
+            { icdCode: 'I10', icdName: 'Essential (primary) hypertension' }
+        ] 
+    },
+    { 
+        id: 't2dm', 
+        clinicalDiagnosis: 'Type 2 Diabetes Mellitus', 
+        icdMappings: [
+            { icdCode: 'E11.9', icdName: 'Type 2 diabetes mellitus without complications' }
+        ] 
+    },
+    { 
+        id: 'ckd', 
+        clinicalDiagnosis: 'Chronic Kidney Disease', 
+        icdMappings: [
+            { icdCode: 'N18.1', icdName: 'Chronic kidney disease, stage 1' },
+            { icdCode: 'N18.2', icdName: 'Chronic kidney disease, stage 2 (mild)' },
+            { icdCode: 'N18.3', icdName: 'Chronic kidney disease, stage 3 (moderate)' },
+            { icdCode: 'N18.4', icdName: 'Chronic kidney disease, stage 4 (severe)' },
+            { icdCode: 'N18.5', icdName: 'Chronic kidney disease, stage 5' },
+            { icdCode: 'N18.6', icdName: 'End-stage renal disease' },
+            { icdCode: 'N18.9', icdName: 'Chronic kidney disease, unspecified' },
+        ] 
+    },
+    { 
+        id: 'iga_nephropathy', 
+        clinicalDiagnosis: 'IgA Nephropathy', 
+        icdMappings: [
+            { icdCode: 'N02.8', icdName: 'Recurrent and persistent haematuria with other morphologic changes' }
+        ] 
+    },
 ];
 
 export const INVESTIGATION_GROUPS = [
@@ -358,3 +328,4 @@ export const DIAGNOSIS_TEMPLATES = {
         kidneyBiopsyReport: "Not performed.",
     }
 };
+

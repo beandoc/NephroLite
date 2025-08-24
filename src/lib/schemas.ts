@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS, VACCINATION_NAMES, VISIT_TYPES, PATIENT_GROUP_NAMES, RESIDENCE_TYPES, APPOINTMENT_TYPES, APPOINTMENT_STATUSES, MOCK_DOCTORS, INVESTIGATION_GROUPS, RESULT_TYPES } from './constants';
 
@@ -176,12 +177,15 @@ export const appointmentSchema = z.object({
     status: z.enum(APPOINTMENT_STATUSES),
 });
 
-export const diagnosisEntrySchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    icdName: z.string(),
-    icdCode: z.string(),
-    clinicalNames: z.array(z.string()),
+export const icdMappingSchema = z.object({
+  icdCode: z.string(),
+  icdName: z.string(),
+});
+
+export const masterDiagnosisSchema = z.object({
+  id: z.string(),
+  clinicalDiagnosis: z.string(),
+  icdMappings: z.array(icdMappingSchema),
 });
 
 export const investigationMasterSchema = z.object({
