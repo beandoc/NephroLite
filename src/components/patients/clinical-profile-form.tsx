@@ -105,12 +105,12 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
                 </CardHeader>
                 <CardContent className="space-y-3">
                      {fields.map((vaccine, index) => (
-                        <div key={vaccine.id} className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] items-center gap-4 p-3 border rounded-md">
+                        <div key={vaccine.id} className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] items-end gap-4 p-3 border rounded-md">
                            <FormField
                                 control={form.control}
                                 name={`vaccinations.${index}.administered`}
                                 render={({ field }) => (
-                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                    <FormItem className="flex items-center space-x-3 space-y-0 pt-8">
                                         <FormControl>
                                             <Checkbox
                                                 checked={field.value}
@@ -131,7 +131,7 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
                                 name={`vaccinations.${index}.date`}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-xs text-muted-foreground sr-only">Administered Date</FormLabel>
+                                        <FormLabel>Administered Date</FormLabel>
                                         <FormControl>
                                             <Input 
                                                 type="date" 
@@ -149,7 +149,7 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
                                 name={`vaccinations.${index}.nextDoseDate`}
                                 render={({ field }) => (
                                     <FormItem>
-                                         <FormLabel className="text-xs text-muted-foreground sr-only">Next Dose Date</FormLabel>
+                                        <FormLabel>Next Dose Date</FormLabel>
                                         <FormControl>
                                             <Input 
                                                 type="date" 
