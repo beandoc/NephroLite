@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Save, Trash2, PlusCircle, FileText, Activity, Microscope, ChevronsUpDown, Pencil } from 'lucide-react';
+import { Save, Trash2, PlusCircle, FileText, Activity, Microscope, ChevronsUpDown, Pencil, Database } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { MOCK_DIAGNOSES, DIAGNOSIS_TEMPLATES } from '@/lib/constants';
 import type { DiagnosisTemplate, Diagnosis, Medication, DiagnosisEntry } from '@/lib/types';
@@ -586,8 +586,49 @@ export default function TemplatesPage() {
           </CardContent>
         </Card>
 
-        <InvestigationDatabase />
+        <Card>
+            <CardHeader>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle className="font-headline flex items-center"><Database className="mr-2 h-6 w-6 text-primary" />Master Diagnosis Database</CardTitle>
+                        <CardDescription>Manage the central list of ICD-10 codes and their clinical mappings.</CardDescription>
+                    </div>
+                    <Button onClick={() => setIsAddMasterDiagOpen(true)}><PlusCircle className="mr-2 h-4 w-4" />Add New Diagnosis</Button>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <ScrollArea className="h-[400px]">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>ICD-10 Code</TableHead>
+                                <TableHead>Primary Clinical Name</TableHead>
+                                <TableHead>Other Mapped Names</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {masterDiagnoses.map(diag => (
+                                <TableRow key={diag.id}>
+                                    <TableCell className="font-mono">{diag.icdCode}</TableCell>
+                                    <TableCell className="font-semibold">{diag.name}</TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-wrap gap-1">
+                                            {diag.clinicalNames.filter(cn => cn !== diag.name).map(cn => <Badge key={cn} variant="secondary">{cn}</Badge>)}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="ghost" size="icon" onClick={() => handleEditMasterDiagnosis(diag)}><Pencil className="h-4 w-4"/></Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </ScrollArea>
+            </CardContent>
+        </Card>
 
+        <InvestigationDatabase />
       </div>
 
 
