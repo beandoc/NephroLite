@@ -70,7 +70,7 @@ export default function LabResultsPage() {
           if (isCritical(test)) {
             allCriticalResults.push({
               id: `${record.id}-${test.id}`,
-              patientName: patient.name,
+              patientName: [patient.firstName, patient.lastName].filter(Boolean).join(' '),
               patientId: patient.id,
               nephroId: patient.nephroId,
               testName: test.name,
