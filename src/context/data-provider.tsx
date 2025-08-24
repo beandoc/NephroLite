@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
-import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord, Appointment, InvestigationMaster, InvestigationPanel, Vaccination } from '@/lib/types';
+import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord, Appointment, InvestigationMaster, InvestigationPanel, Vaccination, Dose } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { VACCINATION_NAMES, MOCK_USER } from '@/lib/constants';
 import { MOCK_PATIENTS, MOCK_APPOINTMENTS } from '@/lib/mock-data';
@@ -72,7 +72,7 @@ const getDefaultVaccinations = (): Vaccination[] => {
     name: name,
     totalDoses: vaccineSchedules[name] || 1,
     nextDoseDate: null,
-    doses: Array.from({ length: vaccineSchedules[name] || 1 }, (_, i) => ({
+    doses: Array.from({ length: vaccineSchedules[name] || 1 }, (_, i): Dose => ({
       id: `${name.replace(/\s/g, '')}-${i + 1}`,
       doseNumber: i + 1,
       administered: false,

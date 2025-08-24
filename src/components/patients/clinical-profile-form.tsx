@@ -94,7 +94,7 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
                      {fields.map((vaccine, vaccineIndex) => (
                         <Card key={vaccine.id} className="p-4 bg-muted/30">
                           <div className="flex justify-between items-center mb-4">
-                            <h4 className="font-semibold">{vaccine.name}</h4>
+                            <h4 className="font-semibold">{vaccine.name} ({vaccine.totalDoses} doses)</h4>
                              <FormField
                                 control={form.control}
                                 name={`vaccinations.${vaccineIndex}.nextDoseDate`}
@@ -114,7 +114,7 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
                             />
                           </div>
                           <div className="space-y-3">
-                            {vaccine.doses.map((dose, doseIndex) => (
+                            {(vaccine.doses || []).map((dose, doseIndex) => (
                                <div key={dose.id} className="grid grid-cols-[1fr_auto] items-end gap-4 p-2 border-t">
                                     <p className="font-medium text-sm pt-4">Dose {dose.doseNumber}</p>
                                     <FormField

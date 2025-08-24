@@ -2,7 +2,7 @@
 import { z } from 'zod';
 import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS, VACCINATION_NAMES, VISIT_TYPES, PATIENT_GROUP_NAMES, RESIDENCE_TYPES, APPOINTMENT_TYPES, APPOINTMENT_STATUSES, MOCK_DOCTORS, INVESTIGATION_GROUPS } from './constants';
 
-const doseSchema = z.object({
+export const doseSchema = z.object({
   id: z.string(),
   doseNumber: z.number(),
   administered: z.boolean(),

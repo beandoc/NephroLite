@@ -134,7 +134,7 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
         </CardHeader>
         <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           {(clinicalProfile.vaccinations && clinicalProfile.vaccinations.length > 0) ? (
-            clinicalProfile.vaccinations.map((vaccine, index) => {
+            clinicalProfile.vaccinations.map((vaccine) => {
               const doses = vaccine.doses || [];
               const administeredDoses = doses.filter(d => d.administered).length;
               const status = getVaccineStatus(vaccine);

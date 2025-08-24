@@ -1,8 +1,52 @@
 
-import type { Patient, Appointment } from './types';
+import type { Patient, Appointment, Vaccination } from './types';
 import { format, subDays, addDays } from 'date-fns';
+import { VACCINATION_NAMES } from './constants';
 
 const today = new Date('2024-08-10T10:00:00.000Z');
+
+const getDefaultVaccinations = (): Vaccination[] => {
+  const vaccineSchedules: Record<string, number> = {
+    'Hepatitis B': 4,
+    'Pneumococcal': 2,
+    'Influenza': 1,
+    'Covid': 2,
+    'Varicella': 2,
+  };
+
+  return VACCINATION_NAMES.map(name => ({
+    name: name,
+    totalDoses: vaccineSchedules[name] || 1,
+    nextDoseDate: null,
+    doses: Array.from({ length: vaccineSchedules[name] || 1 }, (_, i) => ({
+      id: `${name.replace(/\s/g, '')}-${i + 1}`,
+      doseNumber: i + 1,
+      administered: false,
+      date: null,
+    }))
+  }));
+};
+
+const getExampleVaccinations = (): Vaccination[] => {
+  const defaultVaccinations = getDefaultVaccinations();
+  const hepB = defaultVaccinations.find(v => v.name === 'Hepatitis B');
+  if (hepB) {
+    hepB.doses[0].administered = true;
+    hepB.doses[0].date = '2023-01-10';
+    hepB.nextDoseDate = '2023-02-10';
+  }
+  const pneumo = defaultVaccinations.find(v => v.name === 'Pneumococcal');
+  if (pneumo) {
+    pneumo.doses[0].administered = true;
+    pneumo.doses[0].date = '2023-03-15';
+  }
+   const covid = defaultVaccinations.find(v => v.name === 'Covid');
+   if(covid) {
+    covid.doses[0].administered = true;
+    covid.doses[0].date = '2022-11-20';
+   }
+  return defaultVaccinations;
+}
 
 export const MOCK_PATIENTS: Patient[] = [
   {
@@ -30,13 +74,7 @@ export const MOCK_PATIENTS: Patient[] = [
       subspecialityFollowUp: 'Endocrinology',
       smokingStatus: 'No',
       alcoholConsumption: 'No',
-      vaccinations: [
-        { name: 'Hepatitis B', administered: true, date: '2023-01-10', nextDoseDate: '2023-02-10' },
-        { name: 'Pneumococcal', administered: true, date: '2023-03-15', nextDoseDate: null },
-        { name: 'Influenza', administered: false, date: null, nextDoseDate: null },
-        { name: 'Covid', administered: true, date: '2022-11-20', nextDoseDate: null },
-        { name: 'Varicella', administered: false, date: null, nextDoseDate: null },
-      ],
+      vaccinations: getExampleVaccinations(),
       pomr: "Long-standing T2DM with progressive proteinuria. Now CKD G3bA3. On ARB and SGLT2i.",
       aabhaNumber: 'ABHA-111',
       bloodGroup: 'O+',
@@ -124,7 +162,7 @@ export const MOCK_PATIENTS: Patient[] = [
       subspecialityFollowUp: 'NIL',
       smokingStatus: 'No',
       alcoholConsumption: 'No',
-      vaccinations: [],
+      vaccinations: getDefaultVaccinations(),
       pomr: 'Recurrent hematuria. Biopsy-proven IgA Nephropathy.',
       aabhaNumber: 'ABHA-222',
       bloodGroup: 'B+',
@@ -162,7 +200,7 @@ export const MOCK_PATIENTS: Patient[] = [
       subspecialityFollowUp: 'Intensive Care',
       smokingStatus: 'No',
       alcoholConsumption: 'No',
-      vaccinations: [],
+      vaccinations: getDefaultVaccinations(),
       pomr: 'Admitted with sepsis leading to AKI. Requires RRT.',
       aabhaNumber: 'ABHA-333',
       bloodGroup: 'A-',
@@ -210,7 +248,7 @@ export const MOCK_PATIENTS: Patient[] = [
       subspecialityFollowUp: 'Rheumatology',
       smokingStatus: 'No',
       alcoholConsumption: 'No',
-      vaccinations: [],
+      vaccinations: getDefaultVaccinations(),
       pomr: 'SLE diagnosed 2 years ago. Now with active nephritis.',
       aabhaNumber: 'ABHA-444',
       bloodGroup: 'AB+',
