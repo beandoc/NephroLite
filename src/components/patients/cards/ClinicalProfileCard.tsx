@@ -32,7 +32,7 @@ const POMRDisplay = ({ pomrText }: { pomrText?: string }) => {
 };
 
 const getVaccineStatus = (vaccine: Vaccination) => {
-    const administeredDoses = vaccine.doses.filter(d => d.administered).length;
+    const administeredDoses = (vaccine.doses || []).filter(d => d.administered).length;
     if(administeredDoses === vaccine.totalDoses) {
         return { text: 'Completed', color: 'bg-green-600', icon: CheckCircle };
     }
@@ -107,7 +107,8 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
         <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           {(clinicalProfile.vaccinations && clinicalProfile.vaccinations.length > 0) ? (
             clinicalProfile.vaccinations.map((vaccine, index) => {
-              const administeredDoses = vaccine.doses.filter(d => d.administered).length;
+              const doses = vaccine.doses || [];
+              const administeredDoses = doses.filter(d => d.administered).length;
               const status = getVaccineStatus(vaccine);
               return (
                 <div key={vaccine.name} className="p-4 border rounded-lg space-y-2 bg-muted/20">
@@ -121,7 +122,7 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
                         {administeredDoses} of {vaccine.totalDoses} dose(s) administered.
                     </p>
                     <ul className="text-xs list-disc pl-5 space-y-1">
-                        {vaccine.doses.map(dose => (
+                        {doses.map(dose => (
                             <li key={dose.doseNumber}>
                                 Dose {dose.doseNumber}: {dose.administered && dose.date ? `Given on ${format(parseISO(dose.date), 'PPP')}` : 'Pending'}
                             </li>
