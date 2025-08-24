@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -43,7 +43,7 @@ export function BmiCalculator() {
   
   // This effect will clear the result if any form value changes
   const watchedFields = form.watch();
-  React.useEffect(() => {
+  useEffect(() => {
     setBmiResult(null);
   }, [watchedFields]);
 
