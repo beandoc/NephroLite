@@ -4,8 +4,13 @@
 import type { Patient, Vaccination } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Stethoscope, ShieldQuestion, Leaf, Accessibility, Cigarette, Wine, ShieldAlert, PencilLine, TagsIcon, Syringe, HeartPulse, CheckCircle, XCircle, HelpingHand, CalendarClock, AlertCircle } from 'lucide-react';
 import { format, parseISO, isPast } from 'date-fns';
+import { usePatientData } from '@/hooks/use-patient-data';
+import { useToast } from '@/hooks/use-toast';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface ClinicalProfileCardProps {
   patient: Patient;
@@ -48,6 +53,20 @@ const getVaccineStatus = (vaccine: Vaccination) => {
 
 export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
   const { clinicalProfile } = patient;
+  const { updateClinicalProfile } = usePatientData();
+  const { toast } = useToast();
+
+  const handleRiskFactorToggle = (factor: 'hasDiabetes' | 'onAntiHypertensiveMedication' | 'onLipidLoweringMedication', value: boolean) => {
+    const updatedProfile = {
+      ...clinicalProfile,
+      [factor]: value,
+    };
+    updateClinicalProfile(patient.id, updatedProfile);
+    toast({
+        title: "Risk Factor Updated",
+        description: `Patient's ${factor.replace(/([A-Z])/g, ' $1').toLowerCase()} status has been updated.`,
+    });
+  };
 
   return (
     <>
@@ -91,12 +110,21 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
       <Card className="shadow-md">
         <CardHeader className="bg-muted/30">
             <CardTitle className="font-headline text-xl flex items-center"><HelpingHand className="w-6 h-6 mr-3 text-primary"/>Cardiovascular Risk Factors</CardTitle>
-            <CardDescription>Key factors for the PREVENT cardiovascular risk score calculation.</CardDescription>
+            <CardDescription>Key factors for the PREVENT cardiovascular risk score calculation. Changes are saved instantly.</CardDescription>
         </CardHeader>
         <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-6">
-             <DetailItem label="Diabetes Status" value={typeof clinicalProfile.hasDiabetes === 'boolean' ? (clinicalProfile.hasDiabetes ? 'Yes' : 'No') : <span className="text-muted-foreground">Not Set</span>} />
-             <DetailItem label="On Anti-Hypertensive Meds" value={typeof clinicalProfile.onAntiHypertensiveMedication === 'boolean' ? (clinicalProfile.onAntiHypertensiveMedication ? 'Yes' : 'No') : <span className="text-muted-foreground">Not Set</span>} />
-             <DetailItem label="On Lipid-Lowering Meds" value={typeof clinicalProfile.onLipidLoweringMedication === 'boolean' ? (clinicalProfile.onLipidLoweringMedication ? 'Yes' : 'No') : <span className="text-muted-foreground">Not Set</span>} />
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+                <Label htmlFor="hasDiabetes-switch" className="font-medium">Diabetes Status</Label>
+                <Switch id="hasDiabetes-switch" checked={clinicalProfile.hasDiabetes} onCheckedChange={(value) => handleRiskFactorToggle('hasDiabetes', value)} />
+            </div>
+             <div className="flex items-center justify-between p-3 border rounded-lg">
+                <Label htmlFor="onAntiHypertensiveMedication-switch" className="font-medium">On Anti-Hypertensive Meds</Label>
+                <Switch id="onAntiHypertensiveMedication-switch" checked={clinicalProfile.onAntiHypertensiveMedication} onCheckedChange={(value) => handleRiskFactorToggle('onAntiHypertensiveMedication', value)} />
+            </div>
+             <div className="flex items-center justify-between p-3 border rounded-lg">
+                <Label htmlFor="onLipidLoweringMedication-switch" className="font-medium">On Lipid-Lowering Meds</Label>
+                <Switch id="onLipidLoweringMedication-switch" checked={clinicalProfile.onLipidLoweringMedication} onCheckedChange={(value) => handleRiskFactorToggle('onLipidLoweringMedication', value)} />
+            </div>
         </CardContent>
       </Card>
 
