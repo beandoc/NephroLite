@@ -42,27 +42,24 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
   
   const handleVaccinationDateChange = (index: number, dateStr: string | null) => {
     const vaccine = fields[index];
-    let nextDoseDateUpdate: string | null = vaccine.nextDoseDate; // Preserve manual entry by default
     
-    if (dateStr) {
-        const adminDate = parseISO(dateStr);
-         // Only auto-calculate if next dose is not already set manually
-        if (!vaccine.nextDoseDate) {
-            if (vaccine.name === 'Hepatitis B') {
-                nextDoseDateUpdate = format(addMonths(adminDate, 1), 'yyyy-MM-dd');
-            } else if (vaccine.name === 'Pneumococcal') {
-                nextDoseDateUpdate = format(addMonths(adminDate, 2), 'yyyy-MM-dd');
-            }
-        }
-    }
+    // Automatically check the box if a date is entered
+    const isNowAdministered = !!dateStr;
 
     update(index, {
         ...vaccine,
         date: dateStr,
-        administered: !!dateStr,
-        nextDoseDate: nextDoseDateUpdate,
+        administered: isNowAdministered,
     });
   };
+
+  const handleNextDoseDateChange = (index: number, dateStr: string | null) => {
+    const vaccine = fields[index];
+     update(index, {
+        ...vaccine,
+        nextDoseDate: dateStr,
+    });
+  }
 
 
   return (
@@ -117,6 +114,7 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
                                                 onCheckedChange={(checked) => {
                                                     field.onChange(checked);
                                                     if (!checked) {
+                                                       // Clear the date if unchecked
                                                        handleVaccinationDateChange(index, null);
                                                     }
                                                 }}
@@ -137,7 +135,6 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
                                                 type="date" 
                                                 value={field.value || ""}
                                                 onChange={(e) => handleVaccinationDateChange(index, e.target.value || null)}
-                                                disabled={!form.watch(`vaccinations.${index}.administered`)}
                                                 className="w-full md:w-40"
                                             />
                                         </FormControl>
@@ -154,7 +151,7 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
                                             <Input 
                                                 type="date" 
                                                 value={field.value || ""}
-                                                onChange={(e) => update(index, {...vaccine, nextDoseDate: e.target.value || null})}
+                                                onChange={(e) => handleNextDoseDateChange(index, e.target.value || null)}
                                                 className="w-full md:w-40"
                                             />
                                         </FormControl>
