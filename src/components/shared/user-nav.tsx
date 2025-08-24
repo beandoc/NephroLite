@@ -15,7 +15,7 @@ import {
 import { LogOut, User, Settings, Bell, MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { usePatientData } from "@/hooks/use-patient-data";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type { Patient, InvestigationTest } from "@/lib/types";
 import { MOCK_USER } from "@/lib/constants";
 
@@ -38,9 +38,17 @@ const isCritical = (test: InvestigationTest): boolean => {
 
 export function UserNav() {
   const { patients, isLoading } = usePatientData();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   const criticalResultsCount = useMemo(() => {
-    if (isLoading) return 0;
+    // Prevent calculation on the server or before client has mounted
+    if (!isClient || isLoading) return 0;
+    
     const allCriticalResults = new Set<string>();
     patients.forEach(patient => {
       patient.investigationRecords?.forEach(record => {
@@ -52,7 +60,7 @@ export function UserNav() {
       });
     });
     return allCriticalResults.size;
-  }, [patients, isLoading]);
+  }, [patients, isLoading, isClient]);
 
   const user = MOCK_USER;
 
@@ -60,7 +68,7 @@ export function UserNav() {
     <div className="flex items-center gap-3">
       <Button variant="ghost" size="icon" className="relative rounded-full h-9 w-9">
         <Bell className="h-5 w-5" />
-        {criticalResultsCount > 0 && (
+        {isClient && criticalResultsCount > 0 && (
             <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 min-w-4 p-0 flex items-center justify-center text-xs">
                 {criticalResultsCount}
             </Badge>
