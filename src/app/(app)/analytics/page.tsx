@@ -46,7 +46,7 @@ interface MetricCardProps {
   disabled?: boolean;
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ title, value, description, colorClass, icon: Icon, link, disabled }) => {
+const MetricCard: React.FC<MetricCardProps> = React.memo(({ title, value, description, colorClass, icon: Icon, link, disabled }) => {
   const content = (
     <Card className={`shadow-lg relative overflow-hidden ${colorClass ? `border-t-4 ${colorClass}` : 'border-t-4 border-transparent'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
       <CardHeader className="pb-2 pt-4">
@@ -64,7 +64,8 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, description, colo
     return <Link href={link} className="hover:opacity-80 transition-opacity block">{content}</Link>;
   }
   return content;
-};
+});
+MetricCard.displayName = 'MetricCard';
 
 
 const COLORS_GENDER = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))'];
