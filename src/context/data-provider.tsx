@@ -43,6 +43,21 @@ export interface DataContextType {
 // Create the context
 export const DataContext = createContext<DataContextType | undefined>(undefined);
 
+// Helper function to safely get data from localStorage
+const getFromLocalStorage = <T>(key: string, fallback: T): T => {
+    if (typeof window === 'undefined') {
+        return fallback;
+    }
+    try {
+        const item = window.localStorage.getItem(key);
+        return item ? JSON.parse(item) : fallback;
+    } catch (error) {
+        console.warn(`Error reading localStorage key "${key}":`, error);
+        return fallback;
+    }
+};
+
+
 // Helper functions for patient data management
 const getDefaultVaccinations = (): Vaccination[] => {
   const vaccineSchedules: Record<string, number> = {
@@ -96,12 +111,29 @@ const calculateInitialLastId = (patients: Patient[]): number => {
 // Create the Provider component
 export const DataProvider = ({ children }: { children: React.ReactNode }) => {
   // --- STATE MANAGEMENT ---
-  const [patients, setPatients] = useState<Patient[]>(MOCK_PATIENTS);
-  const [appointments, setAppointments] = useState<Appointment[]>(MOCK_APPOINTMENTS);
-  const [investigationMasterList, setInvestigationMasterList] = useState<InvestigationMaster[]>(INVESTIGATION_MASTER_LIST);
-  const [investigationPanels, setInvestigationPanels] = useState<InvestigationPanel[]>(INVESTIGATION_PANELS);
-  const [lastId, setLastId] = useState(() => calculateInitialLastId(MOCK_PATIENTS));
+  const [patients, setPatients] = useState<Patient[]>(() => getFromLocalStorage('patients', MOCK_PATIENTS));
+  const [appointments, setAppointments] = useState<Appointment[]>(() => getFromLocalStorage('appointments', MOCK_APPOINTMENTS));
+  const [investigationMasterList, setInvestigationMasterList] = useState<InvestigationMaster[]>(() => getFromLocalStorage('investigationMasterList', INVESTIGATION_MASTER_LIST));
+  const [investigationPanels, setInvestigationPanels] = useState<InvestigationPanel[]>(() => getFromLocalStorage('investigationPanels', INVESTIGATION_PANELS));
+  const [lastId, setLastId] = useState(() => calculateInitialLastId(patients));
   const [isLoading, setIsLoading] = useState(false);
+
+  // --- PERSISTENCE TO LOCALSTORAGE ---
+  useEffect(() => {
+    localStorage.setItem('patients', JSON.stringify(patients));
+  }, [patients]);
+
+  useEffect(() => {
+    localStorage.setItem('appointments', JSON.stringify(appointments));
+  }, [appointments]);
+
+  useEffect(() => {
+    localStorage.setItem('investigationMasterList', JSON.stringify(investigationMasterList));
+  }, [investigationMasterList]);
+
+  useEffect(() => {
+    localStorage.setItem('investigationPanels', JSON.stringify(investigationPanels));
+  }, [investigationPanels]);
 
 
   // --- PATIENT DATA LOGIC ---
