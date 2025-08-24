@@ -60,7 +60,7 @@ const getFromLocalStorage = <T>(key: string, fallback: T): T => {
 
 // Helper functions for patient data management
 const getDefaultVaccinations = (): Vaccination[] => {
-  const vaccineSchedules: Record<string, number> = {
+  const vaccineSchedules: Record<typeof VACCINATION_NAMES[number], number> = {
     'Hepatitis B': 4,
     'Pneumococcal': 2,
     'Influenza': 1,

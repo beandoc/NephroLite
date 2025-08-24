@@ -151,7 +151,7 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
                     </p>
                     <ul className="text-xs list-disc pl-5 space-y-1">
                         {doses.map(dose => (
-                            <li key={dose.doseNumber}>
+                            <li key={dose.id}>
                                 Dose {dose.doseNumber}: {dose.administered && dose.date ? `Given on ${format(parseISO(dose.date), 'PPP')}` : 'Pending'}
                             </li>
                         ))}

@@ -43,7 +43,7 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
   
   const handleAdministeredDateChange = (vaccineIndex: number, doseIndex: number, dateStr: string | null) => {
     const vaccine = fields[vaccineIndex];
-    const newDoses = [...vaccine.doses];
+    const newDoses = [...(vaccine.doses || [])];
     newDoses[doseIndex] = { ...newDoses[doseIndex], date: dateStr, administered: !!dateStr };
     
     update(vaccineIndex, {
