@@ -42,7 +42,7 @@ export default function RegistrationPage() {
   const alphabeticalPatients = useMemo(() => {
     if (!clientReady || patientsLoading) return [];
     return [...patients]
-        .sort((a, b) => a.name.localeCompare(b.name))
+        .sort((a, b) => [a.firstName, a.lastName].join(' ').localeCompare([b.firstName, b.lastName].join(' ')))
         .slice(0, 10);
   }, [clientReady, patients, patientsLoading]);
 
@@ -66,11 +66,12 @@ export default function RegistrationPage() {
 
     // Start with the full list of patients for every search
     let foundPatients = patients.filter(patient => {
+      const fullName = [patient.firstName, patient.lastName].filter(Boolean).join(' ').toLowerCase();
       const nephroIdMatch = termNephroId 
         ? patient.nephroId.toLowerCase().includes(termNephroId) 
         : true;
       const nameMatch = termName 
-        ? patient.name.toLowerCase().includes(termName) 
+        ? fullName.includes(termName) 
         : true;
       return nephroIdMatch && nameMatch;
     });
@@ -159,7 +160,7 @@ export default function RegistrationPage() {
                 {searchResults.map(patient => (
                   <li key={patient.id} className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50">
                     <div>
-                      <p className="font-semibold">{patient.name}</p>
+                      <p className="font-semibold">{[patient.firstName, patient.lastName].join(' ')}</p>
                       <p className="text-sm text-muted-foreground">Nephro ID: {patient.nephroId} &bull; DOB: {format(parseISO(patient.dob), 'PPP')}</p>
                     </div>
                     <Button asChild variant="outline" size="sm">
@@ -192,7 +193,7 @@ export default function RegistrationPage() {
               <ul className="space-y-2 text-sm">
                 {byRegistrationDatePatients.map(p => (
                   <li key={p.id}>
-                    <Link href={`/patients/${p.id}`} className="text-primary hover:underline">{p.name}</Link> ({p.nephroId})
+                    <Link href={`/patients/${p.id}`} className="text-primary hover:underline">{[p.firstName, p.lastName].join(' ')}</Link> ({p.nephroId})
                      <span className="text-muted-foreground text-xs ml-2"> - Reg: {format(parseISO(p.registrationDate), 'dd-MMM-yy')}</span>
                   </li>
                 ))}
@@ -205,7 +206,7 @@ export default function RegistrationPage() {
               <ul className="space-y-2 text-sm">
                 {alphabeticalPatients.map(p => (
                   <li key={p.id}>
-                    <Link href={`/patients/${p.id}`} className="text-primary hover:underline">{p.name}</Link> ({p.nephroId})
+                    <Link href={`/patients/${p.id}`} className="text-primary hover:underline">{[p.firstName, p.lastName].join(' ')}</Link> ({p.nephroId})
                   </li>
                 ))}
               </ul>

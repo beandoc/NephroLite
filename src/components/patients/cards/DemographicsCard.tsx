@@ -33,21 +33,23 @@ export function DemographicsCard({ patient }: DemographicsCardProps) {
   const { updatePatient } = usePatientData();
   const { appointments } = useAppointmentData();
 
+  const patientFullName = [patient.firstName, patient.lastName].filter(Boolean).join(' ');
+
   const handleAdmitPatient = () => {
     updatePatient(patient.id, { patientStatus: 'IPD' });
-    toast({ title: "Patient Admitted", description: `${patient.name} is now marked as IPD.` });
+    toast({ title: "Patient Admitted", description: `${patientFullName} is now marked as IPD.` });
   };
 
   const handleDischargePatient = () => {
     updatePatient(patient.id, { patientStatus: 'OPD' });
-    toast({ title: "Patient Discharged", description: `${patient.name} has been discharged.` });
+    toast({ title: "Patient Discharged", description: `${patientFullName} has been discharged.` });
   };
   
   const handleTrackingToggle = (isToggled: boolean) => {
     updatePatient(patient.id, { isTracked: isToggled });
     toast({
         title: `Patient Tracking ${isToggled ? 'Enabled' : 'Disabled'}`,
-        description: `${patient.name}'s tracking status has been updated.`
+        description: `${patientFullName}'s tracking status has been updated.`
     });
   }
 
@@ -74,7 +76,7 @@ export function DemographicsCard({ patient }: DemographicsCardProps) {
         </div>
       </CardHeader>
       <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <DetailItem label="Full Name" value={patient.name} />
+        <DetailItem label="Full Name" value={patientFullName} />
         <DetailItem label="Nephro ID" value={patient.nephroId} />
         <div className="flex items-center">
           <DetailItem label="Patient Status" value={patient.patientStatus} className="mr-2"/>

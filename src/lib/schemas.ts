@@ -29,7 +29,7 @@ export const clinicalProfileSchema = z.object({
   onLipidLoweringMedication: z.boolean().optional(),
 });
 
-const diagnosisSchema = z.object({
+export const diagnosisSchema = z.object({
     id: z.string(),
     name: z.string(),
     icdName: z.string().optional(),
@@ -99,7 +99,8 @@ const investigationRecordSchema = z.object({
 export const patientSchema = z.object({
     id: z.string(),
     nephroId: z.string(),
-    name: z.string(),
+    firstName: z.string(),
+    lastName: z.string(),
     dob: z.string(),
     gender: z.enum(GENDERS),
     contact: z.string().optional(),
@@ -133,7 +134,8 @@ export const patientSchema = z.object({
 });
 
 export const patientFormDataSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters."),
+  firstName: z.string().min(1, "First name is required."),
+  lastName: z.string().min(1, "Last name is required."),
   dob: z.string().min(1, "Date of birth is required."),
   gender: z.enum(GENDERS),
   contact: z.string().optional(),
@@ -218,7 +220,6 @@ export const investigationSchema = z.object({
   normalRange: z.string().optional(),
 });
 
-export type InvestigationFormData = z.infer<typeof investigationSchema>;
 
 export const panelSchema = z.object({
   id: z.string().optional(),
@@ -226,5 +227,3 @@ export const panelSchema = z.object({
   group: z.enum(INVESTIGATION_GROUPS, { required_error: 'Group is required.' }),
   testIds: z.array(z.object({ id: z.string() })).min(1, 'At least one test must be selected.'),
 });
-
-export type PanelFormData = z.infer<typeof panelSchema>;

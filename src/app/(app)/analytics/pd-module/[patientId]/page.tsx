@@ -115,10 +115,12 @@ export default function IndividualPDPage() {
     );
   }
   
+  const patientFullName = [patient.firstName, patient.lastName].filter(Boolean).join(' ');
+  
   if (!pdData) {
     return (
       <div className="container mx-auto py-2">
-        <PageHeader title={`PD Details for ${patient.name}`} description="No specific Peritoneal Dialysis data found for this patient." />
+        <PageHeader title={`PD Details for ${patientFullName}`} description="No specific Peritoneal Dialysis data found for this patient." />
          <Button variant="outline" onClick={() => router.push('/analytics/pd-module')}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to PD Roster
         </Button>
@@ -137,7 +139,7 @@ export default function IndividualPDPage() {
   return (
     <div className="container mx-auto py-2">
       <PageHeader
-        title={`PD Details for ${patient.name}`}
+        title={`PD Details for ${patientFullName}`}
         description={`Nephro ID: ${patient.nephroId}`}
         actions={
           <Button variant="outline" onClick={() => router.push('/analytics/pd-module')}>

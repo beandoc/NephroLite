@@ -8,7 +8,8 @@ export const MOCK_PATIENTS: Patient[] = [
   {
     id: 'patient-1',
     nephroId: '1001/0824',
-    name: 'Aarav Sharma',
+    firstName: 'Aarav',
+    lastName: 'Sharma',
     dob: '1968-05-15',
     gender: 'Male',
     contact: '9876543210',
@@ -59,7 +60,6 @@ export const MOCK_PATIENTS: Patient[] = [
                 history: 'Patient referred from primary care for persistent proteinuria.',
                 height: '175', weight: '78', bmi: '25.47', idealBodyWeight: '68.27',
                 pulse: '76', systolicBP: '145', diastolicBP: '88', respiratoryRate: '16',
-                generalExamination: 'Mild pedal edema noted.',
                 medications: [
                     { id: 'med-1', name: 'Telmisartan', dosage: '40mg', frequency: 'OD' },
                     { id: 'med-2', name: 'Metformin', dosage: '500mg', frequency: 'BD' }
@@ -102,7 +102,8 @@ export const MOCK_PATIENTS: Patient[] = [
   {
     id: 'patient-2',
     nephroId: '1002/0824',
-    name: 'Isha Singh',
+    firstName: 'Isha',
+    lastName: 'Singh',
     dob: '1992-11-22',
     gender: 'Female',
     contact: '9988776655',
@@ -139,7 +140,8 @@ export const MOCK_PATIENTS: Patient[] = [
   {
     id: 'patient-3',
     nephroId: '1003/0724',
-    name: 'Vikram Reddy',
+    firstName: 'Vikram',
+    lastName: 'Reddy',
     dob: '1985-03-10',
     gender: 'Male',
     contact: '9123456789',
@@ -186,7 +188,8 @@ export const MOCK_PATIENTS: Patient[] = [
   {
     id: 'patient-4',
     nephroId: '1004/0724',
-    name: 'Anjali Menon',
+    firstName: 'Anjali',
+    lastName: 'Menon',
     dob: '2000-08-01',
     gender: 'Female',
     contact: '9898989898',

@@ -39,7 +39,7 @@ export default function EditPatientPage() {
     updatePatient(patient.id, data);
     toast({
       title: "Patient Demographics Updated",
-      description: `${data.name}'s profile has been successfully updated.`,
+      description: `${[data.firstName, data.lastName].join(' ')}'s profile has been successfully updated.`,
     });
     router.push(`/patients/${patient.id}`);
   };
@@ -49,7 +49,7 @@ export default function EditPatientPage() {
       updateClinicalProfile(patient.id, data);
       toast({
         title: "Clinical Profile Updated",
-        description: `${patient.name}'s clinical profile has been successfully updated.`,
+        description: `${[patient.firstName, patient.lastName].join(' ')}'s clinical profile has been successfully updated.`,
       });
       router.push(`/patients/${patient.id}`);
   };
@@ -75,7 +75,7 @@ export default function EditPatientPage() {
   return (
     <div className="container mx-auto py-2">
       <PageHeader 
-        title={`Edit Profile: ${patient.name}`}
+        title={`Edit Profile: ${[patient.firstName, patient.lastName].join(' ')}`}
         description="Update the patient's demographic and clinical details."
         backHref={`/patients/${patient.id}`}
       />

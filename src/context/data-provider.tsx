@@ -105,7 +105,8 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
       const newPatient: Patient = {
           id: crypto.randomUUID(),
           nephroId: newNephroId,
-          name: patientData.name,
+          firstName: patientData.firstName,
+          lastName: patientData.lastName,
           dob: patientData.dob,
           gender: patientData.gender,
           contact: patientData.contact || "",
@@ -117,7 +118,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
               pincode: patientData.address.pincode || "",
           },
           guardian: {
-              name: patientData.guardian.relation === 'Self' ? patientData.name : (patientData.guardian.name || ""),
+              name: patientData.guardian.relation === 'Self' ? [patientData.firstName, patientData.lastName].filter(Boolean).join(' ') : (patientData.guardian.name || ""),
               relation: patientData.guardian.relation || "",
               contact: patientData.guardian.relation === 'Self' ? (patientData.contact || "") : (patientData.guardian.contact || ""),
           },
@@ -150,7 +151,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     setPatients(prev => prev.map(p => {
         if (p.id !== patientId) return p;
         const updatedPatient = { ...p };
-        const patientFormKeys: Array<keyof PatientFormData> = ['name', 'dob', 'gender', 'contact', 'email'];
+        const patientFormKeys: Array<keyof PatientFormData> = ['firstName', 'lastName', 'dob', 'gender', 'contact', 'email'];
         patientFormKeys.forEach(key => {
             if (updatedData[key] !== undefined) {
                 (updatedPatient as any)[key] = updatedData[key];
@@ -243,7 +244,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     const newAppointment: Appointment = {
       id: crypto.randomUUID(),
       ...appointmentData,
-      patientName: patient.name,
+      patientName: [patient.firstName, patient.lastName].filter(Boolean).join(' '),
       status: 'Scheduled',
       createdAt: nowISO,
     };

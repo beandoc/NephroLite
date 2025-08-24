@@ -33,12 +33,8 @@ import { PATIENT_GROUP_NAMES, VISIT_TYPES } from "@/lib/constants";
 import type { Patient, VisitFormData } from "@/lib/types";
 import { usePatientData } from "@/hooks/use-patient-data";
 import { useState, useEffect } from "react";
+import { visitFormDataSchema } from "@/lib/schemas";
 
-const visitFormSchema = z.object({
-  visitType: z.string().min(1, "Visit type is required."),
-  visitRemark: z.string().min(1, "Visit remark is required."),
-  groupName: z.string().min(1, "Group name is required."),
-});
 
 const defaultValues = {
   visitType: "Routine",
@@ -65,7 +61,7 @@ export function CreateVisitDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<VisitFormData>({
-    resolver: zodResolver(visitFormSchema),
+    resolver: zodResolver(visitFormDataSchema),
     defaultValues: defaultValues,
   });
 
@@ -98,11 +94,13 @@ export function CreateVisitDialog({
     return null; // Don't render the dialog if there's no patient
   }
 
+  const patientFullName = [patient.firstName, patient.lastName].filter(Boolean).join(' ');
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create Initial Visit for {patient.name}</DialogTitle>
+          <DialogTitle>Create Initial Visit for {patientFullName}</DialogTitle>
           <DialogDescription>
             Please provide the following details for this first visit.
           </DialogDescription>

@@ -16,7 +16,7 @@ export default function PDModulePage() {
 
   const pdPatients = useMemo(() => {
     if (patientsLoading) return [];
-    return patients.filter(p => p.clinicalProfile.tags.includes('PD'));
+    return patients.filter(p => p.clinicalProfile.tags?.includes('PD'));
   }, [patients, patientsLoading]);
 
   return (
@@ -49,7 +49,7 @@ export default function PDModulePage() {
                     {pdPatients.map(patient => (
                       <li key={patient.id} className="p-2 border rounded-md hover:bg-muted/50 text-sm">
                         <Link href={`/analytics/pd-module/${patient.id}`} className="text-primary hover:underline">
-                          {patient.name} ({patient.nephroId})
+                          {`${patient.firstName} ${patient.lastName}`} ({patient.nephroId})
                         </Link>
                       </li>
                     ))}

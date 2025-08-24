@@ -240,7 +240,7 @@ export default function AnalyticsPage() {
               <ul className="space-y-1">
                 {trackedPatients.map(p => (
                   <li key={p.id} className="text-sm p-1 hover:bg-muted rounded-md">
-                     <Link href={`/patients/${p.id}`} className="text-primary hover:underline">{p.name}</Link> ({p.nephroId})
+                     <Link href={`/patients/${p.id}`} className="text-primary hover:underline">{`${p.firstName} ${p.lastName}`}</Link> ({p.nephroId})
                   </li>
                 ))}
               </ul>
@@ -300,7 +300,7 @@ export default function AnalyticsPage() {
                             {filteredByTagsPatients.map(p => (
                                 <TableRow key={p.id}>
                                     <TableCell>
-                                        <Link href={`/patients/${p.id}`} className="text-primary hover:underline">{p.name}</Link>
+                                        <Link href={`/patients/${p.id}`} className="text-primary hover:underline">{`${p.firstName} ${p.lastName}`}</Link>
                                     </TableCell>
                                     <TableCell>{p.nephroId}</TableCell>
                                     <TableCell>

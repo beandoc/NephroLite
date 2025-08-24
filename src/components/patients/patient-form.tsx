@@ -27,37 +27,17 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, parseISO } from "date-fns";
+import { format, parse, parseISO } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GENDERS, INDIAN_STATES, RELATIONSHIPS } from "@/lib/constants";
 import type { Patient } from "@/lib/types";
+import { patientFormDataSchema, type PatientFormData } from "@/lib/schemas";
 
-const patientFormSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters."),
-  dob: z.string().min(1, "Date of birth is required."),
-  gender: z.enum(["Male", "Female"]),
-  contact: z.string().optional(),
-  email: z.string().email("Invalid email address.").optional().or(z.literal('')),
-  whatsappNumber: z.string().optional(),
-  uhid: z.string().optional(),
-  address: z.object({
-    street: z.string().optional(),
-    city: z.string().optional(),
-    state: z.string().optional(),
-    pincode: z.string().optional(),
-  }),
-  guardian: z.object({
-    name: z.string().optional(),
-    relation: z.string().optional(),
-    contact: z.string().optional(),
-  }),
-});
-
-export type PatientFormData = z.infer<typeof patientFormSchema>;
 
 const defaultFormValues: PatientFormData = {
-  name: "",
+  firstName: "",
+  lastName: "",
   dob: "",
   gender: "Male",
   contact: "",
@@ -71,7 +51,8 @@ const defaultFormValues: PatientFormData = {
 const getInitialValues = (patient?: Patient | null): PatientFormData => {
   if (patient) {
     return {
-      name: patient.name || "",
+      firstName: patient.firstName || "",
+      lastName: patient.lastName || "",
       dob: patient.dob ? format(parseISO(patient.dob), "yyyy-MM-dd") : "",
       gender: patient.gender || "Male",
       contact: patient.contact || "",
@@ -104,24 +85,25 @@ interface PatientFormProps {
 export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: PatientFormProps) {
   
   const form = useForm<PatientFormData>({
-    resolver: zodResolver(patientFormSchema),
+    resolver: zodResolver(patientFormDataSchema),
     defaultValues: getInitialValues(existingPatientData),
   });
   
   const today = new Date();
-  const twelveYearsAgo = new Date(today.getFullYear() - 12, today.getMonth(), today.getDate());
   const oneHundredYearsAgo = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
 
   const relation = form.watch("guardian.relation");
-  const patientName = form.watch("name");
+  const firstName = form.watch("firstName");
+  const lastName = form.watch("lastName");
   const patientContact = form.watch("contact");
-
+  
   React.useEffect(() => {
     if (relation === "Self") {
-      form.setValue("guardian.name", patientName);
+      const fullName = [firstName, lastName].filter(Boolean).join(' ');
+      form.setValue("guardian.name", fullName);
       form.setValue("guardian.contact", patientContact);
     }
-  }, [relation, patientName, patientContact, form]);
+  }, [relation, firstName, lastName, patientContact, form]);
 
 
   const handleFormSubmit = (data: PatientFormData) => {
@@ -141,10 +123,17 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
             <CardDescription>Enter the patient's personal and contact details. Name, DOB, and Gender are required.</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
-            <FormField control={form.control} name="name" render={({ field }) => (
+            <FormField control={form.control} name="firstName" render={({ field }) => (
               <FormItem>
-                <FormLabel>Full Name</FormLabel>
-                <FormControl><Input placeholder="Enter patient's full name" {...field} /></FormControl>
+                <FormLabel>First Name</FormLabel>
+                <FormControl><Input placeholder="Enter patient's first name" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+             <FormField control={form.control} name="lastName" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name</FormLabel>
+                <FormControl><Input placeholder="Enter patient's last name" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -153,18 +142,22 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
               return (
                 <FormItem className="flex flex-col">
                   <FormLabel>Date of Birth</FormLabel>
+                   <Input
+                      id={formItemId}
+                      placeholder="dd-mm-yyyy"
+                      value={field.value ? format(parseISO(field.value), 'dd-MM-yyyy') : ''}
+                      onChange={(e) => {
+                        try {
+                           const parsedDate = parse(e.target.value, 'dd-MM-yyyy', new Date());
+                           if (!isNaN(parsedDate.getTime())) {
+                             field.onChange(format(parsedDate, 'yyyy-MM-dd'));
+                           }
+                        } catch {}
+                      }}
+                    />
                   <Popover>
                     <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          id={formItemId}
-                          variant={"outline"}
-                          className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
-                        >
-                          {field.value ? format(parseISO(field.value), "PPP") : <span>Pick a date</span>}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
+                       <Button variant="outline" className="w-fit"><CalendarIcon className="h-4 w-4" /> Pick from Calendar</Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
@@ -236,13 +229,6 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
                         <FormMessage />
                     </FormItem>
                 )} />
-                <FormField control={form.control} name="address.city" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>City</FormLabel>
-                        <FormControl><Input placeholder="Enter city" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
                 <FormField control={form.control} name="address.state" render={({ field }) => (
                     <FormItem>
                         <FormLabel>State</FormLabel>
@@ -250,6 +236,13 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
                             <FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl>
                             <SelectContent>{INDIAN_STATES.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}</SelectContent>
                         </Select>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+                <FormField control={form.control} name="address.city" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>City</FormLabel>
+                        <FormControl><Input placeholder="Enter city" {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                 )} />

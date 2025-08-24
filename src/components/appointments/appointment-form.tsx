@@ -117,7 +117,7 @@ export function AppointmentForm({ appointment, onSubmit, isSubmitting }: Appoint
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl><SelectTrigger><SelectValue placeholder="Select patient" /></SelectTrigger></FormControl>
                   <SelectContent>
-                    {patients.map(p => <SelectItem key={p.id} value={p.id}>{p.name} ({p.nephroId})</SelectItem>)}
+                    {patients.map(p => <SelectItem key={p.id} value={p.id}>{`${p.firstName} ${p.lastName}`} ({p.nephroId})</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <FormMessage />

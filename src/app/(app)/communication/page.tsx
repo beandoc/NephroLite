@@ -45,9 +45,10 @@ export default function CommunicationPage() {
 
     const allVisits: VisitWithPatientName[] = useMemo(() => {
         if (patientsLoading) return [];
-        return patients.flatMap(p => 
-            (p.visits || []).map(v => ({...v, patientName: p.name, patientId: p.id }))
-        );
+        return patients.flatMap(p => {
+            const patientName = [p.firstName, p.lastName].filter(Boolean).join(' ');
+            return (p.visits || []).map(v => ({...v, patientName, patientId: p.id }));
+        });
     }, [patients, patientsLoading]);
     
     const selectedPatientForOutreach = useMemo(() => {
@@ -80,8 +81,9 @@ export default function CommunicationPage() {
         setIsGeneratingMessage(true);
         setGeneratedMessage('');
         try {
+            const patientFullName = [selectedPatientForOutreach.firstName, selectedPatientForOutreach.lastName].filter(Boolean).join(' ');
             const result = await generatePatientOutreach({
-                patientName: selectedPatientForOutreach.name,
+                patientName: patientFullName,
                 primaryDiagnosis: selectedPatientForOutreach.clinicalProfile.primaryDiagnosis || 'N/A',
                 messageContext: messageContext,
             });
@@ -171,7 +173,7 @@ export default function CommunicationPage() {
                                 <SelectValue placeholder="Select Patient..." />
                             </SelectTrigger>
                             <SelectContent>
-                                {patients.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                {patients.map(p => <SelectItem key={p.id} value={p.id}>{`${p.firstName} ${p.lastName}`}</SelectItem>)}
                             </SelectContent>
                         </Select>
                         <Input 

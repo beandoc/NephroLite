@@ -62,53 +62,56 @@ export function PatientsTable({ patients }: PatientsTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {patients.map((patient) => (
-            <TableRow key={patient.id}>
-              <TableCell className="font-medium">{patient.nephroId}</TableCell>
-              <TableCell>{patient.name}</TableCell>
-              <TableCell>{patient.gender}</TableCell>
-              <TableCell>
-                 <Badge 
-                    variant={patient.patientStatus === 'IPD' ? 'destructive' : 'secondary'}
-                    className={patient.patientStatus === 'Discharged' ? 'opacity-70' : ''}
-                 >
-                    {patient.patientStatus}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Badge variant="outline">{patient.clinicalProfile.primaryDiagnosis}</Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <Button variant="ghost" size="icon" asChild title="View Profile">
-                  <Link href={`/patients/${patient.id}`}><Eye className="h-4 w-4" /></Link>
-                </Button>
-                <Button variant="ghost" size="icon" asChild title="Edit Patient">
-                  <Link href={`/patients/${patient.id}/edit`}><Edit className="h-4 w-4" /></Link>
-                </Button>
-                 <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" title="Delete Patient" className="text-destructive hover:text-destructive/90">
-                      <Trash2 className="h-4 w-4" />
+          {patients.map((patient) => {
+            const patientFullName = [patient.firstName, patient.lastName].filter(Boolean).join(' ');
+            return (
+                <TableRow key={patient.id}>
+                <TableCell className="font-medium">{patient.nephroId}</TableCell>
+                <TableCell>{patientFullName}</TableCell>
+                <TableCell>{patient.gender}</TableCell>
+                <TableCell>
+                    <Badge 
+                        variant={patient.patientStatus === 'IPD' ? 'destructive' : 'secondary'}
+                        className={patient.patientStatus === 'Discharged' ? 'opacity-70' : ''}
+                    >
+                        {patient.patientStatus}
+                    </Badge>
+                </TableCell>
+                <TableCell>
+                    <Badge variant="outline">{patient.clinicalProfile.primaryDiagnosis}</Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" asChild title="View Profile">
+                    <Link href={`/patients/${patient.id}`}><Eye className="h-4 w-4" /></Link>
                     </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete patient <span className="font-semibold">{patient.name} ({patient.nephroId})</span> and all associated data, including appointments.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleDelete(patient.id, patient.name)} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </TableCell>
-            </TableRow>
-          ))}
+                    <Button variant="ghost" size="icon" asChild title="Edit Patient">
+                    <Link href={`/patients/${patient.id}/edit`}><Edit className="h-4 w-4" /></Link>
+                    </Button>
+                    <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" title="Delete Patient" className="text-destructive hover:text-destructive/90">
+                        <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete patient <span className="font-semibold">{patientFullName} ({patient.nephroId})</span> and all associated data, including appointments.
+                        </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(patient.id, patientFullName)} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+                            Delete
+                        </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                    </AlertDialog>
+                </TableCell>
+                </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

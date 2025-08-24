@@ -29,7 +29,7 @@ export default function NewPatientPage() {
       
       toast({
         title: "Patient Registered",
-        description: `${newPatient.name} (${newPatient.nephroId}) has been added.`,
+        description: `${[newPatient.firstName, newPatient.lastName].join(' ')} (${newPatient.nephroId}) has been added.`,
       });
 
       // Programmatically open the dialog after successful registration

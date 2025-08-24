@@ -254,11 +254,12 @@ export default function PatientHealthTrendsPage() {
     );
   }
 
+  const patientFullName = [patient.firstName, patient.lastName].filter(Boolean).join(' ');
 
   return (
     <div className="container mx-auto py-2">
       <PageHeader
-        title={`Health Trends for ${patient.name}`}
+        title={`Health Trends for ${patientFullName}`}
         description={`Advanced analytics for patient ID: ${patient.nephroId}`}
         actions={
           <Button variant="outline" onClick={() => router.back()}>

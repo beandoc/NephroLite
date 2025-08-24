@@ -52,16 +52,18 @@ export const PatientDiagnosisRx = ({ patient: initialPatient }: PatientDiagnosis
       </div>
       <div className="space-y-4">
         {history.map(item => (
-          <Card key={item.id} className="shadow-sm">
-            <CardHeader className="pb-3 pt-4">
-              <CardTitle className="text-md font-semibold flex items-center"><Stethoscope className="w-5 h-5 mr-2 text-primary"/>{item.diagnosis}</CardTitle>
-              <CardDescription>{format(parseISO(item.date), 'PPP')} - Visit with {item.doctor}</CardDescription>
-            </CardHeader>
-            <CardContent className="pb-4">
-              <p className="text-sm font-medium flex items-center text-muted-foreground"><Pill className="w-4 h-4 mr-2 text-primary"/>Medication:</p>
-              <p className="text-sm text-foreground pl-6">{item.medication}</p>
-            </CardContent>
-          </Card>
+          <div key={item.id}>
+            <Card className="shadow-sm">
+                <CardHeader className="pb-3 pt-4">
+                <CardTitle className="text-md font-semibold flex items-center"><Stethoscope className="w-5 h-5 mr-2 text-primary"/>{item.diagnosis}</CardTitle>
+                <CardDescription>{format(parseISO(item.date), 'PPP')} - Visit with {item.doctor}</CardDescription>
+                </CardHeader>
+                <CardContent className="pb-4">
+                <p className="text-sm font-medium flex items-center text-muted-foreground"><Pill className="w-4 h-4 mr-2 text-primary"/>Medication:</p>
+                <p className="text-sm text-foreground pl-6">{item.medication}</p>
+                </CardContent>
+            </Card>
+          </div>
         ))}
         {history.length === 0 && (
          <Card className="flex items-center justify-center h-32 border-dashed">

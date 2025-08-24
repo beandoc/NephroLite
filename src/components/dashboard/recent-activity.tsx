@@ -31,24 +31,25 @@ export function RecentActivity() {
         const patientActivities: ActivityItem[] = patients.map(p => ({
             type: 'patient',
             id: p.id,
-            description: `Patient ${p.name} was registered.`,
+            description: `Patient ${[p.firstName, p.lastName].join(' ')} was registered.`,
             date: parseISO(p.createdAt),
             href: `/patients/${p.id}`,
             icon: UserPlus,
             iconColor: 'text-green-500',
         }));
 
-        const visitActivities: ActivityItem[] = patients.flatMap(p => 
-            p.visits.map(v => ({
+        const visitActivities: ActivityItem[] = patients.flatMap(p => {
+            const patientName = [p.firstName, p.lastName].join(' ');
+            return p.visits.map(v => ({
                 type: 'visit' as const,
                 id: v.id,
-                description: `New ${v.visitType.toLowerCase()} visit for ${p.name}.`,
+                description: `New ${v.visitType.toLowerCase()} visit for ${patientName}.`,
                 date: parseISO(v.createdAt),
                 href: `/patients/${p.id}?tab=visits`,
                 icon: FileText,
                 iconColor: 'text-indigo-500'
             }))
-        );
+        });
         
         return [...patientActivities, ...visitActivities]
             .sort((a, b) => b.date.getTime() - a.date.getTime())
