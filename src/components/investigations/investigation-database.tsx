@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -20,6 +20,7 @@ import type { InvestigationMaster, InvestigationPanel } from '@/lib/types';
 import { investigationSchema, panelSchema, type InvestigationFormData, type PanelFormData } from '@/lib/schemas';
 import { INVESTIGATION_GROUPS, RESULT_TYPES } from '@/lib/constants';
 import { usePatientData } from '@/hooks/use-patient-data';
+import { Skeleton } from '../ui/skeleton';
 
 
 export function InvestigationDatabase() {
@@ -38,6 +39,12 @@ export function InvestigationDatabase() {
   const [editingInvestigation, setEditingInvestigation] = useState<InvestigationMaster | null>(null);
   const [editingPanel, setEditingPanel] = useState<InvestigationPanel | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   const investigationForm = useForm<InvestigationFormData>({
     resolver: zodResolver(investigationSchema),
@@ -136,37 +143,45 @@ export function InvestigationDatabase() {
             className="mb-4"
           />
           <ScrollArea className="h-[500px]">
-            <Table>
-              <TableHeader className="sticky top-0 bg-card">
-                <TableRow>
-                  <TableHead>Test Name</TableHead>
-                  <TableHead>Group</TableHead>
-                  <TableHead>Result Type</TableHead>
-                  <TableHead>Unit</TableHead>
-                  <TableHead>Normal Range</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredMasterList.map(inv => (
-                  <TableRow key={inv.id}>
-                    <TableCell className="font-medium">{inv.name}</TableCell>
-                    <TableCell>{inv.group}</TableCell>
-                    <TableCell>{inv.resultType}</TableCell>
-                    <TableCell>{inv.unit || 'N/A'}</TableCell>
-                    <TableCell>{inv.normalRange || 'N/A'}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenInvestigationDialog(inv)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDeleteInvestigation(inv.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            {!isClient ? (
+                <div className="space-y-2 p-2">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
+            ) : (
+                <Table>
+                <TableHeader className="sticky top-0 bg-card">
+                    <TableRow>
+                    <TableHead>Test Name</TableHead>
+                    <TableHead>Group</TableHead>
+                    <TableHead>Result Type</TableHead>
+                    <TableHead>Unit</TableHead>
+                    <TableHead>Normal Range</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {filteredMasterList.map(inv => (
+                    <TableRow key={inv.id}>
+                        <TableCell className="font-medium">{inv.name}</TableCell>
+                        <TableCell>{inv.group}</TableCell>
+                        <TableCell>{inv.resultType}</TableCell>
+                        <TableCell>{inv.unit || 'N/A'}</TableCell>
+                        <TableCell>{inv.normalRange || 'N/A'}</TableCell>
+                        <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenInvestigationDialog(inv)}>
+                            <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteInvestigation(inv.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                        </TableCell>
+                    </TableRow>
+                    ))}
+                </TableBody>
+                </Table>
+            )}
           </ScrollArea>
         </CardContent>
       </Card>
