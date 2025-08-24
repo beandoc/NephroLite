@@ -159,9 +159,13 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
                 const handleManualChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                     const typedValue = e.target.value;
                     setDisplayValue(typedValue);
-                    const parsedDate = parse(typedValue, 'dd-MM-yyyy', new Date());
-                    if (isValid(parsedDate)) {
-                        field.onChange(format(parsedDate, 'yyyy-MM-dd'));
+                    
+                    // Only attempt to parse and set the value if the length is 10 (dd-mm-yyyy)
+                    if (typedValue.length === 10) {
+                        const parsedDate = parse(typedValue, 'dd-MM-yyyy', new Date());
+                        if (isValid(parsedDate)) {
+                            field.onChange(format(parsedDate, 'yyyy-MM-dd'));
+                        }
                     }
                 };
 
