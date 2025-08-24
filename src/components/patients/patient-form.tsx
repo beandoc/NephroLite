@@ -27,7 +27,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, parse, parseISO } from "date-fns";
+import { format, parse, parseISO, isValid } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GENDERS, INDIAN_STATES, RELATIONSHIPS } from "@/lib/constants";
@@ -137,45 +137,73 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
                 <FormMessage />
               </FormItem>
             )} />
-            <FormField control={form.control} name="dob" render={({ field }) => {
-              const { formItemId } = useFormField();
-              return (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Date of Birth</FormLabel>
-                   <Input
-                      id={formItemId}
+            <FormField
+              control={form.control}
+              name="dob"
+              render={({ field }) => {
+                const [displayValue, setDisplayValue] = React.useState(
+                  field.value ? format(parseISO(field.value), 'dd-MM-yyyy') : ''
+                );
+
+                React.useEffect(() => {
+                  if (field.value) {
+                    const date = parseISO(field.value);
+                    if (isValid(date)) {
+                      setDisplayValue(format(date, 'dd-MM-yyyy'));
+                    }
+                  } else {
+                    setDisplayValue('');
+                  }
+                }, [field.value]);
+
+                const handleManualChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                    const typedValue = e.target.value;
+                    setDisplayValue(typedValue);
+                    const parsedDate = parse(typedValue, 'dd-MM-yyyy', new Date());
+                    if (isValid(parsedDate)) {
+                        field.onChange(format(parsedDate, 'yyyy-MM-dd'));
+                    }
+                };
+
+                const handleCalendarSelect = (date: Date | undefined) => {
+                    if (date) {
+                        field.onChange(format(date, 'yyyy-MM-dd'));
+                        setDisplayValue(format(date, 'dd-MM-yyyy'));
+                    }
+                };
+                
+                return (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Date of Birth</FormLabel>
+                    <Input
                       placeholder="dd-mm-yyyy"
-                      value={field.value ? format(parseISO(field.value), 'dd-MM-yyyy') : ''}
-                      onChange={(e) => {
-                        try {
-                           const parsedDate = parse(e.target.value, 'dd-MM-yyyy', new Date());
-                           if (!isNaN(parsedDate.getTime())) {
-                             field.onChange(format(parsedDate, 'yyyy-MM-dd'));
-                           }
-                        } catch {}
-                      }}
+                      value={displayValue}
+                      onChange={handleManualChange}
                     />
-                  <Popover>
-                    <PopoverTrigger asChild>
-                       <Button variant="outline" className="w-fit"><CalendarIcon className="h-4 w-4" /> Pick from Calendar</Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value ? parseISO(field.value) : undefined}
-                        onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
-                        disabled={(date) => date > today || date < oneHundredYearsAgo}
-                        initialFocus
-                        captionLayout="dropdown-buttons" 
-                        fromYear={oneHundredYearsAgo.getFullYear()} 
-                        toYear={today.getFullYear()}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              );
-            }} />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-fit">
+                          <CalendarIcon className="h-4 w-4" /> Pick from Calendar
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ? parseISO(field.value) : undefined}
+                          onSelect={handleCalendarSelect}
+                          disabled={(date) => date > today || date < oneHundredYearsAgo}
+                          initialFocus
+                          captionLayout="dropdown-buttons"
+                          fromYear={oneHundredYearsAgo.getFullYear()}
+                          toYear={today.getFullYear()}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
             <FormField control={form.control} name="gender" render={({ field }) => (
               <FormItem>
                 <FormLabel>Gender</FormLabel>
@@ -222,13 +250,6 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
                 <CardTitle className="font-headline">Address Details (Optional)</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
-                 <FormField control={form.control} name="address.street" render={({ field }) => (
-                    <FormItem className="md:col-span-2">
-                        <FormLabel>Street Address</FormLabel>
-                        <FormControl><Input placeholder="House No., Street, Area" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
                 <FormField control={form.control} name="address.state" render={({ field }) => (
                     <FormItem>
                         <FormLabel>State</FormLabel>
@@ -243,6 +264,13 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
                     <FormItem>
                         <FormLabel>City</FormLabel>
                         <FormControl><Input placeholder="Enter city" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+                 <FormField control={form.control} name="address.street" render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                        <FormLabel>Street Address</FormLabel>
+                        <FormControl><Input placeholder="House No., Street, Area" {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                 )} />
