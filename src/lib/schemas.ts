@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS, VACCINATION_NAMES, VISIT_TYPES, PATIENT_GROUP_NAMES, RESIDENCE_TYPES, APPOINTMENT_TYPES, APPOINTMENT_STATUSES, MOCK_DOCTORS, INVESTIGATION_GROUPS } from './constants';
+import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS, VACCINATION_NAMES, VISIT_TYPES, PATIENT_GROUP_NAMES, RESIDENCE_TYPES, APPOINTMENT_TYPES, APPOINTMENT_STATUSES, MOCK_DOCTORS, INVESTIGATION_GROUPS, RESULT_TYPES } from './constants';
 
 export const doseSchema = z.object({
   id: z.string(),
@@ -93,6 +93,8 @@ const investigationTestSchema = z.object({
     result: z.string(),
     unit: z.string().optional(),
     normalRange: z.string().optional(),
+    resultType: z.enum(RESULT_TYPES).optional(),
+    options: z.array(z.string()).optional(),
 });
 
 const investigationRecordSchema = z.object({
@@ -164,6 +166,7 @@ export const patientFormDataSchema = z.object({
 export const appointmentSchema = z.object({
     id: z.string(),
     patientId: z.string(),
+    patientName: z.string(),
     date: z.string(),
     createdAt: z.string(),
     time: z.string(),
@@ -187,6 +190,8 @@ export const investigationMasterSchema = z.object({
     group: z.enum(INVESTIGATION_GROUPS),
     unit: z.string().optional(),
     normalRange: z.string().optional(),
+    resultType: z.enum(RESULT_TYPES).default('numeric'),
+    options: z.array(z.string()).optional(),
 });
 
 export const investigationPanelSchema = z.object({
@@ -223,6 +228,8 @@ export const investigationSchema = z.object({
   group: z.enum(INVESTIGATION_GROUPS, { required_error: 'Group is required.' }),
   unit: z.string().optional(),
   normalRange: z.string().optional(),
+  resultType: z.enum(RESULT_TYPES).optional(),
+  options: z.array(z.string()).optional(),
 });
 
 

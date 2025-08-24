@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -27,6 +26,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { usePatientData } from '@/hooks/use-patient-data';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 interface PatientInvestigationsTabContentProps {
@@ -40,6 +40,8 @@ const testEntrySchema = z.object({
   result: z.string().min(1, "Result is required"),
   unit: z.string().optional(),
   normalRange: z.string().optional(),
+  resultType: z.enum(['numeric', 'text', 'select']).optional(),
+  options: z.array(z.string()).optional(),
 });
 
 const investigationRecordFormSchema = z.object({
@@ -50,18 +52,8 @@ const investigationRecordFormSchema = z.object({
 });
 type InvestigationRecordFormData = z.infer<typeof investigationRecordFormSchema>;
 
-const NARRATIVE_GROUPS = ['Radiology', 'Special Investigations'];
-const NARRATIVE_TEST_NAMES = [
-  'Urine Routine & Microscopy (R/M)',
-  'Urine Culture & Sensitivity',
-  'Blood Culture & Sensitivity',
-  'ECG',
-  'Kidney Biopsy',
-  'Peripheral Blood Smear (PBS)'
-];
-
 const isCritical = (test: InvestigationTest): boolean => {
-  if (!test.result || !test.normalRange || test.normalRange === 'N/A') return false;
+  if (test.resultType !== 'numeric' || !test.result || !test.normalRange || test.normalRange === 'N/A') return false;
 
   const resultValue = parseFloat(test.result);
   if (isNaN(resultValue)) return false; 
@@ -186,7 +178,9 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
         name: t.name,
         result: "",
         unit: t.unit || "",
-        normalRange: t.normalRange || ""
+        normalRange: t.normalRange || "",
+        resultType: t.resultType || 'numeric',
+        options: t.options || [],
       })),
     });
     setAddTestSearchQuery('');
@@ -226,7 +220,16 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     if (shouldAdd) {
         const testsToAdd = INVESTIGATION_MASTER_LIST
             .filter(t => testIdsToToggle.includes(t.id) && !testsInForm.includes(t.id))
-            .map(t => ({ ...t, result: '' }));
+            .map(t => ({ 
+              id: t.id,
+              group: t.group,
+              name: t.name,
+              result: '',
+              unit: t.unit,
+              normalRange: t.normalRange,
+              resultType: t.resultType,
+              options: t.options,
+            }));
         append(testsToAdd);
     } else {
         const testIndicesToRemove: number[] = [];
@@ -324,7 +327,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                                 <CommandInput 
                                     placeholder="Search to add any test or panel from the database..."
                                     value={addTestSearchQuery}
-                                    onChangeCapture={(e: React.ChangeEvent<HTMLInputElement>) => setAddTestSearchQuery(e.target.value)}
+                                    onValueChange={setAddTestSearchQuery}
                                 />
                                 <CommandList>
                                   <CommandEmpty>No results found.</CommandEmpty>
@@ -353,7 +356,8 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
 
                   <div className="space-y-4 mt-4">
                     {fields.map((field, index) => {
-                      const isNarrative = NARRATIVE_GROUPS.includes(field.group) || NARRATIVE_TEST_NAMES.includes(field.name);
+                      const isNarrative = field.resultType === 'text';
+                      const isSelect = field.resultType === 'select';
                       return (
                         <div key={field.id} className="p-3 border rounded-lg space-y-2 relative bg-muted/50">
                           <Button type="button" variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => remove(index)}>
@@ -371,12 +375,27 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                                   <FormMessage />
                                 </FormItem>
                               )} />
-                          ) : (
+                          ) : isSelect ? (
+                            <FormField control={form.control} name={`tests.${index}.result`} render={({ field: selectField }) => (
+                               <FormItem>
+                                  <FormLabel>Result</FormLabel>
+                                   <Select onValueChange={selectField.onChange} defaultValue={selectField.value}>
+                                    <FormControl>
+                                        <SelectTrigger><SelectValue placeholder="Select result..."/></SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {(field.options || []).map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                                    </SelectContent>
+                                   </Select>
+                                  <FormMessage />
+                                </FormItem>
+                            )}/>
+                          ) : ( // Numeric
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                               <FormField control={form.control} name={`tests.${index}.result`} render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>Result</FormLabel>
-                                  <FormControl><Input placeholder="e.g., 12.5, Positive" {...field} /></FormControl>
+                                  <FormControl><Input type="number" step="any" placeholder="e.g., 12.5" {...field} /></FormControl>
                                   <FormMessage />
                                 </FormItem>
                               )} />

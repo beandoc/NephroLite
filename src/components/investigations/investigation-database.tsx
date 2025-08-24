@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import type { InvestigationMaster, InvestigationPanel } from '@/lib/types';
 import { investigationSchema, panelSchema, type InvestigationFormData, type PanelFormData } from '@/lib/schemas';
-import { INVESTIGATION_GROUPS } from '@/lib/constants';
+import { INVESTIGATION_GROUPS, RESULT_TYPES } from '@/lib/constants';
 import { usePatientData } from '@/hooks/use-patient-data';
 
 
@@ -58,7 +58,7 @@ export function InvestigationDatabase() {
 
   const handleOpenInvestigationDialog = (inv?: InvestigationMaster) => {
     setEditingInvestigation(inv || null);
-    investigationForm.reset(inv || { name: '', unit: '', normalRange: '' });
+    investigationForm.reset(inv || { name: '', unit: '', normalRange: '', resultType: 'numeric', options: [] });
     setIsInvestigationDialogOpen(true);
   };
 
@@ -72,6 +72,7 @@ export function InvestigationDatabase() {
     const investigationToSave: InvestigationMaster = {
       ...data,
       id: editingInvestigation?.id || data.name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now(),
+      resultType: data.resultType || 'numeric',
     };
     addOrUpdateInvestigation(investigationToSave);
     toast({ title: `Investigation ${editingInvestigation ? 'Updated' : 'Added'}` });
@@ -102,6 +103,8 @@ export function InvestigationDatabase() {
   const filteredMasterList = useMemo(() => {
     return investigationMasterList.filter(inv => inv.name.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [investigationMasterList, searchQuery]);
+  
+  const resultType = investigationForm.watch('resultType');
 
   return (
     <>
@@ -138,6 +141,7 @@ export function InvestigationDatabase() {
                 <TableRow>
                   <TableHead>Test Name</TableHead>
                   <TableHead>Group</TableHead>
+                  <TableHead>Result Type</TableHead>
                   <TableHead>Unit</TableHead>
                   <TableHead>Normal Range</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -148,6 +152,7 @@ export function InvestigationDatabase() {
                   <TableRow key={inv.id}>
                     <TableCell className="font-medium">{inv.name}</TableCell>
                     <TableCell>{inv.group}</TableCell>
+                    <TableCell>{inv.resultType}</TableCell>
                     <TableCell>{inv.unit || 'N/A'}</TableCell>
                     <TableCell>{inv.normalRange || 'N/A'}</TableCell>
                     <TableCell className="text-right">
@@ -181,16 +186,40 @@ export function InvestigationDatabase() {
                   <FormMessage />
                 </FormItem>
               )} />
-              <FormField control={investigationForm.control} name="group" render={({ field }) => (
-                 <FormItem>
-                  <FormLabel>Group</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl><SelectTrigger><SelectValue placeholder="Select group..." /></SelectTrigger></FormControl>
-                    <SelectContent>{INVESTIGATION_GROUPS.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              <div className="grid grid-cols-2 gap-4">
+                 <FormField control={investigationForm.control} name="group" render={({ field }) => (
+                   <FormItem>
+                    <FormLabel>Group</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Select group..." /></SelectTrigger></FormControl>
+                      <SelectContent>{INVESTIGATION_GROUPS.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                 <FormField control={investigationForm.control} name="resultType" render={({ field }) => (
+                   <FormItem>
+                    <FormLabel>Result Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || 'numeric'}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Select result type..." /></SelectTrigger></FormControl>
+                      <SelectContent>{RESULT_TYPES.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+              
+              {resultType === 'select' && (
+                 <FormField control={investigationForm.control} name="options" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Options (comma-separated)</FormLabel>
+                    <FormControl><Input {...field} value={Array.isArray(field.value) ? field.value.join(', ') : ''} onChange={(e) => field.onChange(e.target.value.split(',').map(s => s.trim()))} /></FormControl>
+                    <FormDescription>e.g., Positive, Negative</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              )}
+              
               <FormField control={investigationForm.control} name="unit" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Unit (Optional)</FormLabel>
