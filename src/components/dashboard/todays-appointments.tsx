@@ -42,25 +42,27 @@ export function TodaysAppointments() {
   }, [appointments]);
 
 
-  const handleUpdateStatus = (appointmentId: string, newStatus: Appointment['status'], patientName: string, patientId?: string) => {
+  const handleUpdateStatus = (appointmentId: string, newStatus: Appointment['status'], patientId?: string) => {
     updateAppointmentStatus(appointmentId, newStatus);
+    const patient = patientId ? getPatientById(patientId) : null;
+    const patientFullName = patient ? [patient.firstName, patient.lastName].filter(Boolean).join(' ') : "The patient";
+
     toast({
       title: "Appointment Updated",
-      description: `${patientName}'s appointment marked as ${newStatus}.`
+      description: `${patientFullName}'s appointment marked as ${newStatus}.`
     });
 
-    if (newStatus === 'Admitted' && patientId) {
-      const patient = getPatientById(patientId);
-      if (patient && patient.patientStatus !== 'IPD') {
+    if (newStatus === 'Admitted' && patient) {
+      if (patient.patientStatus !== 'IPD') {
         updatePatient(patientId, { patientStatus: 'IPD' });
         toast({
           title: "Patient Admitted",
-          description: `${patientName} has been admitted.`
+          description: `${patientFullName} has been admitted.`
         });
-      } else if (patient && patient.patientStatus === 'IPD') {
+      } else {
          toast({
           title: "Patient Already Admitted",
-          description: `${patientName} is already marked as IPD.`
+          description: `${patientFullName} is already marked as IPD.`
         });
       }
     }
@@ -120,7 +122,11 @@ export function TodaysAppointments() {
         {todaysAppointments.length > 0 ? (
           <ScrollArea className="flex-grow pr-3">
             <div className="space-y-3">
-            {todaysAppointments.map((appointment) => (
+            {todaysAppointments.map((appointment) => {
+              const patient = getPatientById(appointment.patientId);
+              const patientFullName = patient ? [patient.firstName, patient.lastName].filter(Boolean).join(' ') : "Unknown Patient";
+
+              return (
               <div 
                 key={appointment.id} 
                 className="flex flex-col p-3 rounded-md border bg-card hover:bg-muted/50 transition-colors shadow-sm"
@@ -128,7 +134,7 @@ export function TodaysAppointments() {
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-grow">
                     <Link href={`/patients/${appointment.patientId}`} className="font-semibold text-sm text-primary hover:underline flex items-center">
-                      <User className="w-3.5 h-3.5 mr-1.5" /> {appointment.patientName}
+                      <User className="w-3.5 h-3.5 mr-1.5" /> {patientFullName}
                     </Link>
                     <Badge 
                       variant={getStatusBadgeVariant(appointment.status)}
@@ -147,18 +153,18 @@ export function TodaysAppointments() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       {appointment.status === 'Scheduled' &&
-                        <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Waiting', appointment.patientName)}>
+                        <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Waiting', appointment.patientId)}>
                           <Hourglass className="mr-2 h-4 w-4 text-amber-600" /> Mark as Waiting
                         </DropdownMenuItem>
                       }
-                      <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Completed', appointment.patientName)}>
+                      <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Completed', appointment.patientId)}>
                         <CalendarCheck className="mr-2 h-4 w-4 text-green-600" /> Mark Completed
                       </DropdownMenuItem>
-                       <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Not Showed', appointment.patientName)}>
+                       <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Not Showed', appointment.patientId)}>
                         <CalendarX className="mr-2 h-4 w-4 text-red-600" /> Mark Not Showed
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Admitted', appointment.patientName, appointment.patientId)}>
+                      <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Admitted', appointment.patientId)}>
                         <Hospital className="mr-2 h-4 w-4" /> Admit Patient
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -173,7 +179,8 @@ export function TodaysAppointments() {
                    <Link href={`/patients/${appointment.patientId}`}><Eye className="w-3.5 h-3.5 mr-1"/> View Patient</Link>
                 </Button>
               </div>
-            ))}
+              )
+            })}
             </div>
           </ScrollArea>
         ) : (

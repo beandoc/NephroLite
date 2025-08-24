@@ -27,7 +27,7 @@ export interface DataContextType {
 
   // Appointment Data
   appointments: Appointment[];
-  addAppointment: (appointmentData: Omit<Appointment, 'id' | 'status' | 'patientName' | 'createdAt'>, patient: Patient) => Promise<Appointment>;
+  addAppointment: (appointmentData: Omit<Appointment, 'id' | 'status' | 'createdAt'>, patient: Patient) => Promise<Appointment>;
   updateAppointmentStatus: (id: string, status: Appointment['status']) => Promise<void>;
   updateMultipleAppointmentStatuses: (updates: { id: string, status: Appointment['status'] }[]) => Promise<void>;
   updateAppointment: (updatedAppointmentData: Appointment) => Promise<void>;
@@ -273,12 +273,11 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
   }, [patients]);
 
   // --- APPOINTMENT DATA LOGIC ---
-  const addAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'status' | 'patientName' | 'createdAt'>, patient: Patient): Promise<Appointment> => {
+  const addAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'status' | 'createdAt'>, patient: Patient): Promise<Appointment> => {
     const nowISO = new Date().toISOString();
     const newAppointment: Appointment = {
       id: crypto.randomUUID(),
       ...appointmentData,
-      patientName: [patient.firstName, patient.lastName].filter(Boolean).join(' '),
       status: 'Scheduled',
       createdAt: nowISO,
     };

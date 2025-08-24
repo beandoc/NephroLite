@@ -164,7 +164,6 @@ export const patientFormDataSchema = z.object({
 export const appointmentSchema = z.object({
     id: z.string(),
     patientId: z.string(),
-    patientName: z.string(),
     date: z.string(),
     createdAt: z.string(),
     time: z.string(),

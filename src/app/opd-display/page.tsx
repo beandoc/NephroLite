@@ -59,9 +59,10 @@ export default function OpdLoginPage() {
       return;
     }
 
+    const patientFullName = [patientWithMobile.firstName, patientWithMobile.lastName].filter(Boolean).join(' ');
     toast({
       title: "Login Successful",
-      description: `Welcome, ${patientWithMobile.name}. Your status page will open.`,
+      description: `Welcome, ${patientFullName}. Your status page will open.`,
     });
     
     router.push(`/opd-display/status/${todaysAppointment.id}`);

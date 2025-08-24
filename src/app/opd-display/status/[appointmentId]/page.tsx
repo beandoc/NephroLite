@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { User, Users, Clock, PlayCircle, Loader2, CheckCircle, Hourglass } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { usePatientData } from '@/hooks/use-patient-data';
 
 const anonymizeName = (name: string) => {
     if (!name || name.length < 2) return "******";
@@ -21,6 +22,7 @@ export default function PatientStatusPage() {
     const { toast } = useToast();
 
     const { appointments, isLoading: appointmentsLoading } = useAppointmentData();
+    const { getPatientById } = usePatientData();
 
     // Auto-refresh data every 10 seconds
     useEffect(() => {
@@ -62,6 +64,12 @@ export default function PatientStatusPage() {
 
         return { nowServing, waitingList, myAppointment, myQueuePosition, nowServingQueueNumber };
     }, [appointments, appointmentsLoading, appointmentId]);
+
+    const getPatientFullName = (patientId: string) => {
+        const patient = getPatientById(patientId);
+        if (!patient) return "Patient";
+        return [patient.firstName, patient.lastName].filter(Boolean).join(' ');
+    }
 
     const getStatusContent = () => {
         if (!myAppointment) return null;
@@ -116,10 +124,12 @@ export default function PatientStatusPage() {
         );
     }
 
+    const patientFullName = getPatientFullName(myAppointment.patientId);
+
     return (
         <div className="max-w-4xl mx-auto p-4 space-y-6">
              <header className="text-center space-y-1">
-                <h1 className="text-3xl font-bold text-primary">Welcome, {myAppointment.patientName}</h1>
+                <h1 className="text-3xl font-bold text-primary">Welcome, {patientFullName}</h1>
                 <p className="text-muted-foreground text-lg">Here is your live queue status.</p>
             </header>
 
@@ -154,13 +164,16 @@ export default function PatientStatusPage() {
                 <CardContent>
                     {waitingList.length > 0 ? (
                         <ul className="space-y-2">
-                            {waitingList.slice(0, 5).map((app, index) => (
-                                <li key={app.id} className={`flex items-center p-2 rounded-md text-lg ${app.id === myAppointment.id ? 'bg-blue-100 border-primary border-2' : 'bg-slate-100'}`}>
-                                    <span className="font-bold text-primary mr-4">{nowServingQueueNumber > 0 ? nowServingQueueNumber + index + 1 : index + 1}</span>
-                                    <span className="font-semibold">{anonymizeName(app.patientName)}</span>
-                                     {app.id === myAppointment.id && <span className="ml-auto text-sm font-bold text-primary">(This is you)</span>}
-                                </li>
-                            ))}
+                            {waitingList.slice(0, 5).map((app, index) => {
+                                const appPatientName = getPatientFullName(app.patientId);
+                                return (
+                                    <li key={app.id} className={`flex items-center p-2 rounded-md text-lg ${app.id === myAppointment.id ? 'bg-blue-100 border-primary border-2' : 'bg-slate-100'}`}>
+                                        <span className="font-bold text-primary mr-4">{nowServingQueueNumber > 0 ? nowServingQueueNumber + index + 1 : index + 1}</span>
+                                        <span className="font-semibold">{anonymizeName(appPatientName)}</span>
+                                         {app.id === myAppointment.id && <span className="ml-auto text-sm font-bold text-primary">(This is you)</span>}
+                                    </li>
+                                );
+                            })}
                         </ul>
                     ) : (
                         <p className="text-center text-muted-foreground py-4">The waiting list is empty.</p>

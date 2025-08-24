@@ -18,11 +18,12 @@ export default function NewAppointmentPage() {
 
   const handleSubmit = async (data: AppointmentFormData, patient: Patient) => {
     setIsSubmitting(true);
+    const patientFullName = [patient.firstName, patient.lastName].filter(Boolean).join(' ');
     try {
       const newAppointment = await addAppointment(data, patient);
       toast({
         title: "Appointment Scheduled",
-        description: `Appointment for ${patient.name} with ${newAppointment.doctorName} on ${format(parse(newAppointment.date, "yyyy-MM-dd", new Date()), 'PPP')} at ${newAppointment.time} has been scheduled.`,
+        description: `Appointment for ${patientFullName} with ${newAppointment.doctorName} on ${format(parse(newAppointment.date, "yyyy-MM-dd", new Date()), 'PPP')} at ${newAppointment.time} has been scheduled.`,
       });
       router.push('/appointments');
     } catch (error) {
