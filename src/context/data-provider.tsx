@@ -277,7 +277,13 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     const nowISO = new Date().toISOString();
     const newAppointment: Appointment = {
       id: crypto.randomUUID(),
-      ...appointmentData,
+      patientId: appointmentData.patientId,
+      patientName: appointmentData.patientName,
+      date: appointmentData.date,
+      time: appointmentData.time,
+      type: appointmentData.type,
+      doctorName: appointmentData.doctorName,
+      notes: appointmentData.notes,
       status: 'Scheduled',
       createdAt: nowISO,
     };
