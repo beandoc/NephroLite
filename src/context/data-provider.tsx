@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
-import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord, Appointment, InvestigationMaster, InvestigationPanel, Vaccination, Dose } from '@/lib/types';
+import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord, Appointment, InvestigationMaster, InvestigationPanel, Vaccination, Dose, Intervention } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { VACCINATION_NAMES, MOCK_USER } from '@/lib/constants';
 import { MOCK_PATIENTS, MOCK_APPOINTMENTS } from '@/lib/mock-data';
@@ -23,6 +23,8 @@ export interface DataContextType {
   updateVisitData: (patientId: string, visitId: string, data: ClinicalVisitData) => void;
   addOrUpdateInvestigationRecord: (patientId: string, record: InvestigationRecord) => void;
   deleteInvestigationRecord: (patientId: string, recordId: string) => void;
+  addOrUpdateIntervention: (patientId: string, intervention: Intervention) => void;
+  deleteIntervention: (patientId: string, interventionId: string) => void;
   updateClinicalProfile: (patientId: string, clinicalProfileData: ClinicalProfile) => void;
 
   // Appointment Data
@@ -154,6 +156,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
           visits: [],
           investigationRecords: [],
           nextAppointmentDate: "",
+          interventions: [],
           clinicalProfile: {
               ...getInitialClinicalProfile(),
               tags: [],
@@ -262,6 +265,27 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
         return { ...p, investigationRecords: (p.investigationRecords || []).filter(r => r.id !== recordId) };
     }));
   }, []);
+  
+  const addOrUpdateIntervention = useCallback((patientId: string, intervention: Intervention) => {
+    setPatients(prev => prev.map(p => {
+      if (p.id !== patientId) return p;
+      const interventions = p.interventions || [];
+      const existingIndex = interventions.findIndex(i => i.id === intervention.id);
+      if (existingIndex > -1) {
+        interventions[existingIndex] = intervention;
+      } else {
+        interventions.push(intervention);
+      }
+      return { ...p, interventions: [...interventions] };
+    }));
+  }, []);
+
+  const deleteIntervention = useCallback((patientId: string, interventionId: string) => {
+    setPatients(prev => prev.map(p => {
+      if (p.id !== patientId) return p;
+      return { ...p, interventions: (p.interventions || []).filter(i => i.id !== interventionId) };
+    }));
+  }, []);
 
   const deletePatient = useCallback((patientId: string): void => {
     setPatients(prev => prev.filter(p => p.id !== patientId));
@@ -359,6 +383,8 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     updateVisitData,
     addOrUpdateInvestigationRecord,
     deleteInvestigationRecord,
+    addOrUpdateIntervention,
+    deleteIntervention,
     updateClinicalProfile,
     currentPatient,
     appointments,
@@ -383,6 +409,8 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     updateVisitData, 
     addOrUpdateInvestigationRecord, 
     deleteInvestigationRecord,
+    addOrUpdateIntervention,
+    deleteIntervention,
     updateClinicalProfile,
     currentPatient,
     appointments,
