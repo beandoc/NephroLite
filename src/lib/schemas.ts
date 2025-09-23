@@ -1,7 +1,7 @@
 
 
 import { z } from 'zod';
-import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS, VACCINATION_NAMES, VISIT_TYPES, PATIENT_GROUP_NAMES, RESIDENCE_TYPES, APPOINTMENT_TYPES, APPOINTMENT_STATUSES, MOCK_DOCTORS, INVESTIGATION_GROUPS, RESULT_TYPES } from './constants';
+import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS, VACCINATION_NAMES, VISIT_TYPES, PATIENT_GROUP_NAMES, RESIDENCE_TYPES, APPOINTMENT_TYPES, APPOINTMENT_STATUSES, MOCK_DOCTORS, INVESTIGATION_GROUPS, RESULT_TYPES, INTERVENTION_TYPES, CATHETER_SITES, CUFFED_CATHETER_SITES, CAPD_CATHETER_TYPES, CAPD_INSERTION_TECHNIQUES, AV_FISTULA_TYPES } from './constants';
 
 export const doseSchema = z.object({
   id: z.string(),
@@ -15,6 +15,14 @@ export const vaccinationSchema = z.object({
     totalDoses: z.number(),
     nextDoseDate: z.string().nullable(),
     doses: z.array(doseSchema),
+});
+
+export const interventionSchema = z.object({
+  id: z.string(),
+  date: z.string(),
+  type: z.enum(INTERVENTION_TYPES),
+  details: z.record(z.string().or(z.boolean())).optional(),
+  notes: z.string().optional(),
 });
 
 export const clinicalProfileSchema = z.object({
@@ -140,6 +148,7 @@ export const patientSchema = z.object({
     residenceType: z.enum(RESIDENCE_TYPES).optional(),
     visits: z.array(visitSchema),
     investigationRecords: z.array(investigationRecordSchema).optional(),
+    interventions: z.array(interventionSchema).optional(),
 });
 
 export const patientFormDataSchema = z.object({
@@ -242,4 +251,22 @@ export const panelSchema = z.object({
   name: z.string().min(1, 'Panel name is required.'),
   group: z.enum(INVESTIGATION_GROUPS, { required_error: 'Group is required.' }),
   testIds: z.array(z.object({ id: z.string() })).min(1, 'At least one test must be selected.'),
+});
+
+// New schema for the intervention form
+export const interventionFormSchema = z.object({
+  date: z.string().min(1, "Date is required"),
+  type: z.enum(INTERVENTION_TYPES, {
+    required_error: "Intervention type is required",
+  }),
+  notes: z.string().optional(),
+  // Dynamic fields based on type
+  catheterSite: z.enum(CATHETER_SITES).optional(),
+  cuffedCatheterSite: z.enum(CUFFED_CATHETER_SITES).optional(),
+  isCatheterRemoved: z.boolean().optional(),
+  capdCatheterType: z.enum(CAPD_CATHETER_TYPES).optional(),
+  capdInsertionTechnique: z.enum(CAPD_INSERTION_TECHNIQUES).optional(),
+  isCapdCatheterRemoved: z.boolean().optional(),
+  avFistulaType: z.enum(AV_FISTULA_TYPES).optional(),
+  endoInterventionDetails: z.string().optional(),
 });

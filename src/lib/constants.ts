@@ -123,6 +123,24 @@ export const PATIENT_GROUP_NAMES = [
 
 export const RESIDENCE_TYPES = ['Rural', 'Urban', 'Semi-Urban', 'Other', 'Not Set'] as const;
 
+// New constants for Interventions
+export const INTERVENTION_TYPES = [
+    'Kidney Biopsy', 
+    'Temporary Catheter', 
+    'Tunneled Cuffed Catheter', 
+    'Dialysis Catheter Removal', 
+    'CAPD Catheter Insertion', 
+    'CAPD Catheter Removal', 
+    'AV Fistula Creation', 
+    'Endovascular Intervention'
+] as const;
+
+export const CATHETER_SITES = ['SLFC Rt', 'SLFC Lt', 'DLFC Rt', 'DLFC Lt', 'DLJC Rt', 'DLJC Lt'] as const;
+export const CUFFED_CATHETER_SITES = ['Right IJV', 'Left IJV', 'Right EJV', 'Left EJV', 'Femoral'] as const;
+export const CAPD_CATHETER_TYPES = ['Straight', 'Coiled'] as const;
+export const CAPD_INSERTION_TECHNIQUES = ['Percutaneous', 'Mini Laparotomy', 'Laparoscopic'] as const;
+export const AV_FISTULA_TYPES = ['Radio-cephalic', 'Brachio-cephalic'] as const;
+
 export const MOCK_DIAGNOSES: MasterDiagnosis[] = [
     { 
         id: 'hypertension', 
@@ -328,4 +346,3 @@ export const DIAGNOSIS_TEMPLATES = {
         kidneyBiopsyReport: "Not performed.",
     }
 };
-

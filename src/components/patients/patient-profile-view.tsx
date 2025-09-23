@@ -4,7 +4,7 @@
 import type { Patient } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, Microscope, Pill, FileText, TrendingUp } from 'lucide-react';
+import { User, Microscope, Pill, FileText, TrendingUp, FileClock } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { DemographicsCard } from './cards/DemographicsCard';
 import { ClinicalProfileCard } from './cards/ClinicalProfileCard';
@@ -15,6 +15,7 @@ import { PatientDiagnosisRx } from './profile-tabs/PatientDiagnosisRx';
 import { HealthTrendsTabContent } from './profile-tabs/HealthTrendsTabContent';
 import { usePatientData } from '@/hooks/use-patient-data';
 import { useSearchParams } from 'next/navigation';
+import { PatientInterventionsTabContent } from './profile-tabs/PatientInterventionsTabContent';
 
 
 interface PatientProfileViewProps {
@@ -42,9 +43,10 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6">
+      <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 mb-6">
         <TabsTrigger value="overview"><User className="w-4 h-4 mr-2 sm:hidden md:inline-block"/>Overview</TabsTrigger>
         <TabsTrigger value="visits"><FileText className="w-4 h-4 mr-2 sm:hidden md:inline-block"/>Visit History</TabsTrigger>
+        <TabsTrigger value="interventions"><FileClock className="w-4 h-4 mr-2 sm:hidden md:inline-block"/>Interventions</TabsTrigger>
         <TabsTrigger value="investigations"><Microscope className="w-4 h-4 mr-2 sm:hidden md:inline-block"/>Investigations</TabsTrigger>
         <TabsTrigger value="diagnosis"><Pill className="w-4 h-4 mr-2 sm:hidden md:inline-block"/>Diagnosis/Rx</TabsTrigger>
         <TabsTrigger value="healthTrends"><TrendingUp className="w-4 h-4 mr-2 sm:hidden md:inline-block"/>Health Trends</TabsTrigger>
@@ -58,6 +60,10 @@ export function PatientProfileView({ patient: initialPatient }: PatientProfileVi
 
       <TabsContent value="visits">
         <PatientVisitsTabContent patient={patient} />
+      </TabsContent>
+
+      <TabsContent value="interventions">
+        <PatientInterventionsTabContent patient={patient} />
       </TabsContent>
 
       <TabsContent value="investigations">
