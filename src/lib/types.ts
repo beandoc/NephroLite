@@ -61,3 +61,4 @@ export type Medication = z.infer<typeof visitSchema.shape.clinicalData.shape.med
 export type ClinicalVisitData = z.infer<typeof visitSchema.shape.clinicalData>;
 export type InvestigationTest = z.infer<typeof patientSchema.shape.investigationRecords.element.shape.tests.element>;
 export type InvestigationRecord = z.infer<typeof patientSchema.shape.investigationRecords.element>;
+export type Attachment = { name: string; url: string; };

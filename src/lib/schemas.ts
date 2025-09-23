@@ -23,6 +23,8 @@ export const interventionSchema = z.object({
   type: z.enum(INTERVENTION_TYPES),
   details: z.record(z.string().or(z.boolean())).optional(),
   notes: z.string().optional(),
+  complications: z.string().optional(),
+  attachments: z.array(z.object({ name: z.string(), url: z.string() })).optional(),
 });
 
 export const clinicalProfileSchema = z.object({
@@ -260,6 +262,8 @@ export const interventionFormSchema = z.object({
     required_error: "Intervention type is required",
   }),
   notes: z.string().optional(),
+  complications: z.string().optional(),
+  attachments: z.array(z.object({ name: z.string(), url: z.string() })).optional(),
   // Dynamic fields based on type
   catheterSite: z.enum(CATHETER_SITES).optional(),
   cuffedCatheterSite: z.enum(CUFFED_CATHETER_SITES).optional(),

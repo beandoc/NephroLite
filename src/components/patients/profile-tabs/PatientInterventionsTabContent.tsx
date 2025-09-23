@@ -3,9 +3,9 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { Patient, Intervention, InterventionFormData } from '@/lib/types';
+import type { Patient, Intervention, InterventionFormData, Attachment } from '@/lib/types';
 import { interventionFormSchema } from '@/lib/schemas';
 import { usePatientData } from '@/hooks/use-patient-data';
 import { useToast } from '@/hooks/use-toast';
@@ -17,8 +17,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { PlusCircle, Edit, Trash2, Wind } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Wind, Upload, File as FileIcon, X } from 'lucide-react';
 import { INTERVENTION_TYPES, CATHETER_SITES, CUFFED_CATHETER_SITES, CAPD_CATHETER_TYPES, CAPD_INSERTION_TECHNIQUES, AV_FISTULA_TYPES } from '@/lib/constants';
+import { Badge } from '@/components/ui/badge';
 
 interface PatientInterventionsTabContentProps {
     patient: Patient;
@@ -37,18 +38,25 @@ export function PatientInterventionsTabContent({ patient }: PatientInterventions
     const form = useForm<InterventionFormData>({
         resolver: zodResolver(interventionFormSchema),
     });
+    
+    const { fields: attachmentFields, append: appendAttachment, remove: removeAttachment } = useFieldArray({
+        control: form.control,
+        name: "attachments"
+    });
+
 
     const openDialog = (intervention: Intervention | null = null) => {
         setEditingIntervention(intervention);
         form.reset(intervention ? {
-            ...intervention.details,
+            ...intervention, // This includes details, notes, complications
             type: intervention.type,
             date: format(parseISO(intervention.date), 'yyyy-MM-dd'),
-            notes: intervention.notes,
         } : {
             date: format(new Date(), 'yyyy-MM-dd'),
             type: undefined,
             notes: "",
+            complications: "",
+            attachments: [],
         });
         setIsFormOpen(true);
     };
@@ -59,6 +67,8 @@ export function PatientInterventionsTabContent({ patient }: PatientInterventions
             date: data.date,
             type: data.type,
             notes: data.notes,
+            complications: data.complications,
+            attachments: data.attachments || [],
             details: data,
         };
         
@@ -76,6 +86,17 @@ export function PatientInterventionsTabContent({ patient }: PatientInterventions
     };
 
     const interventionType = form.watch('type');
+    
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            // In a real app, you'd upload this file and get a URL.
+            // Here, we'll just simulate it.
+            appendAttachment({ name: file.name, url: `blob:${file.name}` });
+            toast({ title: "File Added", description: `${file.name} has been staged for saving.` });
+        }
+    };
+
 
     return (
         <>
@@ -108,8 +129,17 @@ export function PatientInterventionsTabContent({ patient }: PatientInterventions
                                             <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(item.id)}><Trash2 className="h-4 w-4"/></Button>
                                          </div>
                                     </CardHeader>
-                                    <CardContent>
-                                        {item.notes && <p className="text-sm italic">"{item.notes}"</p>}
+                                    <CardContent className="space-y-2">
+                                        {item.notes && <p className="text-sm"><strong>Notes:</strong> <span className="italic">"{item.notes}"</span></p>}
+                                        {item.complications && <p className="text-sm text-destructive"><strong>Complications:</strong> <span className="italic">"{item.complications}"</span></p>}
+                                        {item.attachments && item.attachments.length > 0 && (
+                                            <div>
+                                                <h4 className="text-sm font-semibold">Attachments:</h4>
+                                                <div className="flex flex-wrap gap-2 mt-1">
+                                                    {item.attachments.map(att => <Badge key={att.name} variant="secondary">{att.name}</Badge>)}
+                                                </div>
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
                             ))}
@@ -168,6 +198,33 @@ export function PatientInterventionsTabContent({ patient }: PatientInterventions
                             <FormField control={form.control} name="notes" render={({ field }) => (
                                <FormItem><FormLabel>Notes (Optional)</FormLabel><FormControl><Textarea placeholder="Enter any relevant notes..." {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>
+
+                            <FormField control={form.control} name="complications" render={({ field }) => (
+                               <FormItem><FormLabel>Complications (Optional)</FormLabel><FormControl><Textarea placeholder="Describe any complications..." {...field} className="border-destructive/50 focus:border-destructive" /></FormControl><FormMessage /></FormItem>
+                            )}/>
+                            
+                            <FormItem>
+                                <FormLabel>Attachments (JPEG/PDF)</FormLabel>
+                                <div className="p-4 border-2 border-dashed rounded-lg text-center">
+                                    <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2"/>
+                                    <p className="text-sm text-muted-foreground mb-2">Drag & drop files or click to browse</p>
+                                    <Input id="file-upload" type="file" className="sr-only" onChange={handleFileSelect} accept=".jpeg,.jpg,.pdf" />
+                                    <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById('file-upload')?.click()}>Browse Files</Button>
+                                </div>
+                                <div className="mt-2 space-y-2">
+                                    {attachmentFields.map((field, index) => (
+                                        <div key={field.id} className="flex items-center justify-between p-2 text-sm rounded-md bg-secondary">
+                                            <div className="flex items-center gap-2">
+                                                <FileIcon className="h-4 w-4" />
+                                                <span className="truncate">{field.name}</span>
+                                            </div>
+                                            <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeAttachment(index)}><X className="h-4 w-4 text-destructive"/></Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </FormItem>
+
+
                             <DialogFooter>
                                 <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancel</Button>
                                 <Button type="submit">Save Intervention</Button>
