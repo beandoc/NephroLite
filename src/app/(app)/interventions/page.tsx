@@ -5,10 +5,10 @@ import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { usePatientData } from '@/hooks/use-patient-data';
 import { useMemo } from 'react';
-import type { Intervention } from '@/lib/types';
 import { INTERVENTION_TYPES } from '@/lib/constants';
 import { Stethoscope, Droplet, Waves, HeartPulse, Shield, Activity, Syringe, Wind } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
 
 const interventionIcons: Record<string, React.ElementType> = {
     'Kidney Biopsy': Stethoscope,
@@ -62,7 +62,7 @@ export default function InterventionsPage() {
         <div className="container mx-auto py-2">
             <PageHeader
                 title="Interventions Dashboard"
-                description="Overview of all clinical interventions performed."
+                description="Overview of all clinical interventions performed. Click a tile to see patient details."
             />
             {isLoading ? (
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
@@ -71,12 +71,13 @@ export default function InterventionsPage() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
                     {INTERVENTION_TYPES.map(type => (
-                        <MetricCard
-                            key={type}
-                            title={type}
-                            value={interventionCounts[type] || 0}
-                            icon={interventionIcons[type] || Activity}
-                        />
+                        <Link key={type} href={`/interventions/${encodeURIComponent(type)}`} className="hover:opacity-90 transition-opacity">
+                            <MetricCard
+                                title={type}
+                                value={interventionCounts[type] || 0}
+                                icon={interventionIcons[type] || Activity}
+                            />
+                        </Link>
                     ))}
                 </div>
             )}
