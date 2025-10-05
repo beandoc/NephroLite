@@ -5,13 +5,15 @@ import type { Patient, Vaccination } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Stethoscope, ShieldQuestion, Leaf, Accessibility, Cigarette, Wine, ShieldAlert, PencilLine, TagsIcon, Syringe, HeartPulse, CheckCircle, XCircle, HelpingHand, CalendarClock, AlertCircle, PlusCircle } from 'lucide-react';
+import { Stethoscope, ShieldQuestion, Leaf, Accessibility, Cigarette, Wine, ShieldAlert, PencilLine, TagsIcon, Syringe, HeartPulse, CheckCircle, XCircle, HelpingHand, CalendarClock, AlertCircle, PlusCircle, Edit } from 'lucide-react';
 import { format, parseISO, isPast } from 'date-fns';
 import { usePatientData } from '@/hooks/use-patient-data';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { getDefaultVaccinations } from '@/lib/data-helpers';
+import { useState }from 'react';
+import { ManageRegistryStatusDialog } from '../ManageRegistryStatusDialog';
 
 interface ClinicalProfileCardProps {
   patient: Patient;
@@ -57,6 +59,7 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
   const { clinicalProfile } = patient;
   const { updateClinicalProfile } = usePatientData();
   const { toast } = useToast();
+  const [isRegistryDialogOpen, setIsRegistryDialogOpen] = useState(false);
 
   const handleRiskFactorToggle = (factor: 'hasDiabetes' | 'onAntiHypertensiveMedication' | 'onLipidLoweringMedication', value: boolean) => {
     const updatedProfile = {
@@ -83,6 +86,28 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
     });
   };
 
+  const handleRegistryStatusUpdate = (tags: string[]) => {
+      const updatedProfile = {
+        ...clinicalProfile,
+        tags,
+    };
+    updateClinicalProfile(patient.id, updatedProfile);
+    toast({
+        title: "Registry Status Updated",
+        description: "Patient's clinical tags have been updated.",
+    });
+  };
+
+  const registryTags = {
+    'HD': 'On Hemodialysis',
+    'PD': 'On Peritoneal Dialysis',
+    'Transplant Prospect': 'Post Kidney Transplant'
+  };
+
+  const currentRegistryStatus = (clinicalProfile.tags || [])
+    .filter(tag => Object.keys(registryTags).includes(tag))
+    .map(tag => registryTags[tag as keyof typeof registryTags]);
+
   return (
     <>
       <Card className="shadow-md">
@@ -100,10 +125,27 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
             <DetailItem label="Drug Allergies" value={clinicalProfile.drugAllergies || "None reported"} icon={ShieldAlert} className="md:col-span-2 lg:col-span-1"/>
           </div>
           
+           <div>
+                <div className="flex justify-between items-center mb-1">
+                    <h3 className="text-sm font-medium text-muted-foreground flex items-center">
+                        <ShieldAlert className="w-4 h-4 mr-2 text-primary" />
+                        Registry Status
+                    </h3>
+                    <Button variant="outline" size="sm" onClick={() => setIsRegistryDialogOpen(true)}>
+                        <Edit className="mr-2 h-3 w-3" /> Update Status
+                    </Button>
+                </div>
+                {currentRegistryStatus.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                        {currentRegistryStatus.map((status, index) => <Badge key={index} variant="default" className="text-base py-1">{status}</Badge>)}
+                    </div>
+                ) : <p className="text-base text-muted-foreground italic">Not assigned to a registry.</p>}
+            </div>
+          
           <div>
             <h3 className="text-sm font-medium text-muted-foreground flex items-center mb-1">
               <TagsIcon className="w-4 h-4 mr-2 text-primary" />
-              Clinical Tags
+              Other Clinical Tags
             </h3>
             {clinicalProfile.tags && clinicalProfile.tags.length > 0 ? (
               <div className="flex flex-wrap gap-2">
@@ -185,6 +227,14 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
           )}
         </CardContent>
       </Card>
+
+      <ManageRegistryStatusDialog
+        isOpen={isRegistryDialogOpen}
+        onOpenChange={setIsRegistryDialogOpen}
+        currentTags={clinicalProfile.tags || []}
+        onSave={handleRegistryStatusUpdate}
+        patientName={`${patient.firstName} ${patient.lastName}`}
+      />
     </>
   );
 }
