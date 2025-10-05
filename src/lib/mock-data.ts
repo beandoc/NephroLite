@@ -156,14 +156,14 @@ export const MOCK_PATIENTS: Patient[] = [
     nextAppointmentDate: '2024-08-15',
     clinicalProfile: {
       primaryDiagnosis: 'IgA Nephropathy (IgAN)',
-      tags: ['Glomerulonephritis', 'IgAN'],
+      tags: ['Glomerulonephritis', 'IgAN', 'HD'],
       nutritionalStatus: 'Well-nourished',
       disability: 'None',
       subspecialityFollowUp: 'NIL',
       smokingStatus: 'No',
       alcoholConsumption: 'No',
       vaccinations: getDefaultVaccinations(),
-      pomr: 'Recurrent hematuria. Biopsy-proven IgA Nephropathy.',
+      pomr: 'Recurrent hematuria. Biopsy-proven IgA Nephropathy. Now on maintenance hemodialysis.',
       aabhaNumber: 'ABHA-222',
       bloodGroup: 'B+',
       drugAllergies: 'None',
@@ -173,7 +173,8 @@ export const MOCK_PATIENTS: Patient[] = [
       onLipidLoweringMedication: false,
     },
     visits: [],
-    investigationRecords: []
+    investigationRecords: [],
+    dialysisSessions: []
   },
   {
     id: 'patient-3',
@@ -194,7 +195,7 @@ export const MOCK_PATIENTS: Patient[] = [
     nextAppointmentDate: null,
     clinicalProfile: {
       primaryDiagnosis: 'Acute Kidney Injury (AKI)',
-      tags: ['AKI', 'Sepsis'],
+      tags: ['AKI', 'Sepsis', 'HD'],
       nutritionalStatus: 'Moderate malnutrition',
       disability: 'None',
       subspecialityFollowUp: 'Intensive Care',
@@ -221,7 +222,8 @@ export const MOCK_PATIENTS: Patient[] = [
             patientId: 'patient-3'
         }
     ],
-    investigationRecords: []
+    investigationRecords: [],
+    dialysisSessions: []
   },
   {
     id: 'patient-4',
@@ -260,6 +262,62 @@ export const MOCK_PATIENTS: Patient[] = [
     },
     visits: [],
     investigationRecords: []
+  },
+  {
+    id: 'patient-5',
+    nephroId: '1005/0824',
+    firstName: 'Rohan',
+    lastName: 'Gupta',
+    dob: '1975-09-01',
+    gender: 'Male',
+    contact: '9000011111',
+    email: 'rohan.gupta@example.com',
+    address: { street: 'Banjara Hills', city: 'Hyderabad', state: 'Telangana', pincode: '500034' },
+    guardian: { name: 'Rohan Gupta', relation: 'Self', contact: '9000011111' },
+    registrationDate: '2024-03-15',
+    createdAt: '2024-03-15T10:00:00.000Z',
+    patientStatus: 'OPD',
+    isTracked: true,
+    residenceType: 'Urban',
+    nextAppointmentDate: '2024-08-18',
+    clinicalProfile: {
+      primaryDiagnosis: 'End-Stage Renal Disease (ESRD)',
+      tags: ['ESRD', 'HD', 'Hypertension'],
+      nutritionalStatus: 'Well-nourished',
+      disability: 'None',
+      subspecialityFollowUp: 'NIL',
+      smokingStatus: 'Former',
+      alcoholConsumption: 'No',
+      vaccinations: getExampleVaccinations(),
+      pomr: 'Long-standing hypertension leading to ESRD. On maintenance hemodialysis 3 times a week.',
+      aabhaNumber: 'ABHA-555',
+      bloodGroup: 'O+',
+      drugAllergies: 'None',
+      whatsappNumber: '9000011111',
+      hasDiabetes: false,
+      onAntiHypertensiveMedication: true,
+      onLipidLoweringMedication: true,
+    },
+    visits: [],
+    investigationRecords: [],
+    dialysisSessions: [
+        {
+            id: 'ds-5-1',
+            patientId: 'patient-5',
+            dateOfSession: '2024-08-05',
+            duration: { hours: 4, minutes: 0 },
+            dialysisModality: 'HD',
+            accessType: 'AV Fistula',
+            ultrafiltration: 2500,
+            bloodFlowRate: 350,
+            bpBefore: { systolic: 150, diastolic: 90 },
+            bpAfter: { systolic: 130, diastolic: 80 },
+            complicationsFlag: false,
+            indicationOfDialysis: ['CKD'],
+            comorbidities: ['HTN'],
+            anticoagulation: 'Heparin',
+        }
+    ]
   }
 ];
 
@@ -282,7 +340,7 @@ export const MOCK_APPOINTMENTS: Appointment[] = [
       date: '2024-08-15',
       createdAt: '2024-07-31T10:00:00.000Z',
       time: '11:30',
-      type: 'Routine Checkup',
+      type: 'Dialysis Session',
       doctorName: 'Dr. Atul',
       status: 'Scheduled',
     },
