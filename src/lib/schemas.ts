@@ -1,7 +1,7 @@
 
 
 import { z } from 'zod';
-import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS, VACCINATION_NAMES, VISIT_TYPES, PATIENT_GROUP_NAMES, RESIDENCE_TYPES, APPOINTMENT_TYPES, APPOINTMENT_STATUSES, MOCK_DOCTORS, INVESTIGATION_GROUPS, RESULT_TYPES, INTERVENTION_TYPES, CATHETER_SITES, CUFFED_CATHETER_SITES, CAPD_CATHETER_TYPES, CAPD_INSERTION_TECHNIQUES, AV_FISTULA_TYPES, DIALYSIS_INDICATIONS, COMORBIDITIES, DIALYSIS_TYPES, HD_MODALITIES, SESSION_LOCATIONS, ACCESS_TYPES, ANTICOAGULATION_TYPES } from './constants';
+import { GENDERS, INDIAN_STATES, RELATIONSHIPS, PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS, VACCINATION_NAMES, VISIT_TYPES, PATIENT_GROUP_NAMES, RESIDENCE_TYPES, APPOINTMENT_TYPES, APPOINTMENT_STATUSES, MOCK_DOCTORS, INVESTIGATION_GROUPS, RESULT_TYPES, INTERVENTION_TYPES, CATHETER_SITES, CUFFED_CATHETER_SITES, CAPD_CATHETER_TYPES, CAPD_INSERTION_TECHNIQUES, AV_FISTULA_TYPES, DIALYSIS_INDICATIONS, COMORBIDITIES, DIALYSIS_TYPES, HD_MODALITIES, SESSION_LOCATIONS, ACCESS_TYPES, ANTICOAGULATION_TYPES, VASCULAR_ACCESS_LOCATIONS } from './constants';
 
 export const doseSchema = z.object({
   id: z.string(),
@@ -119,14 +119,14 @@ export const dialysisSessionSchema = z.object({
     id: z.string(),
     patientId: z.string(),
     dateOfSession: z.string(),
-    indicationOfDialysis: z.array(z.string()),
-    nativeKidneyDisease: z.array(z.string()),
-    comorbidities: z.array(z.string()),
+    indicationOfDialysis: z.array(z.string()).optional(),
+    nativeKidneyDisease: z.array(z.string()).optional(),
+    comorbidities: z.array(z.string()).optional(),
     typeOfDialysis: z.enum(DIALYSIS_TYPES),
     dialysisModality: z.enum(HD_MODALITIES).optional(),
     previousDialysisModality: z.enum(DIALYSIS_TYPES).optional(),
-    dateOfDialysisInitiation: z.string(),
-    locationOfSession: z.enum(SESSION_LOCATIONS),
+    dateOfDialysisInitiation: z.string().optional(),
+    locationOfSession: z.enum(SESSION_LOCATIONS).optional(),
     facility: z.string().optional(),
     duration: z.object({ hours: z.number(), minutes: z.number() }),
     dryWeight: z.number().optional(),
@@ -137,11 +137,11 @@ export const dialysisSessionSchema = z.object({
     complicationsFlag: z.boolean(),
     complicationsDesc: z.array(z.string()).optional(),
     complicationsManagementDesc: z.array(z.string()).optional(),
-    bpBefore: z.object({ systolic: z.number(), diastolic: z.number() }).optional(),
+    bpBefore: z.object({ systolic: z.number().optional(), diastolic: z.number().optional() }).optional(),
     bpDuring: z.string().optional(),
-    bpPeak: z.object({ systolic: z.number(), diastolic: z.number() }).optional(),
-    bpNadir: z.object({ systolic: z.number(), diastolic: z.number() }).optional(),
-    bpAfter: z.object({ systolic: z.number(), diastolic: z.number() }).optional(),
+    bpPeak: z.object({ systolic: z.number().optional(), diastolic: z.number().optional() }).optional(),
+    bpNadir: z.object({ systolic: z.number().optional(), diastolic: z.number().optional() }).optional(),
+    bpAfter: z.object({ systolic: z.number().optional(), diastolic: z.number().optional() }).optional(),
     pdFluidType: z.string().optional(),
     pdFluidVolume: z.number().optional(),
     accessType: z.enum(ACCESS_TYPES),
@@ -153,10 +153,13 @@ export const dialysisSessionSchema = z.object({
     dialyzerType: z.string().optional(),
     dialyzerSurfaceArea: z.number().optional(),
     medicationsAdministered: z.string().optional(),
+    drugAllergies: z.string().optional(),
     vascularAccessCondition: z.string().optional(),
     vascularInterventionsPerformed: z.string().optional(),
     accessRelatedComplications: z.string().optional(),
     anyConcernsForDoctor: z.string().optional(),
+    nextScheduledSession: z.string().optional(),
+    dialysisAdherence: z.number().optional(),
 });
 
 
