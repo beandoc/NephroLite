@@ -346,3 +346,15 @@ export const DIAGNOSIS_TEMPLATES = {
         kidneyBiopsyReport: "Not performed.",
     }
 };
+
+// Dialysis Related Constants
+export const DIALYSIS_INDICATIONS = ["CKD", "AKI", "Drug Overdose", "Fluid Overload", "Hyperkalemia", "Metabolic Acidosis", "Others"] as const;
+export const COMORBIDITIES = ["Diabetes", "HTN", "CAD", "Sepsis", "Cirrhosis", "Pregnancy", "Others"] as const;
+export const DIALYSIS_TYPES = ["Hemodialysis", "Peritoneal Dialysis"] as const;
+export const HD_MODALITIES = ["HD", "HDF"] as const;
+export const SESSION_LOCATIONS = ["Home", "Healthcare Facility"] as const;
+export const HD_COMPLICATIONS = ["Hypotension", "Cramp", "Nausea", "Vomiting", "Chest Pain", "Hypoglycemia", "Fever/Chills", "Others"] as const;
+export const HD_COMPLICATION_MANAGEMENTS = ["Saline Bolus", "Reduction in UFR", "Temporary cessation of UF", "Others"] as const;
+export const ACCESS_TYPES = ["AV Fistula", "Temporary Catheter", "Tunneled Cuff Catheter", "PD catheter"] as const;
+export const VASCULAR_ACCESS_LOCATIONS = ["Left Radiocephalic Fistula", "Right Radiocephalic Fistula", "Left Brachiocephalic Fistula", "Right Brachiocephalic Fistula", "Right IJV Catheter", "Left IJV Catheter", "Right TCC-IJV", "Left TCC-IJV", "Femoral Catheter"] as const;
+export const ANTICOAGULATION_TYPES = ["Heparin", "Citrate", "None"] as const;

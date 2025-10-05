@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
-import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord, Appointment, InvestigationMaster, InvestigationPanel, Vaccination, Dose, Intervention } from '@/lib/types';
+import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord, Appointment, InvestigationMaster, InvestigationPanel, Vaccination, Dose, Intervention, DialysisSession } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { VACCINATION_NAMES, MOCK_USER } from '@/lib/constants';
 import { MOCK_PATIENTS, MOCK_APPOINTMENTS } from '@/lib/mock-data';
@@ -29,7 +29,7 @@ export interface DataContextType {
 
   // Appointment Data
   appointments: Appointment[];
-  addAppointment: (appointmentData: Omit<Appointment, 'id' | 'status' | 'createdAt'>, patient: Patient) => Promise<Appointment>;
+  addAppointment: (appointmentData: Omit<Appointment, 'id' | 'status' | 'createdAt'>) => Promise<Appointment>;
   updateAppointmentStatus: (id: string, status: Appointment['status']) => Promise<void>;
   updateMultipleAppointmentStatuses: (updates: { id: string, status: Appointment['status'] }[]) => Promise<void>;
   updateAppointment: (updatedAppointmentData: Appointment) => Promise<void>;
@@ -41,6 +41,9 @@ export interface DataContextType {
   deleteInvestigation: (investigationId: string) => void;
   addOrUpdatePanel: (panel: InvestigationPanel) => void;
   deletePanel: (panelId: string) => void;
+  
+  // Dialysis
+  addOrUpdateDialysisSession: (patientId: string, session: DialysisSession) => void;
 }
 
 // Create the context
@@ -157,6 +160,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
           investigationRecords: [],
           nextAppointmentDate: "",
           interventions: [],
+          dialysisSessions: [],
           clinicalProfile: {
               ...getInitialClinicalProfile(),
               tags: [],
@@ -286,6 +290,21 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
       return { ...p, interventions: (p.interventions || []).filter(i => i.id !== interventionId) };
     }));
   }, []);
+  
+  const addOrUpdateDialysisSession = useCallback((patientId: string, session: DialysisSession) => {
+    setPatients(prev => prev.map(p => {
+      if (p.id !== patientId) return p;
+      const sessions = p.dialysisSessions || [];
+      const existingIndex = sessions.findIndex(s => s.id === session.id);
+      if (existingIndex > -1) {
+        sessions[existingIndex] = session;
+      } else {
+        session.id = session.id || crypto.randomUUID();
+        sessions.push(session);
+      }
+      return { ...p, dialysisSessions: [...sessions] };
+    }));
+  }, []);
 
   const deletePatient = useCallback((patientId: string): void => {
     setPatients(prev => prev.filter(p => p.id !== patientId));
@@ -297,7 +316,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
   }, [patients]);
 
   // --- APPOINTMENT DATA LOGIC ---
-  const addAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'status' | 'createdAt'>, patient: Patient): Promise<Appointment> => {
+  const addAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'status' | 'createdAt'>): Promise<Appointment> => {
     const nowISO = new Date().toISOString();
     const newAppointment: Appointment = {
       id: crypto.randomUUID(),
@@ -398,6 +417,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     deleteInvestigation,
     addOrUpdatePanel,
     deletePanel,
+    addOrUpdateDialysisSession,
   }), [
     patients, 
     isLoading, 
@@ -424,6 +444,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     deleteInvestigation,
     addOrUpdatePanel,
     deletePanel,
+    addOrUpdateDialysisSession,
   ]);
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

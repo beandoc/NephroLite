@@ -19,6 +19,7 @@ import {
   doseSchema,
   interventionSchema,
   interventionFormSchema,
+  dialysisSessionSchema,
 } from './schemas';
 
 // Address and Guardian types are simple and don't need Zod schemas unless they have complex validation.
@@ -53,6 +54,7 @@ export type InvestigationFormData = z.infer<typeof investigationSchema>;
 export type PanelFormData = z.infer<typeof panelSchema>;
 export type Intervention = z.infer<typeof interventionSchema>;
 export type InterventionFormData = z.infer<typeof interventionFormSchema>;
+export type DialysisSession = z.infer<typeof dialysisSessionSchema>;
 
 
 // These types are derived from parts of other schemas
