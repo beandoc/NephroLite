@@ -24,7 +24,7 @@ export default function NewAppointmentPage() {
         ...data,
         patientName: patientFullName,
       };
-      const newAppointment = await addAppointment(appointmentDataWithPatientName, patient);
+      const newAppointment = await addAppointment(appointmentDataWithPatientName);
       toast({
         title: "Appointment Scheduled",
         description: `Appointment for ${patientFullName} with ${newAppointment.doctorName} on ${format(parse(newAppointment.date, "yyyy-MM-dd", new Date()), 'PPP')} at ${newAppointment.time} has been scheduled.`,
