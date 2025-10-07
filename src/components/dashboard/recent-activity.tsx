@@ -9,7 +9,7 @@ import { usePatientData } from '@/hooks/use-patient-data';
 import { useAppointmentData } from '@/hooks/use-appointment-data';
 import { format, parseISO } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 type ActivityItem = {
     type: 'patient' | 'appointment' | 'visit';
@@ -23,9 +23,14 @@ type ActivityItem = {
 
 export function RecentActivity() {
     const { patients, isLoading: patientsLoading } = usePatientData();
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     const recentActivities = useMemo(() => {
-        if (patientsLoading) return [];
+        if (patientsLoading || !isClient) return [];
 
         const allActivities: ActivityItem[] = [];
 
@@ -61,9 +66,9 @@ export function RecentActivity() {
             .sort((a, b) => b.date.getTime() - a.date.getTime())
             .slice(0, 5);
 
-    }, [patients, patientsLoading]);
+    }, [patients, patientsLoading, isClient]);
 
-    if (patientsLoading) {
+    if (patientsLoading || !isClient) {
         return (
              <Card>
                 <CardHeader>
@@ -71,7 +76,7 @@ export function RecentActivity() {
                     <CardDescription>Latest actions and updates in the system.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                    {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+                    {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
                 </CardContent>
             </Card>
         )
