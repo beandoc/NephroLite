@@ -48,9 +48,12 @@ export function PatientInterventionsTabContent({ patient }: PatientInterventions
     const openDialog = (intervention: Intervention | null = null) => {
         setEditingIntervention(intervention);
         form.reset(intervention ? {
-            ...intervention, // This includes details, notes, complications
+            ...intervention.details, // Use details for form population
             type: intervention.type,
             date: format(parseISO(intervention.date), 'yyyy-MM-dd'),
+            notes: intervention.notes || "",
+            complications: intervention.complications || "",
+            attachments: intervention.attachments || [],
         } : {
             date: format(new Date(), 'yyyy-MM-dd'),
             type: undefined,
@@ -167,7 +170,7 @@ export function PatientInterventionsTabContent({ patient }: PatientInterventions
                             )}/>}
 
                             {interventionType === 'Tunneled Cuffed Catheter' && <FormField control={form.control} name="cuffedCatheterSite" render={({ field }) => (
-                                <FormItem><FormLabel>Cuffed Catheter Site</FormLabel><Select onValuechange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select site..." /></SelectTrigger></FormControl><SelectContent>{CUFFED_CATHETER_SITES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
+                                <FormItem><FormLabel>Cuffed Catheter Site</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select site..." /></SelectTrigger></FormControl><SelectContent>{CUFFED_CATHETER_SITES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
                             )}/>}
                             
                             {interventionType === 'Dialysis Catheter Removal' && <FormField control={form.control} name="isCatheterRemoved" render={({ field }) => (
