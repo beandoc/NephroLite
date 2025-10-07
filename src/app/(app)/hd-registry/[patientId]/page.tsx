@@ -13,6 +13,7 @@ import { format, parseISO } from 'date-fns';
 import type { Patient, DialysisSession } from '@/lib/types';
 import { DialysisSessionForm } from '@/components/dialysis/dialysis-session-form';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 const DetailItem = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <div>
@@ -24,7 +25,8 @@ const DetailItem = ({ label, value }: { label: string; value: React.ReactNode })
 export default function PatientHDPage() {
   const router = useRouter();
   const params = useParams();
-  const { getPatientById, isLoading } = usePatientData();
+  const { getPatientById, isLoading, deleteDialysisSession } = usePatientData(); // Correctly get delete function
+  const { toast } = useToast();
   const patientId = typeof params.patientId === 'string' ? params.patientId : '';
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -44,6 +46,16 @@ export default function PatientHDPage() {
     setEditingSession(session);
     setIsFormOpen(true);
   };
+  
+  const handleDeleteSession = (sessionId: string) => {
+    if(!patient) return;
+    deleteDialysisSession(patient.id, sessionId);
+    toast({
+        title: "Dialysis Session Deleted",
+        description: "The session has been removed from the patient's record.",
+        variant: "destructive"
+    });
+  }
 
   if (isLoading) {
     return (
@@ -100,7 +112,7 @@ export default function PatientHDPage() {
                       <Edit className="h-4 w-4" />
                     </Button>
                     {/* Add delete confirmation later */}
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDeleteSession(session.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

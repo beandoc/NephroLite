@@ -32,6 +32,8 @@ export function usePatientData() {
     deleteInvestigation,
     addOrUpdatePanel,
     deletePanel,
+    addOrUpdateDialysisSession,
+    deleteDialysisSession,
   } = context;
 
   return {
@@ -55,5 +57,7 @@ export function usePatientData() {
     deleteInvestigation,
     addOrUpdatePanel,
     deletePanel,
+    addOrUpdateDialysisSession,
+    deleteDialysisSession,
   };
 }

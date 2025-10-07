@@ -44,6 +44,7 @@ export interface DataContextType {
   
   // Dialysis
   addOrUpdateDialysisSession: (patientId: string, session: DialysisSession) => void;
+  deleteDialysisSession: (patientId: string, sessionId: string) => void;
 }
 
 // Create the context
@@ -305,6 +306,13 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
       return { ...p, dialysisSessions: [...sessions] };
     }));
   }, []);
+  
+  const deleteDialysisSession = useCallback((patientId: string, sessionId: string) => {
+    setPatients(prev => prev.map(p => {
+      if (p.id !== patientId) return p;
+      return { ...p, dialysisSessions: (p.dialysisSessions || []).filter(s => s.id !== sessionId) };
+    }));
+  }, []);
 
   const deletePatient = useCallback((patientId: string): void => {
     setPatients(prev => prev.filter(p => p.id !== patientId));
@@ -418,6 +426,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     addOrUpdatePanel,
     deletePanel,
     addOrUpdateDialysisSession,
+    deleteDialysisSession,
   }), [
     patients, 
     isLoading, 
@@ -445,6 +454,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     addOrUpdatePanel,
     deletePanel,
     addOrUpdateDialysisSession,
+    deleteDialysisSession,
   ]);
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
