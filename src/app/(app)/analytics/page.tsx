@@ -86,7 +86,7 @@ export default function AnalyticsPage() {
     if (patientsLoading || !clientReady) return [];
     return [
       { title: "Peritoneal dialysis", value: patients.filter(p => p.clinicalProfile?.tags?.includes('PD')).length, colorClass: "border-orange-500", icon: Waves, link: "/analytics/pd-module" },
-      { title: "Hemodialysis", value: patients.filter(p => p.clinicalProfile?.tags?.includes('HD')).length, colorClass: "border-blue-500", icon: Droplets, link: "/analytics/hd-module", disabled: true },
+      { title: "Hemodialysis", value: patients.filter(p => p.clinicalProfile?.tags?.includes('HD')).length, colorClass: "border-blue-500", icon: Droplets, link: "/hd-registry" },
       { title: "Glomerulonephritis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Glomerulonephritis').length, colorClass: "border-green-500", icon: Stethoscope },
       { title: "Kidney transplant", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Transplant Prospect').length, colorClass: "border-green-600", icon: HeartPulse, link: "/analytics/transplant-module", disabled: true },
       { title: "Chronic Kidney disease", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis?.toLowerCase().startsWith('chronic kidney disease')).length, colorClass: "border-cyan-500", icon: Activity },
@@ -161,7 +161,7 @@ export default function AnalyticsPage() {
           <CardDescription>Overview of patient distribution by specific groups and conditions.</CardDescription>
         </CardHeader>
         <CardContent>
-          {patientsLoading ? (
+          {patientsLoading || !clientReady ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
               {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-36 w-full" />)}
             </div>
@@ -193,7 +193,7 @@ export default function AnalyticsPage() {
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <h3 className="text-lg font-semibold mb-2 text-center">Gender Distribution</h3>
-                {patientsLoading ? <Skeleton className="h-64 w-full" /> : genderData.length > 0 ? (
+                {patientsLoading || !clientReady ? <Skeleton className="h-64 w-full" /> : genderData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250}>
                     <PieChart>
                     <Pie data={genderData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
@@ -209,7 +209,7 @@ export default function AnalyticsPage() {
             </div>
             <div>
                 <h3 className="text-lg font-semibold mb-2 text-center">Residence Type</h3>
-                {patientsLoading ? <Skeleton className="h-64 w-full" /> : residenceData.length > 0 ? (
+                {patientsLoading || !clientReady ? <Skeleton className="h-64 w-full" /> : residenceData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250}>
                     <PieChart>
                     <Pie data={residenceData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
@@ -235,7 +235,7 @@ export default function AnalyticsPage() {
           <CardDescription>List of patients with active health tracking enabled.</CardDescription>
         </CardHeader>
         <CardContent>
-          {patientsLoading ? <Skeleton className="h-40 w-full" /> : trackedPatients.length > 0 ? (
+          {patientsLoading || !clientReady ? <Skeleton className="h-40 w-full" /> : trackedPatients.length > 0 ? (
             <ScrollArea className="h-40">
               <ul className="space-y-1">
                 {trackedPatients.map(p => (
@@ -279,7 +279,7 @@ export default function AnalyticsPage() {
               ))}
             </div>
           )}
-          {patientsLoading ? (
+          {patientsLoading || !clientReady ? (
             <Skeleton className="h-60 w-full" />
           ) : (
             <div>
@@ -339,5 +339,3 @@ export default function AnalyticsPage() {
     </div>
   );
 }
-
-    

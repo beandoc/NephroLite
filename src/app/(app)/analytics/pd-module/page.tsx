@@ -7,17 +7,22 @@ import { Button } from '@/components/ui/button';
 import { Users, ListChecks, FileBarChart, Edit, Zap, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { usePatientData } from '@/hooks/use-patient-data';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function PDModulePage() {
   const { patients, isLoading: patientsLoading } = usePatientData();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const pdPatients = useMemo(() => {
-    if (patientsLoading) return [];
+    if (patientsLoading || !isClient) return [];
     return patients.filter(p => p.clinicalProfile.tags?.includes('PD'));
-  }, [patients, patientsLoading]);
+  }, [patients, patientsLoading, isClient]);
 
   return (
     <div className="container mx-auto py-2">
@@ -39,7 +44,7 @@ export default function PDModulePage() {
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h3 className="text-md font-semibold mb-2">PD Patient List ({pdPatients.length})</h3>
-              {patientsLoading ? (
+              {patientsLoading || !isClient ? (
                 <div className="space-y-2">
                   {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
                 </div>
@@ -69,7 +74,7 @@ export default function PDModulePage() {
               <div className="space-y-2 text-sm p-3 border rounded-md bg-card">
                 <div className="flex justify-between">
                   <span className="font-medium">Total Active PD Patients:</span>
-                  {patientsLoading ? <Skeleton className="h-4 w-10 inline-block" /> : <span className="font-bold">{pdPatients.length}</span>}
+                  {patientsLoading || !isClient ? <Skeleton className="h-4 w-10 inline-block" /> : <span className="font-bold">{pdPatients.length}</span>}
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Average Duration on PD:</span>
