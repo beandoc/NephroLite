@@ -224,6 +224,8 @@ export const patientFormDataSchema = z.object({
   }),
 });
 
+export type PatientFormData = z.infer<typeof patientFormDataSchema>;
+
 export const appointmentSchema = z.object({
     id: z.string(),
     patientId: z.string(),
@@ -236,6 +238,17 @@ export const appointmentSchema = z.object({
     notes: z.string().optional(),
     status: z.enum(APPOINTMENT_STATUSES),
 });
+
+export const appointmentFormSchema = z.object({
+  patientId: z.string().min(1, "Please select a patient."),
+  date: z.string().min(1, "Please select a date."),
+  time: z.string().min(1, "Please select a time slot."),
+  type: z.string().min(1, "Please select an appointment type."),
+  doctorName: z.string().min(1, "Please select a doctor."),
+  notes: z.string().optional(),
+});
+export type AppointmentFormData = z.infer<typeof appointmentFormSchema>;
+
 
 export const icdMappingSchema = z.object({
   icdCode: z.string(),
@@ -295,6 +308,7 @@ export const investigationSchema = z.object({
   resultType: z.enum(RESULT_TYPES).optional(),
   options: z.array(z.string()).optional(),
 });
+export type InvestigationFormData = z.infer<typeof investigationSchema>;
 
 
 export const panelSchema = z.object({
@@ -303,6 +317,8 @@ export const panelSchema = z.object({
   group: z.enum(INVESTIGATION_GROUPS, { required_error: 'Group is required.' }),
   testIds: z.array(z.object({ id: z.string() })).min(1, 'At least one test must be selected.'),
 });
+export type PanelFormData = z.infer<typeof panelSchema>;
+
 
 // New schema for the intervention form
 export const interventionFormSchema = z.object({
@@ -323,3 +339,4 @@ export const interventionFormSchema = z.object({
   avFistulaType: z.enum(AV_FISTULA_TYPES).optional(),
   endoInterventionDetails: z.string().optional(),
 });
+export type InterventionFormData = z.infer<typeof interventionFormSchema>;
