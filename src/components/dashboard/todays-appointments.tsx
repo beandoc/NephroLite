@@ -52,7 +52,7 @@ export function TodaysAppointments() {
       description: `${patientFullName}'s appointment marked as ${newStatus}.`
     });
 
-    if (newStatus === 'Admitted' && patient) {
+    if (newStatus === 'Admitted' && patient && patientId) {
       if (patient.patientStatus !== 'IPD') {
         updatePatient(patientId, { patientStatus: 'IPD' });
         toast({
