@@ -26,6 +26,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Patient, Appointment } from "@/lib/types";
+import { appointmentFormSchema, type AppointmentFormData } from '@/lib/schemas';
 import { APPOINTMENT_TYPES, MOCK_DOCTORS, TIME_SLOTS } from "@/lib/constants";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -35,18 +36,6 @@ import { cn } from "@/lib/utils";
 import { usePatientData } from "@/hooks/use-patient-data";
 import { Skeleton } from "../ui/skeleton";
 import Link from "next/link";
-
-
-const appointmentFormSchema = z.object({
-  patientId: z.string().min(1, "Patient selection is required"),
-  date: z.string().min(1, "Date is required"), 
-  time: z.string().min(1, "Time is required"),
-  type: z.string().min(1, "Appointment type is required"),
-  doctorName: z.string().min(1, "Doctor selection is required"),
-  notes: z.string().optional(),
-});
-
-export type AppointmentFormData = z.infer<typeof appointmentFormSchema>;
 
 interface AppointmentFormProps {
   appointment?: Appointment; 

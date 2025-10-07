@@ -3,7 +3,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AppointmentForm, type AppointmentFormData } from '@/components/appointments/appointment-form';
+import { AppointmentForm } from '@/components/appointments/appointment-form';
+import type { AppointmentFormData } from '@/lib/schemas';
 import { PageHeader } from '@/components/shared/page-header';
 import { useAppointmentData } from '@/hooks/use-appointment-data';
 import { useToast } from "@/hooks/use-toast";

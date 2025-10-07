@@ -3,7 +3,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PatientForm, type PatientFormData } from '@/components/patients/patient-form';
+import { PatientForm } from '@/components/patients/patient-form';
+import type { PatientFormData } from '@/lib/schemas';
 import { PageHeader } from '@/components/shared/page-header';
 import { usePatientData } from '@/hooks/use-patient-data';
 import { useToast } from "@/hooks/use-toast";
