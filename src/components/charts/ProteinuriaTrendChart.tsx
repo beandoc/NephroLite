@@ -4,7 +4,7 @@
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceArea } from "recharts";
 import { ChartConfig, ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { useMemo } from 'react';
-import type { InvestigationRecord, Visit } from '@/lib/types';
+import type { InvestigationRecord, Visit, InvestigationTest } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { SGLT2_INHIBITORS, ARBS, ACE_INHIBITORS, FINERENONE } from '@/lib/constants';
 
@@ -48,8 +48,8 @@ export function ProteinuriaTrendChart({ investigationRecords, medicationHistory 
     if (!investigationRecords) return [];
 
     const proteinTests = investigationRecords
-      .flatMap(record => record.tests.map(test => ({ ...test, date: record.date })))
-      .filter(test => (test.name === '24-hour Urine Protein' || test.name === 'Urine for AC Ratio (mg/gm)') && !isNaN(parseFloat(test.result)));
+      .flatMap(record => record.tests.map((test: InvestigationTest) => ({ ...test, date: record.date })))
+      .filter(test => (test.name === '24-hour Urine Protein' || test.name === 'Urine for AC Ratio (mg/gm)') && test.result && !isNaN(parseFloat(test.result)));
 
     const groupedByDate: Record<string, { protein?: number; uacr?: number }> = {};
     
