@@ -26,6 +26,11 @@ export function OverviewMetrics() {
   const { patients, isLoading: patientsLoading } = usePatientData();
   const { appointments, isLoading: appointmentsLoading } = useAppointmentData();
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   const metricsData = useMemo(() => {
     if (patientsLoading || appointmentsLoading) {
@@ -126,13 +131,13 @@ export function OverviewMetrics() {
                 <metric.icon className={`h-5 w-5 ${metric.iconColorClass}`} />
             </CardHeader>
             <CardContent>
-                {metric.loading ? (
+                {(metric.loading || !isClient) ? (
                     <Skeleton className="h-8 w-1/2 rounded-md my-1" />
                 ) : (
                 <div className="text-3xl font-bold">{metric.value}</div>
                 )}
                 
-                {metric.loading ? (
+                {(metric.loading || !isClient) ? (
                     <Skeleton className="h-3 w-3/4 mt-1 rounded-md" />
                 ) : metric.subtitle ? (
                 <p className="text-xs text-muted-foreground">{metric.subtitle}</p>
