@@ -26,47 +26,51 @@ const chartConfig = {
 const processVisitData = (appointments: any[], patients: any[], period: 'weekly' | 'monthly') => {
     if (patients.length === 0 || appointments.length === 0) return [];
 
-    const firstVisitDateByPatient: { [patientId: string]: string } = {};
-    for (const patient of patients) {
+    // Create a map of patientId to their first visit date for efficient lookup
+    const firstVisitDateByPatient = new Map<string, string>();
+    patients.forEach(patient => {
         const patientAppointments = appointments
             .filter(a => a.patientId === patient.id)
             .sort((a,b) => parseISO(a.date).getTime() - parseISO(b.date).getTime());
         
         if(patientAppointments.length > 0) {
-            firstVisitDateByPatient[patient.id] = patientAppointments[0].date;
+            firstVisitDateByPatient.set(patient.id, patientAppointments[0].date);
         }
-    }
+    });
 
     const aggregatedData: { [key: string]: { date: string, newVisits: number, followUpVisits: number } } = {};
 
     appointments.forEach(appointment => {
-        const visitDate = parseISO(appointment.date);
-        let key: string;
-        let formattedDate: string;
+        try {
+            const visitDate = parseISO(appointment.date);
+            let key: string;
+            let formattedDate: string;
 
-        if (period === 'weekly') {
-            const weekStart = startOfWeek(visitDate, { weekStartsOn: 1 });
-            const weekNumber = getWeek(weekStart, { weekStartsOn: 1 });
-            const year = getYear(weekStart);
-            key = `${year}-W${weekNumber}`;
-            formattedDate = `Week ${weekNumber}, ${year}`;
-        } else { // monthly
-            const month = getMonth(visitDate) + 1;
-            const year = getYear(visitDate);
-            key = `${year}-${month}`;
-            formattedDate = format(visitDate, 'MMM yyyy');
-        }
+            if (period === 'weekly') {
+                const weekStart = startOfWeek(visitDate, { weekStartsOn: 1 });
+                const weekNumber = getWeek(weekStart, { weekStartsOn: 1 });
+                const year = getYear(weekStart);
+                key = `${year}-W${String(weekNumber).padStart(2, '0')}`;
+                formattedDate = `Week ${weekNumber}, ${year}`;
+            } else { // monthly
+                key = format(visitDate, 'yyyy-MM');
+                formattedDate = format(visitDate, 'MMM yyyy');
+            }
 
-        if (!aggregatedData[key]) {
-            aggregatedData[key] = { date: formattedDate, newVisits: 0, followUpVisits: 0 };
-        }
+            if (!aggregatedData[key]) {
+                aggregatedData[key] = { date: formattedDate, newVisits: 0, followUpVisits: 0 };
+            }
 
-        const isNewPatientVisit = firstVisitDateByPatient[appointment.patientId] === appointment.date;
-
-        if (isNewPatientVisit) {
-            aggregatedData[key].newVisits += 1;
-        } else {
-            aggregatedData[key].followUpVisits += 1;
+            const firstVisitDate = firstVisitDateByPatient.get(appointment.patientId);
+            const isNewPatientVisit = firstVisitDate === appointment.date;
+            
+            if (isNewPatientVisit) {
+                aggregatedData[key].newVisits += 1;
+            } else {
+                aggregatedData[key].followUpVisits += 1;
+            }
+        } catch(e) {
+            // Ignore appointments with invalid dates
         }
     });
 
@@ -74,8 +78,10 @@ const processVisitData = (appointments: any[], patients: any[], period: 'weekly'
         if(period === 'weekly') {
             const [aYear, aWeek] = a.date.replace('Week ', '').split(', ');
             const [bYear, bWeek] = b.date.replace('Week ', '').split(', ');
-            return parseInt(aYear) - parseInt(bYear) || parseInt(aWeek) - parseInt(bWeek);
+            if (aYear !== bYear) return parseInt(aYear) - parseInt(bYear);
+            return parseInt(aWeek) - parseInt(bWeek);
         } else {
+            // For monthly, we can parse the date for sorting
             return new Date(a.date).getTime() - new Date(b.date).getTime();
         }
     });

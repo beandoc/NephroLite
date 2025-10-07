@@ -23,41 +23,47 @@ type ActivityItem = {
 
 export function RecentActivity() {
     const { patients, isLoading: patientsLoading } = usePatientData();
-    const { appointments, isLoading: appointmentsLoading } = useAppointmentData();
 
     const recentActivities = useMemo(() => {
-        if (patientsLoading || appointmentsLoading) return [];
+        if (patientsLoading) return [];
 
-        const patientActivities: ActivityItem[] = patients.map(p => ({
-            type: 'patient',
-            id: p.id,
-            description: `Patient ${[p.firstName, p.lastName].join(' ')} was registered.`,
-            date: parseISO(p.createdAt),
-            href: `/patients/${p.id}`,
-            icon: UserPlus,
-            iconColor: 'text-green-500',
-        }));
+        const allActivities: ActivityItem[] = [];
 
-        const visitActivities: ActivityItem[] = patients.flatMap(p => {
-            const patientName = [p.firstName, p.lastName].join(' ');
-            return p.visits.map(v => ({
-                type: 'visit' as const,
-                id: v.id,
-                description: `New ${v.visitType.toLowerCase()} visit for ${patientName}.`,
-                date: parseISO(v.createdAt),
-                href: `/patients/${p.id}?tab=visits`,
-                icon: FileText,
-                iconColor: 'text-indigo-500'
-            }))
+        patients.forEach(p => {
+            // Patient registration event
+            allActivities.push({
+                type: 'patient',
+                id: `patient-${p.id}`,
+                description: `Patient ${[p.firstName, p.lastName].join(' ')} was registered.`,
+                date: parseISO(p.createdAt),
+                href: `/patients/${p.id}`,
+                icon: UserPlus,
+                iconColor: 'text-green-500',
+            });
+
+            // Patient visit events
+            if (p.visits) {
+                p.visits.forEach(v => {
+                    allActivities.push({
+                        type: 'visit' as const,
+                        id: `visit-${v.id}`,
+                        description: `New ${v.visitType.toLowerCase()} visit for ${[p.firstName, p.lastName].join(' ')}.`,
+                        date: parseISO(v.createdAt),
+                        href: `/patients/${p.id}?tab=visits`,
+                        icon: FileText,
+                        iconColor: 'text-indigo-500'
+                    });
+                });
+            }
         });
         
-        return [...patientActivities, ...visitActivities]
+        return allActivities
             .sort((a, b) => b.date.getTime() - a.date.getTime())
             .slice(0, 5);
 
-    }, [patients, appointments, patientsLoading, appointmentsLoading]);
+    }, [patients, patientsLoading]);
 
-    if (patientsLoading || appointmentsLoading) {
+    if (patientsLoading) {
         return (
              <Card>
                 <CardHeader>
@@ -87,7 +93,7 @@ export function RecentActivity() {
                         </div>
                         <div className="ml-3 flex-grow">
                             <p className="text-sm">{activity.description}</p>
-                            <p className="text-xs text-muted-foreground">{format(activity.date, 'PPP')}</p>
+                            <p className="text-xs text-muted-foreground">{format(activity.date, 'PPP, p')}</p>
                         </div>
                         <Button asChild variant="ghost" size="sm">
                             <Link href={activity.href}><Eye className="h-4 w-4" /></Link>
