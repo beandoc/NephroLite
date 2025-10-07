@@ -48,7 +48,7 @@ export function PatientInterventionsTabContent({ patient }: PatientInterventions
     const openDialog = (intervention: Intervention | null = null) => {
         setEditingIntervention(intervention);
         form.reset(intervention ? {
-            ...intervention.details, // Use details for form population
+            ...(intervention.details || {}),
             type: intervention.type,
             date: format(parseISO(intervention.date), 'yyyy-MM-dd'),
             notes: intervention.notes || "",
@@ -65,14 +65,16 @@ export function PatientInterventionsTabContent({ patient }: PatientInterventions
     };
 
     const onSubmit = async (data: InterventionFormData) => {
+        const { attachments, ...restOfData } = data;
+        
         const interventionToSave: Intervention = {
             id: editingIntervention?.id || crypto.randomUUID(),
             date: data.date,
             type: data.type,
             notes: data.notes,
             complications: data.complications,
-            attachments: data.attachments || [],
-            details: data,
+            attachments: attachments || [],
+            details: restOfData,
         };
         
         await addOrUpdateIntervention(patient.id, interventionToSave);
