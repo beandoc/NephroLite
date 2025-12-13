@@ -23,7 +23,7 @@ import { Check, ChevronsUpDown, Save } from 'lucide-react';
 import * as D_CONSTANTS from '@/lib/constants'; // Use aliased import to avoid name clashes
 import { useEffect } from 'react';
 
-const formSchema = dialysisSessionSchema.omit({id: true, patientId: true});
+const formSchema = dialysisSessionSchema.omit({ id: true, patientId: true });
 type FormData = Zod.infer<typeof formSchema>;
 
 
@@ -50,27 +50,30 @@ const MultiSelectField = ({ form, name, label, options }: { form: any, name: any
                             </Button>
                         </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
+                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
                         <Command>
                             <CommandInput placeholder={`Search ${label.toLowerCase()}...`} />
                             <CommandEmpty>Nothing found.</CommandEmpty>
-                            <CommandGroup>
-                                <ScrollArea className="h-48">
-                                    {options.map((option) => (
-                                        <CommandItem
-                                            key={option}
-                                            onSelect={() => {
-                                                const selected = field.value || [];
-                                                const isSelected = selected.includes(option);
-                                                form.setValue(name, isSelected ? selected.filter((s: string) => s !== option) : [...selected, option]);
-                                            }}
-                                        >
-                                            <Check className={cn("mr-2 h-4 w-4", (field.value || []).includes(option) ? "opacity-100" : "opacity-0")} />
-                                            {option}
-                                        </CommandItem>
-                                    ))}
-                                </ScrollArea>
-                            </CommandGroup>
+                            <CommandList>
+                                <CommandGroup>
+                                    <ScrollArea className="h-48">
+                                        {options.map((option) => (
+                                            <CommandItem
+                                                key={option}
+                                                value={option}
+                                                onSelect={() => {
+                                                    const selected = field.value || [];
+                                                    const isSelected = selected.includes(option);
+                                                    form.setValue(name, isSelected ? selected.filter((s: string) => s !== option) : [...selected, option]);
+                                                }}
+                                            >
+                                                <Check className={cn("mr-2 h-4 w-4", (field.value || []).includes(option) ? "opacity-100" : "opacity-0")} />
+                                                {option}
+                                            </CommandItem>
+                                        ))}
+                                    </ScrollArea>
+                                </CommandGroup>
+                            </CommandList>
                         </Command>
                     </PopoverContent>
                 </Popover>
@@ -118,7 +121,7 @@ export function DialysisSessionForm({ isOpen, onOpenChange, patient, session }: 
         toast({ title: `Session ${session ? 'updated' : 'saved'} successfully.` });
         onOpenChange(false);
     };
-    
+
     const showComplications = form.watch('complicationsFlag');
 
     return (
@@ -132,28 +135,28 @@ export function DialysisSessionForm({ isOpen, onOpenChange, patient, session }: 
                     <form onSubmit={form.handleSubmit(onSubmit)}>
                         <ScrollArea className="h-[70vh] pr-4">
                             <div className="space-y-6">
-                                <FormField control={form.control} name="dateOfSession" render={({ field }) => ( <FormItem><FormLabel>Date of Session</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                                <FormField control={form.control} name="dateOfSession" render={({ field }) => (<FormItem><FormLabel>Date of Session</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>)} />
                                 <MultiSelectField form={form} name="indicationOfDialysis" label="Indication of Dialysis" options={D_CONSTANTS.DIALYSIS_INDICATIONS} />
                                 <MultiSelectField form={form} name="comorbidities" label="Comorbidities" options={D_CONSTANTS.COMORBIDITIES} />
 
                                 <Card>
                                     <CardHeader><CardTitle>Session Details</CardTitle></CardHeader>
                                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <FormField control={form.control} name="dialysisModality" render={({ field }) => ( <FormItem><FormLabel>Dialysis Modality</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger></FormControl><SelectContent>{D_CONSTANTS.HD_MODALITIES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )} />
+                                        <FormField control={form.control} name="dialysisModality" render={({ field }) => (<FormItem><FormLabel>Dialysis Modality</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger></FormControl><SelectContent>{D_CONSTANTS.HD_MODALITIES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
                                         <div className="grid grid-cols-2 gap-2">
-                                            <FormField control={form.control} name="duration.hours" render={({ field }) => ( <FormItem><FormLabel>Duration (H)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl><FormMessage /></FormItem> )} />
-                                            <FormField control={form.control} name="duration.minutes" render={({ field }) => ( <FormItem><FormLabel>Duration (M)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)}/></FormControl><FormMessage /></FormItem> )} />
+                                            <FormField control={form.control} name="duration.hours" render={({ field }) => (<FormItem><FormLabel>Duration (H)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl><FormMessage /></FormItem>)} />
+                                            <FormField control={form.control} name="duration.minutes" render={({ field }) => (<FormItem><FormLabel>Duration (M)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl><FormMessage /></FormItem>)} />
                                         </div>
                                     </CardContent>
                                 </Card>
-                                
+
                                 <Card>
                                     <CardHeader><CardTitle>Fluid Management</CardTitle></CardHeader>
                                     <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-center">
-                                        <FormField control={form.control} name="dryWeight" render={({ field }) => ( <FormItem><FormLabel>Dry Weight (kg)</FormLabel><FormControl><Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || undefined)} /></FormControl><FormMessage /></FormItem> )} />
-                                        <FormField control={form.control} name="weightBefore" render={({ field }) => ( <FormItem><FormLabel>Pre-HD Weight (kg)</FormLabel><FormControl><Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}/></FormControl><FormMessage /></FormItem> )} />
-                                        <FormField control={form.control} name="weightAfter" render={({ field }) => ( <FormItem><FormLabel>Post-HD Weight (kg)</FormLabel><FormControl><Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}/></FormControl><FormMessage /></FormItem> )} />
-                                        <FormField control={form.control} name="ultrafiltration" render={({ field }) => ( <FormItem><FormLabel>Ultrafiltration (mL)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)}/></FormControl><FormMessage /></FormItem> )} />
+                                        <FormField control={form.control} name="dryWeight" render={({ field }) => (<FormItem><FormLabel>Dry Weight (kg)</FormLabel><FormControl><Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
+                                        <FormField control={form.control} name="weightBefore" render={({ field }) => (<FormItem><FormLabel>Pre-HD Weight (kg)</FormLabel><FormControl><Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
+                                        <FormField control={form.control} name="weightAfter" render={({ field }) => (<FormItem><FormLabel>Post-HD Weight (kg)</FormLabel><FormControl><Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
+                                        <FormField control={form.control} name="ultrafiltration" render={({ field }) => (<FormItem><FormLabel>Ultrafiltration (mL)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
                                         <FormField control={form.control} name="fluidRemovalTolerance" render={({ field }) => (
                                             <FormItem className="flex flex-row items-center space-x-3 space-y-0 pt-6">
                                                 <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
@@ -166,27 +169,27 @@ export function DialysisSessionForm({ isOpen, onOpenChange, patient, session }: 
                                 <Card>
                                     <CardHeader><CardTitle>Blood Pressure (mmHg)</CardTitle></CardHeader>
                                     <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        <FormField control={form.control} name="bpBefore.systolic" render={({ field }) => ( <FormItem><FormLabel>Pre-HD Sys.</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)}/></FormControl></FormItem> )}/>
-                                        <FormField control={form.control} name="bpBefore.diastolic" render={({ field }) => ( <FormItem><FormLabel>Pre-HD Dia.</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)}/></FormControl></FormItem> )}/>
-                                        <FormField control={form.control} name="bpAfter.systolic" render={({ field }) => ( <FormItem><FormLabel>Post-HD Sys.</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)}/></FormControl></FormItem> )}/>
-                                        <FormField control={form.control} name="bpAfter.diastolic" render={({ field }) => ( <FormItem><FormLabel>Post-HD Dia.</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)}/></FormControl></FormItem> )}/>
-                                        <FormField control={form.control} name="bpDuring" render={({ field }) => ( <FormItem><FormLabel>BP During</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
-                                        <FormField control={form.control} name="bpPeak.systolic" render={({ field }) => ( <FormItem><FormLabel>Peak Sys.</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)}/></FormControl></FormItem> )}/>
-                                        <FormField control={form.control} name="bpNadir.systolic" render={({ field }) => ( <FormItem><FormLabel>Nadir Sys.</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)}/></FormControl></FormItem> )}/>
+                                        <FormField control={form.control} name="bpBefore.systolic" render={({ field }) => (<FormItem><FormLabel>Pre-HD Sys.</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)} /></FormControl></FormItem>)} />
+                                        <FormField control={form.control} name="bpBefore.diastolic" render={({ field }) => (<FormItem><FormLabel>Pre-HD Dia.</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)} /></FormControl></FormItem>)} />
+                                        <FormField control={form.control} name="bpAfter.systolic" render={({ field }) => (<FormItem><FormLabel>Post-HD Sys.</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)} /></FormControl></FormItem>)} />
+                                        <FormField control={form.control} name="bpAfter.diastolic" render={({ field }) => (<FormItem><FormLabel>Post-HD Dia.</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)} /></FormControl></FormItem>)} />
+                                        <FormField control={form.control} name="bpDuring" render={({ field }) => (<FormItem><FormLabel>BP During</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                        <FormField control={form.control} name="bpPeak.systolic" render={({ field }) => (<FormItem><FormLabel>Peak Sys.</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)} /></FormControl></FormItem>)} />
+                                        <FormField control={form.control} name="bpNadir.systolic" render={({ field }) => (<FormItem><FormLabel>Nadir Sys.</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)} /></FormControl></FormItem>)} />
                                     </CardContent>
                                 </Card>
-                                
+
                                 <Card>
                                     <CardHeader><CardTitle>Access & Technical Details</CardTitle></CardHeader>
                                     <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        <FormField control={form.control} name="accessType" render={({ field }) => ( <FormItem><FormLabel>Access Type</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger></FormControl><SelectContent>{D_CONSTANTS.ACCESS_TYPES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )} />
-                                        <FormField control={form.control} name="vascularAccessLocation" render={({ field }) => ( <FormItem><FormLabel>Access Location</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger></FormControl><SelectContent>{D_CONSTANTS.VASCULAR_ACCESS_LOCATIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )} />
-                                        <FormField control={form.control} name="anticoagulation" render={({ field }) => ( <FormItem><FormLabel>Anticoagulation</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger></FormControl><SelectContent>{D_CONSTANTS.ANTICOAGULATION_TYPES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )} />
-                                        <FormField control={form.control} name="bloodFlowRate" render={({ field }) => ( <FormItem><FormLabel>Blood Flow Rate (mL/min)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)}/></FormControl><FormMessage /></FormItem> )} />
-                                        <FormField control={form.control} name="dialysateFlowRate" render={({ field }) => ( <FormItem><FormLabel>Dialysate Flow Rate (mL/min)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)}/></FormControl><FormMessage /></FormItem> )} />
-                                        <FormField control={form.control} name="dialyzerType" render={({ field }) => ( <FormItem><FormLabel>Dialyzer Type</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
-                                        <FormField control={form.control} name="dialyzerSurfaceArea" render={({ field }) => ( <FormItem><FormLabel>Dialyzer Surface Area (m²)</FormLabel><FormControl><Input type="number" step="0.1" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || undefined)} /></FormControl><FormMessage /></FormItem> )} />
-                                        <FormField control={form.control} name="vascularAccessCondition" render={({ field }) => ( <FormItem><FormLabel>Vascular Access Condition</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
+                                        <FormField control={form.control} name="accessType" render={({ field }) => (<FormItem><FormLabel>Access Type</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger></FormControl><SelectContent>{D_CONSTANTS.ACCESS_TYPES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
+                                        <FormField control={form.control} name="vascularAccessLocation" render={({ field }) => (<FormItem><FormLabel>Access Location</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger></FormControl><SelectContent>{D_CONSTANTS.VASCULAR_ACCESS_LOCATIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
+                                        <FormField control={form.control} name="anticoagulation" render={({ field }) => (<FormItem><FormLabel>Anticoagulation</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger></FormControl><SelectContent>{D_CONSTANTS.ANTICOAGULATION_TYPES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>)} />
+                                        <FormField control={form.control} name="bloodFlowRate" render={({ field }) => (<FormItem><FormLabel>Blood Flow Rate (mL/min)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
+                                        <FormField control={form.control} name="dialysateFlowRate" render={({ field }) => (<FormItem><FormLabel>Dialysate Flow Rate (mL/min)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
+                                        <FormField control={form.control} name="dialyzerType" render={({ field }) => (<FormItem><FormLabel>Dialyzer Type</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                        <FormField control={form.control} name="dialyzerSurfaceArea" render={({ field }) => (<FormItem><FormLabel>Dialyzer Surface Area (m²)</FormLabel><FormControl><Input type="number" step="0.1" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
+                                        <FormField control={form.control} name="vascularAccessCondition" render={({ field }) => (<FormItem><FormLabel>Vascular Access Condition</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                                     </CardContent>
                                 </Card>
 
@@ -203,13 +206,13 @@ export function DialysisSessionForm({ isOpen, onOpenChange, patient, session }: 
                                         <CardContent className="space-y-4">
                                             <MultiSelectField form={form} name="complicationsDesc" label="Complications" options={D_CONSTANTS.HD_COMPLICATIONS} />
                                             <MultiSelectField form={form} name="complicationsManagementDesc" label="Management" options={D_CONSTANTS.HD_COMPLICATION_MANAGEMENTS} />
-                                            <FormField control={form.control} name="accessRelatedComplications" render={({ field }) => ( <FormItem><FormLabel>Access-Related Complications</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )} />
+                                            <FormField control={form.control} name="accessRelatedComplications" render={({ field }) => (<FormItem><FormLabel>Access-Related Complications</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)} />
                                         </CardContent>
                                     )}
                                 </Card>
-                                
-                                <FormField control={form.control} name="medicationsAdministered" render={({ field }) => ( <FormItem><FormLabel>Medications Administered (e.g., EPO, Iron)</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )} />
-                                <FormField control={form.control} name="anyConcernsForDoctor" render={({ field }) => ( <FormItem><FormLabel>Concerns for Doctor</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )} />
+
+                                <FormField control={form.control} name="medicationsAdministered" render={({ field }) => (<FormItem><FormLabel>Medications Administered (e.g., EPO, Iron)</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                <FormField control={form.control} name="anyConcernsForDoctor" render={({ field }) => (<FormItem><FormLabel>Concerns for Doctor</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)} />
 
                             </div>
                         </ScrollArea>

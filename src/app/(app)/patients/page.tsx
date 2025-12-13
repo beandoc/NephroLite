@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { PatientsTable } from '@/components/patients/patients-table';
 import { PageHeader } from '@/components/shared/page-header';
@@ -11,7 +11,7 @@ import { usePatientData } from '@/hooks/use-patient-data';
 import { PlusCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function PatientsPage() {
+function PatientsContent() {
   const { patients, isLoading } = usePatientData();
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get('status');
@@ -39,8 +39,8 @@ export default function PatientsPage() {
   if (isLoading) {
     return (
       <div className="container mx-auto py-2">
-        <PageHeader 
-          title="Patient Records" 
+        <PageHeader
+          title="Patient Records"
           description="Manage all patient information and history."
           actions={<Button disabled><PlusCircle className="mr-2 h-4 w-4" /> Add New Patient</Button>}
           backHref="/dashboard"
@@ -57,7 +57,7 @@ export default function PatientsPage() {
 
   return (
     <div className="container mx-auto py-2">
-      <PageHeader 
+      <PageHeader
         title={getPageTitle()}
         description={getPageDescription()}
         actions={
@@ -76,3 +76,17 @@ export default function PatientsPage() {
   );
 }
 
+export default function PatientsPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto py-2">
+        <div className="space-y-4 mt-6">
+          <Skeleton className="h-12 w-full" />
+          <div className="p-8 text-center text-muted-foreground">Loading...</div>
+        </div>
+      </div>
+    }>
+      <PatientsContent />
+    </Suspense>
+  );
+}

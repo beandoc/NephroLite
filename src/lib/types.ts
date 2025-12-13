@@ -1,11 +1,11 @@
 
 
 import { z } from 'zod';
-import { 
+import {
   patientSchema,
-  patientFormDataSchema, 
-  clinicalProfileSchema, 
-  investigationMasterSchema, 
+  patientFormDataSchema,
+  clinicalProfileSchema,
+  investigationMasterSchema,
   investigationPanelSchema,
   visitFormDataSchema,
   diagnosisTemplateSchema,
@@ -20,6 +20,10 @@ import {
   interventionSchema,
   interventionFormSchema,
   dialysisSessionSchema,
+  medicationSchema,
+  clinicalVisitDataSchema,
+  investigationTestSchema,
+  investigationRecordSchema,
 } from './schemas';
 
 // Address and Guardian types are simple and don't need Zod schemas unless they have complex validation.
@@ -59,8 +63,8 @@ export type DialysisSession = z.infer<typeof dialysisSessionSchema>;
 
 // These types are derived from parts of other schemas
 export type Diagnosis = z.infer<typeof diagnosisSchema>;
-export type Medication = z.infer<typeof visitSchema.shape.clinicalData.shape.medications.element>;
-export type ClinicalVisitData = z.infer<typeof visitSchema.shape.clinicalData>;
-export type InvestigationTest = z.infer<typeof patientSchema.shape.investigationRecords.element.shape.tests.element>;
-export type InvestigationRecord = z.infer<typeof patientSchema.shape.investigationRecords.element>;
+export type Medication = z.infer<typeof medicationSchema>;
+export type ClinicalVisitData = z.infer<typeof clinicalVisitDataSchema>;
+export type InvestigationTest = z.infer<typeof investigationTestSchema>;
+export type InvestigationRecord = z.infer<typeof investigationRecordSchema>;
 export type Attachment = { name: string; url: string; };

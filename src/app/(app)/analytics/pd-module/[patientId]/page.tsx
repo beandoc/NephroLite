@@ -14,6 +14,11 @@ import type { Patient, Visit } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/auth-provider';
+import { getPDBaseline, getPDExchanges, getPeritonitisEpisodes } from '@/lib/pd-firestore-helpers';
+import { PDDataFormDialog } from '@/components/pd/pd-data-form';
+import { PeritonitisFormDialog } from '@/components/pd/peritonitis-form';
+import { PatientPDLogsDisplay } from '@/components/pd/patient-pd-logs-display';
 
 
 // Mock data structure for a single PD patient's detailed data
@@ -28,10 +33,10 @@ interface PdExchange {
 }
 
 interface PeritonitisEpisode {
-    id: string;
-    date: string; // YYYY-MM-DD
-    organism: string;
-    outcome: 'Cured' | 'Catheter Removed' | 'Shifted to HD' | 'Death' | 'Ongoing';
+  id: string;
+  date: string; // YYYY-MM-DD
+  organism: string;
+  outcome: 'Cured' | 'Catheter Removed' | 'Shifted to HD' | 'Death' | 'Ongoing';
 }
 
 interface PdPatientDetail {
@@ -64,32 +69,80 @@ export default function IndividualPDPage() {
   const params = useParams();
   const { getPatientById, isLoading: patientDataLoading } = usePatientData();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const [patient, setPatient] = useState<Patient | null>(null);
-  const [pdData, setPdData] = useState<PdPatientDetail | null>(null);
-  
+  const [pdData, setPdData] = useState<any | null>(null);
+  const [pdExchanges, setPdExchanges] = useState<any[]>([]);
+  const [peritonitisEpisodes, setPeritonitisEpisodes] = useState<any[]>([]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isPeritonitisFormOpen, setIsPeritonitisFormOpen] = useState(false);
+  const [isLoadingPD, setIsLoadingPD] = useState(false);
+
   const patientId = typeof params.patientId === 'string' ? params.patientId : undefined;
 
+  // Load patient data
   useEffect(() => {
     if (patientId && !patientDataLoading) {
       const generalPatientData = getPatientById(patientId);
       setPatient(generalPatientData || null);
-      
-      // In a real app, this data would come from the patient object.
-      // For now, we simulate this by checking a non-existent property.
-      const detailedData = (generalPatientData as any)?.pdData;
-      setPdData(detailedData || null);
     }
   }, [patientId, getPatientById, patientDataLoading]);
 
+  // Load PD data from Firestore
+  useEffect(() => {
+    if (!user || !patientId) return;
+
+    const loadPDData = async () => {
+      try {
+        setIsLoadingPD(true);
+        const [baseline, exchanges, episodes] = await Promise.all([
+          getPDBaseline(user.uid, patientId),
+          getPDExchanges(user.uid, patientId),
+          getPeritonitisEpisodes(user.uid, patientId)
+        ]);
+
+        setPdData(baseline);
+        setPdExchanges(exchanges);
+        setPeritonitisEpisodes(episodes);
+      } catch (error) {
+        console.error('Error loading PD data:', error);
+      } finally {
+        setIsLoadingPD(false);
+      }
+    };
+
+    loadPDData();
+  }, [user, patientId]);
+
+  const handleOpenForm = () => {
+    setIsFormOpen(true);
+  };
+
+  const handleFormClose = () => {
+    setIsFormOpen(false);
+    // Reload PD data
+    if (user && patientId) {
+      Promise.all([
+        getPDBaseline(user.uid, patientId),
+        getPDExchanges(user.uid, patientId),
+        getPeritonitisEpisodes(user.uid, patientId)
+      ]).then(([baseline, exchanges, episodes]) => {
+        setPdData(baseline);
+        setPdExchanges(exchanges);
+        setPeritonitisEpisodes(episodes);
+      });
+    }
+  };
+
   const handleMockAction = (action: string) => {
     toast({
-        title: "Feature Under Development",
-        description: `${action} functionality is a work-in-progress.`,
+      title: "Feature Under Development",
+      description: `${action} functionality is a work-in-progress.`,
     })
   }
 
-  if (patientDataLoading || !patientId) {
+  if (patientDataLoading || !patientId || isLoadingPD) {
     return (
       <div className="container mx-auto py-2">
         <PageHeader title="Loading Patient PD Details..." />
@@ -114,23 +167,32 @@ export default function IndividualPDPage() {
       </div>
     );
   }
-  
   const patientFullName = [patient.firstName, patient.lastName].filter(Boolean).join(' ');
-  
-  if (!pdData) {
+
+  // Show form dialog if no PD data
+  if (!pdData && !isLoadingPD) {
     return (
       <div className="container mx-auto py-2">
         <PageHeader title={`PD Details for ${patientFullName}`} description="No specific Peritoneal Dialysis data found for this patient." />
-         <Button variant="outline" onClick={() => router.push('/analytics/pd-module')}>
+        <Button variant="outline" onClick={() => router.push('/analytics/pd-module')}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to PD Roster
         </Button>
         <Card className="mt-6">
-            <CardContent className="p-6 text-center text-muted-foreground">
-                This patient does not have detailed PD data recorded yet.
-                <br/>
-                <Button variant="link" className="mt-2" onClick={() => handleMockAction('Adding PD Data')}>Add PD Data</Button>
-            </CardContent>
+          <CardContent className="p-6 text-center text-muted-foreground">
+            This patient does not have detailed PD data recorded yet.
+            <br />
+            <Button variant="default" className="mt-4" onClick={handleOpenForm}>
+              Add PD Data
+            </Button>
+          </CardContent>
         </Card>
+
+        <PDDataFormDialog
+          isOpen={isFormOpen}
+          onOpenChange={handleFormClose}
+          patientId={patientId!}
+          patientName={patientFullName}
+        />
       </div>
     );
   }
@@ -151,28 +213,28 @@ export default function IndividualPDPage() {
       <div className="space-y-6 mt-6">
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline flex items-center"><Calendar className="mr-2 h-5 w-5 text-primary"/>PD Overview & Catheter</CardTitle>
+            <CardTitle className="font-headline flex items-center"><Calendar className="mr-2 h-5 w-5 text-primary" />PD Overview & Catheter</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
             <DetailItem label="PD Start Date" value={pdData.pdStartDate ? format(parseISO(pdData.pdStartDate), 'PPP') : 'N/A'} />
             <DetailItem label="Transfer Set Date" value={pdData.transferSetDate ? format(parseISO(pdData.transferSetDate), 'PPP') : 'N/A'} />
             <div className="md:col-span-2 mt-2">
-                <Button variant="outline" size="sm" onClick={() => handleMockAction('Managing PD Catheter Data')}><Edit3 className="mr-2 h-4 w-4" />Manage PD Catheter Data</Button>
-                <p className="text-xs text-muted-foreground mt-1">Log catheter insertion, exit site care, and transfer set changes.</p>
+              <Button variant="outline" size="sm" onClick={handleOpenForm}><Edit3 className="mr-2 h-4 w-4" />Edit PD Baseline</Button>
+              <p className="text-xs text-muted-foreground mt-1">Log catheter insertion, exit site care, and transfer set changes.</p>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline flex items-center"><Droplet className="mr-2 h-5 w-5 text-primary"/>PD Prescription & Exchange Schedule</CardTitle>
+            <CardTitle className="font-headline flex items-center"><Droplet className="mr-2 h-5 w-5 text-primary" />PD Prescription & Exchange Schedule</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 mb-4">
-                <DetailItem label="No. of Exchange Cycles" value={pdData.numberOfCycles} />
-                <DetailItem label="General Dwell Volume" value={pdData.generalDwellVolume} />
+              <DetailItem label="No. of Exchange Cycles" value={pdData.numberOfCycles} />
+              <DetailItem label="General Dwell Volume" value={pdData.generalDwellVolume} />
             </div>
-            {pdData.exchangeSchedule && pdData.exchangeSchedule.length > 0 ? (
+            {pdExchanges && pdExchanges.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -184,7 +246,7 @@ export default function IndividualPDPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pdData.exchangeSchedule.map((ex) => (
+                  {pdExchanges.map((ex: any) => (
                     <TableRow key={ex.id}>
                       <TableCell>{ex.exchangeNo}</TableCell>
                       <TableCell>{ex.strength}</TableCell>
@@ -199,15 +261,15 @@ export default function IndividualPDPage() {
               <p className="text-muted-foreground">No exchange schedule defined.</p>
             )}
             <div className="mt-4">
-                 <Button variant="outline" size="sm" onClick={() => handleMockAction('Managing PD Prescriptions')}><Edit3 className="mr-2 h-4 w-4" />Manage PD Prescriptions</Button>
-                 <p className="text-xs text-muted-foreground mt-1">Enter and track PD solution types, cycles, concentrations, and dwell details.</p>
+              <Button variant="outline" size="sm" onClick={handleOpenForm}><Edit3 className="mr-2 h-4 w-4" />Manage PD Prescriptions</Button>
+              <p className="text-xs text-muted-foreground mt-1">Enter and track PD solution types, cycles, concentrations, and dwell details.</p>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline flex items-center"><Gauge className="mr-2 h-5 w-5 text-primary"/>PD Baseline & Adequacy</CardTitle>
+            <CardTitle className="font-headline flex items-center"><Gauge className="mr-2 h-5 w-5 text-primary" />PD Baseline & Adequacy</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
             <DetailItem label="Transporter Status" value={pdData.transporterStatus} />
@@ -217,13 +279,13 @@ export default function IndividualPDPage() {
             <DetailItem label="Baseline Urine Output" value={pdData.baselineUrineOutput || "(Placeholder)"} />
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline flex items-center"><AlertTriangle className="mr-2 h-5 w-5 text-primary"/>Peritonitis History</CardTitle>
+            <CardTitle className="font-headline flex items-center"><AlertTriangle className="mr-2 h-5 w-5 text-primary" />Peritonitis History</CardTitle>
           </CardHeader>
           <CardContent>
-            {pdData.peritonitisHistory && pdData.peritonitisHistory.length > 0 ? (
+            {peritonitisEpisodes && peritonitisEpisodes.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -233,11 +295,11 @@ export default function IndividualPDPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pdData.peritonitisHistory.map((episode) => (
+                  {peritonitisEpisodes.map((episode: any) => (
                     <TableRow key={episode.id}>
-                      <TableCell>{format(parseISO(episode.date), 'PPP')}</TableCell>
-                      <TableCell>{episode.organism}</TableCell>
-                      <TableCell>{episode.outcome}</TableCell>
+                      <TableCell>{episode.date ? format(parseISO(episode.date), 'PPP') : 'N/A'}</TableCell>
+                      <TableCell>{episode.organism || 'N/A'}</TableCell>
+                      <TableCell>{episode.outcome || 'N/A'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -245,15 +307,15 @@ export default function IndividualPDPage() {
             ) : (
               <p className="text-muted-foreground">No peritonitis episodes recorded.</p>
             )}
-             <div className="mt-4">
-                <Button variant="outline" size="sm" onClick={() => handleMockAction('Logging Peritonitis Episode')}><Edit3 className="mr-2 h-4 w-4" />Log New Peritonitis Episode</Button>
-             </div>
+            <div className="mt-4">
+              <Button variant="outline" size="sm" onClick={() => setIsPeritonitisFormOpen(true)}><Edit3 className="mr-2 h-4 w-4" />Log New Peritonitis Episode</Button>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline flex items-center"><Activity className="mr-2 h-5 w-5 text-primary"/>Daily Monitoring & Notes</CardTitle>
+            <CardTitle className="font-headline flex items-center"><Activity className="mr-2 h-5 w-5 text-primary" />Daily Monitoring & Notes</CardTitle>
             <CardDescription>Log patient symptoms, ultrafiltration, vitals, and urine output.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -264,7 +326,30 @@ export default function IndividualPDPage() {
           </CardContent>
         </Card>
 
+        {/* Patient PD Daily Monitoring Logs */}
+        <PatientPDLogsDisplay patientId={patientId!} />
       </div>
+
+      {/* Dialogs */}
+      <PDDataFormDialog
+        isOpen={isFormOpen}
+        onOpenChange={handleFormClose}
+        patientId={patientId!}
+        patientName={patientFullName}
+        existingData={pdData}
+      />
+
+      <PeritonitisFormDialog
+        isOpen={isPeritonitisFormOpen}
+        onOpenChange={setIsPeritonitisFormOpen}
+        patientId={patientId!}
+        patientName={patientFullName}
+        onSuccess={() => {
+          if (user && patientId) {
+            getPeritonitisEpisodes(user.uid, patientId).then(setPeritonitisEpisodes);
+          }
+        }}
+      />
     </div>
   );
 }

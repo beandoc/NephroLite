@@ -1,70 +1,67 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useAppointmentData } from '@/hooks/use-appointment-data';
-import { usePatientData } from '@/hooks/use-patient-data';
-import { isToday, parseISO } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import { useOpdQueue } from '@/hooks/use-opd-queue';
 import { Skeleton } from '@/components/ui/skeleton';
-import { User, Clock, ChevronRight, PlayCircle, Users, CheckCircle, Ban, Forward, Tv2, Copy } from 'lucide-react';
+import { User, Clock, ChevronRight, PlayCircle, Users, CheckCircle, Ban, Forward, Tv2, Copy, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
-import type { Appointment } from '@/lib/types';
+import { format } from 'date-fns';
 
 export default function OpdQueuePage() {
-  const { appointments, isLoading, updateMultipleAppointmentStatuses } = useAppointmentData();
+  const { queueEntries, loading, nowServing, waiting, updateStatus, callNext } = useOpdQueue();
   const { toast } = useToast();
   const router = useRouter();
 
-  const { nowServing, waitingList } = useMemo(() => {
-    // No need to filter by date anymore as the hook does it for us.
-    const nowServing = appointments.find(app => app.status === 'Now Serving') || null;
-    const waitingList = appointments
-      .filter(app => app.status === 'Waiting')
-      .sort((a, b) => a.time.localeCompare(b.time));
-    
-    return { nowServing, waitingList };
-  }, [appointments]);
-
-  const handleCallNext = () => {
-    if (waitingList.length === 0) {
-      toast({ title: "Queue is empty", description: "No patients are currently waiting." });
-      return;
+  const handleCallNext = async () => {
+    try {
+      await callNext();
+      toast({
+        title: "Next Patient Called",
+        description: waiting[0] ? `${waiting[0].patientName} is now being served.` : '',
+      });
+    } catch (error: any) {
+      toast({
+        title: error.message || "Queue is empty",
+        description: "No patients are currently waiting.",
+        variant: "destructive"
+      });
     }
-
-    const updates: { id: string; status: Appointment['status'] }[] = [];
-    const nextPatient = waitingList[0];
-
-    // Mark current patient as completed, if there is one
-    if (nowServing) {
-      updates.push({ id: nowServing.id, status: 'Completed' });
-    }
-
-    // Mark next patient as now serving
-    updates.push({ id: nextPatient.id, status: 'Now Serving' });
-
-    updateMultipleAppointmentStatuses(updates);
-
-    toast({
-      title: "Next Patient Called",
-      description: `${nextPatient.patientName} is now being served.`,
-    });
   };
-  
+
   const handleCopyDisplayLink = () => {
     const url = new URL('/opd-display/public', window.location.origin);
     navigator.clipboard.writeText(url.href);
     toast({
-        title: "Link Copied",
-        description: "The public waiting room display link has been copied to your clipboard.",
+      title: "Link Copied",
+      description: "The public waiting room display link has been copied to your clipboard.",
     });
   };
 
-  if (isLoading) {
+  const handleMarkCompleted = async (entryId: string) => {
+    try {
+      await updateStatus(entryId, 'completed');
+      toast({ title: "Marked as Completed" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
+    }
+  };
+
+  const handleMarkNoShow = async (entryId: string) => {
+    try {
+      await updateStatus(entryId, 'no-show');
+      toast({ title: "Marked as No Show" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
+    }
+  };
+
+  if (loading) {
     return (
       <div className="container mx-auto py-2">
         <PageHeader title="OPD Queue Management" description="Loading today's patient queue..." />
@@ -101,7 +98,7 @@ export default function OpdQueuePage() {
               <CardTitle className="font-headline">Queue Control</CardTitle>
             </CardHeader>
             <CardContent>
-              <Button onClick={handleCallNext} size="lg" className="w-full" disabled={waitingList.length === 0}>
+              <Button onClick={handleCallNext} size="lg" className="w-full" disabled={waiting.length === 0}>
                 <Forward className="mr-2 h-5 w-5" /> Call Next Patient
               </Button>
             </CardContent>
@@ -115,11 +112,26 @@ export default function OpdQueuePage() {
               {nowServing ? (
                 <div className="space-y-2">
                   <p className="text-2xl font-bold text-primary">{nowServing.patientName}</p>
-                  <p className="text-sm text-muted-foreground flex items-center"><Clock className="mr-1.5 h-4 w-4" />Scheduled at {nowServing.time}</p>
-                  <p className="text-sm text-muted-foreground flex items-center"><User className="mr-1.5 h-4 w-4" />Nephro ID: {nowServing.patientId.split('-')[0]}</p>
-                   <Button variant="link" asChild className="p-0 h-auto mt-2">
-                        <Link href={`/patients/${nowServing.patientId}`}>View Patient Profile</Link>
-                   </Button>
+                  {nowServing.time && (
+                    <p className="text-sm text-muted-foreground flex items-center">
+                      <Clock className="mr-1.5 h-4 w-4" />Check-in: {nowServing.time}
+                    </p>
+                  )}
+                  {nowServing.nephroId && (
+                    <p className="text-sm text-muted-foreground flex items-center">
+                      <User className="mr-1.5 h-4 w-4" />Nephro ID: {nowServing.nephroId}
+                    </p>
+                  )}
+                  <p className="text-sm text-muted-foreground">Type: {nowServing.appointmentType}</p>
+                  {nowServing.checkedInBy === 'patient' && (
+                    <Badge className="bg-green-500">
+                      <UserCheck className="mr-1 h-3 w-3" />
+                      Self Check-in
+                    </Badge>
+                  )}
+                  <Button variant="link" asChild className="p-0 h-auto mt-2">
+                    <Link href={`/patients/${nowServing.patientId}`}>View Patient Profile</Link>
+                  </Button>
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
@@ -136,29 +148,42 @@ export default function OpdQueuePage() {
           <Card className="shadow-lg h-full">
             <CardHeader>
               <CardTitle className="font-headline flex items-center"><Users className="mr-2 h-5 w-5 text-primary" />Waiting List</CardTitle>
-              <CardDescription>Patients who have checked in and are waiting to be seen. Total waiting: {waitingList.length}</CardDescription>
+              <CardDescription>Patients who have checked in and are waiting to be seen. Total waiting: {waiting.length}</CardDescription>
             </CardHeader>
             <CardContent>
-              {waitingList.length > 0 ? (
+              {waiting.length > 0 ? (
                 <ul className="space-y-3">
-                  {waitingList.map((app, index) => (
-                    <li key={app.id} className="flex items-center justify-between p-3 border rounded-lg bg-background hover:bg-muted/50">
+                  {waiting.map((entry, index) => (
+                    <li key={entry.id} className="flex items-center justify-between p-3 border rounded-lg bg-background hover:bg-muted/50">
                       <div className="flex items-center">
                         <span className="text-lg font-bold text-primary mr-4">{index + 1}</span>
                         <div>
-                          <p className="font-semibold">{app.patientName}</p>
-                          <p className="text-sm text-muted-foreground">Scheduled: {app.time} &bull; Type: {app.type}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold">{entry.patientName}</p>
+                            {entry.checkedInBy === 'patient' && (
+                              <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                                <UserCheck className="mr-1 h-3 w-3" />
+                                Self Check-in
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {entry.time ? `Check-in: ${entry.time}` : 'Time: N/A'} • Type: {entry.appointmentType}
+                          </p>
+                          {entry.nephroId && (
+                            <p className="text-xs text-muted-foreground">Nephro ID: {entry.nephroId}</p>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => toast({title: "WIP"})} title="Mark as Completed">
-                            <CheckCircle className="h-4 w-4 text-green-600"/>
+                        <Button variant="ghost" size="sm" onClick={() => handleMarkCompleted(entry.id)} title="Mark as Completed">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
                         </Button>
-                         <Button variant="ghost" size="sm" onClick={() => toast({title: "WIP"})} title="Mark as No Show">
-                            <Ban className="h-4 w-4 text-red-600"/>
+                        <Button variant="ghost" size="sm" onClick={() => handleMarkNoShow(entry.id)} title="Mark as No Show">
+                          <Ban className="h-4 w-4 text-red-600" />
                         </Button>
                         <Button variant="ghost" size="icon" asChild>
-                            <Link href={`/patients/${app.patientId}`}><ChevronRight className="h-5 w-5"/></Link>
+                          <Link href={`/patients/${entry.patientId}`}><ChevronRight className="h-5 w-5" /></Link>
                         </Button>
                       </div>
                     </li>
@@ -167,7 +192,7 @@ export default function OpdQueuePage() {
               ) : (
                 <div className="text-center py-16 text-muted-foreground">
                   <p className="text-lg">The waiting list is empty.</p>
-                  <p>Patients with "Waiting" status will appear here.</p>
+                  <p>Patients who check-in will appear here.</p>
                 </div>
               )}
             </CardContent>

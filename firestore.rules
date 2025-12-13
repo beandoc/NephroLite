@@ -1,0 +1,292 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================================
+    // HELPER FUNCTIONS
+    // ============================================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Get user role from users or patientUsers collection
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    // Check if user is a staff member (doctor, nurse, admin)
+    function isStaff() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             getUserRole() in ['doctor', 'nurse', 'admin'];
+    }
+    
+    // Check if user is a patient
+    function isPatient() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/patientUsers/$(request.auth.uid));
+    }
+    
+    // Check if patient is accessing their own data
+    function isOwnPatientData(patientId) {
+      return isPatient() && 
+             get(/databases/$(database)/documents/patientUsers/$(request.auth.uid)).data.patientId == patientId;
+    }
+    
+    // Check if patient account is active
+    function isActivePatient() {
+      return isPatient() && 
+             get(/databases/$(database)/documents/patientUsers/$(request.auth.uid)).data.isActive == true;
+    }
+    
+    // ============================================================
+    // STAFF COLLECTIONS
+    // ============================================================
+    
+    // Users collection (staff only)
+    match /users/{userId} {
+      // Staff can read their own document
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Only authenticated users can create (during signup)
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Staff can update their own data
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Only admins can delete
+      allow delete: if isStaff() && getUserRole() == 'admin';
+    }
+    
+    // Patients collection (staff read/write, patients read own)
+    match /patients/{patientId} {
+      // Staff can read all patients
+      allow read: if isStaff() || isOwnPatientData(patientId);
+      
+      // Only staff can create/update/delete patients
+      allow create, update, delete: if isStaff();
+      
+      // --------------------------------------------------------
+      // Patient Sub-collections
+      // --------------------------------------------------------
+      
+      // PD Data - Baseline
+      match /pdData/baseline {
+        allow read: if isStaff() || isOwnPatientData(patientId);
+        allow write: if isStaff();
+      }
+      
+      // PD Data - Exchanges
+      match /pdData/exchanges/{exchangeId} {
+        allow read: if isStaff() || isOwnPatientData(patientId);
+        allow write: if isStaff();
+      }
+      
+      // PD Data - Peritonitis Episodes
+      match /pdData/peritonitisEpisodes/{episodeId} {
+        allow read: if isStaff() || isOwnPatientData(patientId);
+        allow write: if isStaff();
+      }
+      
+      // PD Data - Daily Monitoring (patients can write their own)
+      match /pdData/dailyMonitoring/{logId} {
+        // Staff and patient can read
+        allow read: if isStaff() || isOwnPatientData(patientId);
+        
+        // Staff can write any entry
+        allow create, update: if isStaff();
+        
+        // Active patients can create their own entries
+        allow create: if isActivePatient() && 
+                        isOwnPatientData(patientId) &&
+                        request.resource.data.enteredBy == 'patient';
+        
+        // Patients can update only their own entries
+        allow update: if isActivePatient() && 
+                        isOwnPatientData(patientId) &&
+                        resource.data.enteredBy == 'patient' &&
+                        request.resource.data.enteredBy == 'patient';
+        
+        // Only staff can delete
+        allow delete: if isStaff();
+      }
+      
+      // Investigation Records
+      match /investigationRecords/{recordId} {
+        // Staff and patient can read
+        allow read: if isStaff() || isOwnPatientData(patientId);
+        
+        // Only staff can write
+        allow write: if isStaff();
+      }
+      
+      // Dialysis Sessions
+      match /dialysisSessions/{sessionId} {
+        // Staff and patient can read
+        allow read: if isStaff() || isOwnPatientData(patientId);
+        
+        // Only staff can write
+        allow write: if isStaff();
+      }
+      
+      // Visits
+      match /visits/{visitId} {
+        // Staff and patient can read
+        allow read: if isStaff() || isOwnPatientData(patientId);
+        
+        // Only staff can write
+        allow write: if isStaff();
+      }
+      
+      // Interventions
+      match /interventions/{interventionId} {
+        // Staff and patient can read
+        allow read: if isStaff() || isOwnPatientData(patientId);
+        
+        // Only staff can write
+        allow write: if isStaff();
+      }
+    }
+    
+    // ============================================================
+    // PATIENT USER COLLECTIONS
+    // ============================================================
+    
+    // Patient Users collection (authentication data)
+    match /patientUsers/{userId} {
+      // Only the patient can read their own document
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Only staff can create patient accounts
+      allow create: if isStaff();
+      
+      // Only staff can update patient accounts
+      allow update: if isStaff();
+      
+      // Only staff can delete patient accounts
+      allow delete: if isStaff();
+    }
+    
+    // ============================================================
+    // OPD QUEUE
+    // ============================================================
+    
+    // OPD Queue by date
+    match /opdQueue/{date}/patients/{entryId} {
+      // Staff can read all queue entries
+      // Patients can read all entries (to see queue status)
+      allow read: if isAuthenticated();
+      
+      // Staff can create any entry
+      allow create: if isStaff();
+      
+      // Active patients can check themselves in
+      allow create: if isActivePatient() && 
+                      request.resource.data.patientId == get(/databases/$(database)/documents/patientUsers/$(request.auth.uid)).data.patientId &&
+                      request.resource.data.checkedInBy == 'patient';
+      
+      // Staff can update any entry
+      allow update: if isStaff();
+      
+      // Patients cannot update queue entries
+      // Only staff can delete queue entries
+      allow delete: if isStaff();
+    }
+    
+    // ============================================================
+    // APPOINTMENTS
+    // ============================================================
+    
+    match /appointments/{appointmentId} {
+      // Staff can read all appointments
+      allow read: if isStaff();
+      
+      // Patients can read their own appointments
+      allow read: if isPatient() && 
+                    resource.data.patientId == get(/databases/$(database)/documents/patientUsers/$(request.auth.uid)).data.patientId;
+      
+      // Only staff can create/update/delete appointments
+      allow write: if isStaff();
+    }
+    
+    // ============================================================
+    // MASTER DATA (Read-only for patients, Read/Write for staff)
+    // ============================================================
+    
+    // Investigation Masters
+    match /investigationMasters/{masterId} {
+      allow read: if isAuthenticated();
+      allow write: if isStaff();
+    }
+    
+    // Investigation Panels
+    match /investigationPanels/{panelId} {
+      allow read: if isAuthenticated();
+      allow write: if isStaff();
+    }
+    
+    // Diagnosis Templates
+    match /diagnosisTemplates/{templateId} {
+      allow read: if isAuthenticated();
+      allow write: if isStaff();
+    }
+    
+    // Master Diagnoses
+    match /masterDiagnoses/{diagnosisId} {
+      allow read: if isAuthenticated();
+      allow write: if isStaff();
+    }
+    
+    // ============================================================
+    // ANALYTICS & REPORTING (Staff only)
+    // ============================================================
+    
+    match /analytics/{document=**} {
+      allow read: if isStaff();
+      allow write: if isStaff();
+    }
+    
+    match /reports/{document=**} {
+      allow read: if isStaff();
+      allow write: if isStaff();
+    }
+    
+    // ============================================================
+    // AUDIT LOGS (Staff only, append-only)
+    // ============================================================
+    
+    match /auditLogs/{logId} {
+      // Only staff can read audit logs
+      allow read: if isStaff();
+      
+      // System can create audit logs (server-side)
+      // Staff can create logs for their actions
+      allow create: if isStaff();
+      
+      // No one can update or delete audit logs
+      allow update, delete: if false;
+    }
+    
+    // ============================================================
+    // SYSTEM COLLECTIONS (No direct access)
+    // ============================================================
+    
+    // System configuration (admin only)
+    match /system/{document=**} {
+      allow read: if isStaff() && getUserRole() == 'admin';
+      allow write: if isStaff() && getUserRole() == 'admin';
+    }
+    
+    // ============================================================
+    // DEFAULT DENY
+    // ============================================================
+    
+    // Deny all other access by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

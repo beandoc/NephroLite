@@ -1,4 +1,6 @@
 
+"use client";
+
 import {
   SidebarProvider,
   Sidebar,
@@ -12,15 +14,28 @@ import { SidebarNav } from "@/components/shared/sidebar-nav";
 import { UserNav } from "@/components/shared/user-nav";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
-import { CircleDot, LogOut } from "lucide-react"; 
+import { CircleDot, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataProvider } from "@/context/data-provider";
+import { useAuth } from "@/context/auth-provider";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  // This layout is for authenticated app routes.
-  // The OPD display will have its own layout.
+  const { signOut, user } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  // Extract user name from email or displayName
+  const userName = user?.displayName || user?.email?.split('@')[0] || 'User';
+  const userEmail = user?.email || '';
+
   return (
     <DataProvider>
       <SidebarProvider defaultOpen>
@@ -28,11 +43,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <SidebarHeader className="p-4 flex flex-col items-start">
             <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold text-sidebar-foreground hover:text-sidebar-foreground/90 mb-1">
               <CircleDot className="h-7 w-7 text-sidebar-foreground" />
-              <span className="font-headline group-data-[collapsible=icon]:hidden">NephroConnect</span>
+              <span className="font-headline group-data-[collapsible=icon]:hidden">NephroLite</span>
             </Link>
             <div className="ml-1 group-data-[collapsible=icon]:hidden">
-              <p className="text-sm font-medium text-sidebar-foreground">Dr. Sachin</p>
-              <p className="text-xs text-sidebar-foreground/80">Nephrology Specialist</p>
+              <p className="text-sm font-medium text-sidebar-foreground">{userName}</p>
+              <p className="text-xs text-sidebar-foreground/80 truncate max-w-[180px]">{userEmail}</p>
             </div>
           </SidebarHeader>
           <SidebarContent>
@@ -41,7 +56,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </ScrollArea>
           </SidebarContent>
           <SidebarFooter className="p-2 border-t border-sidebar-border">
-            <Button variant="ghost" className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:justify-center">
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:justify-center"
+              onClick={handleLogout}
+            >
               <LogOut className="h-5 w-5 group-data-[collapsible=icon]:mr-0 mr-2" />
               <span className="group-data-[collapsible=icon]:hidden">Logout</span>
             </Button>
@@ -70,3 +89,4 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </DataProvider>
   );
 }
+

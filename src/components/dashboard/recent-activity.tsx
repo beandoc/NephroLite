@@ -10,6 +10,7 @@ import { useAppointmentData } from '@/hooks/use-appointment-data';
 import { format, parseISO } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMemo, useState, useEffect } from 'react';
+import { Timestamp } from 'firebase/firestore';
 
 type ActivityItem = {
     type: 'patient' | 'appointment' | 'visit';
@@ -20,6 +21,22 @@ type ActivityItem = {
     icon: React.ElementType;
     iconColor: string;
 }
+
+// Helper to convert Firestore Timestamp or ISO string to Date
+const toDate = (dateValue: any): Date => {
+    if (!dateValue) return new Date();
+    if (dateValue instanceof Date) return dateValue;
+    if (dateValue?.toDate && typeof dateValue.toDate === 'function') {
+        // Firestore Timestamp
+        return dateValue.toDate();
+    }
+    if (typeof dateValue === 'string') {
+        // ISO string
+        return parseISO(dateValue);
+    }
+    // Fallback
+    return new Date();
+};
 
 export function RecentActivity() {
     const { patients, isLoading: patientsLoading } = usePatientData();
@@ -36,32 +53,36 @@ export function RecentActivity() {
 
         patients.forEach(p => {
             // Patient registration event
-            allActivities.push({
-                type: 'patient',
-                id: `patient-${p.id}`,
-                description: `Patient ${[p.firstName, p.lastName].join(' ')} was registered.`,
-                date: parseISO(p.createdAt),
-                href: `/patients/${p.id}`,
-                icon: UserPlus,
-                iconColor: 'text-green-500',
-            });
+            if (p.createdAt) {
+                allActivities.push({
+                    type: 'patient',
+                    id: `patient-${p.id}`,
+                    description: `Patient ${[p.firstName, p.lastName].join(' ')} was registered.`,
+                    date: toDate(p.createdAt),
+                    href: `/patients/${p.id}`,
+                    icon: UserPlus,
+                    iconColor: 'text-green-500',
+                });
+            }
 
             // Patient visit events
             if (p.visits) {
                 p.visits.forEach(v => {
-                    allActivities.push({
-                        type: 'visit' as const,
-                        id: `visit-${v.id}`,
-                        description: `New ${v.visitType.toLowerCase()} visit for ${[p.firstName, p.lastName].join(' ')}.`,
-                        date: parseISO(v.createdAt),
-                        href: `/patients/${p.id}?tab=visits`,
-                        icon: FileText,
-                        iconColor: 'text-indigo-500'
-                    });
+                    if (v.createdAt) {
+                        allActivities.push({
+                            type: 'visit' as const,
+                            id: `visit-${v.id}`,
+                            description: `New ${v.visitType.toLowerCase()} visit for ${[p.firstName, p.lastName].join(' ')}.`,
+                            date: toDate(v.createdAt),
+                            href: `/patients/${p.id}?tab=visits`,
+                            icon: FileText,
+                            iconColor: 'text-indigo-500'
+                        });
+                    }
                 });
             }
         });
-        
+
         return allActivities
             .sort((a, b) => b.date.getTime() - a.date.getTime())
             .slice(0, 5);
@@ -70,9 +91,9 @@ export function RecentActivity() {
 
     if (patientsLoading || !isClient) {
         return (
-             <Card>
+            <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline flex items-center"><Activity className="mr-2 h-5 w-5 text-primary"/>Recent Activity</CardTitle>
+                    <CardTitle className="font-headline flex items-center"><Activity className="mr-2 h-5 w-5 text-primary" />Recent Activity</CardTitle>
                     <CardDescription>Latest actions and updates in the system.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -82,36 +103,36 @@ export function RecentActivity() {
         )
     }
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="font-headline flex items-center"><Activity className="mr-2 h-5 w-5 text-primary"/>Recent Activity</CardTitle>
-        <CardDescription>Latest actions and updates in the system.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {recentActivities.length > 0 ? (
-            <div className="space-y-4">
-                {recentActivities.map(activity => (
-                    <div key={activity.id} className="flex items-center">
-                        <div className="flex-shrink-0">
-                           <activity.icon className={`h-5 w-5 ${activity.iconColor}`} />
-                        </div>
-                        <div className="ml-3 flex-grow">
-                            <p className="text-sm">{activity.description}</p>
-                            <p className="text-xs text-muted-foreground">{format(activity.date, 'PPP, p')}</p>
-                        </div>
-                        <Button asChild variant="ghost" size="sm">
-                            <Link href={activity.href}><Eye className="h-4 w-4" /></Link>
-                        </Button>
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline flex items-center"><Activity className="mr-2 h-5 w-5 text-primary" />Recent Activity</CardTitle>
+                <CardDescription>Latest actions and updates in the system.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {recentActivities.length > 0 ? (
+                    <div className="space-y-4">
+                        {recentActivities.map(activity => (
+                            <div key={activity.id} className="flex items-center">
+                                <div className="flex-shrink-0">
+                                    <activity.icon className={`h-5 w-5 ${activity.iconColor}`} />
+                                </div>
+                                <div className="ml-3 flex-grow">
+                                    <p className="text-sm">{activity.description}</p>
+                                    <p className="text-xs text-muted-foreground">{format(activity.date, 'PPP, p')}</p>
+                                </div>
+                                <Button asChild variant="ghost" size="sm">
+                                    <Link href={activity.href}><Eye className="h-4 w-4" /></Link>
+                                </Button>
+                            </div>
+                        ))}
                     </div>
-                ))}
-            </div>
-        ) : (
-            <div className="h-40 flex items-center justify-center text-muted-foreground">
-                <p>No recent activity to display.</p>
-            </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+                ) : (
+                    <div className="h-40 flex items-center justify-center text-muted-foreground">
+                        <p>No recent activity to display.</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
 }

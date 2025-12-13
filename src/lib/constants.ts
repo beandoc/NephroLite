@@ -3,9 +3,9 @@
 import type { MasterDiagnosis, InvestigationMaster, InvestigationPanel } from './types';
 
 export const MOCK_USER = {
-  name: "Dr. Sachin", 
-  email: "dr.sachin@nephroconnect.com", 
-  avatarUrl: "https://placehold.co/40x40.png", 
+  name: "Dr. Sachin",
+  email: "dr.sachin@nephroconnect.com",
+  avatarUrl: "https://placehold.co/40x40.png",
 };
 
 
@@ -68,12 +68,11 @@ export const NUTRITIONAL_STATUSES = [
 
 export const DISABILITY_PROFILES = [
   'None',
-  'Mild physical disability',
-  'Moderate physical disability',
-  'Severe physical disability',
-  'Cognitive impairment',
-  'Visual impairment',
-  'Hearing impairment',
+  'SHAPE-I',
+  'P2(T-24)',
+  'P3(T-24)',
+  'P2(P)',
+  'P3(P)',
   'Other',
   'Not Set',
 ] as const;
@@ -125,14 +124,14 @@ export const RESIDENCE_TYPES = ['Rural', 'Urban', 'Semi-Urban', 'Other', 'Not Se
 
 // New constants for Interventions
 export const INTERVENTION_TYPES = [
-    'Kidney Biopsy', 
-    'Temporary Catheter', 
-    'Tunneled Cuffed Catheter', 
-    'Dialysis Catheter Removal', 
-    'CAPD Catheter Insertion', 
-    'CAPD Catheter Removal', 
-    'AV Fistula Creation', 
-    'Endovascular Intervention'
+  'Kidney Biopsy',
+  'Temporary Catheter',
+  'Tunneled Cuffed Catheter',
+  'Dialysis Catheter Removal',
+  'CAPD Catheter Insertion',
+  'CAPD Catheter Removal',
+  'AV Fistula Creation',
+  'Endovascular Intervention'
 ] as const;
 
 export const CATHETER_SITES = ['SLFC Rt', 'SLFC Lt', 'DLFC Rt', 'DLFC Lt', 'DLJC Rt', 'DLJC Lt'] as const;
@@ -142,40 +141,40 @@ export const CAPD_INSERTION_TECHNIQUES = ['Percutaneous', 'Mini Laparotomy', 'La
 export const AV_FISTULA_TYPES = ['Radio-cephalic', 'Brachio-cephalic'] as const;
 
 export const MOCK_DIAGNOSES: MasterDiagnosis[] = [
-    { 
-        id: 'hypertension', 
-        clinicalDiagnosis: 'Hypertension', 
-        icdMappings: [
-            { icdCode: 'I10', icdName: 'Essential (primary) hypertension' }
-        ] 
-    },
-    { 
-        id: 't2dm', 
-        clinicalDiagnosis: 'Type 2 Diabetes Mellitus', 
-        icdMappings: [
-            { icdCode: 'E11.9', icdName: 'Type 2 diabetes mellitus without complications' }
-        ] 
-    },
-    { 
-        id: 'ckd', 
-        clinicalDiagnosis: 'Chronic Kidney Disease', 
-        icdMappings: [
-            { icdCode: 'N18.1', icdName: 'Chronic kidney disease, stage 1' },
-            { icdCode: 'N18.2', icdName: 'Chronic kidney disease, stage 2 (mild)' },
-            { icdCode: 'N18.3', icdName: 'Chronic kidney disease, stage 3 (moderate)' },
-            { icdCode: 'N18.4', icdName: 'Chronic kidney disease, stage 4 (severe)' },
-            { icdCode: 'N18.5', icdName: 'Chronic kidney disease, stage 5' },
-            { icdCode: 'N18.6', icdName: 'End-stage renal disease' },
-            { icdCode: 'N18.9', icdName: 'Chronic kidney disease, unspecified' },
-        ] 
-    },
-    { 
-        id: 'iga_nephropathy', 
-        clinicalDiagnosis: 'IgA Nephropathy', 
-        icdMappings: [
-            { icdCode: 'N02.8', icdName: 'Recurrent and persistent haematuria with other morphologic changes' }
-        ] 
-    },
+  {
+    id: 'hypertension',
+    clinicalDiagnosis: 'Hypertension',
+    icdMappings: [
+      { icdCode: 'I10', icdName: 'Essential (primary) hypertension' }
+    ]
+  },
+  {
+    id: 't2dm',
+    clinicalDiagnosis: 'Type 2 Diabetes Mellitus',
+    icdMappings: [
+      { icdCode: 'E11.9', icdName: 'Type 2 diabetes mellitus without complications' }
+    ]
+  },
+  {
+    id: 'ckd',
+    clinicalDiagnosis: 'Chronic Kidney Disease',
+    icdMappings: [
+      { icdCode: 'N18.1', icdName: 'Chronic kidney disease, stage 1' },
+      { icdCode: 'N18.2', icdName: 'Chronic kidney disease, stage 2 (mild)' },
+      { icdCode: 'N18.3', icdName: 'Chronic kidney disease, stage 3 (moderate)' },
+      { icdCode: 'N18.4', icdName: 'Chronic kidney disease, stage 4 (severe)' },
+      { icdCode: 'N18.5', icdName: 'Chronic kidney disease, stage 5' },
+      { icdCode: 'N18.6', icdName: 'End-stage renal disease' },
+      { icdCode: 'N18.9', icdName: 'Chronic kidney disease, unspecified' },
+    ]
+  },
+  {
+    id: 'iga_nephropathy',
+    clinicalDiagnosis: 'IgA Nephropathy',
+    icdMappings: [
+      { icdCode: 'N02.8', icdName: 'Recurrent and persistent haematuria with other morphologic changes' }
+    ]
+  },
 ];
 
 export const INVESTIGATION_GROUPS = [
@@ -219,7 +218,7 @@ export const INVESTIGATION_MASTER_LIST: InvestigationMaster[] = [
   { id: 'bio_019', name: 'Total Cholesterol', group: 'Biochemistry', unit: 'mg/dL', normalRange: '<200', resultType: 'numeric' },
   { id: 'bio_020', name: 'HDL Cholesterol', group: 'Biochemistry', unit: 'mg/dL', normalRange: '>40', resultType: 'numeric' },
   { id: 'bio_021', name: 'LDL Cholesterol', group: 'Biochemistry', unit: 'mg/dL', normalRange: '<100', resultType: 'numeric' },
-  
+
   // Radiology
   { id: 'rad_001', name: 'USG KUB', group: 'Radiology', resultType: 'text' },
   { id: 'rad_002', name: 'Chest X-Ray (CXR)', group: 'Radiology', resultType: 'text' },
@@ -245,7 +244,7 @@ export const INVESTIGATION_MASTER_LIST: InvestigationMaster[] = [
   { id: 'urn_003', name: '24-hour Urine Protein', group: 'Urine Analysis', unit: 'mg/day', normalRange: '<150', resultType: 'numeric' },
   { id: 'urn_004', name: 'Urine Spot Protein/Creatinine Ratio (PCR)', group: 'Urine Analysis', unit: 'mg/g', normalRange: '<150', resultType: 'numeric' },
   { id: 'urn_005', name: 'Urine for AC Ratio (mg/gm)', group: 'Urine Analysis', unit: 'mg/gm', normalRange: '<30', resultType: 'numeric' },
-  
+
   // Special Investigations
   { id: 'spc_001', name: 'Kidney Biopsy', group: 'Special Investigations', resultType: 'text' },
   { id: 'spc_002', name: 'ECG', group: 'Special Investigations', resultType: 'text' },
@@ -256,41 +255,41 @@ export const INVESTIGATION_MASTER_LIST: InvestigationMaster[] = [
 ];
 
 export const INVESTIGATION_PANELS: InvestigationPanel[] = [
-    // Hematology Panels
-    { id: 'panel_hem_1', name: 'Hematology Basic', group: 'Hematological', testIds: ['hem_001', 'hem_002', 'hem_003', 'hem_004'] },
-    { id: 'panel_hem_2', name: 'Hematology Extended', group: 'Hematological', testIds: ['hem_001', 'hem_002', 'hem_003', 'hem_004', 'hem_005', 'hem_010', 'hem_006'] },
-    { id: 'panel_hem_3', name: 'Coagulation Profile', group: 'Hematological', testIds: ['hem_006', 'hem_007', 'hem_010', 'hem_004'] },
-    { id: 'panel_hem_4', name: 'Complete Anemia Profile', group: 'Hematological', testIds: ['hem_001', 'hem_002', 'hem_003', 'hem_004', 'hem_008', 'hem_009'] },
-    
-    // Biochemistry Panels
-    { id: 'panel_bio_1', name: 'Renal Function Basic (KFT)', group: 'Biochemistry', testIds: ['bio_001', 'bio_002', 'bio_003', 'bio_004', 'bio_005'] },
-    { id: 'panel_bio_2', name: 'Renal Function Extended', group: 'Biochemistry', testIds: ['bio_001', 'bio_002', 'bio_003', 'bio_004', 'bio_005', 'bio_006', 'bio_007', 'bio_008'] },
-    { id: 'panel_bio_3', name: 'Liver Function Test (LFT)', group: 'Biochemistry', testIds: ['bio_010', 'bio_011', 'bio_016'] }, // Simplified LFT
-    { id: 'panel_bio_4', name: 'Diabetic Profile', group: 'Biochemistry', testIds: ['bio_012', 'bio_013', 'bio_014'] },
-    { id: 'panel_bio_5', name: 'Metabolic Bone Disease (MBD) Screen', group: 'Biochemistry', testIds: ['bio_006', 'bio_007', 'bio_009'] },
-    { id: 'panel_bio_6', name: 'Lipid Profile', group: 'Biochemistry', testIds: ['bio_019', 'bio_020', 'bio_021'] },
+  // Hematology Panels
+  { id: 'panel_hem_1', name: 'Hematology Basic', group: 'Hematological', testIds: ['hem_001', 'hem_002', 'hem_003', 'hem_004'] },
+  { id: 'panel_hem_2', name: 'Hematology Extended', group: 'Hematological', testIds: ['hem_001', 'hem_002', 'hem_003', 'hem_004', 'hem_005', 'hem_010', 'hem_006'] },
+  { id: 'panel_hem_3', name: 'Coagulation Profile', group: 'Hematological', testIds: ['hem_006', 'hem_007', 'hem_010', 'hem_004'] },
+  { id: 'panel_hem_4', name: 'Complete Anemia Profile', group: 'Hematological', testIds: ['hem_001', 'hem_002', 'hem_003', 'hem_004', 'hem_008', 'hem_009'] },
 
-    // Serology Panels
-    { id: 'panel_ser_1', name: 'Viral Markers', group: 'Serology', testIds: ['ser_001', 'ser_002', 'ser_003'] },
-    { id: 'panel_ser_2', name: 'Glomerulonephritis (GN) Basic', group: 'Serology', testIds: ['ser_004', 'ser_006', 'ser_007'] },
-    { id: 'panel_ser_3', name: 'Glomerulonephritis (GN) Extended', group: 'Serology', testIds: ['ser_004', 'ser_005', 'ser_006', 'ser_007', 'ser_008', 'ser_009'] },
+  // Biochemistry Panels
+  { id: 'panel_bio_1', name: 'Renal Function Basic (KFT)', group: 'Biochemistry', testIds: ['bio_001', 'bio_002', 'bio_003', 'bio_004', 'bio_005'] },
+  { id: 'panel_bio_2', name: 'Renal Function Extended', group: 'Biochemistry', testIds: ['bio_001', 'bio_002', 'bio_003', 'bio_004', 'bio_005', 'bio_006', 'bio_007', 'bio_008'] },
+  { id: 'panel_bio_3', name: 'Liver Function Test (LFT)', group: 'Biochemistry', testIds: ['bio_010', 'bio_011', 'bio_016'] }, // Simplified LFT
+  { id: 'panel_bio_4', name: 'Diabetic Profile', group: 'Biochemistry', testIds: ['bio_012', 'bio_013', 'bio_014'] },
+  { id: 'panel_bio_5', name: 'Metabolic Bone Disease (MBD) Screen', group: 'Biochemistry', testIds: ['bio_006', 'bio_007', 'bio_009'] },
+  { id: 'panel_bio_6', name: 'Lipid Profile', group: 'Biochemistry', testIds: ['bio_019', 'bio_020', 'bio_021'] },
 
-    // Urine Panels
-    { id: 'panel_urn_1', name: 'Basic Urinalysis', group: 'Urine Analysis', testIds: ['urn_001'] },
-    { id: 'panel_urn_2', name: 'Proteinuria Screen', group: 'Urine Analysis', testIds: ['urn_001', 'urn_004'] },
+  // Serology Panels
+  { id: 'panel_ser_1', name: 'Viral Markers', group: 'Serology', testIds: ['ser_001', 'ser_002', 'ser_003'] },
+  { id: 'panel_ser_2', name: 'Glomerulonephritis (GN) Basic', group: 'Serology', testIds: ['ser_004', 'ser_006', 'ser_007'] },
+  { id: 'panel_ser_3', name: 'Glomerulonephritis (GN) Extended', group: 'Serology', testIds: ['ser_004', 'ser_005', 'ser_006', 'ser_007', 'ser_008', 'ser_009'] },
+
+  // Urine Panels
+  { id: 'panel_urn_1', name: 'Basic Urinalysis', group: 'Urine Analysis', testIds: ['urn_001'] },
+  { id: 'panel_urn_2', name: 'Proteinuria Screen', group: 'Urine Analysis', testIds: ['urn_001', 'urn_004'] },
 ];
 
 export const FREQUENTLY_USED_INVESTIGATIONS: { name: string; type: 'test' | 'panel'; id: string }[] = [
-    { name: 'Hematology Basic', type: 'panel', id: 'panel_hem_1' },
-    { name: 'Renal Profile Extended', type: 'panel', id: 'panel_bio_2' },
-    { name: 'Lipid Profile', type: 'panel', id: 'panel_bio_6' },
-    { name: 'CXR PA View', type: 'test', id: 'rad_002' },
-    { name: 'ECG', type: 'test', id: 'spc_002' },
-    { name: 'USG KUB', type: 'test', id: 'rad_001' },
-    { name: 'Urine R/E', type: 'test', id: 'urn_001' },
-    { name: 'Urine PC Ratio', type: 'test', id: 'urn_004' },
-    { name: 'Urine for AC Ratio', type: 'test', id: 'urn_005' },
-    { name: 'Kidney Biopsy', type: 'test', id: 'spc_001' },
+  { name: 'Hematology Basic', type: 'panel', id: 'panel_hem_1' },
+  { name: 'Renal Profile Extended', type: 'panel', id: 'panel_bio_2' },
+  { name: 'Lipid Profile', type: 'panel', id: 'panel_bio_6' },
+  { name: 'CXR PA View', type: 'test', id: 'rad_002' },
+  { name: 'ECG', type: 'test', id: 'spc_002' },
+  { name: 'USG KUB', type: 'test', id: 'rad_001' },
+  { name: 'Urine R/E', type: 'test', id: 'urn_001' },
+  { name: 'Urine PC Ratio', type: 'test', id: 'urn_004' },
+  { name: 'Urine for AC Ratio', type: 'test', id: 'urn_005' },
+  { name: 'Kidney Biopsy', type: 'test', id: 'spc_001' },
 ];
 
 
@@ -308,43 +307,43 @@ export const PATIENT_GROUPS_FOR_ANALYSIS = [
 ];
 
 export const DIAGNOSIS_TEMPLATES = {
-    "IgA Nephropathy": {
-        templateName: "IgA Nephropathy",
-        templateType: "Opinion Report" as const,
-        diagnoses: [{ id: "d004", name: "IgA Nephropathy", icdCode: "N02.8", icdName: "IgA nephropathy" }],
-        history: "Patient presents with a history of recurrent macroscopic hematuria following upper respiratory tract infections. No significant family history of renal disease.",
-        generalExamination: "General condition is fair. No pallor, icterus, or edema noted.",
-        systemicExamination: "Cardiovascular: S1, S2 heard, no murmurs. Respiratory: Clear breath sounds. Abdomen: Soft, non-tender.",
-        medications: [
-            { id: crypto.randomUUID(), name: "Ramipril", dosage: "5mg", frequency: "OD", instructions: "After breakfast" },
-            { id: crypto.randomUUID(), name: "Atorvastatin", dosage: "10mg", frequency: "HS", instructions: "At bedtime" },
-        ],
-        usgReport: "Both kidneys are normal in size and echotexture. No evidence of hydronephrosis or calculi.",
-        kidneyBiopsyReport: "Light Microscopy: Mesangial hypercellularity with matrix expansion.\nImmunofluorescence: Dominant mesangial deposits of IgA and C3.\nElectron Microscopy: Electron-dense deposits in the mesangium.",
-        opinionText: "The findings are consistent with IgA Nephropathy. The patient has moderate proteinuria and preserved renal function.",
-        recommendations: "Continue ACE inhibitor for blood pressure control and proteinuria reduction. Regular monitoring of renal function and proteinuria is advised. Avoid nephrotoxic drugs.",
-    },
-    "Diabetic Nephropathy": {
-        templateName: "Diabetic Nephropathy",
-        templateType: "Discharge Summary" as const,
-        diagnoses: [
-            { id: "e11.21", name: "Diabetic Nephropathy", icdCode: "E11.21", icdName: "Type 2 diabetes mellitus with diabetic nephropathy" },
-            { id: "d002", name: "Type 2 Diabetes Mellitus", icdCode: "E11.9", icdName: "Type 2 diabetes mellitus without complications" },
-            { id: "d001", name: "Hypertension", icdCode: "I10", icdName: "Essential (primary) hypertension" },
-        ],
-        history: "Known case of Type 2 Diabetes Mellitus for 15 years with suboptimal glycemic control. Presented with progressive pedal edema and worsening renal function.",
-        generalExamination: "Bilateral pitting pedal edema present up to the knees. BP: 150/90 mmHg.",
-        systemicExamination: "Fundoscopy shows background diabetic retinopathy. Other systems are within normal limits.",
-        medications: [
-            { id: crypto.randomUUID(), name: "Insulin Glargine", dosage: "20 units", frequency: "HS", instructions: "Subcutaneous" },
-            { id: "randomid1", name: "Metformin", dosage: "500mg", frequency: "BD", instructions: "After meals (dosage adjusted for GFR)" },
-            { id: crypto.randomUUID(), name: "Telmisartan", dosage: "40mg", frequency: "OD", instructions: "" },
-            { id: crypto.randomUUID(), name: "Dapagliflozin", dosage: "10mg", frequency: "OD", instructions: "SGLT2 inhibitor for nephroprotection" },
-        ],
-        dischargeInstructions: "Advised strict glycemic and blood pressure control. Low salt, low protein diet. Monitor renal function tests every 3 months. Follow up in the nephrology OPD.",
-        usgReport: "Slightly increased echogenicity of both kidneys, suggestive of medical renal disease.",
-        kidneyBiopsyReport: "Not performed.",
-    }
+  "IgA Nephropathy": {
+    templateName: "IgA Nephropathy",
+    templateType: "Opinion Report" as const,
+    diagnoses: [{ id: "d004", name: "IgA Nephropathy", icdCode: "N02.8", icdName: "IgA nephropathy" }],
+    history: "Patient presents with a history of recurrent macroscopic hematuria following upper respiratory tract infections. No significant family history of renal disease.",
+    generalExamination: "General condition is fair. No pallor, icterus, or edema noted.",
+    systemicExamination: "Cardiovascular: S1, S2 heard, no murmurs. Respiratory: Clear breath sounds. Abdomen: Soft, non-tender.",
+    medications: [
+      { id: crypto.randomUUID(), name: "Ramipril", dosage: "5mg", frequency: "OD", instructions: "After breakfast" },
+      { id: crypto.randomUUID(), name: "Atorvastatin", dosage: "10mg", frequency: "HS", instructions: "At bedtime" },
+    ],
+    usgReport: "Both kidneys are normal in size and echotexture. No evidence of hydronephrosis or calculi.",
+    kidneyBiopsyReport: "Light Microscopy: Mesangial hypercellularity with matrix expansion.\nImmunofluorescence: Dominant mesangial deposits of IgA and C3.\nElectron Microscopy: Electron-dense deposits in the mesangium.",
+    opinionText: "The findings are consistent with IgA Nephropathy. The patient has moderate proteinuria and preserved renal function.",
+    recommendations: "Continue ACE inhibitor for blood pressure control and proteinuria reduction. Regular monitoring of renal function and proteinuria is advised. Avoid nephrotoxic drugs.",
+  },
+  "Diabetic Nephropathy": {
+    templateName: "Diabetic Nephropathy",
+    templateType: "Discharge Summary" as const,
+    diagnoses: [
+      { id: "e11.21", name: "Diabetic Nephropathy", icdCode: "E11.21", icdName: "Type 2 diabetes mellitus with diabetic nephropathy" },
+      { id: "d002", name: "Type 2 Diabetes Mellitus", icdCode: "E11.9", icdName: "Type 2 diabetes mellitus without complications" },
+      { id: "d001", name: "Hypertension", icdCode: "I10", icdName: "Essential (primary) hypertension" },
+    ],
+    history: "Known case of Type 2 Diabetes Mellitus for 15 years with suboptimal glycemic control. Presented with progressive pedal edema and worsening renal function.",
+    generalExamination: "Bilateral pitting pedal edema present up to the knees. BP: 150/90 mmHg.",
+    systemicExamination: "Fundoscopy shows background diabetic retinopathy. Other systems are within normal limits.",
+    medications: [
+      { id: crypto.randomUUID(), name: "Insulin Glargine", dosage: "20 units", frequency: "HS", instructions: "Subcutaneous" },
+      { id: "randomid1", name: "Metformin", dosage: "500mg", frequency: "BD", instructions: "After meals (dosage adjusted for GFR)" },
+      { id: crypto.randomUUID(), name: "Telmisartan", dosage: "40mg", frequency: "OD", instructions: "" },
+      { id: crypto.randomUUID(), name: "Dapagliflozin", dosage: "10mg", frequency: "OD", instructions: "SGLT2 inhibitor for nephroprotection" },
+    ],
+    dischargeInstructions: "Advised strict glycemic and blood pressure control. Low salt, low protein diet. Monitor renal function tests every 3 months. Follow up in the nephrology OPD.",
+    usgReport: "Slightly increased echogenicity of both kidneys, suggestive of medical renal disease.",
+    kidneyBiopsyReport: "Not performed.",
+  }
 };
 
 // Dialysis Related Constants

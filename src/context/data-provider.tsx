@@ -2,12 +2,11 @@
 "use client";
 
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
-import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord, Appointment, InvestigationMaster, InvestigationPanel, Vaccination, Dose, Intervention, DialysisSession } from '@/lib/types';
+import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord, Appointment, InvestigationMaster, InvestigationPanel, Intervention, DialysisSession } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
-import { VACCINATION_NAMES, MOCK_USER } from '@/lib/constants';
-import { MOCK_PATIENTS, MOCK_APPOINTMENTS } from '@/lib/mock-data';
-import { INVESTIGATION_MASTER_LIST, INVESTIGATION_PANELS } from '@/lib/constants';
 import { getDefaultVaccinations } from '@/lib/data-helpers';
+import { useAuth } from './auth-provider';
+import * as firestoreHelpers from '@/lib/firestore-helpers';
 
 // Define the shape of the context data
 export interface DataContextType {
@@ -17,15 +16,15 @@ export interface DataContextType {
   addPatient: (patientData: PatientFormData) => Promise<Patient>;
   getPatientById: (id: string) => Patient | null;
   currentPatient: (id: string) => Patient | undefined;
-  updatePatient: (patientId: string, updatedData: Partial<PatientFormData & { isTracked?: boolean, patientStatus?: Patient['patientStatus'] }>) => void;
-  deletePatient: (patientId: string) => void;
-  addVisitToPatient: (patientId: string, visitData: VisitFormData) => void;
-  updateVisitData: (patientId: string, visitId: string, data: ClinicalVisitData) => void;
-  addOrUpdateInvestigationRecord: (patientId: string, record: InvestigationRecord) => void;
-  deleteInvestigationRecord: (patientId: string, recordId: string) => void;
-  addOrUpdateIntervention: (patientId: string, intervention: Intervention) => void;
-  deleteIntervention: (patientId: string, interventionId: string) => void;
-  updateClinicalProfile: (patientId: string, clinicalProfileData: ClinicalProfile) => void;
+  updatePatient: (patientId: string, updatedData: Partial<PatientFormData & { isTracked?: boolean, patientStatus?: Patient['patientStatus'] }>) => Promise<void>;
+  deletePatient: (patientId: string) => Promise<void>;
+  addVisitToPatient: (patientId: string, visitData: VisitFormData) => Promise<void>;
+  updateVisitData: (patientId: string, visitId: string, data: ClinicalVisitData) => Promise<void>;
+  addOrUpdateInvestigationRecord: (patientId: string, record: InvestigationRecord) => Promise<void>;
+  deleteInvestigationRecord: (patientId: string, recordId: string) => Promise<void>;
+  addOrUpdateIntervention: (patientId: string, intervention: Intervention) => Promise<void>;
+  deleteIntervention: (patientId: string, interventionId: string) => Promise<void>;
+  updateClinicalProfile: (patientId: string, clinicalProfileData: ClinicalProfile) => Promise<void>;
 
   // Appointment Data
   appointments: Appointment[];
@@ -37,33 +36,18 @@ export interface DataContextType {
   // Investigation Database
   investigationMasterList: InvestigationMaster[];
   investigationPanels: InvestigationPanel[];
-  addOrUpdateInvestigation: (investigation: InvestigationMaster) => void;
-  deleteInvestigation: (investigationId: string) => void;
-  addOrUpdatePanel: (panel: InvestigationPanel) => void;
-  deletePanel: (panelId: string) => void;
-  
+  addOrUpdateInvestigation: (investigation: InvestigationMaster) => Promise<void>;
+  deleteInvestigation: (investigationId: string) => Promise<void>;
+  addOrUpdatePanel: (panel: InvestigationPanel) => Promise<void>;
+  deletePanel: (panelId: string) => Promise<void>;
+
   // Dialysis
-  addOrUpdateDialysisSession: (patientId: string, session: DialysisSession) => void;
-  deleteDialysisSession: (patientId: string, sessionId: string) => void;
+  addOrUpdateDialysisSession: (patientId: string, session: DialysisSession) => Promise<void>;
+  deleteDialysisSession: (patientId: string, sessionId: string) => Promise<void>;
 }
 
 // Create the context
 export const DataContext = createContext<DataContextType | undefined>(undefined);
-
-// Helper function to safely get data from localStorage
-const getFromLocalStorage = <T,>(key: string, fallback: T): T => {
-    if (typeof window === 'undefined') {
-        return fallback;
-    }
-    try {
-        const item = window.localStorage.getItem(key);
-        return item ? JSON.parse(item) : fallback;
-    } catch (error) {
-        console.warn(`Error reading localStorage key "${key}":`, error);
-        return fallback;
-    }
-};
-
 
 // Helper functions for patient data management
 const getInitialClinicalProfile = (): Omit<ClinicalProfile, 'tags'> => ({
@@ -85,239 +69,276 @@ const getInitialClinicalProfile = (): Omit<ClinicalProfile, 'tags'> => ({
 });
 
 const calculateInitialLastId = (patients: Patient[]): number => {
-    if (patients.length === 0) return 1000;
-    return patients.reduce((max, p) => {
-        const idPart = parseInt(p.nephroId.split('/')[0], 10);
-        return isNaN(idPart) ? max : Math.max(idPart, max);
-    }, 1000);
+  if (patients.length === 0) return 1000;
+  return patients.reduce((max, p) => {
+    const idPart = parseInt(p.nephroId.split('/')[0], 10);
+    return isNaN(idPart) ? max : Math.max(idPart, max);
+  }, 1000);
 }
 
 
 // Create the Provider component
 export const DataProvider = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+
   // --- STATE MANAGEMENT ---
-  const [patients, setPatients] = useState<Patient[]>(() => getFromLocalStorage('patients', MOCK_PATIENTS));
-  const [appointments, setAppointments] = useState<Appointment[]>(() => getFromLocalStorage('appointments', MOCK_APPOINTMENTS));
-  const [investigationMasterList, setInvestigationMasterList] = useState<InvestigationMaster[]>(() => getFromLocalStorage('investigationMasterList', INVESTIGATION_MASTER_LIST));
-  const [investigationPanels, setInvestigationPanels] = useState<InvestigationPanel[]>(() => getFromLocalStorage('investigationPanels', INVESTIGATION_PANELS));
-  const [lastId, setLastId] = useState(() => calculateInitialLastId(patients));
-  const [isLoading, setIsLoading] = useState(false);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [investigationMasterList, setInvestigationMasterList] = useState<InvestigationMaster[]>([]);
+  const [investigationPanels, setInvestigationPanels] = useState<InvestigationPanel[]>([]);
+  const [lastId, setLastId] = useState(1000);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // --- PERSISTENCE TO LOCALSTORAGE ---
+  // --- FIRESTORE SUBSCRIPTIONS ---
   useEffect(() => {
-    localStorage.setItem('patients', JSON.stringify(patients));
-  }, [patients]);
+    if (!user) {
+      setPatients([]);
+      setAppointments([]);
+      setIsLoading(false);
+      return;
+    }
 
-  useEffect(() => {
-    localStorage.setItem('appointments', JSON.stringify(appointments));
-  }, [appointments]);
+    setIsLoading(true);
 
-  useEffect(() => {
-    localStorage.setItem('investigationMasterList', JSON.stringify(investigationMasterList));
-  }, [investigationMasterList]);
+    // Subscribe to patients
+    const unsubscribePatients = firestoreHelpers.subscribeToPatients(
+      user.uid,
+      (patientsData) => {
+        setPatients(patientsData);
+        setLastId(calculateInitialLastId(patientsData));
+        setIsLoading(false);
+      }
+    );
 
-  useEffect(() => {
-    localStorage.setItem('investigationPanels', JSON.stringify(investigationPanels));
-  }, [investigationPanels]);
+    // Subscribe to appointments
+    const unsubscribeAppointments = firestoreHelpers.subscribeToAppointments(
+      user.uid,
+      (appointmentsData) => {
+        setAppointments(appointmentsData);
+      }
+    );
 
+    // Load investigation master data
+    firestoreHelpers.getInvestigationMaster(user.uid).then((data) => {
+      setInvestigationMasterList(data.investigationMasterList);
+      setInvestigationPanels(data.investigationPanels);
+    });
+
+    return () => {
+      unsubscribePatients();
+      unsubscribeAppointments();
+    };
+  }, [user]);
 
   // --- PATIENT DATA LOGIC ---
   const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
-      const newIdNumber = lastId + 1;
-      setLastId(newIdNumber);
-      
-      const now = new Date();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const year = String(now.getFullYear()).slice(-2);
-      const newNephroId = `${newIdNumber}/${month}${year}`;
-      const nowISO = new Date().toISOString();
+    if (!user) throw new Error('User not authenticated');
 
-      const newPatient: Patient = {
-          id: crypto.randomUUID(),
-          nephroId: newNephroId,
-          firstName: patientData.firstName,
-          lastName: patientData.lastName,
-          dob: patientData.dob,
-          gender: patientData.gender,
-          contact: patientData.contact || "",
-          email: patientData.email || "",
-          address: {
-              street: patientData.address.street || "",
-              city: patientData.address.city || "",
-              state: patientData.address.state || "",
-              pincode: patientData.address.pincode || "",
-          },
-          guardian: {
-              name: patientData.guardian.relation === 'Self' ? [patientData.firstName, patientData.lastName].filter(Boolean).join(' ') : (patientData.guardian.name || ""),
-              relation: patientData.guardian.relation || "",
-              contact: patientData.guardian.relation === 'Self' ? (patientData.contact || "") : (patientData.guardian.contact || ""),
-          },
-          registrationDate: nowISO.split('T')[0],
-          createdAt: nowISO,
-          patientStatus: 'OPD',
-          isTracked: false,
-          residenceType: 'Not Set',
-          visits: [],
-          investigationRecords: [],
-          nextAppointmentDate: "",
-          interventions: [],
-          dialysisSessions: [],
-          clinicalProfile: {
-              ...getInitialClinicalProfile(),
-              tags: [],
-              whatsappNumber: patientData.whatsappNumber || '',
-              aabhaNumber: patientData.uhid || '',
-          },
-      };
-      
-      setPatients(prev => [...prev, newPatient]);
-      return newPatient;
-  }, [lastId]);
+    const newIdNumber = lastId + 1;
+    setLastId(newIdNumber);
+
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = String(now.getFullYear()).slice(-2);
+    const newNephroId = `${newIdNumber}/${month}${year}`;
+    const nowISO = new Date().toISOString();
+
+    const newPatient: Patient = {
+      id: crypto.randomUUID(),
+      nephroId: newNephroId,
+      firstName: patientData.firstName,
+      lastName: patientData.lastName,
+      dob: patientData.dob,
+      gender: patientData.gender,
+      contact: patientData.contact || "",
+      email: patientData.email || "",
+      address: {
+        street: patientData.address.street || "",
+        city: patientData.address.city || "",
+        state: patientData.address.state || "",
+        pincode: patientData.address.pincode || "",
+      },
+      guardian: {
+        name: patientData.guardian.relation === 'Self' ? [patientData.firstName, patientData.lastName].filter(Boolean).join(' ') : (patientData.guardian.name || ""),
+        relation: patientData.guardian.relation || "",
+        contact: patientData.guardian.relation === 'Self' ? (patientData.contact || "") : (patientData.guardian.contact || ""),
+      },
+      registrationDate: nowISO.split('T')[0],
+      createdAt: nowISO,
+      patientStatus: 'OPD',
+      isTracked: false,
+      residenceType: 'Not Set',
+      visits: [],
+      investigationRecords: [],
+      nextAppointmentDate: "",
+      interventions: [],
+      dialysisSessions: [],
+      clinicalProfile: {
+        ...getInitialClinicalProfile(),
+        tags: [],
+        whatsappNumber: patientData.whatsappNumber || '',
+        aabhaNumber: patientData.uhid || '',
+      },
+    };
+
+    await firestoreHelpers.createPatient(user.uid, newPatient);
+    return newPatient;
+  }, [lastId, user]);
 
   const getPatientById = useCallback((id: string): Patient | null => {
     const foundPatient = patients.find(p => p.id === id);
     return foundPatient || null;
   }, [patients]);
-  
-  const updatePatient = useCallback((patientId: string, updatedData: Partial<PatientFormData & { isTracked?: boolean, patientStatus?: Patient['patientStatus'] }>): void => {
-    setPatients(prev => prev.map(p => {
-        if (p.id !== patientId) return p;
-        const updatedPatient = { ...p };
-        const patientFormKeys: Array<keyof PatientFormData> = ['firstName', 'lastName', 'dob', 'gender', 'contact', 'email'];
-        patientFormKeys.forEach(key => {
-            if (updatedData[key] !== undefined) {
-                (updatedPatient as any)[key] = updatedData[key];
-            }
-        });
-        if (updatedData.address) updatedPatient.address = { ...p.address, ...updatedData.address };
-        if (updatedData.guardian) updatedPatient.guardian = { ...p.guardian, ...updatedData.guardian };
-        if (updatedData.isTracked !== undefined) updatedPatient.isTracked = updatedData.isTracked;
-        if (updatedData.uhid !== undefined) updatedPatient.clinicalProfile.aabhaNumber = updatedData.uhid;
-        if (updatedData.whatsappNumber !== undefined) updatedPatient.clinicalProfile.whatsappNumber = updatedData.whatsappNumber;
-        if (updatedData.patientStatus !== undefined) updatedPatient.patientStatus = updatedData.patientStatus;
-        return updatedPatient;
-    }));
-  }, []);
 
-  const updateClinicalProfile = useCallback((patientId: string, clinicalProfileData: ClinicalProfile): void => {
-    setPatients(prev => prev.map(p => {
-        if (p.id !== patientId) return p;
-        // Ensure that vaccinations are initialized if they don't exist.
-        const profileWithVaccinations = {
-            ...clinicalProfileData,
-            vaccinations: clinicalProfileData.vaccinations && clinicalProfileData.vaccinations.length > 0
-                ? clinicalProfileData.vaccinations
-                : getDefaultVaccinations(),
-        };
-        return { ...p, clinicalProfile: profileWithVaccinations };
-    }));
-  }, []);
+  const updatePatient = useCallback(async (patientId: string, updatedData: Partial<PatientFormData & { isTracked?: boolean, patientStatus?: Patient['patientStatus'] }>): Promise<void> => {
+    if (!user) throw new Error('User not authenticated');
 
-  const addVisitToPatient = useCallback((patientId: string, visitData: VisitFormData): void => {
-    setPatients(prevPatients => prevPatients.map(p => {
-      if (p.id !== patientId) return p;
-      const nowISO = new Date().toISOString();
-      const newVisit: Visit = {
-        id: crypto.randomUUID(),
-        date: nowISO.split('T')[0],
-        createdAt: nowISO,
-        ...visitData,
-        patientGender: p.gender,
-        patientRelation: p.guardian.relation,
-        patientId: p.id,
+    const patient = patients.find(p => p.id === patientId);
+    if (!patient) return;
+
+    const updates: Partial<Patient> = {};
+
+    const patientFormKeys: Array<keyof PatientFormData> = ['firstName', 'lastName', 'dob', 'gender', 'contact', 'email'];
+    patientFormKeys.forEach(key => {
+      if (updatedData[key] !== undefined) {
+        (updates as any)[key] = updatedData[key];
+      }
+    });
+
+    if (updatedData.address) updates.address = { ...patient.address, ...updatedData.address };
+    if (updatedData.guardian) updates.guardian = { ...patient.guardian, ...updatedData.guardian };
+    if (updatedData.isTracked !== undefined) updates.isTracked = updatedData.isTracked;
+    if (updatedData.patientStatus !== undefined) updates.patientStatus = updatedData.patientStatus;
+
+    if (updatedData.uhid !== undefined || updatedData.whatsappNumber !== undefined) {
+      updates.clinicalProfile = {
+        ...patient.clinicalProfile,
+        ...(updatedData.uhid !== undefined && { aabhaNumber: updatedData.uhid }),
+        ...(updatedData.whatsappNumber !== undefined && { whatsappNumber: updatedData.whatsappNumber })
       };
-      const newVisits = [...(p.visits || []), newVisit];
-      const newTags = Array.from(new Set([...(p.clinicalProfile.tags || []), visitData.groupName]));
-      let newPrimaryDiagnosis = p.clinicalProfile.primaryDiagnosis;
-      if (newPrimaryDiagnosis === 'Not Set' && visitData.groupName !== 'Misc') {
-          newPrimaryDiagnosis = visitData.groupName;
-      }
-      const visitRemarkEntry = `[${format(parseISO(newVisit.date), 'yyyy-MM-dd')}] Visit (${newVisit.visitType}): ${newVisit.visitRemark}`;
-      const newPomr = p.clinicalProfile.pomr ? `${p.clinicalProfile.pomr}\n${visitRemarkEntry}` : visitRemarkEntry;
-      return { ...p, visits: newVisits, clinicalProfile: { ...p.clinicalProfile, tags: newTags, primaryDiagnosis: newPrimaryDiagnosis, pomr: newPomr }};
-    }));
-  }, []);
+    }
 
-  const updateVisitData = useCallback((patientId: string, visitId: string, data: ClinicalVisitData): void => {
-    setPatients(prev => prev.map(p => {
-        if (p.id !== patientId) return p;
-        const updatedVisits = p.visits.map(v => {
-            if (v.id !== visitId) return v;
-            const updatedVisit = { ...v };
-            updatedVisit.clinicalData = { ...updatedVisit.clinicalData, ...data };
-            if (data.diagnoses && data.diagnoses.length > 0) updatedVisit.diagnoses = data.diagnoses;
-            else if (data.diagnoses === undefined) {} else { updatedVisit.diagnoses = []; }
-            return updatedVisit;
-        });
-        return { ...p, visits: updatedVisits };
-    }));
-  }, []);
-  
-  const addOrUpdateInvestigationRecord = useCallback((patientId: string, record: InvestigationRecord): void => {
-    setPatients(prev => prev.map(p => {
-        if (p.id !== patientId) return p;
-        const records = p.investigationRecords || [];
-        const existingRecordIndex = records.findIndex(r => r.id === record.id);
-        if (existingRecordIndex > -1) { records[existingRecordIndex] = record; }
-        else { record.id = record.id || crypto.randomUUID(); records.push(record); }
-        return { ...p, investigationRecords: [...records] };
-    }));
-  }, []);
-  
-  const deleteInvestigationRecord = useCallback((patientId: string, recordId: string): void => {
-    setPatients(prev => prev.map(p => {
-        if (p.id !== patientId) return p;
-        return { ...p, investigationRecords: (p.investigationRecords || []).filter(r => r.id !== recordId) };
-    }));
-  }, []);
-  
-  const addOrUpdateIntervention = useCallback((patientId: string, intervention: Intervention) => {
-    setPatients(prev => prev.map(p => {
-      if (p.id !== patientId) return p;
-      const interventions = p.interventions || [];
-      const existingIndex = interventions.findIndex(i => i.id === intervention.id);
-      if (existingIndex > -1) {
-        interventions[existingIndex] = intervention;
-      } else {
-        interventions.push(intervention);
-      }
-      return { ...p, interventions: [...interventions] };
-    }));
-  }, []);
+    await firestoreHelpers.updatePatient(user.uid, patientId, updates);
+  }, [patients, user]);
 
-  const deleteIntervention = useCallback((patientId: string, interventionId: string) => {
-    setPatients(prev => prev.map(p => {
-      if (p.id !== patientId) return p;
-      return { ...p, interventions: (p.interventions || []).filter(i => i.id !== interventionId) };
-    }));
-  }, []);
-  
-  const addOrUpdateDialysisSession = useCallback((patientId: string, session: DialysisSession) => {
-    setPatients(prev => prev.map(p => {
-      if (p.id !== patientId) return p;
-      const sessions = p.dialysisSessions || [];
-      const existingIndex = sessions.findIndex(s => s.id === session.id);
-      if (existingIndex > -1) {
-        sessions[existingIndex] = session;
-      } else {
-        session.id = session.id || crypto.randomUUID();
-        sessions.push(session);
-      }
-      return { ...p, dialysisSessions: [...sessions] };
-    }));
-  }, []);
-  
-  const deleteDialysisSession = useCallback((patientId: string, sessionId: string) => {
-    setPatients(prev => prev.map(p => {
-      if (p.id !== patientId) return p;
-      return { ...p, dialysisSessions: (p.dialysisSessions || []).filter(s => s.id !== sessionId) };
-    }));
-  }, []);
+  const updateClinicalProfile = useCallback(async (patientId: string, clinicalProfileData: ClinicalProfile): Promise<void> => {
+    if (!user) throw new Error('User not authenticated');
 
-  const deletePatient = useCallback((patientId: string): void => {
-    setPatients(prev => prev.filter(p => p.id !== patientId));
-    setAppointments(prev => prev.filter(a => a.patientId !== patientId));
-  }, []);
+    const profileWithVaccinations = {
+      ...clinicalProfileData,
+      vaccinations: clinicalProfileData.vaccinations && clinicalProfileData.vaccinations.length > 0
+        ? clinicalProfileData.vaccinations
+        : getDefaultVaccinations(),
+    };
+
+    await firestoreHelpers.updatePatient(user.uid, patientId, { clinicalProfile: profileWithVaccinations });
+  }, [user]);
+
+  const addVisitToPatient = useCallback(async (patientId: string, visitData: VisitFormData): Promise<void> => {
+    if (!user) throw new Error('User not authenticated');
+
+    const patient = patients.find(p => p.id === patientId);
+    if (!patient) return;
+
+    const nowISO = new Date().toISOString();
+    const newVisit: Visit = {
+      id: crypto.randomUUID(),
+      date: nowISO.split('T')[0],
+      createdAt: nowISO,
+      ...visitData,
+      patientGender: patient.gender,
+      patientRelation: patient.guardian.relation,
+      patientId: patient.id,
+    };
+
+    await firestoreHelpers.addVisit(user.uid, patientId, newVisit);
+
+    // Update clinical profile tags and POMR
+    const newTags = Array.from(new Set([...(patient.clinicalProfile.tags || []), visitData.groupName]));
+    let newPrimaryDiagnosis = patient.clinicalProfile.primaryDiagnosis;
+    if (newPrimaryDiagnosis === 'Not Set' && visitData.groupName !== 'Misc') {
+      newPrimaryDiagnosis = visitData.groupName;
+    }
+    const visitRemarkEntry = `[${format(parseISO(newVisit.date), 'yyyy-MM-dd')}] Visit (${newVisit.visitType}): ${newVisit.visitRemark}`;
+    const newPomr = patient.clinicalProfile.pomr ? `${patient.clinicalProfile.pomr}\n${visitRemarkEntry}` : visitRemarkEntry;
+
+    await firestoreHelpers.updatePatient(user.uid, patientId, {
+      clinicalProfile: {
+        ...patient.clinicalProfile,
+        tags: newTags,
+        primaryDiagnosis: newPrimaryDiagnosis,
+        pomr: newPomr
+      }
+    });
+  }, [patients, user]);
+
+  const updateVisitData = useCallback(async (patientId: string, visitId: string, data: ClinicalVisitData): Promise<void> => {
+    if (!user) throw new Error('User not authenticated');
+
+    // Fetch the full patient with subcollections to get the visit
+    const patient = await firestoreHelpers.getPatientWithSubcollections(user.uid, patientId);
+    if (!patient) return;
+
+    const visit = patient.visits.find(v => v.id === visitId);
+    if (!visit) return;
+
+    const updatedVisit: Partial<Visit> = {
+      clinicalData: { ...(visit.clinicalData || {}), ...data }
+    };
+
+    if (data?.diagnoses && data.diagnoses.length > 0) {
+      updatedVisit.diagnoses = data.diagnoses;
+    } else if (data?.diagnoses !== undefined) {
+      updatedVisit.diagnoses = [];
+    }
+
+    await firestoreHelpers.updateVisit(user.uid, patientId, visitId, updatedVisit);
+  }, [user]);
+
+  const addOrUpdateInvestigationRecord = useCallback(async (patientId: string, record: InvestigationRecord): Promise<void> => {
+    if (!user) throw new Error('User not authenticated');
+
+    if (!record.id) {
+      record.id = crypto.randomUUID();
+    }
+
+    await firestoreHelpers.addInvestigationRecord(user.uid, patientId, record);
+  }, [user]);
+
+  const deleteInvestigationRecord = useCallback(async (patientId: string, recordId: string): Promise<void> => {
+    if (!user) throw new Error('User not authenticated');
+    await firestoreHelpers.deleteInvestigationRecord(user.uid, patientId, recordId);
+  }, [user]);
+
+  const addOrUpdateIntervention = useCallback(async (patientId: string, intervention: Intervention): Promise<void> => {
+    if (!user) throw new Error('User not authenticated');
+    await firestoreHelpers.addIntervention(user.uid, patientId, intervention);
+  }, [user]);
+
+  const deleteIntervention = useCallback(async (patientId: string, interventionId: string): Promise<void> => {
+    if (!user) throw new Error('User not authenticated');
+    await firestoreHelpers.deleteIntervention(user.uid, patientId, interventionId);
+  }, [user]);
+
+  const addOrUpdateDialysisSession = useCallback(async (patientId: string, session: DialysisSession): Promise<void> => {
+    if (!user) throw new Error('User not authenticated');
+
+    if (!session.id) {
+      session.id = crypto.randomUUID();
+    }
+
+    await firestoreHelpers.addDialysisSession(user.uid, patientId, session);
+  }, [user]);
+
+  const deleteDialysisSession = useCallback(async (patientId: string, sessionId: string): Promise<void> => {
+    if (!user) throw new Error('User not authenticated');
+    await firestoreHelpers.deleteDialysisSession(user.uid, patientId, sessionId);
+  }, [user]);
+
+  const deletePatient = useCallback(async (patientId: string): Promise<void> => {
+    if (!user) throw new Error('User not authenticated');
+    await firestoreHelpers.deletePatient(user.uid, patientId);
+  }, [user]);
 
   const currentPatient = useCallback((id: string): Patient | undefined => {
     return patients.find(p => p.id === id);
@@ -325,6 +346,8 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
 
   // --- APPOINTMENT DATA LOGIC ---
   const addAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'status' | 'createdAt'>): Promise<Appointment> => {
+    if (!user) throw new Error('User not authenticated');
+
     const nowISO = new Date().toISOString();
     const newAppointment: Appointment = {
       id: crypto.randomUUID(),
@@ -338,65 +361,101 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
       status: 'Scheduled',
       createdAt: nowISO,
     };
-    setAppointments(prev => [...prev, newAppointment]);
+
+    await firestoreHelpers.createAppointment(user.uid, newAppointment);
     return newAppointment;
-  }, []);
+  }, [user]);
 
   const updateAppointmentStatus = useCallback(async (id: string, status: Appointment['status']): Promise<void> => {
-    setAppointments(prev => prev.map(app => app.id === id ? { ...app, status } : app));
-  }, []);
+    if (!user) throw new Error('User not authenticated');
+    await firestoreHelpers.updateAppointment(user.uid, id, { status });
+  }, [user]);
 
   const updateMultipleAppointmentStatuses = useCallback(async (updates: { id: string, status: Appointment['status'] }[]): Promise<void> => {
-    setAppointments(prev => {
-        let newAppointments = [...prev];
-        updates.forEach(update => {
-            newAppointments = newAppointments.map(app => app.id === update.id ? { ...app, status: update.status } : app);
-        });
-        return newAppointments;
-    });
-  }, []);
+    if (!user) throw new Error('User not authenticated');
+
+    await Promise.all(
+      updates.map(update => firestoreHelpers.updateAppointment(user.uid, update.id, { status: update.status }))
+    );
+  }, [user]);
 
   const updateAppointment = useCallback(async (updatedAppointmentData: Appointment): Promise<void> => {
-    setAppointments(prev => prev.map(app => app.id === updatedAppointmentData.id ? updatedAppointmentData : app));
-  }, []);
+    if (!user) throw new Error('User not authenticated');
+    const { id, ...updates } = updatedAppointmentData;
+    await firestoreHelpers.updateAppointment(user.uid, id, updates);
+  }, [user]);
 
   // --- INVESTIGATION DATABASE LOGIC ---
-  const addOrUpdateInvestigation = useCallback((investigation: InvestigationMaster) => {
-    setInvestigationMasterList(prev => {
-      const index = prev.findIndex(item => item.id === investigation.id);
-      if (index > -1) {
-        const newList = [...prev];
-        newList[index] = investigation;
-        return newList;
-      }
-      return [...prev, { ...investigation, id: investigation.id || crypto.randomUUID() }];
-    });
-  }, []);
+  const addOrUpdateInvestigation = useCallback(async (investigation: InvestigationMaster): Promise<void> => {
+    if (!user) throw new Error('User not authenticated');
 
-  const deleteInvestigation = useCallback((investigationId: string) => {
-    setInvestigationMasterList(prev => prev.filter(item => item.id !== investigationId));
-    // Also remove from any panels
-    setInvestigationPanels(prev => prev.map(panel => ({
+    const newList = [...investigationMasterList];
+    const index = newList.findIndex(item => item.id === investigation.id);
+
+    if (index > -1) {
+      newList[index] = investigation;
+    } else {
+      newList.push({ ...investigation, id: investigation.id || crypto.randomUUID() });
+    }
+
+    await firestoreHelpers.updateInvestigationMaster(user.uid, {
+      investigationMasterList: newList,
+      investigationPanels
+    });
+
+    setInvestigationMasterList(newList);
+  }, [investigationMasterList, investigationPanels, user]);
+
+  const deleteInvestigation = useCallback(async (investigationId: string): Promise<void> => {
+    if (!user) throw new Error('User not authenticated');
+
+    const newList = investigationMasterList.filter(item => item.id !== investigationId);
+    const newPanels = investigationPanels.map(panel => ({
       ...panel,
       testIds: panel.testIds.filter(id => id !== investigationId)
-    })));
-  }, []);
+    }));
 
-  const addOrUpdatePanel = useCallback((panel: InvestigationPanel) => {
-    setInvestigationPanels(prev => {
-      const index = prev.findIndex(item => item.id === panel.id);
-      if (index > -1) {
-        const newList = [...prev];
-        newList[index] = panel;
-        return newList;
-      }
-      return [...prev, { ...panel, id: panel.id || crypto.randomUUID() }];
+    await firestoreHelpers.updateInvestigationMaster(user.uid, {
+      investigationMasterList: newList,
+      investigationPanels: newPanels
     });
-  }, []);
 
-  const deletePanel = useCallback((panelId: string) => {
-    setInvestigationPanels(prev => prev.filter(item => item.id !== panelId));
-  }, []);
+    setInvestigationMasterList(newList);
+    setInvestigationPanels(newPanels);
+  }, [investigationMasterList, investigationPanels, user]);
+
+  const addOrUpdatePanel = useCallback(async (panel: InvestigationPanel): Promise<void> => {
+    if (!user) throw new Error('User not authenticated');
+
+    const newPanels = [...investigationPanels];
+    const index = newPanels.findIndex(item => item.id === panel.id);
+
+    if (index > -1) {
+      newPanels[index] = panel;
+    } else {
+      newPanels.push({ ...panel, id: panel.id || crypto.randomUUID() });
+    }
+
+    await firestoreHelpers.updateInvestigationMaster(user.uid, {
+      investigationMasterList,
+      investigationPanels: newPanels
+    });
+
+    setInvestigationPanels(newPanels);
+  }, [investigationMasterList, investigationPanels, user]);
+
+  const deletePanel = useCallback(async (panelId: string): Promise<void> => {
+    if (!user) throw new Error('User not authenticated');
+
+    const newPanels = investigationPanels.filter(item => item.id !== panelId);
+
+    await firestoreHelpers.updateInvestigationMaster(user.uid, {
+      investigationMasterList,
+      investigationPanels: newPanels
+    });
+
+    setInvestigationPanels(newPanels);
+  }, [investigationMasterList, investigationPanels, user]);
 
   // --- PROVIDER VALUE ---
   const value = useMemo(() => ({
@@ -428,15 +487,15 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     addOrUpdateDialysisSession,
     deleteDialysisSession,
   }), [
-    patients, 
-    isLoading, 
-    addPatient, 
-    getPatientById, 
-    updatePatient, 
-    deletePatient, 
-    addVisitToPatient, 
-    updateVisitData, 
-    addOrUpdateInvestigationRecord, 
+    patients,
+    isLoading,
+    addPatient,
+    getPatientById,
+    updatePatient,
+    deletePatient,
+    addVisitToPatient,
+    updateVisitData,
+    addOrUpdateInvestigationRecord,
     deleteInvestigationRecord,
     addOrUpdateIntervention,
     deleteIntervention,

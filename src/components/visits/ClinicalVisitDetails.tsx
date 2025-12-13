@@ -4,7 +4,7 @@
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import type { Visit, Diagnosis, Medication, ClinicalVisitData, DiagnosisTemplate } from "@/lib/types";
+import type { Visit, Diagnosis, Medication, ClinicalVisitData, DiagnosisTemplate, Patient } from "@/lib/types";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -63,11 +63,15 @@ const clinicalVisitSchema = z.object({
 
 type ClinicalVisitFormData = z.infer<typeof clinicalVisitSchema>;
 
+import { DischargeSummaryButton } from '@/components/pdf/DischargeSummaryButton';
+
 interface ClinicalVisitDetailsProps {
   visit: Visit;
+  patient?: Patient;
+  onSaveComplete?: (data: any) => void;
 }
 
-export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
+export function ClinicalVisitDetails({ visit, patient, onSaveComplete }: ClinicalVisitDetailsProps) {
   const { toast } = useToast();
   const { updateVisitData } = usePatientData();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,7 +106,7 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
     control: form.control,
     name: "medications"
   });
-  
+
   const height = form.watch("height");
   const weight = form.watch("weight");
   const gender = visit.patientGender || 'Male';
@@ -122,12 +126,12 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
       let idealWeight;
       if (gender === 'Male') {
         idealWeight = 50 + 0.91 * (h - 152.4);
-      } else { 
+      } else {
         idealWeight = 45.5 + 0.91 * (h - 152.4);
       }
       form.setValue("idealBodyWeight", idealWeight > 0 ? idealWeight.toFixed(2) : "");
     } else {
-        form.setValue("idealBodyWeight", "");
+      form.setValue("idealBodyWeight", "");
     }
 
   }, [height, weight, gender, form]);
@@ -138,8 +142,11 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
     try {
       // Transform single diagnosis back into an array for saving if needed
       const dataToSave: ClinicalVisitData = {
-          ...data,
-          diagnoses: data.diagnosis ? [data.diagnosis] : []
+        ...data,
+        diagnoses: data.diagnosis ? [{
+          ...data.diagnosis,
+          id: data.diagnosis.id || crypto.randomUUID()
+        }] : []
       };
       // remove the temporary single 'diagnosis' field
       delete (dataToSave as any).diagnosis;
@@ -149,36 +156,41 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
         title: "Clinical Data Saved",
         description: "The visit details have been successfully saved to the database.",
       });
+
+      // Call the callback if provided (for wizard integration)
+      if (onSaveComplete) {
+        onSaveComplete(dataToSave);
+      }
     } catch (error) {
-       toast({
+      toast({
         title: "Save Failed",
         description: "An error occurred while saving the visit data.",
         variant: "destructive",
       });
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
   const handleTemplateSelect = (templateKey: string) => {
     const template = DIAGNOSIS_TEMPLATES[templateKey as keyof typeof DIAGNOSIS_TEMPLATES];
     if (!template) {
-        toast({ title: "Template not found", variant: "destructive" });
-        return;
+      toast({ title: "Template not found", variant: "destructive" });
+      return;
     }
-    
+
     // Keep existing vitals
     const existingVitals = {
-        height: form.getValues('height'),
-        weight: form.getValues('weight'),
-        bmi: form.getValues('bmi'),
-        idealBodyWeight: form.getValues('idealBodyWeight'),
-        pulse: form.getValues('pulse'),
-        systolicBP: form.getValues('systolicBP'),
-        diastolicBP: form.getValues('diastolicBP'),
-        respiratoryRate: form.getValues('respiratoryRate'),
+      height: form.getValues('height'),
+      weight: form.getValues('weight'),
+      bmi: form.getValues('bmi'),
+      idealBodyWeight: form.getValues('idealBodyWeight'),
+      pulse: form.getValues('pulse'),
+      systolicBP: form.getValues('systolicBP'),
+      diastolicBP: form.getValues('diastolicBP'),
+      respiratoryRate: form.getValues('respiratoryRate'),
     };
-    
+
     // Reset the form with template data, but preserve vitals
     form.reset({
       ...template,
@@ -186,10 +198,10 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
       medications: template.medications.map(med => ({ ...med, id: med.id || crypto.randomUUID() })),
       diagnosis: template.diagnoses?.[0] || { id: "", name: "", icdCode: "", icdName: "" }
     });
-    
+
     setAvailableDiagnoses(template.diagnoses || []);
 
-    toast({ title: "Template Loaded", description: `The form has been pre-filled with the "${templateKey}" template.`});
+    toast({ title: "Template Loaded", description: `The form has been pre-filled with the "${templateKey}" template.` });
   };
 
   return (
@@ -198,55 +210,55 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 
           <Card>
-              <CardHeader>
-                  <CardTitle>Visit Data Entry</CardTitle>
-                  <CardDescription>If diagnosis is known, select a template to pre-fill the form. Otherwise, proceed with manual data entry. Patient-specific vitals will not be overwritten by templates.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                  <div className="flex flex-col sm:flex-row gap-2 items-center">
-                      <Select onValueChange={handleTemplateSelect}>
-                          <SelectTrigger className="flex-grow">
-                              <SelectValue placeholder="Load a clinical template..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                              {Object.keys(DIAGNOSIS_TEMPLATES).map(key => (
-                                  <SelectItem key={key} value={key}>{key}</SelectItem>
-                              ))}
-                          </SelectContent>
-                      </Select>
-                      <Button type="button" variant="outline" onClick={() => form.reset()}>Clear Form</Button>
-                  </div>
-              </CardContent>
+            <CardHeader>
+              <CardTitle>Visit Data Entry</CardTitle>
+              <CardDescription>If diagnosis is known, select a template to pre-fill the form. Otherwise, proceed with manual data entry. Patient-specific vitals will not be overwritten by templates.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row gap-2 items-center">
+                <Select onValueChange={handleTemplateSelect}>
+                  <SelectTrigger className="flex-grow">
+                    <SelectValue placeholder="Load a clinical template..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(DIAGNOSIS_TEMPLATES).map(key => (
+                      <SelectItem key={key} value={key}>{key}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button type="button" variant="outline" onClick={() => form.reset()}>Clear Form</Button>
+              </div>
+            </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle>Clinical Diagnosis</CardTitle>
               <CardDescription>
-                {availableDiagnoses.length > 0 
-                  ? "Select the specific diagnosis for this visit from the list provided by the template." 
+                {availableDiagnoses.length > 0
+                  ? "Select the specific diagnosis for this visit from the list provided by the template."
                   : "Enter the diagnosis manually."}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-               {availableDiagnoses.length > 0 ? (
-                 <div className="space-y-2">
-                   {availableDiagnoses.map((diag) => (
-                     <Button
-                       type="button"
-                       key={diag.id || diag.icdCode || diag.name}
-                       variant={selectedDiagnosis?.name === diag.name ? "default" : "outline"}
-                       className="w-full justify-start text-left h-auto py-2"
-                       onClick={() => form.setValue('diagnosis', diag)}
-                     >
-                       <div className="flex justify-between items-center w-full">
-                         <span>{diag.name}</span>
-                         {diag.icdCode && <Badge variant={selectedDiagnosis?.name === diag.name ? "secondary" : "default"} className="ml-2">{diag.icdCode}</Badge>}
-                       </div>
-                     </Button>
-                   ))}
-                 </div>
-               ) : (
+              {availableDiagnoses.length > 0 ? (
+                <div className="space-y-2">
+                  {availableDiagnoses.map((diag) => (
+                    <Button
+                      type="button"
+                      key={diag.id || diag.icdCode || diag.name}
+                      variant={selectedDiagnosis?.name === diag.name ? "default" : "outline"}
+                      className="w-full justify-start text-left h-auto py-2"
+                      onClick={() => form.setValue('diagnosis', diag)}
+                    >
+                      <div className="flex justify-between items-center w-full">
+                        <span>{diag.name}</span>
+                        {diag.icdCode && <Badge variant={selectedDiagnosis?.name === diag.name ? "secondary" : "default"} className="ml-2">{diag.icdCode}</Badge>}
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-end">
                   <FormField
                     control={form.control}
@@ -259,23 +271,23 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
                       </FormItem>
                     )}
                   />
-                    <FormField
+                  <FormField
                     control={form.control}
                     name="diagnosis.icdCode"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>ICD-10</FormLabel>
-                        <FormControl><Input placeholder="e.g., I10" {...field} className="w-24"/></FormControl>
+                        <FormControl><Input placeholder="e.g., I10" {...field} className="w-24" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-               )}
+              )}
             </CardContent>
           </Card>
-          
-            <FormField
+
+          <FormField
             control={form.control}
             name="history"
             render={({ field }) => (
@@ -287,29 +299,29 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
             )}
           />
 
-           <Card>
-              <CardHeader><CardTitle>Vitals</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <FormField control={form.control} name="height" render={({ field }) => ( <FormItem><FormLabel>Height (cm)</FormLabel><FormControl><Input type="number" placeholder="e.g., 175" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                      <FormField control={form.control} name="weight" render={({ field }) => ( <FormItem><FormLabel>Weight (kg)</FormLabel><FormControl><Input type="number" placeholder="e.g., 70" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                      <FormField control={form.control} name="idealBodyWeight" render={({ field }) => ( <FormItem><FormLabel>Ideal Wt (kg)</FormLabel><FormControl><Input placeholder="Calculated" {...field} readOnly /></FormControl><FormMessage /></FormItem> )} />
-                      <FormField control={form.control} name="bmi" render={({ field }) => ( <FormItem><FormLabel>BMI (kg/m²)</FormLabel><FormControl><Input placeholder="Calculated" {...field} readOnly /></FormControl><FormMessage /></FormItem> )} />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t mt-4">
-                      <FormField control={form.control} name="pulse" render={({ field }) => ( <FormItem><FormLabel>Pulse (/min)</FormLabel><FormControl><Input type="number" placeholder="e.g., 72" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                      <FormField control={form.control} name="systolicBP" render={({ field }) => ( <FormItem><FormLabel>Systolic BP (mmHg)</FormLabel><FormControl><Input type="number" placeholder="e.g., 120" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                      <FormField control={form.control} name="diastolicBP" render={({ field }) => ( <FormItem><FormLabel>Diastolic BP (mmHg)</FormLabel><FormControl><Input type="number" placeholder="e.g., 80" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                      <FormField control={form.control} name="respiratoryRate" render={({ field }) => ( <FormItem><FormLabel>Resp. Rate (/min)</FormLabel><FormControl><Input type="number" placeholder="e.g., 16" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  </div>
-              </CardContent>
+          <Card>
+            <CardHeader><CardTitle>Vitals</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <FormField control={form.control} name="height" render={({ field }) => (<FormItem><FormLabel>Height (cm)</FormLabel><FormControl><Input type="number" placeholder="e.g., 175" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel>Weight (kg)</FormLabel><FormControl><Input type="number" placeholder="e.g., 70" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="idealBodyWeight" render={({ field }) => (<FormItem><FormLabel>Ideal Wt (kg)</FormLabel><FormControl><Input placeholder="Calculated" {...field} readOnly /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="bmi" render={({ field }) => (<FormItem><FormLabel>BMI (kg/m²)</FormLabel><FormControl><Input placeholder="Calculated" {...field} readOnly /></FormControl><FormMessage /></FormItem>)} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t mt-4">
+                <FormField control={form.control} name="pulse" render={({ field }) => (<FormItem><FormLabel>Pulse (/min)</FormLabel><FormControl><Input type="number" placeholder="e.g., 72" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="systolicBP" render={({ field }) => (<FormItem><FormLabel>Systolic BP (mmHg)</FormLabel><FormControl><Input type="number" placeholder="e.g., 120" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="diastolicBP" render={({ field }) => (<FormItem><FormLabel>Diastolic BP (mmHg)</FormLabel><FormControl><Input type="number" placeholder="e.g., 80" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="respiratoryRate" render={({ field }) => (<FormItem><FormLabel>Resp. Rate (/min)</FormLabel><FormControl><Input type="number" placeholder="e.g., 16" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              </div>
+            </CardContent>
           </Card>
 
           <Card>
             <CardHeader><CardTitle>Examination Findings</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <FormField control={form.control} name="generalExamination" render={({ field }) => ( <FormItem><FormLabel>General Examination</FormLabel><FormControl><Textarea rows={3} placeholder="Pallor, icterus, clubbing, etc." {...field} /></FormControl><FormMessage /></FormItem> )} />
-              <FormField control={form.control} name="systemicExamination" render={({ field }) => ( <FormItem><FormLabel>Systemic Examination</FormLabel><FormControl><Textarea rows={3} placeholder="CVS, Respiratory, Abdomen, etc." {...field} /></FormControl><FormMessage /></FormItem> )} />
+              <FormField control={form.control} name="generalExamination" render={({ field }) => (<FormItem><FormLabel>General Examination</FormLabel><FormControl><Textarea rows={3} placeholder="Pallor, icterus, clubbing, etc." {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="systemicExamination" render={({ field }) => (<FormItem><FormLabel>Systemic Examination</FormLabel><FormControl><Textarea rows={3} placeholder="CVS, Respiratory, Abdomen, etc." {...field} /></FormControl><FormMessage /></FormItem>)} />
             </CardContent>
           </Card>
 
@@ -324,88 +336,88 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
               </FormItem>
             )}
           />
-          
+
           <Card>
-              <CardHeader>
-                  <CardTitle>Medications</CardTitle>
-                  <CardDescription>Medications can be loaded from a template or added manually.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                  <div className="rounded-md border">
-                      <Table>
-                          <TableHeader>
-                              <TableRow>
-                                  <TableHead>Medicine Name</TableHead>
-                                  <TableHead>Dosage</TableHead>
-                                  <TableHead>Frequency</TableHead>
-                                  <TableHead>Instructions</TableHead>
-                                  <TableHead className="w-[50px]">Action</TableHead>
-                              </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                              {medicationFields.length > 0 ? (
-                                medicationFields.map((field, index) => (
-                                    <TableRow key={field.id}>
-                                        <TableCell>
-                                            <FormField control={form.control} name={`medications.${index}.name`} render={({ field }) => <Input placeholder="Medication" {...field} />} />
-                                        </TableCell>
-                                        <TableCell>
-                                            <FormField control={form.control} name={`medications.${index}.dosage`} render={({ field }) => <Input placeholder="e.g., 40mg" {...field} />} />
-                                        </TableCell>
-                                        <TableCell>
-                                            <FormField control={form.control} name={`medications.${index}.frequency`} render={({ field }) => <Input placeholder="e.g., OD" {...field} />} />
-                                        </TableCell>
-                                          <TableCell>
-                                            <FormField control={form.control} name={`medications.${index}.instructions`} render={({ field }) => <Input placeholder="e.g., After food" {...field} />} />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button type="button" variant="destructive" size="icon" onClick={() => removeMedication(index)}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                              ) : (
-                                  <TableRow>
-                                    <TableCell colSpan={5} className="text-center text-muted-foreground h-24">
-                                        No medications added. Load a template or add manually.
-                                    </TableCell>
-                                </TableRow>
-                              )}
-                          </TableBody>
-                      </Table>
-                  </div>
-                  <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => appendMedication({ id: crypto.randomUUID(), name: "", dosage: "", frequency: "", instructions: "" })}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Medication Manually
-                  </Button>
-              </CardContent>
+            <CardHeader>
+              <CardTitle>Medications</CardTitle>
+              <CardDescription>Medications can be loaded from a template or added manually.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Medicine Name</TableHead>
+                      <TableHead>Dosage</TableHead>
+                      <TableHead>Frequency</TableHead>
+                      <TableHead>Instructions</TableHead>
+                      <TableHead className="w-[50px]">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {medicationFields.length > 0 ? (
+                      medicationFields.map((field, index) => (
+                        <TableRow key={field.id}>
+                          <TableCell>
+                            <FormField control={form.control} name={`medications.${index}.name`} render={({ field }) => <Input placeholder="Medication" {...field} />} />
+                          </TableCell>
+                          <TableCell>
+                            <FormField control={form.control} name={`medications.${index}.dosage`} render={({ field }) => <Input placeholder="e.g., 40mg" {...field} />} />
+                          </TableCell>
+                          <TableCell>
+                            <FormField control={form.control} name={`medications.${index}.frequency`} render={({ field }) => <Input placeholder="e.g., OD" {...field} />} />
+                          </TableCell>
+                          <TableCell>
+                            <FormField control={form.control} name={`medications.${index}.instructions`} render={({ field }) => <Input placeholder="e.g., After food" {...field} />} />
+                          </TableCell>
+                          <TableCell>
+                            <Button type="button" variant="destructive" size="icon" onClick={() => removeMedication(index)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground h-24">
+                          No medications added. Load a template or add manually.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+              <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => appendMedication({ id: crypto.randomUUID(), name: "", dosage: "", frequency: "", instructions: "" })}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Medication Manually
+              </Button>
+            </CardContent>
           </Card>
 
           {visit.patientRelation === "Self" && (
-                <Card>
-                  <CardHeader>
-                      <CardTitle className="font-headline flex items-center"><FileText className="mr-2 h-5 w-5 text-primary"/>Opinion Report Section</CardTitle>
-                      <CardDescription>This section is available as the patient's relation is marked as 'Self'.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                      <FormField control={form.control} name="opinionText" render={({ field }) => (
-                          <FormItem>
-                              <FormLabel>Medical Opinion</FormLabel>
-                              <FormControl><Textarea rows={5} placeholder="Provide your detailed medical opinion..." {...field} /></FormControl>
-                              <FormMessage />
-                          </FormItem>
-                      )} />
-                      <FormField control={form.control} name="recommendations" render={({ field }) => (
-                          <FormItem>
-                              <FormLabel>Recommendations</FormLabel>
-                              <FormControl><Textarea rows={5} placeholder="Provide specific recommendations for the patient..." {...field} /></FormControl>
-                              <FormMessage />
-                          </FormItem>
-                      )} />
-                  </CardContent>
-                </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-headline flex items-center"><FileText className="mr-2 h-5 w-5 text-primary" />Opinion Report Section</CardTitle>
+                <CardDescription>This section is available as the patient's relation is marked as 'Self'.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField control={form.control} name="opinionText" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Medical Opinion</FormLabel>
+                    <FormControl><Textarea rows={5} placeholder="Provide your detailed medical opinion..." {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="recommendations" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Recommendations</FormLabel>
+                    <FormControl><Textarea rows={5} placeholder="Provide specific recommendations for the patient..." {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </CardContent>
+            </Card>
           )}
-          
+
           <FormField
             control={form.control}
             name="dischargeInstructions"
@@ -418,7 +430,18 @@ export function ClinicalVisitDetails({ visit }: ClinicalVisitDetailsProps) {
             )}
           />
 
-          <div className="flex justify-end">
+          <div className="flex justify-between items-center gap-3">
+            {patient && (
+              <DischargeSummaryButton
+                patient={patient}
+                visit={visit}
+                variant="outline"
+                size="default"
+              />
+            )}
+
+            <div className="flex-1" />
+
             <Button type="submit" disabled={isSubmitting}>
               <Save className="mr-2 h-4 w-4" />
               {isSubmitting ? "Saving..." : "Save Clinical Data"}

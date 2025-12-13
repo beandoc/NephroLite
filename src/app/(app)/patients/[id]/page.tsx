@@ -2,13 +2,11 @@
 "use client";
 
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { PatientProfileView } from '@/components/patients/patient-profile-view';
 import { PageHeader } from '@/components/shared/page-header';
-import { usePatientData } from '@/hooks/use-patient-data';
-import type { Patient } from '@/lib/types';
+import { useFullPatient } from '@/hooks/use-full-patient';
 import { ArrowLeft, Edit, Printer } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, parseISO } from 'date-fns';
@@ -16,33 +14,11 @@ import { format, parseISO } from 'date-fns';
 export default function PatientProfilePage() {
   const router = useRouter();
   const params = useParams();
-  const { getPatientById } = usePatientData();
-  const [patient, setPatient] = useState<Patient | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const patientId = typeof params.id === 'string' ? params.id : null;
 
-  const patientId = typeof params.id === 'string' ? params.id : undefined;
+  const { patient, loading, error } = useFullPatient(patientId);
 
-  useEffect(() => {
-    async function fetchPatient() {
-      if (!patientId) {
-        setIsLoading(false);
-        router.push('/patients?error=invalid_id');
-        return;
-      }
-
-      const fetchedPatient = await getPatientById(patientId);
-      if (fetchedPatient) {
-        setPatient(fetchedPatient);
-      } else {
-        router.push('/patients?error=notfound');
-      }
-      setIsLoading(false);
-    }
-
-    fetchPatient();
-  }, [patientId, getPatientById, router]);
-
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="container mx-auto py-2">
         <PageHeader title="Loading Patient Profile..." />
@@ -56,7 +32,7 @@ export default function PatientProfilePage() {
     );
   }
 
-  if (!patient) {
+  if (error || !patient) {
     return (
       <div className="container mx-auto py-2">
         <PageHeader title="Patient Not Found" description="The requested patient could not be found." />
@@ -66,12 +42,12 @@ export default function PatientProfilePage() {
       </div>
     );
   }
-  
+
   const patientFullName = [patient.firstName, patient.lastName].filter(Boolean).join(' ');
 
   return (
     <div className="container mx-auto py-2">
-      <PageHeader 
+      <PageHeader
         title={`${patientFullName} (${patient.nephroId})`}
         description={`Patient Profile Overview. Registered on ${format(parseISO(patient.registrationDate), 'PPP')}`}
         actions={
@@ -84,7 +60,7 @@ export default function PatientProfilePage() {
                 <Edit className="mr-2 h-4 w-4" /> Edit Profile
               </Link>
             </Button>
-             <Button variant="default" onClick={() => window.print()}>
+            <Button variant="default" onClick={() => window.print()}>
               <Printer className="mr-2 h-4 w-4" /> Print Summary
             </Button>
           </div>
@@ -96,3 +72,4 @@ export default function PatientProfilePage() {
     </div>
   );
 }
+
