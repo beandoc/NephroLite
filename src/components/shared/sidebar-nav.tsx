@@ -17,7 +17,7 @@ import {
   LineChart,
   CalendarRange,
   UserPlus,
-  Waves, 
+  Waves,
   Droplets,
   HeartPulse,
   LucideIcon,
@@ -54,14 +54,15 @@ const navItems: NavItem[] = [
   { href: "/communication", label: "Communication", icon: MessageCircle },
   { href: "/documents", label: "Documents", icon: FileText, disabled: true },
   { href: "/templates", label: "Templates & Databases", icon: FileSignature },
+  { href: "/reports", label: "Reports", icon: FileText },
   { href: "/system", label: "System", icon: Settings2, disabled: true },
 ];
 
 const analyticsSubNavItems: NavItem[] = [
-    { href: "/analytics/medication-impact", label: "Medication Impact", icon: LineChart },
-    { href: "/analytics/pd-module", label: "PD Module", icon: Waves },
-    { href: "/analytics/hd-module", label: "HD Module", icon: Droplets, disabled: true },
-    { href: "/analytics/transplant-module", label: "Transplant Module", icon: HeartPulse, disabled: true },
+  { href: "/analytics/medication-impact", label: "Medication Impact", icon: LineChart },
+  { href: "/analytics/pd-module", label: "PD Module", icon: Waves },
+  { href: "/analytics/hd-module", label: "HD Module", icon: Droplets, disabled: true },
+  { href: "/analytics/transplant-module", label: "Transplant Module", icon: HeartPulse, disabled: true },
 ];
 
 
@@ -76,24 +77,24 @@ export function SidebarNav() {
         if (item.href === "/analytics") {
           return (
             <SidebarMenuItem key={item.label}>
-                <Link href={item.href}>
-                    <SidebarMenuButton
-                        isActive={pathname === item.href}
-                        className={cn(
-                            (pathname === item.href) ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                            "w-full justify-start"
-                        )}
-                        tooltip={item.label}
-                        disabled={item.disabled}
-                    >
-                        <item.icon className="h-5 w-5" />
-                        <span className="truncate">{item.label}</span>
-                    </SidebarMenuButton>
-                </Link>
+              <Link href={item.href}>
+                <SidebarMenuButton
+                  isActive={pathname === item.href}
+                  className={cn(
+                    (pathname === item.href) ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    "w-full justify-start"
+                  )}
+                  tooltip={item.label}
+                  disabled={item.disabled}
+                >
+                  <item.icon className="h-5 w-5" />
+                  <span className="truncate">{item.label}</span>
+                </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
           )
         }
-        
+
         const isActive = item.matchStartsWith ? pathname.startsWith(item.href) : pathname === item.href;
 
         return (

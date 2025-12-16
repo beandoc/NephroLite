@@ -11,6 +11,8 @@ import {
     updateDoc,
     serverTimestamp
 } from 'firebase/firestore';
+import { logError } from './logger';
+import type { PatientAccountInfo } from './patient-auth-types';
 
 /**
  * Create a patient login account linked to an existing patient record
@@ -47,7 +49,7 @@ export async function createPatientAccount(
 
         return { success: true, userId };
     } catch (error: any) {
-        console.error('Error creating patient account:', error);
+        logError('Error creating patient account', error);
         return {
             success: false,
             error: error.message || 'Failed to create patient account'
@@ -66,7 +68,7 @@ export async function hasPatientAccount(patientId: string): Promise<boolean> {
         const data = patientDoc.data();
         return data.hasLoginAccess === true && !!data.userId;
     } catch (error) {
-        console.error('Error checking patient account:', error);
+        logError('Error checking patient account', error);
         return false;
     }
 }
@@ -74,7 +76,7 @@ export async function hasPatientAccount(patientId: string): Promise<boolean> {
 /**
  * Get patient account details
  */
-export async function getPatientAccountInfo(patientId: string) {
+export async function getPatientAccountInfo(patientId: string): Promise<PatientAccountInfo | null> {
     try {
         const patientDoc = await getDoc(doc(db, `patients/${patientId}`));
         if (!patientDoc.exists()) return null;
@@ -95,7 +97,7 @@ export async function getPatientAccountInfo(patientId: string) {
             createdAt: userData.createdAt,
         };
     } catch (error) {
-        console.error('Error getting patient account info:', error);
+        logError('Error getting patient account info', error);
         return null;
     }
 }
@@ -124,7 +126,7 @@ export async function deactivatePatientAccount(patientId: string): Promise<boole
 
         return true;
     } catch (error) {
-        console.error('Error deactivating patient account:', error);
+        logError('Error deactivating patient account', error);
         return false;
     }
 }
@@ -151,7 +153,7 @@ export async function reactivatePatientAccount(patientId: string): Promise<boole
 
         return true;
     } catch (error) {
-        console.error('Error reactivating patient account:', error);
+        logError('Error reactivating patient account', error);
         return false;
     }
 }
@@ -164,7 +166,7 @@ export async function sendPatientPasswordReset(email: string): Promise<boolean> 
         await sendPasswordResetEmail(auth, email);
         return true;
     } catch (error) {
-        console.error('Error sending password reset:', error);
+        logError('Error sending password reset', error);
         return false;
     }
 }
@@ -179,6 +181,6 @@ export async function updateLastLogin(userId: string, role: 'patient' | 'staff')
             lastLogin: serverTimestamp(),
         });
     } catch (error) {
-        console.error('Error updating last login:', error);
+        logError('Error updating last login', error);
     }
 }

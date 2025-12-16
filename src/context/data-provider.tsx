@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
-import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord, Appointment, InvestigationMaster, InvestigationPanel, Intervention, DialysisSession } from '@/lib/types';
+import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, ClinicalVisitData, InvestigationRecord, Appointment, InvestigationMaster, InvestigationPanel, Intervention, DialysisSession, Diagnosis } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { getDefaultVaccinations } from '@/lib/data-helpers';
 import { useAuth } from './auth-provider';
@@ -18,7 +18,15 @@ export interface DataContextType {
   currentPatient: (id: string) => Patient | undefined;
   updatePatient: (patientId: string, updatedData: Partial<PatientFormData & { isTracked?: boolean, patientStatus?: Patient['patientStatus'] }>) => Promise<void>;
   deletePatient: (patientId: string) => Promise<void>;
-  addVisitToPatient: (patientId: string, visitData: VisitFormData) => Promise<void>;
+  addVisitToPatient: (patientId: string, visitData: {
+    id?: string;
+    date?: string;
+    visitType: string;
+    visitRemark: string;
+    groupName: string;
+    diagnoses?: Diagnosis[];
+    clinicalData?: ClinicalVisitData;
+  }) => Promise<void>;
   updateVisitData: (patientId: string, visitId: string, data: ClinicalVisitData) => Promise<void>;
   addOrUpdateInvestigationRecord: (patientId: string, record: InvestigationRecord) => Promise<void>;
   deleteInvestigationRecord: (patientId: string, recordId: string) => Promise<void>;
@@ -234,43 +242,45 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     await firestoreHelpers.updatePatient(user.uid, patientId, { clinicalProfile: profileWithVaccinations });
   }, [user]);
 
-  const addVisitToPatient = useCallback(async (patientId: string, visitData: VisitFormData): Promise<void> => {
+  const addVisitToPatient = useCallback(async (
+    patientId: string,
+    visitData: {
+      id?: string;
+      date?: string;
+      visitType: string;
+      visitRemark: string;
+      groupName: string;
+      diagnoses?: Diagnosis[];
+      clinicalData?: ClinicalVisitData;
+    }
+  ): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
 
-    const patient = patients.find(p => p.id === patientId);
-    if (!patient) return;
+    const patient = await firestoreHelpers.getPatientWithSubcollections(user.uid, patientId);
+    if (!patient) throw new Error('Patient not found');
 
-    const nowISO = new Date().toISOString();
-    const newVisit: Visit = {
-      id: crypto.randomUUID(),
-      date: nowISO.split('T')[0],
-      createdAt: nowISO,
-      ...visitData,
+    const visit: Visit = {
+      id: visitData.id || crypto.randomUUID(),
+      patientId,
+      date: visitData.date || new Date().toISOString().split('T')[0], // Default to today
+      createdAt: new Date().toISOString(),
+      visitType: visitData.visitType,
+      visitRemark: visitData.visitRemark,
+      groupName: visitData.groupName,
       patientGender: patient.gender,
-      patientRelation: patient.guardian.relation,
-      patientId: patient.id,
+      patientRelation: patient.guardian?.relation,
+      diagnoses: visitData.diagnoses || [],
+      clinicalData: visitData.clinicalData || {},
     };
 
-    await firestoreHelpers.addVisit(user.uid, patientId, newVisit);
+    await firestoreHelpers.addVisit(user.uid, patientId, visit);
 
-    // Update clinical profile tags and POMR
-    const newTags = Array.from(new Set([...(patient.clinicalProfile.tags || []), visitData.groupName]));
-    let newPrimaryDiagnosis = patient.clinicalProfile.primaryDiagnosis;
-    if (newPrimaryDiagnosis === 'Not Set' && visitData.groupName !== 'Misc') {
-      newPrimaryDiagnosis = visitData.groupName;
+    // Refresh patient data to include the new visit from subcollection
+    const refreshedPatient = await firestoreHelpers.getPatientWithSubcollections(user.uid, patientId);
+    if (refreshedPatient) {
+      setPatients(prev => prev.map(p => p.id === patientId ? refreshedPatient : p));
     }
-    const visitRemarkEntry = `[${format(parseISO(newVisit.date), 'yyyy-MM-dd')}] Visit (${newVisit.visitType}): ${newVisit.visitRemark}`;
-    const newPomr = patient.clinicalProfile.pomr ? `${patient.clinicalProfile.pomr}\n${visitRemarkEntry}` : visitRemarkEntry;
-
-    await firestoreHelpers.updatePatient(user.uid, patientId, {
-      clinicalProfile: {
-        ...patient.clinicalProfile,
-        tags: newTags,
-        primaryDiagnosis: newPrimaryDiagnosis,
-        pomr: newPomr
-      }
-    });
-  }, [patients, user]);
+  }, [user]);
 
   const updateVisitData = useCallback(async (patientId: string, visitId: string, data: ClinicalVisitData): Promise<void> => {
     if (!user) throw new Error('User not authenticated');

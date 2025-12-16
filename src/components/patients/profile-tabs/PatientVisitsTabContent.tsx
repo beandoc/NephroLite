@@ -52,22 +52,27 @@ export function PatientVisitsTabContent({ patient }: PatientVisitsTabContentProp
         </CardHeader>
         <CardContent className="px-2 sm:px-4 md:px-6">
           <Accordion type="single" collapsible className="w-full">
-            {visits.map(visit => (
-              <AccordionItem value={visit.id} key={visit.id} className="border-b last:border-b-0 rounded-md mb-2 shadow-sm bg-card">
-                <AccordionTrigger className="hover:bg-muted/50 px-4 py-3 text-left rounded-t-md">
-                  <div className="flex items-center gap-4 w-full">
-                    <CalendarDays className="w-5 h-5 text-primary flex-shrink-0" />
-                    <div className="flex-grow">
-                      <p className="font-medium">{format(new Date(visit.date), 'PPP')} - <span className="font-semibold">{visit.visitType}</span></p>
-                      <p className="text-sm text-muted-foreground">Remark: {visit.visitRemark}</p>
+            {visits.map(visit => {
+              // Safely format date or show fallback
+              const visitDate = visit.date ? format(new Date(visit.date), 'PPP') : 'Date not set';
+
+              return (
+                <AccordionItem value={visit.id} key={visit.id} className="border-b last:border-b-0 rounded-md mb-2 shadow-sm bg-card">
+                  <AccordionTrigger className="hover:bg-muted/50 px-4 py-3 text-left rounded-t-md">
+                    <div className="flex items-center gap-4 w-full">
+                      <CalendarDays className="w-5 h-5 text-primary flex-shrink-0" />
+                      <div className="flex-grow">
+                        <p className="font-medium">{visitDate} - <span className="font-semibold">{visit.visitType}</span></p>
+                        <p className="text-sm text-muted-foreground">Remark: {visit.visitRemark}</p>
+                      </div>
                     </div>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-0 sm:px-4 pt-2 pb-4 bg-card rounded-b-md">
-                  <ClinicalVisitDetails visit={{ ...visit, patientId: patient.id }} patient={patient} />
-                </AccordionContent>
-              </AccordionItem>
-            ))}
+                  </AccordionTrigger>
+                  <AccordionContent className="px-0 sm:px-4 pt-2 pb-4 bg-card rounded-b-md">
+                    <ClinicalVisitDetails visit={{ ...visit, patientId: patient.id }} patient={patient} />
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
             {visits.length === 0 && (
               <Card className="flex items-center justify-center h-32 border-dashed">
                 <p className="text-muted-foreground text-center py-4">No visit history recorded.</p>

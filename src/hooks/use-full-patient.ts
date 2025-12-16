@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getPatientWithSubcollections } from '@/lib/firestore-helpers';
 import { useAuth } from '@/context/auth-provider';
 import type { Patient } from '@/lib/types';
+import { logError } from '@/lib/logger';
 
 /**
  * Hook to fetch a patient with all subcollections (visits, investigations, etc.)
@@ -29,11 +30,26 @@ export const useFullPatient = (patientId: string | null) => {
                 setLoading(false);
             })
             .catch((err) => {
-                console.error('Error fetching patient:', err);
+                logError('Error fetching patient with subcollections', err);
                 setError(err);
                 setLoading(false);
             });
     }, [user, patientId]);
 
-    return { patient, loading, error };
+    const refresh = () => {
+        if (!user || !patientId) return;
+        setLoading(true);
+        getPatientWithSubcollections(user.uid, patientId)
+            .then((data) => {
+                setPatient(data);
+                setLoading(false);
+            })
+            .catch((err) => {
+                logError('Error refreshing patient data', err);
+                setError(err);
+                setLoading(false);
+            });
+    };
+
+    return { patient, loading, error, refresh };
 };

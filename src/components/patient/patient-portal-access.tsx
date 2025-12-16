@@ -13,6 +13,8 @@ import { useAuth } from '@/context/auth-provider';
 import { createPatientAccount, hasPatientAccount, getPatientAccountInfo, deactivatePatientAccount, reactivatePatientAccount, sendPatientPasswordReset } from '@/lib/patient-auth';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import type { PatientAccountInfo } from '@/lib/patient-auth-types';
+import { logError } from '@/lib/logger';
 
 interface PatientPortalAccessProps {
     patientId: string;
@@ -25,7 +27,7 @@ export function PatientPortalAccess({ patientId, patientName, patientEmail }: Pa
     const { toast } = useToast();
 
     const [hasAccess, setHasAccess] = useState(false);
-    const [accountInfo, setAccountInfo] = useState<any>(null);
+    const [accountInfo, setAccountInfo] = useState<PatientAccountInfo | null>(null);
     const [loading, setLoading] = useState(true);
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
@@ -52,7 +54,7 @@ export function PatientPortalAccess({ patientId, patientName, patientEmail }: Pa
                 setAccountInfo(info);
             }
         } catch (error) {
-            console.error('Error loading account info:', error);
+            logError('Error loading patient portal account info', error);
         } finally {
             setLoading(false);
         }

@@ -8,7 +8,7 @@ import * as z from "zod";
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
 import { INVESTIGATION_MASTER_LIST, INVESTIGATION_PANELS, FREQUENTLY_USED_INVESTIGATIONS } from '@/lib/constants';
-import type { InvestigationRecord, InvestigationTest } from '@/lib/types';
+import type { InvestigationRecord, InvestigationTest, Patient } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -30,7 +30,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 
 interface PatientInvestigationsTabContentProps {
-  patientId: string;
+  patient: Patient;
+  onDataChange?: () => void;
 }
 
 const testEntrySchema = z.object({
@@ -56,7 +57,7 @@ const isCritical = (test: InvestigationTest): boolean => {
   if (test.resultType !== 'numeric' || !test.result || !test.normalRange || test.normalRange === 'N/A') return false;
 
   const resultValue = parseFloat(test.result);
-  if (isNaN(resultValue)) return false; 
+  if (isNaN(resultValue)) return false;
 
   const rangeMatch = test.normalRange.match(/([\d.]+)\s*-\s*([\d.]+)/);
   if (rangeMatch) {
@@ -64,28 +65,27 @@ const isCritical = (test: InvestigationTest): boolean => {
     const upperBound = parseFloat(rangeMatch[2]);
     return resultValue < lowerBound || resultValue > upperBound;
   }
-  
+
   const lowerBoundMatch = test.normalRange.match(/>\s*([\d.]+)/);
   if (lowerBoundMatch) {
-      const lowerBound = parseFloat(lowerBoundMatch[1]);
-      return resultValue <= lowerBound;
+    const lowerBound = parseFloat(lowerBoundMatch[1]);
+    return resultValue <= lowerBound;
   }
 
   const upperBoundMatch = test.normalRange.match(/<\s*([\d.]+)/);
-  if(upperBoundMatch) {
-      const upperBound = parseFloat(upperBoundMatch[1]);
-      return resultValue >= upperBound;
+  if (upperBoundMatch) {
+    const upperBound = parseFloat(upperBoundMatch[1]);
+    return resultValue >= upperBound;
   }
 
   return false;
 };
 
-
-export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigationsTabContentProps) => {
+export const PatientInvestigationsTabContent = ({ patient, onDataChange }: PatientInvestigationsTabContentProps) => {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { getPatientById, addOrUpdateInvestigationRecord, deleteInvestigationRecord } = usePatientData();
+  const { addOrUpdateInvestigationRecord, deleteInvestigationRecord } = usePatientData();
 
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -95,10 +95,9 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
   const [addTestSearchQuery, setAddTestSearchQuery] = useState('');
 
 
-  const patient = getPatientById(patientId);
   const investigationRecords = patient?.investigationRecords || [];
   const sortedRecords = useMemo(() => {
-      return [...investigationRecords].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return [...investigationRecords].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [investigationRecords]);
 
   const form = useForm<InvestigationRecordFormData>({
@@ -126,7 +125,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     setAddTestSearchQuery('');
     setIsFormDialogOpen(true);
   }, [form]);
-  
+
   const handleOpenDialogForEdit = useCallback((record: InvestigationRecord) => {
     form.reset({
       ...record,
@@ -138,36 +137,55 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
 
   const handleSaveInvestigationRecord = useCallback(async (data: InvestigationRecordFormData) => {
     const recordToSave: InvestigationRecord = {
-        id: data.id || crypto.randomUUID(),
-        date: data.date,
-        notes: data.notes,
-        tests: data.tests
+      id: data.id || crypto.randomUUID(),
+      date: data.date,
+      notes: data.notes || "",
+      tests: data.tests.map(t => ({
+        id: t.id,
+        group: t.group,
+        name: t.name,
+        result: t.result,
+        unit: t.unit || "",
+        normalRange: t.normalRange || "",
+        resultType: t.resultType || 'numeric',
+        options: t.options || []
+      }))
     }
-    await addOrUpdateInvestigationRecord(patientId, recordToSave);
+    await addOrUpdateInvestigationRecord(patient.id, recordToSave);
     toast({ title: "Investigation Saved", description: `Record for ${data.date} has been saved.` });
     setIsFormDialogOpen(false);
-    
-    // Check for critical results after saving
-    const criticals = recordToSave.tests.filter(isCritical);
-    if(criticals.length > 0) {
-        setCriticalResultsFound(criticals);
-        setIsCriticalResultDialogOpen(true);
+
+    // Trigger refresh
+    if (onDataChange) {
+      onDataChange();
     }
 
-  }, [patientId, addOrUpdateInvestigationRecord, toast]);
+    // Check for critical results after saving
+    const criticals = recordToSave.tests.filter(isCritical);
+    if (criticals.length > 0) {
+      setCriticalResultsFound(criticals);
+      setIsCriticalResultDialogOpen(true);
+    }
+
+  }, [patient.id, addOrUpdateInvestigationRecord, toast, onDataChange]);
 
   const handleDeleteRecord = useCallback(async () => {
     if (!recordToDelete) return;
-    await deleteInvestigationRecord(patientId, recordToDelete.id);
+    await deleteInvestigationRecord(patient.id, recordToDelete.id);
     toast({ title: "Record Deleted", description: `Investigation record from ${format(parseISO(recordToDelete.date), 'PPP')} has been deleted.`, variant: "destructive" });
     setIsDeleteDialogOpen(false);
     setRecordToDelete(null);
-  }, [recordToDelete, patientId, deleteInvestigationRecord, toast]);
-  
+
+    // Trigger refresh
+    if (onDataChange) {
+      onDataChange();
+    }
+  }, [recordToDelete, patient.id, deleteInvestigationRecord, toast, onDataChange]);
+
   const addTestsFromMaster = useCallback((testIds: string[], date: string) => {
     if (isFormDialogOpen) return;
     const testsToLog = INVESTIGATION_MASTER_LIST.filter(t => testIds.includes(t.id));
-      
+
     form.reset({
       id: undefined,
       date: date,
@@ -191,7 +209,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     const dateParam = searchParams.get('date');
     const testsParam = searchParams.get('tests');
     const tabParam = searchParams.get('tab');
-    
+
     if (tabParam === 'investigations' && dateParam && testsParam && !isFormDialogOpen) {
       const testIds = testsParam.split(',');
       addTestsFromMaster(testIds, dateParam);
@@ -200,16 +218,16 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
       router.replace(`${currentPath}?tab=investigations`, { scroll: false });
     }
   }, [searchParams, addTestsFromMaster, router, isFormDialogOpen]);
-  
+
   const handleFrequentInvestigationToggle = useCallback((item: { type: 'test' | 'panel'; id: string }) => {
     let testIdsToToggle: string[] = [];
     if (item.type === 'test') {
-        testIdsToToggle.push(item.id);
+      testIdsToToggle.push(item.id);
     } else {
-        const panel = INVESTIGATION_PANELS.find(p => p.id === item.id);
-        if (panel) {
-            testIdsToToggle = panel.testIds;
-        }
+      const panel = INVESTIGATION_PANELS.find(p => p.id === item.id);
+      if (panel) {
+        testIdsToToggle = panel.testIds;
+      }
     }
 
     if (testIdsToToggle.length === 0) return;
@@ -218,34 +236,34 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
     const shouldAdd = testIdsToToggle.some(id => !testsInForm.includes(id));
 
     if (shouldAdd) {
-        const testsToAdd = INVESTIGATION_MASTER_LIST
-            .filter(t => testIdsToToggle.includes(t.id) && !testsInForm.includes(t.id))
-            .map(t => ({ 
-              id: t.id,
-              group: t.group,
-              name: t.name,
-              result: '',
-              unit: t.unit,
-              normalRange: t.normalRange,
-              resultType: t.resultType,
-              options: t.options,
-            }));
-        append(testsToAdd);
+      const testsToAdd = INVESTIGATION_MASTER_LIST
+        .filter(t => testIdsToToggle.includes(t.id) && !testsInForm.includes(t.id))
+        .map(t => ({
+          id: t.id,
+          group: t.group,
+          name: t.name,
+          result: '',
+          unit: t.unit,
+          normalRange: t.normalRange,
+          resultType: t.resultType,
+          options: t.options,
+        }));
+      append(testsToAdd);
     } else {
-        const testIndicesToRemove: number[] = [];
-        fields.forEach((field, index) => {
-            if (testIdsToToggle.includes(field.id)) {
-                testIndicesToRemove.push(index);
-            }
-        });
-        testIndicesToRemove.reverse().forEach(index => remove(index));
+      const testIndicesToRemove: number[] = [];
+      fields.forEach((field, index) => {
+        if (testIdsToToggle.includes(field.id)) {
+          testIndicesToRemove.push(index);
+        }
+      });
+      testIndicesToRemove.reverse().forEach(index => remove(index));
     }
   }, [fields, append, remove]);
 
   const filteredCommandItems = useMemo(() => {
     if (!addTestSearchQuery) return { panels: [], tests: [] };
     const lowercasedQuery = addTestSearchQuery.toLowerCase();
-    
+
     const panels = INVESTIGATION_PANELS.filter(p => p.name.toLowerCase().includes(lowercasedQuery));
     const tests = INVESTIGATION_MASTER_LIST.filter(t => t.name.toLowerCase().includes(lowercasedQuery));
 
@@ -265,7 +283,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
         <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle className="font-headline flex items-center">
-              <Notebook className="mr-2 h-5 w-5 text-primary"/>
+              <Notebook className="mr-2 h-5 w-5 text-primary" />
               {form.getValues('id') ? 'Edit Investigation Record' : 'Log New Investigation Results'}
             </DialogTitle>
             <DialogDescription>
@@ -282,7 +300,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                     <FormMessage />
                   </FormItem>
                 )} />
-                 <FormField control={form.control} name="notes" render={({ field }) => (
+                <FormField control={form.control} name="notes" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Overall Notes (Optional)</FormLabel>
                     <FormControl><Input placeholder="Any overall notes for this set of investigations" {...field} /></FormControl>
@@ -297,62 +315,62 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                   <CardDescription>Add tests or panels using the quick options or the search box below, then enter the results.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="space-y-4">
-                        <div>
-                            <h4 className="text-sm font-medium mb-2 flex items-center"><Star className="mr-2 h-4 w-4 text-amber-500"/>Quick Investigations</h4>
-                             <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 p-3 border rounded-md bg-muted/30">
-                                {FREQUENTLY_USED_INVESTIGATIONS.map(item => {
-                                    const testIdsInPanel = item.type === 'panel'
-                                        ? INVESTIGATION_PANELS.find(p => p.id === item.id)?.testIds || []
-                                        : [item.id];
-                                    const isSelected = testIdsInPanel.length > 0 && testIdsInPanel.every(id => fields.some(f => f.id === id));
-                                    
-                                    return (
-                                        <div key={`quick-${item.type}-${item.id}`} className="flex items-center space-x-2">
-                                            <Checkbox
-                                                id={`quick-chk-${item.id}`}
-                                                checked={isSelected}
-                                                onCheckedChange={() => handleFrequentInvestigationToggle(item)}
-                                            />
-                                            <Label htmlFor={`quick-chk-${item.id}`} className="font-normal cursor-pointer text-xs sm:text-sm">{item.name}</Label>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-medium mb-2 flex items-center"><Star className="mr-2 h-4 w-4 text-amber-500" />Quick Investigations</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 p-3 border rounded-md bg-muted/30">
+                        {FREQUENTLY_USED_INVESTIGATIONS.map(item => {
+                          const testIdsInPanel = item.type === 'panel'
+                            ? INVESTIGATION_PANELS.find(p => p.id === item.id)?.testIds || []
+                            : [item.id];
+                          const isSelected = testIdsInPanel.length > 0 && testIdsInPanel.every(id => fields.some(f => f.id === id));
 
-                         <div>
-                            <Label className="text-sm font-medium mb-2 flex items-center mt-4"><Search className="mr-2 h-4 w-4 text-sky-500"/>Add Other Tests or Panels</Label>
-                            <Command shouldFilter={false} className="border rounded-md">
-                                <CommandInput 
-                                    placeholder="Search to add any test or panel from the database..."
-                                    value={addTestSearchQuery}
-                                    onValueChange={setAddTestSearchQuery}
-                                />
-                                <CommandList>
-                                  <CommandEmpty>No results found.</CommandEmpty>
-                                  {addTestSearchQuery && filteredCommandItems.panels.length > 0 && (
-                                    <CommandGroup heading={<div className="flex items-center"><Package className="mr-2 h-4 w-4"/>Panels</div>}>
-                                      {filteredCommandItems.panels.map(panel => (
-                                        <CommandItem key={panel.id} onSelect={() => handleFrequentInvestigationToggle({ type: 'panel', id: panel.id })}>
-                                          {panel.name}
-                                        </CommandItem>
-                                      ))}
-                                    </CommandGroup>
-                                  )}
-                                  {addTestSearchQuery && filteredCommandItems.tests.length > 0 && (
-                                    <CommandGroup heading={<div className="flex items-center"><TestTube className="mr-2 h-4 w-4"/>Individual Tests</div>}>
-                                      {filteredCommandItems.tests.map(test => (
-                                        <CommandItem key={test.id} onSelect={() => handleFrequentInvestigationToggle({ type: 'test', id: test.id })}>
-                                          {test.name}
-                                        </CommandItem>
-                                      ))}
-                                    </CommandGroup>
-                                  )}
-                                </CommandList>
-                            </Command>
-                        </div>
+                          return (
+                            <div key={`quick-${item.type}-${item.id}`} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`quick-chk-${item.id}`}
+                                checked={isSelected}
+                                onCheckedChange={() => handleFrequentInvestigationToggle(item)}
+                              />
+                              <Label htmlFor={`quick-chk-${item.id}`} className="font-normal cursor-pointer text-xs sm:text-sm">{item.name}</Label>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
+
+                    <div>
+                      <Label className="text-sm font-medium mb-2 flex items-center mt-4"><Search className="mr-2 h-4 w-4 text-sky-500" />Add Other Tests or Panels</Label>
+                      <Command shouldFilter={false} className="border rounded-md">
+                        <CommandInput
+                          placeholder="Search to add any test or panel from the database..."
+                          value={addTestSearchQuery}
+                          onValueChange={setAddTestSearchQuery}
+                        />
+                        <CommandList>
+                          <CommandEmpty>No results found.</CommandEmpty>
+                          {addTestSearchQuery && filteredCommandItems.panels.length > 0 && (
+                            <CommandGroup heading={<div className="flex items-center"><Package className="mr-2 h-4 w-4" />Panels</div>}>
+                              {filteredCommandItems.panels.map(panel => (
+                                <CommandItem key={panel.id} onSelect={() => handleFrequentInvestigationToggle({ type: 'panel', id: panel.id })}>
+                                  {panel.name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          )}
+                          {addTestSearchQuery && filteredCommandItems.tests.length > 0 && (
+                            <CommandGroup heading={<div className="flex items-center"><TestTube className="mr-2 h-4 w-4" />Individual Tests</div>}>
+                              {filteredCommandItems.tests.map(test => (
+                                <CommandItem key={test.id} onSelect={() => handleFrequentInvestigationToggle({ type: 'test', id: test.id })}>
+                                  {test.name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          )}
+                        </CommandList>
+                      </Command>
+                    </div>
+                  </div>
 
                   <div className="space-y-4 mt-4">
                     {fields.map((field, index) => {
@@ -361,35 +379,35 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                       return (
                         <div key={field.id} className="p-3 border rounded-lg space-y-2 relative bg-muted/50">
                           <Button type="button" variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => remove(index)}>
-                            <Trash2 className="h-4 w-4 text-destructive"/>
+                            <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                           <div>
                             <span className="font-medium">{field.name}</span> <Badge variant="secondary">{field.group}</Badge>
                           </div>
-                          
+
                           {isNarrative ? (
-                             <FormField control={form.control} name={`tests.${index}.result`} render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Result / Report</FormLabel>
-                                  <FormControl><Textarea rows={3} placeholder="Enter report findings..." {...field} /></FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )} />
+                            <FormField control={form.control} name={`tests.${index}.result`} render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Result / Report</FormLabel>
+                                <FormControl><Textarea rows={3} placeholder="Enter report findings..." {...field} /></FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
                           ) : isSelect ? (
                             <FormField control={form.control} name={`tests.${index}.result`} render={({ field: selectField }) => (
-                               <FormItem>
-                                  <FormLabel>Result</FormLabel>
-                                   <Select onValueChange={selectField.onChange} defaultValue={selectField.value}>
-                                    <FormControl>
-                                        <SelectTrigger><SelectValue placeholder="Select result..."/></SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {(field.options || []).map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
-                                    </SelectContent>
-                                   </Select>
-                                  <FormMessage />
-                                </FormItem>
-                            )}/>
+                              <FormItem>
+                                <FormLabel>Result</FormLabel>
+                                <Select onValueChange={selectField.onChange} defaultValue={selectField.value}>
+                                  <FormControl>
+                                    <SelectTrigger><SelectValue placeholder="Select result..." /></SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {(field.options || []).map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )} />
                           ) : ( // Numeric
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                               <FormField control={form.control} name={`tests.${index}.result`} render={({ field }) => (
@@ -399,13 +417,13 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
                                   <FormMessage />
                                 </FormItem>
                               )} />
-                               <FormItem>
+                              <FormItem>
                                 <FormLabel>Unit</FormLabel>
                                 <FormControl><Input placeholder="Unit" value={field.unit || ''} readOnly disabled /></FormControl>
                               </FormItem>
-                               <FormItem>
+                              <FormItem>
                                 <FormLabel>Normal Range</FormLabel>
-                                <FormControl><Input placeholder="Normal Range" value={field.normalRange || ''} readOnly disabled/></FormControl>
+                                <FormControl><Input placeholder="Normal Range" value={field.normalRange || ''} readOnly disabled /></FormControl>
                               </FormItem>
                             </div>
                           )}
@@ -425,7 +443,7 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
           </Form>
         </DialogContent>
       </Dialog>
-      
+
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -441,25 +459,25 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
         </AlertDialogContent>
       </AlertDialog>
 
-       <AlertDialog open={isCriticalResultDialogOpen} onOpenChange={setIsCriticalResultDialogOpen}>
+      <AlertDialog open={isCriticalResultDialogOpen} onOpenChange={setIsCriticalResultDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center"><AlertTriangle className="mr-2 h-6 w-6 text-destructive"/>Critical Results Found</AlertDialogTitle>
+            <AlertDialogTitle className="flex items-center"><AlertTriangle className="mr-2 h-6 w-6 text-destructive" />Critical Results Found</AlertDialogTitle>
             <AlertDialogDescription>
               The following investigation results are outside their normal range and may require immediate attention.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="my-4">
-              <ul className="space-y-2 rounded-md border p-2">
-                {criticalResultsFound.map(test => (
-                    <li key={test.id} className="text-sm">
-                        <span className="font-semibold">{test.name}:</span>
-                        <span className="ml-2 font-bold text-destructive">{test.result}</span>
-                        <span className="ml-1 text-xs text-muted-foreground">({test.unit})</span>
-                        <span className="ml-2 text-xs text-muted-foreground">Normal: {test.normalRange}</span>
-                    </li>
-                ))}
-              </ul>
+            <ul className="space-y-2 rounded-md border p-2">
+              {criticalResultsFound.map(test => (
+                <li key={test.id} className="text-sm">
+                  <span className="font-semibold">{test.name}:</span>
+                  <span className="ml-2 font-bold text-destructive">{test.result}</span>
+                  <span className="ml-1 text-xs text-muted-foreground">({test.unit})</span>
+                  <span className="ml-2 text-xs text-muted-foreground">Normal: {test.normalRange}</span>
+                </li>
+              ))}
+            </ul>
           </div>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setIsCriticalResultDialogOpen(false)}>Acknowledge</AlertDialogAction>
@@ -469,73 +487,73 @@ export const PatientInvestigationsTabContent = ({ patientId }: PatientInvestigat
 
 
       {sortedRecords.length === 0 ? (
-         <Card className="flex items-center justify-center h-40 border-dashed">
-            <p className="text-muted-foreground text-center py-4">No investigation records found for this patient.</p>
-          </Card>
+        <Card className="flex items-center justify-center h-40 border-dashed">
+          <p className="text-muted-foreground text-center py-4">No investigation records found for this patient.</p>
+        </Card>
       ) : (
         <div className="space-y-6">
           {sortedRecords.map(record => {
             const hasCritical = record.tests.some(isCritical);
             return (
-                <Card key={record.id} className="shadow-md">
+              <Card key={record.id} className="shadow-md">
                 <CardHeader className={hasCritical ? "bg-red-50" : "bg-muted/30"}>
-                    <CardTitle className="font-headline text-lg flex items-center justify-between">
+                  <CardTitle className="font-headline text-lg flex items-center justify-between">
                     <span className="flex items-center">
-                        {hasCritical && <AlertTriangle className="mr-2 h-5 w-5 text-destructive"/>}
-                        Investigations on: {format(parseISO(record.date), 'PPP')}
+                      {hasCritical && <AlertTriangle className="mr-2 h-5 w-5 text-destructive" />}
+                      Investigations on: {format(parseISO(record.date), 'PPP')}
                     </span>
                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7">
-                            <MoreVertical className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleOpenDialogForEdit(record)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            <span>Edit Record</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => { setRecordToDelete(record); setIsDeleteDialogOpen(true); }} className="text-destructive focus:text-destructive">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            <span>Delete Record</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                        </DropdownMenu>
-                    </CardTitle>
-                    {record.notes && <CardDescription className="pt-1">{record.notes}</CardDescription>}
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleOpenDialogForEdit(record)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          <span>Edit Record</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { setRecordToDelete(record); setIsDeleteDialogOpen(true); }} className="text-destructive focus:text-destructive">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Delete Record</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </CardTitle>
+                  {record.notes && <CardDescription className="pt-1">{record.notes}</CardDescription>}
                 </CardHeader>
                 <CardContent className="pt-4 px-0 sm:px-6">
-                    {record.tests.length > 0 ? (
+                  {record.tests.length > 0 ? (
                     <Table>
-                        <TableHeader>
+                      <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[150px]">Group</TableHead>
-                            <TableHead>Test Name</TableHead>
-                            <TableHead>Result</TableHead>
-                            <TableHead className="w-[100px]">Unit</TableHead>
-                            <TableHead>Normal Range</TableHead>
+                          <TableHead className="w-[150px]">Group</TableHead>
+                          <TableHead>Test Name</TableHead>
+                          <TableHead>Result</TableHead>
+                          <TableHead className="w-[100px]">Unit</TableHead>
+                          <TableHead>Normal Range</TableHead>
                         </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                        {record.tests.map(test => {
-                            const critical = isCritical(test);
-                            return (
-                                <TableRow key={test.id}>
-                                <TableCell><Badge variant="outline">{test.group}</Badge></TableCell>
-                                <TableCell className="font-medium">{test.name}</TableCell>
-                                <TableCell className={critical ? "font-bold text-destructive" : ""}>{test.result}</TableCell>
-                                <TableCell>{test.unit || 'N/A'}</TableCell>
-                                <TableCell>{test.normalRange || 'N/A'}</TableCell>
-                                </TableRow>
-                            );
+                      </TableHeader>
+                      <TableBody>
+                        {record.tests.map((test: InvestigationTest) => {
+                          const critical = isCritical(test);
+                          return (
+                            <TableRow key={test.id}>
+                              <TableCell><Badge variant="outline">{test.group}</Badge></TableCell>
+                              <TableCell className="font-medium">{test.name}</TableCell>
+                              <TableCell className={critical ? "font-bold text-destructive" : ""}>{test.result}</TableCell>
+                              <TableCell>{test.unit || 'N/A'}</TableCell>
+                              <TableCell>{test.normalRange || 'N/A'}</TableCell>
+                            </TableRow>
+                          );
                         })}
-                        </TableBody>
+                      </TableBody>
                     </Table>
-                    ) : (
+                  ) : (
                     <p className="text-muted-foreground text-sm">No specific tests listed for this record date.</p>
-                    )}
+                  )}
                 </CardContent>
-                </Card>
+              </Card>
             );
           })}
         </div>

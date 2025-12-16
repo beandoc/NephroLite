@@ -14,6 +14,7 @@ import {
     serverTimestamp,
     Timestamp
 } from 'firebase/firestore';
+import { format, parseISO } from 'date-fns';
 import { db } from './firebase';
 import type {
     Patient,
@@ -57,6 +58,42 @@ export const getInterventionsRef = (userId: string, patientId: string) =>
 
 export const getDialysisSessionsRef = (userId: string, patientId: string) =>
     collection(db, 'users', userId, 'patients', patientId, 'dialysisSessions');
+
+// ==================== TIME-BASED INDEX OPERATIONS ====================
+// These indexes enable fast monthly queries for dashboards
+// Data is written to BOTH patient-centric location AND time index
+
+/**
+ * Get visit collection reference
+ * Format: users/{userId}/patients/{patientId}/visits
+ */
+export const getVisitsCollection = (userId: string, patientId: string) =>
+    collection(db, 'users', userId, 'patients', patientId, 'visits');
+
+/**
+ * Get reference to monthly investigation index
+ */
+export const getMonthlyInvestigationsIndexRef = (userId: string, monthKey: string) =>
+    collection(db, 'users', userId, 'investigationsByMonth', monthKey);
+
+/**
+ * Get reference to monthly dialysis sessions index
+ */
+export const getMonthlyDialysisIndexRef = (userId: string, monthKey: string) =>
+    collection(db, 'users', userId, 'dialysisByMonth', monthKey);
+
+/**
+ * Helper to get month key from date string
+ * @param dateString ISO date string
+ * @returns Month key in format YYYY-MM
+ */
+export function getMonthKey(dateString: string): string {
+    try {
+        return format(parseISO(dateString), 'yyyy-MM');
+    } catch {
+        return format(new Date(), 'yyyy-MM'); // Fallback to current month
+    }
+}
 
 // Create patient (without subcollections, those are added separately)
 // Create patient (Dual Write: Staff DB + Root DB)
@@ -191,14 +228,21 @@ export const deletePatient = async (userId: string, patientId: string) => {
     await batch.commit();
 };
 
-// ==================== VISIT OPERATIONS ====================
+// ==================== VISIT OPERATIONS (Hybrid: Patient + Time Index) ====================
 
+/**
+ * Add visit with hybrid indexing
+ * Writes to BOTH patient-centric location AND monthly time index
+ * This enables fast patient profile loading AND fast monthly dashboard queries
+ */
 export const addVisit = async (userId: string, patientId: string, visit: Visit) => {
+    // Save visit directly to patient's visits collection
     const visitRef = doc(getVisitsRef(userId, patientId), visit.id);
     await setDoc(visitRef, cleanUndefined(visit));
 };
 
 export const updateVisit = async (userId: string, patientId: string, visitId: string, updates: Partial<Visit>) => {
+    // Update visit in patient's visits collection
     const visitRef = doc(getVisitsRef(userId, patientId), visitId);
     await updateDoc(visitRef, updates);
 };

@@ -16,7 +16,7 @@ export default function PatientProfilePage() {
   const params = useParams();
   const patientId = typeof params.id === 'string' ? params.id : null;
 
-  const { patient, loading, error } = useFullPatient(patientId);
+  const { patient, loading, error, refresh } = useFullPatient(patientId);
 
   if (loading) {
     return (
@@ -67,7 +67,7 @@ export default function PatientProfilePage() {
         }
       />
       <div className="mt-6">
-        <PatientProfileView patient={patient} />
+        <PatientProfileView patient={patient} onDataChange={refresh} />
       </div>
     </div>
   );

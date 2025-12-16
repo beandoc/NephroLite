@@ -44,15 +44,15 @@ export default function EditPatientPage() {
     });
     router.push(`/patients/${patient.id}`);
   };
-  
+
   const handleClinicalSubmit = (data: ClinicalProfile) => {
-      if(!patient) return;
-      updateClinicalProfile(patient.id, data);
-      toast({
-        title: "Clinical Profile Updated",
-        description: `${[patient.firstName, patient.lastName].join(' ')}'s clinical profile has been successfully updated.`,
-      });
-      router.push(`/patients/${patient.id}`);
+    if (!patient) return;
+    updateClinicalProfile(patient.id, data);
+    toast({
+      title: "Clinical Profile Updated",
+      description: `${[patient.firstName, patient.lastName].join(' ')}'s clinical profile has been successfully updated.`,
+    });
+    router.push(`/patients/${patient.id}`);
   };
 
 
@@ -66,7 +66,7 @@ export default function EditPatientPage() {
   }
 
   if (!patient) {
-     return (
+    return (
       <div className="container mx-auto py-2">
         <PageHeader title="Could not load patient data." />
       </div>
@@ -75,7 +75,7 @@ export default function EditPatientPage() {
 
   return (
     <div className="container mx-auto py-2">
-      <PageHeader 
+      <PageHeader
         title={`Edit Profile: ${[patient.firstName, patient.lastName].join(' ')}`}
         description="Update the patient's demographic and clinical details."
         backHref={`/patients/${patient.id}`}
@@ -86,10 +86,11 @@ export default function EditPatientPage() {
           isSubmitting={false}
           existingPatientData={patient}
         />
-        <ClinicalProfileForm 
+        <ClinicalProfileForm
           onSubmit={handleClinicalSubmit}
           isSubmitting={false}
           existingProfileData={patient.clinicalProfile}
+          patientRelation={patient.guardian?.relation}
         />
       </div>
     </div>

@@ -122,7 +122,20 @@ export const PATIENT_GROUP_NAMES = [
 
 export const RESIDENCE_TYPES = ['Rural', 'Urban', 'Semi-Urban', 'Other', 'Not Set'] as const;
 
-// New constants for Interventions
+/**
+ * Application-wide constants
+ * Eliminates magic numbers and provides clear, documented values
+ */
+
+// ==================== SEARCH AND PAGINATION ====================
+export const MAX_SEARCH_RESULTS = 5; // Maximum results shown in autocomplete searches
+export const DEFAULT_PAGE_SIZE = 10;
+export const LARGE_PAGE_SIZE = 50;
+
+// ==================== TIME WINDOWS (in days) ====================
+export const INVESTIGATION_WINDOW_DAYS = 90; // 3 months before/after medication start for analysis
+export const RECENT_VISITS_DAYS = 30;
+export const APPOINTMENT_REMINDER_DAYS = 7;
 export const INTERVENTION_TYPES = [
   'Kidney Biopsy',
   'Temporary Catheter',
@@ -218,6 +231,11 @@ export const INVESTIGATION_MASTER_LIST: InvestigationMaster[] = [
   { id: 'bio_019', name: 'Total Cholesterol', group: 'Biochemistry', unit: 'mg/dL', normalRange: '<200', resultType: 'numeric' },
   { id: 'bio_020', name: 'HDL Cholesterol', group: 'Biochemistry', unit: 'mg/dL', normalRange: '>40', resultType: 'numeric' },
   { id: 'bio_021', name: 'LDL Cholesterol', group: 'Biochemistry', unit: 'mg/dL', normalRange: '<100', resultType: 'numeric' },
+  { id: 'bio_022', name: 'Total Bilirubin', group: 'Biochemistry', unit: 'mg/dL', normalRange: '0.3-1.2', resultType: 'numeric' },
+  { id: 'bio_023', name: 'Direct Bilirubin', group: 'Biochemistry', unit: 'mg/dL', normalRange: '0.0-0.3', resultType: 'numeric' },
+  { id: 'bio_024', name: 'AST (SGOT)', group: 'Biochemistry', unit: 'IU/L', normalRange: '5-40', resultType: 'numeric' },
+  { id: 'bio_025', name: 'ALT (SGPT)', group: 'Biochemistry', unit: 'IU/L', normalRange: '7-56', resultType: 'numeric' },
+  { id: 'bio_026', name: 'Triglycerides (TG)', group: 'Biochemistry', unit: 'mg/dL', normalRange: '<150', resultType: 'numeric' },
 
   // Radiology
   { id: 'rad_001', name: 'USG KUB', group: 'Radiology', resultType: 'text' },
@@ -225,6 +243,7 @@ export const INVESTIGATION_MASTER_LIST: InvestigationMaster[] = [
   { id: 'rad_003', name: 'CT KUB (NCCT)', group: 'Radiology', resultType: 'text' },
   { id: 'rad_004', name: 'CT Abdomen', group: 'Radiology', resultType: 'text' },
   { id: 'rad_005', name: 'MRI Abdomen', group: 'Radiology', resultType: 'text' },
+  { id: 'rad_006', name: 'MRI Brain', group: 'Radiology', resultType: 'text' },
 
   // Serology
   { id: 'ser_001', name: 'HBsAg', group: 'Serology', resultType: 'select', options: ['Positive', 'Negative'] },
@@ -237,6 +256,9 @@ export const INVESTIGATION_MASTER_LIST: InvestigationMaster[] = [
   { id: 'ser_008', name: 'ANCA (p-ANCA, c-ANCA)', group: 'Serology', resultType: 'select', options: ['Positive', 'Negative', 'Atypical'] },
   { id: 'ser_009', name: 'Anti-GBM Antibody', group: 'Serology', resultType: 'select', options: ['Positive', 'Negative'] },
   { id: 'ser_010', name: 'Anti PLA2R antibody', group: 'Serology', resultType: 'select', options: ['Positive', 'Negative'] },
+  { id: 'ser_011', name: 'WIDAL', group: 'Serology', resultType: 'text' },
+  { id: 'ser_012', name: 'c-ANCA', group: 'Serology', resultType: 'select', options: ['Positive', 'Negative'] },
+  { id: 'ser_013', name: 'p-ANCA', group: 'Serology', resultType: 'select', options: ['Positive', 'Negative'] },
 
   // Urine Analysis
   { id: 'urn_001', name: 'Urine Routine & Microscopy (R/M)', group: 'Urine Analysis', resultType: 'text' },
@@ -249,6 +271,9 @@ export const INVESTIGATION_MASTER_LIST: InvestigationMaster[] = [
   { id: 'spc_001', name: 'Kidney Biopsy', group: 'Special Investigations', resultType: 'text' },
   { id: 'spc_002', name: 'ECG', group: 'Special Investigations', resultType: 'text' },
   { id: 'spc_003', name: '2D Echocardiography', group: 'Special Investigations', resultType: 'text' },
+  { id: 'spc_004', name: 'Vitamin D', group: 'Special Investigations', unit: 'ng/mL', normalRange: '30-100', resultType: 'numeric' },
+  { id: 'spc_005', name: 'iPTH (Intact PTH)', group: 'Special Investigations', unit: 'pg/mL', normalRange: '15-65', resultType: 'numeric' },
+  { id: 'spc_006', name: 'DTPA GFR', group: 'Special Investigations', unit: 'mL/min/1.73m²', normalRange: '>90', resultType: 'text' },
 
   // Microbiology
   { id: 'mic_001', name: 'Blood Culture & Sensitivity', group: 'Microbiology', resultType: 'text' },
@@ -264,10 +289,10 @@ export const INVESTIGATION_PANELS: InvestigationPanel[] = [
   // Biochemistry Panels
   { id: 'panel_bio_1', name: 'Renal Function Basic (KFT)', group: 'Biochemistry', testIds: ['bio_001', 'bio_002', 'bio_003', 'bio_004', 'bio_005'] },
   { id: 'panel_bio_2', name: 'Renal Function Extended', group: 'Biochemistry', testIds: ['bio_001', 'bio_002', 'bio_003', 'bio_004', 'bio_005', 'bio_006', 'bio_007', 'bio_008'] },
-  { id: 'panel_bio_3', name: 'Liver Function Test (LFT)', group: 'Biochemistry', testIds: ['bio_010', 'bio_011', 'bio_016'] }, // Simplified LFT
+  { id: 'panel_bio_3', name: 'Liver Function Test (LFT)', group: 'Biochemistry', testIds: ['bio_010', 'bio_011', 'bio_016', 'bio_022', 'bio_023', 'bio_024', 'bio_025'] },
   { id: 'panel_bio_4', name: 'Diabetic Profile', group: 'Biochemistry', testIds: ['bio_012', 'bio_013', 'bio_014'] },
   { id: 'panel_bio_5', name: 'Metabolic Bone Disease (MBD) Screen', group: 'Biochemistry', testIds: ['bio_006', 'bio_007', 'bio_009'] },
-  { id: 'panel_bio_6', name: 'Lipid Profile', group: 'Biochemistry', testIds: ['bio_019', 'bio_020', 'bio_021'] },
+  { id: 'panel_bio_6', name: 'Lipid Profile', group: 'Biochemistry', testIds: ['bio_019', 'bio_020', 'bio_021', 'bio_026'] },
 
   // Serology Panels
   { id: 'panel_ser_1', name: 'Viral Markers', group: 'Serology', testIds: ['ser_001', 'ser_002', 'ser_003'] },
@@ -290,6 +315,11 @@ export const FREQUENTLY_USED_INVESTIGATIONS: { name: string; type: 'test' | 'pan
   { name: 'Urine PC Ratio', type: 'test', id: 'urn_004' },
   { name: 'Urine for AC Ratio', type: 'test', id: 'urn_005' },
   { name: 'Kidney Biopsy', type: 'test', id: 'spc_001' },
+  { name: 'Vitamin D', type: 'test', id: 'spc_004' },
+  { name: 'iPTH', type: 'test', id: 'spc_005' },
+  { name: 'DTPA GFR', type: 'test', id: 'spc_006' },
+  { name: 'MRI Brain', type: 'test', id: 'rad_006' },
+  { name: 'WIDAL', type: 'test', id: 'ser_011' },
 ];
 
 

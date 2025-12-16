@@ -20,9 +20,10 @@ import { PatientPortalAccess } from '@/components/patient/patient-portal-access'
 
 interface PatientProfileViewProps {
   patient: Patient;
+  onDataChange?: () => void;
 }
 
-export function PatientProfileView({ patient }: PatientProfileViewProps) {
+export function PatientProfileView({ patient, onDataChange }: PatientProfileViewProps) {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -75,7 +76,7 @@ export function PatientProfileView({ patient }: PatientProfileViewProps) {
             <CardDescription>Summary of lab reports and other diagnostic findings, grouped by date.</CardDescription>
           </CardHeader>
           <CardContent>
-            <PatientInvestigationsTabContent patientId={patient.id} />
+            <PatientInvestigationsTabContent patient={patient} onDataChange={onDataChange} />
           </CardContent>
         </Card>
       </TabsContent>

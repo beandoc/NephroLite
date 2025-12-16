@@ -44,6 +44,12 @@ export const clinicalProfileSchema = z.object({
   hasDiabetes: z.boolean().optional(),
   onAntiHypertensiveMedication: z.boolean().optional(),
   onLipidLoweringMedication: z.boolean().optional(),
+  // Disability tracking fields
+  pastMedicalClassification: z.string().optional(),
+  primaryDisability: z.string().optional(),
+  disabilityLocationOfOnset: z.string().optional(),
+  disabilityDateOfOnset: z.string().optional(),
+  pdDispositionValue: z.string().optional(),
 });
 
 export const diagnosisSchema = z.object({
@@ -81,6 +87,16 @@ export const clinicalVisitDataSchema = z.object({
   recommendations: z.string().optional(),
   usgReport: z.string().optional(),
   kidneyBiopsyReport: z.string().optional(),
+  serumCreatinine: z.string().optional(),
+  uacr: z.string().optional(),
+  totalCholesterol: z.string().optional(),
+  hdlCholesterol: z.string().optional(),
+  // Military-specific fields
+  disabilityProfile: z.string().optional(),
+  disabilityDetails: z.string().optional(),
+  serviceNumber: z.string().optional(),
+  unitName: z.string().optional(),
+  formation: z.string().optional(),
 });
 
 export const visitSchema = z.object({
