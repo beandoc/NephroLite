@@ -37,17 +37,17 @@ const isCritical = (test: InvestigationTest): boolean => {
     const upperBound = parseFloat(rangeMatch[2]);
     return resultValue < lowerBound || resultValue > upperBound;
   }
-  
+
   const lowerBoundMatch = test.normalRange.match(/>\s*([\d.]+)/);
   if (lowerBoundMatch) {
-      const lowerBound = parseFloat(lowerBoundMatch[1]);
-      return resultValue < lowerBound;
+    const lowerBound = parseFloat(lowerBoundMatch[1]);
+    return resultValue < lowerBound;
   }
 
   const upperBoundMatch = test.normalRange.match(/<\s*([\d.]+)/);
-  if(upperBoundMatch) {
-      const upperBound = parseFloat(upperBoundMatch[1]);
-      return resultValue > upperBound;
+  if (upperBoundMatch) {
+    const upperBound = parseFloat(upperBoundMatch[1]);
+    return resultValue > upperBound;
   }
 
   return false;
@@ -61,9 +61,9 @@ export default function LabResultsPage() {
 
   const criticalResults: CriticalResult[] = useMemo(() => {
     if (isLoading) return [];
-    
+
     const allCriticalResults: CriticalResult[] = [];
-    
+
     patients.forEach(patient => {
       patient.investigationRecords?.forEach(record => {
         record.tests.forEach(test => {
@@ -74,7 +74,7 @@ export default function LabResultsPage() {
               patientId: patient.id,
               nephroId: patient.nephroId,
               testName: test.name,
-              result: test.result,
+              result: test.result || 'N/A',
               normalRange: test.normalRange || 'N/A',
               isAcknowledged: acknowledgedResults[`${record.id}-${test.id}`] || false,
             });
@@ -83,27 +83,27 @@ export default function LabResultsPage() {
       });
     });
 
-    return allCriticalResults.sort((a,b) => (a.isAcknowledged ? 1 : -1) - (b.isAcknowledged ? 1 : -1) || a.patientName.localeCompare(b.patientName));
+    return allCriticalResults.sort((a, b) => (a.isAcknowledged ? 1 : -1) - (b.isAcknowledged ? 1 : -1) || a.patientName.localeCompare(b.patientName));
 
   }, [patients, isLoading, acknowledgedResults]);
 
 
   const handleAcknowledge = (resultId: string, patientName: string) => {
-    setAcknowledgedResults(prev => ({...prev, [resultId]: true}));
+    setAcknowledgedResults(prev => ({ ...prev, [resultId]: true }));
     toast({
       title: "Result Acknowledged",
       description: `Critical result for ${patientName} has been acknowledged. (This is a temporary client-side acknowledgement)`,
     });
   };
-  
+
   if (isLoading) {
     return (
-        <div className="container mx-auto py-2">
-            <PageHeader title="Review Critical Lab Results" />
-            <div className="flex items-center justify-center py-20">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            </div>
+      <div className="container mx-auto py-2">
+        <PageHeader title="Review Critical Lab Results" />
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
         </div>
+      </div>
     )
   }
 
