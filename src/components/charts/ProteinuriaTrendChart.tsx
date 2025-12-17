@@ -58,13 +58,14 @@ export function ProteinuriaTrendChart({ investigationRecords, medicationHistory 
       if (!groupedByDate[dateKey]) {
         groupedByDate[dateKey] = {};
       }
-      if (test.name === '24-hour Urine Protein') groupedByDate[dateKey].protein = parseFloat(test.result);
-      if (test.name === 'Urine for AC Ratio (mg/gm)') groupedByDate[dateKey].uacr = parseFloat(test.result);
+      if (test.name === '24-hour Urine Protein' && test.result) groupedByDate[dateKey].protein = parseFloat(test.result);
+      if (test.name === 'Urine for AC Ratio (mg/gm)' && test.result) groupedByDate[dateKey].uacr = parseFloat(test.result);
     });
 
     // Merge in data from visits (medicationHistory contains the visits)
     if (medicationHistory) {
       medicationHistory.forEach(visit => {
+        if (!visit.date) return; // Skip if date is undefined
         const dateKey = format(parseISO(visit.date), 'yyyy-MM-dd');
         if (!groupedByDate[dateKey]) {
           groupedByDate[dateKey] = {};

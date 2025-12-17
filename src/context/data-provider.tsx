@@ -112,7 +112,24 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     const unsubscribePatients = firestoreHelpers.subscribeToPatients(
       user.uid,
       (patientsData) => {
-        setPatients(patientsData);
+        setPatients(prevPatients => {
+          // Merge new patient data with existing subcollections
+          return patientsData.map(newPatient => {
+            const existingPatient = prevPatients.find(p => p.id === newPatient.id);
+            if (existingPatient) {
+              // Preserve subcollections from existing patient
+              return {
+                ...newPatient,
+                visits: existingPatient.visits || [],
+                investigationRecords: existingPatient.investigationRecords || [],
+                interventions: existingPatient.interventions || [],
+                dialysisSessions: existingPatient.dialysisSessions || []
+              };
+            }
+            // New patient - use empty subcollections
+            return newPatient;
+          });
+        });
         setLastId(calculateInitialLastId(patientsData));
         setIsLoading(false);
       }
@@ -312,7 +329,28 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
       record.id = crypto.randomUUID();
     }
 
+    console.log('💾 SAVING investigation for patient:', patientId);
+    console.log('💾 Record being saved:', record);
+
     await firestoreHelpers.addInvestigationRecord(user.uid, patientId, record);
+    console.log('✅ Saved to Firestore');
+
+    // Refresh patient data to include the new investigation record from subcollection
+    console.log('🔄 Fetching refreshed patient data...');
+    const refreshedPatient = await firestoreHelpers.getPatientWithSubcollections(user.uid, patientId);
+    console.log('🔄 Refreshed patient:', refreshedPatient);
+    console.log('🔄 Investigation records in refreshed data:', refreshedPatient?.investigationRecords);
+
+    if (refreshedPatient) {
+      console.log('✅ Updating local state with', refreshedPatient.investigationRecords?.length, 'investigation records');
+      setPatients(prev => {
+        const updated = prev.map(p => p.id === patientId ? refreshedPatient : p);
+        console.log('✅ Updated patients state');
+        return updated;
+      });
+    } else {
+      console.error('❌ No refreshed patient data returned!');
+    }
   }, [user]);
 
   const deleteInvestigationRecord = useCallback(async (patientId: string, recordId: string): Promise<void> => {

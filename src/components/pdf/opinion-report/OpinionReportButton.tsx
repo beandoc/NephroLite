@@ -9,12 +9,16 @@ interface OpinionReportButtonProps {
     patient: Patient;
     visit: Visit;
     disabled?: boolean;
+    variant?: "default" | "outline" | "ghost" | "secondary" | "destructive" | "link";
+    size?: "default" | "sm" | "lg" | "icon";
 }
 
 export const OpinionReportButton: React.FC<OpinionReportButtonProps> = ({
     patient,
     visit,
-    disabled = false
+    disabled = false,
+    variant = "default",
+    size = "default"
 }) => {
     const fileName = `Opinion_Report_${patient.nephroId}_${new Date().toISOString().split('T')[0]}.pdf`;
 
@@ -24,7 +28,7 @@ export const OpinionReportButton: React.FC<OpinionReportButtonProps> = ({
             fileName={fileName}
         >
             {({ loading }) => (
-                <Button disabled={disabled || loading} variant="default">
+                <Button disabled={disabled || loading} variant={variant} size={size}>
                     <Download className="mr-2 h-4 w-4" />
                     {loading ? 'Generating...' : 'Opinion Report'}
                 </Button>

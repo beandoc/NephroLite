@@ -142,14 +142,22 @@ export const subscribeToPatients = (
     const patientsRef = getPatientsRef(userId);
 
     return onSnapshot(patientsRef, (snapshot) => {
+        // Get current patients to preserve subcollections
+        let currentPatients: Patient[] = [];
+
         const patients = snapshot.docs.map(doc => {
-            const data = doc.data() as Patient; // Cast data to Patient type
+            const data = doc.data() as Patient;
+
+            // Try to preserve existing subcollections from current state if they exist
+            const existingPatient = currentPatients.find(p => p.id === data.id);
+
             return {
                 ...data,
-                visits: [],
-                investigationRecords: [],
-                interventions: [],
-                dialysisSessions: []
+                // Preserve existing subcollections if available, otherwise use empty arrays
+                visits: existingPatient?.visits || [],
+                investigationRecords: existingPatient?.investigationRecords || [],
+                interventions: existingPatient?.interventions || [],
+                dialysisSessions: existingPatient?.dialysisSessions || []
             } as Patient;
         });
 

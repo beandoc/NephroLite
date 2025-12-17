@@ -24,18 +24,36 @@ export function PatientEvents({ patient }: PatientEventsProps) {
   const eventHistory = useMemo(() => {
     // Defensive check: ensure visits array exists
     const visits = patient.visits || [];
-    const events = visits.map(visit => ({
-      date: visit.date,
-      type: visit.visitType,
-      description: eventTypeMap[visit.visitType]?.description(visit) || visit.visitRemark
-    }));
+    const registrationDate = patient.registrationDate ? parseISO(patient.registrationDate) : null;
 
-    // Add registration event
-    events.push({
-      date: patient.registrationDate,
-      type: 'Registered',
-      description: 'Patient registered at the clinic.'
-    });
+    const events = visits
+      .filter(visit => visit.date) // Skip visits without dates
+      .filter(visit => {
+        // Filter out visits marked as "initial" that happen after registration
+        if (!registrationDate) return true;
+        const visitDate = parseISO(visit.date);
+        const isInitialVisit = visit.visitRemark?.toLowerCase().includes('initial');
+
+        // If it's marked as initial but happens after registration, skip it
+        if (isInitialVisit && visitDate > registrationDate) {
+          return false;
+        }
+        return true;
+      })
+      .map(visit => ({
+        date: visit.date,
+        type: visit.visitType,
+        description: visit.visitRemark || `${visit.visitType} visit`
+      }));
+
+    // Add registration event if date exists
+    if (patient.registrationDate) {
+      events.push({
+        date: patient.registrationDate,
+        type: 'Registered',
+        description: 'Patient registered at the clinic.'
+      });
+    }
 
     // Add discharged/admitted events based on status changes if we track that in history
     // For now, we are basing events on visits.

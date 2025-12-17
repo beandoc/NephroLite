@@ -3,6 +3,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { usePatientData } from '@/hooks/use-patient-data';
+import { useAuth } from '@/context/auth-provider';
 import Link from 'next/link';
 import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
@@ -13,11 +14,12 @@ import { ProteinuriaTrendChart } from '@/components/charts/ProteinuriaTrendChart
 import { MedicationTimeline } from '@/components/patients/MedicationTimeline';
 import { PatientEvents } from '@/components/patients/PatientEvents';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { calculateKfre, calculateEgfrFromCreatinine } from '@/lib/kfre-calculator';
 import { calculatePreventRisk } from '@/lib/prevent-calculator';
 import type { PreventInput } from '@/lib/prevent-calculator';
+import type { Patient } from '@/lib/types';
 
 interface PredictionCardProps {
   title: string;
@@ -76,24 +78,58 @@ export default function PatientHealthTrendsPage() {
   const router = useRouter();
   const params = useParams();
   const patientId = typeof params.id === 'string' ? params.id : undefined;
-  const { getPatientById, isLoading: dataLoading } = usePatientData();
+  const { isLoading: dataLoading } = usePatientData();
+  const { user } = useAuth();
 
-  const patient = useMemo(() => {
-    if (!patientId || dataLoading) return null;
-    return getPatientById(patientId);
-  }, [patientId, getPatientById, dataLoading]);
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [isLoadingPatient, setIsLoadingPatient] = useState(true);
+
+  // Fetch patient data directly from Firestore to avoid global state issues
+  useEffect(() => {
+    if (!patientId || !user) {
+      setPatient(null);
+      setIsLoadingPatient(false);
+      return;
+    }
+
+    setIsLoadingPatient(true);
+    import('@/lib/firestore-helpers')
+      .then(({ getPatientWithSubcollections }) =>
+        getPatientWithSubcollections(user.uid, patientId)
+      )
+      .then((fetchedPatient) => {
+        console.log('📊 [Health Trends] Fetched patient directly:', fetchedPatient);
+        console.log('📊 [Health Trends] Investigation records count:', fetchedPatient?.investigationRecords?.length || 0);
+        setPatient(fetchedPatient);
+        setIsLoadingPatient(false);
+      })
+      .catch((error) => {
+        console.error('❌ [Health Trends] Error fetching patient:', error);
+        setPatient(null);
+        setIsLoadingPatient(false);
+      });
+  }, [patientId, user]);
 
   const latestLabData = useMemo(() => {
-    if (!patient?.investigationRecords) return { eGFR: null, UACR: null, totalCholesterol: null, hdlCholesterol: null, systolicBP: null, date: undefined };
+    console.log('🏥 [Health Trends] Patient data:', patient);
+    console.log('🏥 [Health Trends] Investigation records:', patient?.investigationRecords);
+
+    if (!patient?.investigationRecords) {
+      console.log('❌ [Health Trends] No investigation records found');
+      return { eGFR: null, UACR: null, totalCholesterol: null, hdlCholesterol: null, systolicBP: null, date: undefined };
+    }
+
+    console.log('✅ [Health Trends] Found', patient.investigationRecords.length, 'investigation records');
 
     // Helper to get latest from investigations
     const allTests = patient.investigationRecords
+      .filter(rec => rec.date) // Skip records without dates
       .flatMap(rec => rec.tests.map(test => ({ ...test, date: rec.date })))
-      .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
+      .sort((a, b) => parseISO(b.date!).getTime() - parseISO(a.date!).getTime());
 
     const getLatestFromInvestigations = (name: string): { value: number; date: string } | null => {
       const test = allTests.find(t => t.name === name && t.result && !isNaN(parseFloat(t.result)));
-      if (test) {
+      if (test && test.result) {
         return { value: parseFloat(test.result), date: test.date };
       }
       return null;
@@ -174,48 +210,121 @@ export default function PatientHealthTrendsPage() {
 
 
   const kfreScores = useMemo(() => {
-    if (!patient || !latestLabData.eGFR || !latestLabData.UACR) {
+    console.log('🧮 [KFRE] Starting calculation...');
+    console.log('🧮 [KFRE] Patient:', patient);
+    console.log('🧮 [KFRE] Latest Lab Data:', latestLabData);
+    console.log('🧮 [KFRE] eGFR:', latestLabData.eGFR);
+    console.log('🧮 [KFRE] UACR:', latestLabData.UACR);
+
+    if (!patient) {
+      console.log('❌ [KFRE] No patient data');
+      return { twoYear: null, fiveYear: null };
+    }
+
+    if (!latestLabData.eGFR) {
+      console.log('❌ [KFRE] Missing eGFR');
+      return { twoYear: null, fiveYear: null };
+    }
+
+    if (!latestLabData.UACR) {
+      console.log('❌ [KFRE] Missing UACR');
       return { twoYear: null, fiveYear: null };
     }
 
     const age = new Date().getFullYear() - parseISO(patient.dob).getFullYear();
 
-    return calculateKfre({
+    const kfreInput = {
       age: age,
       sex: patient.gender,
       egfr: latestLabData.eGFR,
       uacr: latestLabData.UACR,
-    });
+    };
+
+    console.log('✅ [KFRE] Input data:', kfreInput);
+    const result = calculateKfre(kfreInput);
+    console.log('✅ [KFRE] Result:', result);
+
+    return result;
   }, [patient, latestLabData]);
 
   const preventScore = useMemo(() => {
-    if (!patient || !latestLabData.eGFR || !latestLabData.totalCholesterol || !latestLabData.hdlCholesterol || !latestLabData.systolicBP) {
+    try {
+      console.log('🩺 [PREVENT] Starting calculation...');
+      console.log('🩺 [PREVENT] Patient:', patient);
+      console.log('🩺 [PREVENT] Latest Lab Data:', latestLabData);
+
+      if (!patient) {
+        console.log('❌ [PREVENT] No patient data');
+        return null;
+      }
+
+      if (!latestLabData.eGFR) {
+        console.log('❌ [PREVENT] Missing eGFR:', latestLabData.eGFR);
+        return null;
+      }
+
+      if (!latestLabData.totalCholesterol) {
+        console.log('❌ [PREVENT] Missing totalCholesterol:', latestLabData.totalCholesterol);
+        return null;
+      }
+
+      if (!latestLabData.hdlCholesterol) {
+        console.log('❌ [PREVENT] Missing hdlCholesterol:', latestLabData.hdlCholesterol);
+        return null;
+      }
+
+      if (!latestLabData.systolicBP) {
+        console.log('❌ [PREVENT] Missing systolicBP:', latestLabData.systolicBP);
+        return null;
+      }
+
+      const age = new Date().getFullYear() - parseISO(patient.dob).getFullYear();
+      const lastVisit = patient.visits && patient.visits.length > 0
+        ? patient.visits.sort((a: any, b: any) => parseISO(b.date || '').getTime() - parseISO(a.date || '').getTime())[0]
+        : null;
+      const bmi = lastVisit?.clinicalData?.bmi ? parseFloat(lastVisit.clinicalData.bmi) : null;
+
+      console.log('🩺 [PREVENT] BMI from last visit:', bmi);
+
+      if (!bmi) {
+        console.log('❌ [PREVENT] Missing BMI');
+        return null;
+      }
+
+      const preventInput: PreventInput = {
+        age: age,
+        sex: patient.gender,
+        totalCholesterol: latestLabData.totalCholesterol,
+        hdlCholesterol: latestLabData.hdlCholesterol,
+        systolicBP: latestLabData.systolicBP,
+        isSmoker: patient.clinicalProfile.smokingStatus === 'Yes',
+        hasDiabetes: patient.clinicalProfile.hasDiabetes === true,
+        onAntiHypertensiveMedication: patient.clinicalProfile.onAntiHypertensiveMedication === true,
+        onStatinMedication: patient.clinicalProfile.onLipidLoweringMedication === true,
+        egfr: latestLabData.eGFR,
+        bmi: bmi,
+      };
+
+      console.log('✅ [PREVENT] Input data:', preventInput);
+      const result = calculatePreventRisk(preventInput);
+      console.log('✅ [PREVENT] Result:', result);
+
+      return result;
+    } catch (error) {
+      console.error('❌ [PREVENT] Calculation error:', error);
       return null;
     }
-    const age = new Date().getFullYear() - parseISO(patient.dob).getFullYear();
-    const lastVisit = patient.visits.sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())[0];
-    const bmi = lastVisit?.clinicalData?.bmi ? parseFloat(lastVisit.clinicalData.bmi) : null;
-
-    if (!bmi) return null;
-
-    const preventInput: PreventInput = {
-      age: age,
-      sex: patient.gender,
-      totalCholesterol: latestLabData.totalCholesterol,
-      hdlCholesterol: latestLabData.hdlCholesterol,
-      systolicBP: latestLabData.systolicBP,
-      isSmoker: patient.clinicalProfile.smokingStatus === 'Yes',
-      hasDiabetes: patient.clinicalProfile.hasDiabetes === true,
-      onAntiHypertensiveMedication: patient.clinicalProfile.onAntiHypertensiveMedication === true,
-      onStatinMedication: patient.clinicalProfile.onLipidLoweringMedication === true,
-      egfr: latestLabData.eGFR,
-      bmi: bmi,
-    };
-    return calculatePreventRisk(preventInput);
   }, [patient, latestLabData]);
 
   const getKfreMissingData = (): string[] => {
     const missing = [];
+
+    // Check if eGFR is too high for KFRE calculation
+    if (latestLabData.eGFR && latestLabData.eGFR >= 60) {
+      missing.push("eGFR ≥60 (KFRE only for eGFR <60)");
+      return missing;
+    }
+
     if (!latestLabData.eGFR) missing.push("eGFR");
     if (!latestLabData.UACR) missing.push("UACR");
     return missing;
@@ -324,7 +433,7 @@ export default function PatientHealthTrendsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline flex items-center"><BarChart3 className="mr-2 h-5 w-5 text-primary" />Albuminuria / 24h Protein Trend</CardTitle>
+            <CardTitle className="font-headline flex items-center"><BarChart3 className="mr-2 h-5 w-5 text-primary" />Albuminuria/ 24 hr Urine protein Trend</CardTitle>
             <CardDescription>Visualizing changes in proteinuria, with medication periods highlighted.</CardDescription>
           </CardHeader>
           <CardContent className="pt-4">

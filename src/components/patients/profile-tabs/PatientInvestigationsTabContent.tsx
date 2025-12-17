@@ -38,7 +38,7 @@ const testEntrySchema = z.object({
   id: z.string(),
   group: z.string(),
   name: z.string(),
-  result: z.string().min(1, "Result is required"),
+  result: z.string().optional(), // Made optional so users can save incomplete data
   unit: z.string().optional(),
   normalRange: z.string().optional(),
   resultType: z.enum(['numeric', 'text', 'select']).optional(),
@@ -352,7 +352,18 @@ export const PatientInvestigationsTabContent = ({ patient, onDataChange }: Patie
                           {addTestSearchQuery && filteredCommandItems.panels.length > 0 && (
                             <CommandGroup heading={<div className="flex items-center"><Package className="mr-2 h-4 w-4" />Panels</div>}>
                               {filteredCommandItems.panels.map(panel => (
-                                <CommandItem key={panel.id} onSelect={() => handleFrequentInvestigationToggle({ type: 'panel', id: panel.id })}>
+                                <CommandItem
+                                  key={panel.id}
+                                  value={panel.id}
+                                  onSelect={() => {
+                                    handleFrequentInvestigationToggle({ type: 'panel', id: panel.id });
+                                    setAddTestSearchQuery(''); // Clear search after selection
+                                  }}
+                                  onClick={() => {
+                                    handleFrequentInvestigationToggle({ type: 'panel', id: panel.id });
+                                    setAddTestSearchQuery('');
+                                  }}
+                                >
                                   {panel.name}
                                 </CommandItem>
                               ))}
@@ -361,7 +372,18 @@ export const PatientInvestigationsTabContent = ({ patient, onDataChange }: Patie
                           {addTestSearchQuery && filteredCommandItems.tests.length > 0 && (
                             <CommandGroup heading={<div className="flex items-center"><TestTube className="mr-2 h-4 w-4" />Individual Tests</div>}>
                               {filteredCommandItems.tests.map(test => (
-                                <CommandItem key={test.id} onSelect={() => handleFrequentInvestigationToggle({ type: 'test', id: test.id })}>
+                                <CommandItem
+                                  key={test.id}
+                                  value={test.id}
+                                  onSelect={() => {
+                                    handleFrequentInvestigationToggle({ type: 'test', id: test.id });
+                                    setAddTestSearchQuery(''); // Clear search after selection
+                                  }}
+                                  onClick={() => {
+                                    handleFrequentInvestigationToggle({ type: 'test', id: test.id });
+                                    setAddTestSearchQuery('');
+                                  }}
+                                >
                                   {test.name}
                                 </CommandItem>
                               ))}
@@ -535,10 +557,10 @@ export const PatientInvestigationsTabContent = ({ patient, onDataChange }: Patie
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {record.tests.map((test: InvestigationTest) => {
+                        {record.tests.map((test: InvestigationTest, testIndex: number) => {
                           const critical = isCritical(test);
                           return (
-                            <TableRow key={test.id}>
+                            <TableRow key={`${record.id}-${test.id}-${testIndex}`}>
                               <TableCell><Badge variant="outline">{test.group}</Badge></TableCell>
                               <TableCell className="font-medium">{test.name}</TableCell>
                               <TableCell className={critical ? "font-bold text-destructive" : ""}>{test.result}</TableCell>

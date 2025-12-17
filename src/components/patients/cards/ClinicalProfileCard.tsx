@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { getDefaultVaccinations } from '@/lib/data-helpers';
-import { useState }from 'react';
+import { useState } from 'react';
 import { ManageRegistryStatusDialog } from '../ManageRegistryStatusDialog';
 
 interface ClinicalProfileCardProps {
@@ -31,7 +31,7 @@ const DetailItem = ({ label, value, icon: Icon, className }: { label: string; va
 
 const POMRDisplay = ({ pomrText }: { pomrText?: string }) => {
   if (!pomrText) return <p className="text-base text-muted-foreground italic">No POMR recorded.</p>;
-  
+
   const paragraphs = pomrText.split('\n').map((para, index) => (
     <p key={index} className="mb-1 last:mb-0">{para}</p>
   ));
@@ -40,18 +40,18 @@ const POMRDisplay = ({ pomrText }: { pomrText?: string }) => {
 };
 
 const getVaccineStatus = (vaccine: Vaccination) => {
-    if (!vaccine.doses) return { text: 'Unknown', color: 'bg-muted-foreground', icon: AlertCircle };
-    const administeredDoses = vaccine.doses.filter(d => d.administered).length;
-    if(administeredDoses === vaccine.totalDoses) {
-        return { text: 'Completed', color: 'bg-green-600', icon: CheckCircle };
-    }
-    if (vaccine.nextDoseDate && isPast(parseISO(vaccine.nextDoseDate))) {
-         return { text: 'Overdue', color: 'bg-destructive', icon: AlertCircle };
-    }
-    if (administeredDoses > 0) {
-        return { text: 'In Progress', color: 'bg-amber-500', icon: CalendarClock };
-    }
-    return { text: 'Pending', color: 'bg-muted-foreground', icon: CalendarClock };
+  if (!vaccine.doses) return { text: 'Unknown', color: 'bg-muted-foreground', icon: AlertCircle };
+  const administeredDoses = vaccine.doses.filter(d => d.administered).length;
+  if (administeredDoses === vaccine.totalDoses) {
+    return { text: 'Completed', color: 'bg-green-600', icon: CheckCircle };
+  }
+  if (vaccine.nextDoseDate && isPast(parseISO(vaccine.nextDoseDate))) {
+    return { text: 'Overdue', color: 'bg-destructive', icon: AlertCircle };
+  }
+  if (administeredDoses > 0) {
+    return { text: 'In Progress', color: 'bg-amber-500', icon: CalendarClock };
+  }
+  return { text: 'Pending', color: 'bg-muted-foreground', icon: CalendarClock };
 }
 
 
@@ -64,37 +64,38 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
   const handleRiskFactorToggle = (factor: 'hasDiabetes' | 'onAntiHypertensiveMedication' | 'onLipidLoweringMedication', value: boolean) => {
     const updatedProfile = {
       ...clinicalProfile,
+      vaccinations: clinicalProfile.vaccinations || [], // Ensure vaccinations is never undefined
       [factor]: value,
     };
     updateClinicalProfile(patient.id, updatedProfile);
     toast({
-        title: "Risk Factor Updated",
-        description: `Patient's ${factor.replace(/([A-Z])/g, ' $1').toLowerCase()} status has been updated.`,
+      title: "Risk Factor Updated",
+      description: `Patient's ${factor.replace(/([A-Z])/g, ' $1').toLowerCase()} status has been updated.`,
     });
   };
-  
+
   const handleInitializeVaccinations = () => {
     const defaultVaccinations = getDefaultVaccinations();
     const updatedProfile = {
-        ...clinicalProfile,
-        vaccinations: defaultVaccinations,
+      ...clinicalProfile,
+      vaccinations: defaultVaccinations,
     };
     updateClinicalProfile(patient.id, updatedProfile);
     toast({
-        title: "Vaccination Schedule Initialized",
-        description: "You can now edit the patient's vaccination records.",
+      title: "Vaccination Schedule Initialized",
+      description: "You can now edit the patient's vaccination records.",
     });
   };
 
   const handleRegistryStatusUpdate = (tags: string[]) => {
-      const updatedProfile = {
-        ...clinicalProfile,
-        tags,
+    const updatedProfile = {
+      ...clinicalProfile,
+      tags,
     };
     updateClinicalProfile(patient.id, updatedProfile);
     toast({
-        title: "Registry Status Updated",
-        description: "Patient's clinical tags have been updated.",
+      title: "Registry Status Updated",
+      description: "Patient's clinical tags have been updated.",
     });
   };
 
@@ -112,7 +113,7 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
     <>
       <Card className="shadow-md">
         <CardHeader className="bg-muted/30">
-          <CardTitle className="font-headline text-xl flex items-center"><HeartPulse className="w-6 h-6 mr-3 text-primary"/>Clinical Profile</CardTitle>
+          <CardTitle className="font-headline text-xl flex items-center"><HeartPulse className="w-6 h-6 mr-3 text-primary" />Clinical Profile</CardTitle>
         </CardHeader>
         <CardContent className="pt-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-6">
@@ -122,26 +123,26 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
             <DetailItem label="Disability Profile" icon={Accessibility} value={clinicalProfile.disability} />
             <DetailItem label="Smoking Status" icon={Cigarette} value={clinicalProfile.smokingStatus || 'NIL'} />
             <DetailItem label="Alcohol Consumption" icon={Wine} value={clinicalProfile.alcoholConsumption || 'NIL'} />
-            <DetailItem label="Drug Allergies" value={clinicalProfile.drugAllergies || "None reported"} icon={ShieldAlert} className="md:col-span-2 lg:col-span-1"/>
+            <DetailItem label="Drug Allergies" value={clinicalProfile.drugAllergies || "None reported"} icon={ShieldAlert} className="md:col-span-2 lg:col-span-1" />
           </div>
-          
-           <div>
-                <div className="flex justify-between items-center mb-1">
-                    <h3 className="text-sm font-medium text-muted-foreground flex items-center">
-                        <ShieldAlert className="w-4 h-4 mr-2 text-primary" />
-                        Registry Status
-                    </h3>
-                    <Button variant="outline" size="sm" onClick={() => setIsRegistryDialogOpen(true)}>
-                        <Edit className="mr-2 h-3 w-3" /> Update Status
-                    </Button>
-                </div>
-                {currentRegistryStatus.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                        {currentRegistryStatus.map((status, index) => <Badge key={index} variant="default" className="text-base py-1">{status}</Badge>)}
-                    </div>
-                ) : <p className="text-base text-muted-foreground italic">Not assigned to a registry.</p>}
+
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <h3 className="text-sm font-medium text-muted-foreground flex items-center">
+                <ShieldAlert className="w-4 h-4 mr-2 text-primary" />
+                Registry Status
+              </h3>
+              <Button variant="outline" size="sm" onClick={() => setIsRegistryDialogOpen(true)}>
+                <Edit className="mr-2 h-3 w-3" /> Update Status
+              </Button>
             </div>
-          
+            {currentRegistryStatus.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {currentRegistryStatus.map((status, index) => <Badge key={index} variant="default" className="text-base py-1">{status}</Badge>)}
+              </div>
+            ) : <p className="text-base text-muted-foreground italic">Not assigned to a registry.</p>}
+          </div>
+
           <div>
             <h3 className="text-sm font-medium text-muted-foreground flex items-center mb-1">
               <TagsIcon className="w-4 h-4 mr-2 text-primary" />
@@ -153,9 +154,9 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
               </div>
             ) : <p className="text-base text-muted-foreground italic">None</p>}
           </div>
-          
+
           <div>
-              <h3 className="text-sm font-medium text-muted-foreground flex items-center mb-1">
+            <h3 className="text-sm font-medium text-muted-foreground flex items-center mb-1">
               <PencilLine className="w-4 h-4 mr-2 text-primary" />
               Problem Oriented Medical Record (POMR)
             </h3>
@@ -163,31 +164,31 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
           </div>
         </CardContent>
       </Card>
-      
+
       <Card className="shadow-md">
         <CardHeader className="bg-muted/30">
-            <CardTitle className="font-headline text-xl flex items-center"><HelpingHand className="w-6 h-6 mr-3 text-primary"/>Cardiovascular Risk Factors</CardTitle>
-            <CardDescription>Key factors for the PREVENT cardiovascular risk score calculation. Changes are saved instantly.</CardDescription>
+          <CardTitle className="font-headline text-xl flex items-center"><HelpingHand className="w-6 h-6 mr-3 text-primary" />Cardiovascular Risk Factors</CardTitle>
+          <CardDescription>Key factors for the PREVENT cardiovascular risk score calculation. Changes are saved instantly.</CardDescription>
         </CardHeader>
         <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-6">
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-                <Label htmlFor="hasDiabetes-switch" className="font-medium">Diabetes Status</Label>
-                <Switch id="hasDiabetes-switch" checked={clinicalProfile.hasDiabetes} onCheckedChange={(value) => handleRiskFactorToggle('hasDiabetes', value)} />
-            </div>
-             <div className="flex items-center justify-between p-3 border rounded-lg">
-                <Label htmlFor="onAntiHypertensiveMedication-switch" className="font-medium">On Anti-Hypertensive Meds</Label>
-                <Switch id="onAntiHypertensiveMedication-switch" checked={clinicalProfile.onAntiHypertensiveMedication} onCheckedChange={(value) => handleRiskFactorToggle('onAntiHypertensiveMedication', value)} />
-            </div>
-             <div className="flex items-center justify-between p-3 border rounded-lg">
-                <Label htmlFor="onLipidLoweringMedication-switch" className="font-medium">On Lipid-Lowering Meds</Label>
-                <Switch id="onLipidLoweringMedication-switch" checked={clinicalProfile.onLipidLoweringMedication} onCheckedChange={(value) => handleRiskFactorToggle('onLipidLoweringMedication', value)} />
-            </div>
+          <div className="flex items-center justify-between p-3 border rounded-lg">
+            <Label htmlFor="hasDiabetes-switch" className="font-medium">Diabetes Status</Label>
+            <Switch id="hasDiabetes-switch" checked={clinicalProfile.hasDiabetes} onCheckedChange={(value) => handleRiskFactorToggle('hasDiabetes', value)} />
+          </div>
+          <div className="flex items-center justify-between p-3 border rounded-lg">
+            <Label htmlFor="onAntiHypertensiveMedication-switch" className="font-medium">On Anti-Hypertensive Meds</Label>
+            <Switch id="onAntiHypertensiveMedication-switch" checked={clinicalProfile.onAntiHypertensiveMedication} onCheckedChange={(value) => handleRiskFactorToggle('onAntiHypertensiveMedication', value)} />
+          </div>
+          <div className="flex items-center justify-between p-3 border rounded-lg">
+            <Label htmlFor="onLipidLoweringMedication-switch" className="font-medium">On Lipid-Lowering Meds</Label>
+            <Switch id="onLipidLoweringMedication-switch" checked={clinicalProfile.onLipidLoweringMedication} onCheckedChange={(value) => handleRiskFactorToggle('onLipidLoweringMedication', value)} />
+          </div>
         </CardContent>
       </Card>
 
       <Card className="shadow-md">
         <CardHeader className="bg-muted/30">
-          <CardTitle className="font-headline text-xl flex items-center"><Syringe className="w-6 h-6 mr-3 text-primary"/>Vaccination Status</CardTitle>
+          <CardTitle className="font-headline text-xl flex items-center"><Syringe className="w-6 h-6 mr-3 text-primary" />Vaccination Status</CardTitle>
         </CardHeader>
         <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           {(clinicalProfile.vaccinations && clinicalProfile.vaccinations.length > 0) ? (
@@ -197,32 +198,32 @@ export function ClinicalProfileCard({ patient }: ClinicalProfileCardProps) {
               const status = getVaccineStatus(vaccine);
               return (
                 <div key={vaccine.name} className="p-4 border rounded-lg space-y-2 bg-muted/20">
-                    <div className="flex justify-between items-start">
-                        <h4 className="font-semibold">{vaccine.name}</h4>
-                        <Badge variant="secondary" className={`${status.color} text-primary-foreground`}>
-                            <status.icon className="w-3 h-3 mr-1.5"/>{status.text}
-                        </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                        {administeredDoses} of {vaccine.totalDoses} dose(s) administered.
-                    </p>
-                    <ul className="text-xs list-disc pl-5 space-y-1">
-                        {doses.map(dose => (
-                            <li key={dose.id}>
-                                Dose {dose.doseNumber}: {dose.administered && dose.date ? `Given on ${format(parseISO(dose.date), 'PPP')}` : 'Pending'}
-                            </li>
-                        ))}
-                    </ul>
-                    {vaccine.nextDoseDate && <p className="text-xs text-primary font-medium mt-1">Next Dose Due: {format(parseISO(vaccine.nextDoseDate), 'PPP')}</p>}
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-semibold">{vaccine.name}</h4>
+                    <Badge variant="secondary" className={`${status.color} text-primary-foreground`}>
+                      <status.icon className="w-3 h-3 mr-1.5" />{status.text}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {administeredDoses} of {vaccine.totalDoses} dose(s) administered.
+                  </p>
+                  <ul className="text-xs list-disc pl-5 space-y-1">
+                    {doses.map(dose => (
+                      <li key={dose.id}>
+                        Dose {dose.doseNumber}: {dose.administered && dose.date ? `Given on ${format(parseISO(dose.date), 'PPP')}` : 'Pending'}
+                      </li>
+                    ))}
+                  </ul>
+                  {vaccine.nextDoseDate && <p className="text-xs text-primary font-medium mt-1">Next Dose Due: {format(parseISO(vaccine.nextDoseDate), 'PPP')}</p>}
                 </div>
               )
             })
           ) : (
             <div className="text-muted-foreground text-center py-4 md:col-span-2">
-                <p>No vaccination data recorded for this patient.</p>
-                <Button variant="link" onClick={handleInitializeVaccinations} className="mt-2">
-                    <PlusCircle className="mr-2 h-4 w-4"/>Initialize Vaccination Schedule
-                </Button>
+              <p>No vaccination data recorded for this patient.</p>
+              <Button variant="link" onClick={handleInitializeVaccinations} className="mt-2">
+                <PlusCircle className="mr-2 h-4 w-4" />Initialize Vaccination Schedule
+              </Button>
             </div>
           )}
         </CardContent>

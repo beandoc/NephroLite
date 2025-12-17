@@ -134,7 +134,7 @@ export const DischargeSummary: React.FC<DischargeSummaryProps> = ({
                 {/* Patient Particulars */}
                 <Text style={styles.sectionTitle}>PATIENT'S PARTICULARS</Text>
                 <View style={styles.table}>
-                    {/* Row 1 */}
+                    {/* Row 1 - Name and Age/Sex */}
                     <View style={styles.tableRow}>
                         <View style={{ width: '60%' }}>
                             <Text style={styles.tableCellBold}>
@@ -143,30 +143,25 @@ export const DischargeSummary: React.FC<DischargeSummaryProps> = ({
                         </View>
                         <View style={{ width: '40%' }}>
                             <Text style={styles.tableCellLast}>
-                                Age/Sex:  {age} / {patient.gender === 'Male' ? 'Male' : patient.gender === 'Female' ? 'Female' : patient.gender}
+                                Age/Sex:  {age} / {patient.gender}
                             </Text>
                         </View>
                     </View>
 
-                    {/* Row 2 */}
+                    {/* Row 2 - Relation */}
                     <View style={styles.tableRow}>
-                        <View style={{ width: '60%' }}>
-                            <Text style={styles.tableCellBold}>
-                                Name:  {patient.firstName} {patient.lastName}
-                            </Text>
-                        </View>
-                        <View style={{ width: '40%' }}>
+                        <View style={{ width: '100%' }}>
                             <Text style={styles.tableCellLast}>
                                 Relation:  {relation}
                             </Text>
                         </View>
                     </View>
 
-                    {/* Row 3 */}
-                    <View style={styles.tableRowLast}>
+                    {/* Row 3 - Service Details */}
+                    <View style={styles.tableRow}>
                         <View style={{ width: '33%' }}>
                             <Text style={styles.tableCellBold}>
-                                Per's No:  {patient.serviceNumber || ''}
+                                Per's No:  {clinicalData.serviceNumber || patient.serviceNumber || ''}
                             </Text>
                         </View>
                         <View style={{ width: '33%' }}>
@@ -176,19 +171,107 @@ export const DischargeSummary: React.FC<DischargeSummaryProps> = ({
                         </View>
                         <View style={{ width: '34%' }}>
                             <Text style={styles.tableCellLast}>
-                                Unit:  {patient.unitName || ''}
+                                Unit:  {clinicalData.unitName || patient.unitName || ''}
+                            </Text>
+                        </View>
+                    </View>
+
+                    {/* Row 4 - Formation */}
+                    <View style={styles.tableRowLast}>
+                        <View style={{ width: '100%' }}>
+                            <Text style={styles.tableCellLast}>
+                                Formation:  {clinicalData.formation || patient.formation || ''}
                             </Text>
                         </View>
                     </View>
                 </View>
 
-                {/* Summary Section */}
-                <Text style={styles.sectionTitle}>SUMMARY</Text>
+                {/* Medical History */}
+                {clinicalData.history && (
+                    <>
+                        <Text style={styles.sectionTitle}>MEDICAL HISTORY</Text>
+                        <View style={styles.textBlock}>
+                            <Text>{clinicalData.history}</Text>
+                        </View>
+                    </>
+                )}
+
+                {/* Disability Assessment - For Self patients */}
+                {relation === 'SELF' && (clinicalData.disabilityProfile || clinicalData.disabilityDetails) && (
+                    <>
+                        <Text style={styles.sectionTitle}>DISABILITY ASSESSMENT</Text>
+                        <View style={styles.textBlock}>
+                            {clinicalData.disabilityProfile && (
+                                <Text style={{ fontWeight: 'bold', marginBottom: 4 }}>
+                                    Disability Profile: {clinicalData.disabilityProfile}
+                                </Text>
+                            )}
+                            {clinicalData.disabilityDetails && (
+                                <Text>{clinicalData.disabilityDetails}</Text>
+                            )}
+                        </View>
+                    </>
+                )}
+
+                {/* Physical Examination */}
+                <Text style={styles.sectionTitle}>PHYSICAL EXAMINATION</Text>
                 <View style={styles.textBlock}>
-                    <Text>
-                        {clinicalData.history || clinicalData.courseInHospital || 'No summary available'}
-                    </Text>
+                    {/* Vitals */}
+                    <Text style={{ fontWeight: 'bold', marginBottom: 3 }}>Vitals:</Text>
+                    <Text>Height: {clinicalData.height || '-'} cm | Weight: {clinicalData.weight || '-'} kg | BMI: {clinicalData.bmi || '-'}</Text>
+                    <Text>Pulse: {clinicalData.pulse || '-'} /min | BP: {clinicalData.systolicBP || '-'}/{clinicalData.diastolicBP || '-'} mm Hg</Text>
+
+                    {/* General Examination */}
+                    {clinicalData.generalExamination && (
+                        <>
+                            <Text style={{ fontWeight: 'bold', marginTop: 6, marginBottom: 3 }}>General Examination:</Text>
+                            <Text>{clinicalData.generalExamination}</Text>
+                        </>
+                    )}
+
+                    {/* Systemic Examination */}
+                    {clinicalData.systemicExamination && (
+                        <>
+                            <Text style={{ fontWeight: 'bold', marginTop: 6, marginBottom: 3 }}>Systemic Examination:</Text>
+                            <Text>{clinicalData.systemicExamination}</Text>
+                        </>
+                    )}
                 </View>
+
+                {/* Investigations */}
+                {(clinicalData.serumCreatinine || clinicalData.uacr || clinicalData.totalCholesterol || clinicalData.hdlCholesterol || clinicalData.usgReport || clinicalData.kidneyBiopsyReport) && (
+                    <>
+                        <Text style={styles.sectionTitle}>INVESTIGATIONS</Text>
+                        <View style={styles.textBlock}>
+                            {/* Lab Results */}
+                            {(clinicalData.serumCreatinine || clinicalData.uacr || clinicalData.totalCholesterol || clinicalData.hdlCholesterol) && (
+                                <>
+                                    <Text style={{ fontWeight: 'bold', marginBottom: 3 }}>Laboratory Results:</Text>
+                                    {clinicalData.serumCreatinine && <Text>• Serum Creatinine: {clinicalData.serumCreatinine} mg/dL</Text>}
+                                    {clinicalData.uacr && <Text>• UACR: {clinicalData.uacr}</Text>}
+                                    {clinicalData.totalCholesterol && <Text>• Total Cholesterol: {clinicalData.totalCholesterol} mg/dL</Text>}
+                                    {clinicalData.hdlCholesterol && <Text>• HDL Cholesterol: {clinicalData.hdlCholesterol} mg/dL</Text>}
+                                </>
+                            )}
+
+                            {/* USG Report */}
+                            {clinicalData.usgReport && (
+                                <>
+                                    <Text style={{ fontWeight: 'bold', marginTop: 6, marginBottom: 3 }}>USG Report:</Text>
+                                    <Text>{clinicalData.usgReport}</Text>
+                                </>
+                            )}
+
+                            {/* Kidney Biopsy */}
+                            {clinicalData.kidneyBiopsyReport && (
+                                <>
+                                    <Text style={{ fontWeight: 'bold', marginTop: 6, marginBottom: 3 }}>Kidney Biopsy:</Text>
+                                    <Text>{clinicalData.kidneyBiopsyReport}</Text>
+                                </>
+                            )}
+                        </View>
+                    </>
+                )}
 
                 {/* Diagnosis Section */}
                 <Text style={styles.sectionTitle}>DIAGNOSIS</Text>
@@ -196,13 +279,23 @@ export const DischargeSummary: React.FC<DischargeSummaryProps> = ({
                     {clinicalData.diagnoses && clinicalData.diagnoses.length > 0 ? (
                         clinicalData.diagnoses.map((diag, index) => (
                             <Text key={index}>
-                                {index + 1}. {diag.name}
+                                {index + 1}. {diag.name}{diag.icdCode ? ` (${diag.icdCode})` : ''}
                             </Text>
                         ))
                     ) : (
                         <Text>No diagnosis recorded</Text>
                     )}
                 </View>
+
+                {/* Course in Hospital */}
+                {clinicalData.courseInHospital && (
+                    <>
+                        <Text style={styles.sectionTitle}>COURSE IN HOSPITAL</Text>
+                        <View style={styles.textBlock}>
+                            <Text>{clinicalData.courseInHospital}</Text>
+                        </View>
+                    </>
+                )}
 
                 {/* Treatment Table */}
                 <Text style={styles.sectionTitle}>TREATMENT UNDERTAKEN/ADVISED</Text>

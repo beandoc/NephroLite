@@ -117,7 +117,7 @@ export const investigationTestSchema = z.object({
   id: z.string(),
   group: z.string(),
   name: z.string(),
-  result: z.string(),
+  result: z.string().optional(), // Made optional - users can save incomplete data
   unit: z.string().optional(),
   normalRange: z.string().optional(),
   resultType: z.enum(RESULT_TYPES).optional(),

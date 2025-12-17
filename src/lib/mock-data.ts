@@ -191,7 +191,7 @@ export const MOCK_PATIENTS: Patient[] = [
     email: 'vikram.reddy@example.com',
     address: { street: '78 Jubilee Hills', city: 'Hyderabad', state: 'Telangana', pincode: '500033' },
     guardian: { name: 'Vikram Reddy', relation: 'Self', contact: '9123456789' },
-    registrationDate: '2024-06-26',
+    registrationDate: '2025-06-26',
     createdAt: '2024-06-26T10:00:00.000Z',
     patientStatus: 'IPD',
     isTracked: true,
@@ -218,8 +218,8 @@ export const MOCK_PATIENTS: Patient[] = [
     visits: [
       {
         id: 'visit-3-1',
-        date: '2024-08-05',
-        createdAt: '2024-08-05T10:00:00.000Z',
+        date: '2025-08-05',
+        createdAt: '2025-08-05T10:00:00.000Z',
         visitType: 'Admission',
         visitRemark: 'Admitted via ER with fever and hypotension.',
         groupName: 'Infection',

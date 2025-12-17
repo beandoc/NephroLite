@@ -13,6 +13,8 @@ import { format } from 'date-fns';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { CalendarDays } from 'lucide-react';
 import { ClinicalVisitDetails } from '@/components/visits/ClinicalVisitDetails';
+import { OpinionReportButton } from '@/components/pdf/opinion-report/OpinionReportButton';
+import { DischargeSummaryButton } from '@/components/pdf/DischargeSummaryButton';
 
 
 interface PatientVisitsTabContentProps {
@@ -64,6 +66,21 @@ export function PatientVisitsTabContent({ patient }: PatientVisitsTabContentProp
                       <div className="flex-grow">
                         <p className="font-medium">{visitDate} - <span className="font-semibold">{visit.visitType}</span></p>
                         <p className="text-sm text-muted-foreground">Remark: {visit.visitRemark}</p>
+                      </div>
+                      {/* PDF Download Buttons */}
+                      <div className="flex gap-2 ml-auto" onClick={(e) => e.stopPropagation()}>
+                        <OpinionReportButton
+                          patient={patient}
+                          visit={{ ...visit, patientId: patient.id }}
+                          variant="outline"
+                          size="sm"
+                        />
+                        <DischargeSummaryButton
+                          patient={patient}
+                          visit={{ ...visit, patientId: patient.id }}
+                          variant="outline"
+                          size="sm"
+                        />
                       </div>
                     </div>
                   </AccordionTrigger>
