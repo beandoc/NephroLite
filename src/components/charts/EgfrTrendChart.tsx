@@ -49,7 +49,7 @@ export function EgfrTrendChart({ patient }: EgfrTrendChartProps) {
 
     const allTests = patient.investigationRecords
       .flatMap(record => record.tests.map(test => ({ ...test, date: record.date })))
-      .filter(test => (test.name === 'eGFR' || test.name === 'Serum Creatinine') && !isNaN(parseFloat(test.result)));
+      .filter(test => (test.name === 'eGFR' || test.name === 'Serum Creatinine') && test.result && !isNaN(parseFloat(test.result)));
 
     const groupedByDate: Record<string, { egfr?: number; creatinine?: number; egfr_calculated?: boolean }> = {};
     const age = new Date().getFullYear() - parseISO(patient.dob).getFullYear();
@@ -59,8 +59,8 @@ export function EgfrTrendChart({ patient }: EgfrTrendChartProps) {
       if (!groupedByDate[dateKey]) {
         groupedByDate[dateKey] = {};
       }
-      if (test.name === 'eGFR') groupedByDate[dateKey].egfr = parseFloat(test.result);
-      if (test.name === 'Serum Creatinine') groupedByDate[dateKey].creatinine = parseFloat(test.result);
+      if (test.name === 'eGFR' && test.result) groupedByDate[dateKey].egfr = parseFloat(test.result);
+      if (test.name === 'Serum Creatinine' && test.result) groupedByDate[dateKey].creatinine = parseFloat(test.result);
     });
 
     // Merge in data from visits
