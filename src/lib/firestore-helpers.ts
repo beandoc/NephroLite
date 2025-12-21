@@ -40,24 +40,25 @@ export const cleanUndefined = <T extends Record<string, any>>(obj: T): Partial<T
 
 // ==================== PATIENT OPERATIONS ====================
 
-export const getPatientsRef = (userId: string) =>
-    collection(db, 'users', userId, 'patients');
+// SHARED DATA: All staff see all patients from root collection
+export const getPatientsRef = (userId?: string) =>
+    collection(db, 'patients'); // Root collection - all staff have access
 
 export const getPatientRef = (userId: string, patientId: string) =>
-    doc(db, 'users', userId, 'patients', patientId);
+    doc(db, 'patients', patientId); // Root collection
 
-// Subcollections
+// Subcollections under root patients collection
 export const getVisitsRef = (userId: string, patientId: string) =>
-    collection(db, 'users', userId, 'patients', patientId, 'visits');
+    collection(db, 'patients', patientId, 'visits');
 
 export const getInvestigationsRef = (userId: string, patientId: string) =>
-    collection(db, 'users', userId, 'patients', patientId, 'investigationRecords');
+    collection(db, 'patients', patientId, 'investigationRecords');
 
 export const getInterventionsRef = (userId: string, patientId: string) =>
-    collection(db, 'users', userId, 'patients', patientId, 'interventions');
+    collection(db, 'patients', patientId, 'interventions');
 
 export const getDialysisSessionsRef = (userId: string, patientId: string) =>
-    collection(db, 'users', userId, 'patients', patientId, 'dialysisSessions');
+    collection(db, 'patients', patientId, 'dialysisSessions');
 
 // ==================== TIME-BASED INDEX OPERATIONS ====================
 // These indexes enable fast monthly queries for dashboards
@@ -65,10 +66,10 @@ export const getDialysisSessionsRef = (userId: string, patientId: string) =>
 
 /**
  * Get visit collection reference
- * Format: users/{userId}/patients/{patientId}/visits
+ * Format: patients/{patientId}/visits
  */
 export const getVisitsCollection = (userId: string, patientId: string) =>
-    collection(db, 'users', userId, 'patients', patientId, 'visits');
+    collection(db, 'patients', patientId, 'visits');
 
 /**
  * Get reference to monthly investigation index
@@ -95,27 +96,48 @@ export function getMonthKey(dateString: string): string {
     }
 }
 
-// Create patient (without subcollections, those are added separately)
-// Create patient (Dual Write: Staff DB + Root DB)
+// Create patient in root collection (shared across all staff)
 export const createPatient = async (userId: string, patient: Patient) => {
     const { visits, investigationRecords, interventions, dialysisSessions, ...patientData } = patient;
 
     const patientRef = getPatientRef(userId, patient.id);
-    const rootPatientRef = doc(db, 'patients', patient.id);
 
     const dataToSave = cleanUndefined({
         ...patientData,
+        createdBy: userId, // Track who created the patient
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
     });
 
-    await Promise.all([
-        setDoc(patientRef, dataToSave),
-        setDoc(rootPatientRef, { ...dataToSave, createdBy: userId }, { merge: true })
-    ]);
+    // Write only to root collection - all staff can access
+    await setDoc(patientRef, dataToSave);
 
     return patient;
 };
+
+// Admit patient - update status to IPD and record admission date
+export const admitPatient = async (userId: string, patientId: string) => {
+    const patientRef = getPatientRef(userId, patientId);
+
+    await updateDoc(patientRef, {
+        patientStatus: 'IPD',
+        admissionDate: new Date().toISOString(),
+        dischargeDate: null, // Clear any previous discharge date
+        updatedAt: serverTimestamp()
+    });
+};
+
+// Discharge patient - update status to OPD and record discharge date
+export const dischargePatient = async (userId: string, patientId: string) => {
+    const patientRef = getPatientRef(userId, patientId);
+
+    await updateDoc(patientRef, {
+        patientStatus: 'OPD',
+        dischargeDate: new Date().toISOString(),
+        updatedAt: serverTimestamp()
+    });
+};
+
 
 // Get all patients (without subcollections for performance)
 export const getPatients = async (userId: string): Promise<Patient[]> => {

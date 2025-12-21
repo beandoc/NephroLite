@@ -91,12 +91,26 @@ export const clinicalVisitDataSchema = z.object({
   uacr: z.string().optional(),
   totalCholesterol: z.string().optional(),
   hdlCholesterol: z.string().optional(),
+  investigationsText: z.string().optional(), // Free-form investigations text from template
   // Military-specific fields
   disabilityProfile: z.string().optional(),
   disabilityDetails: z.string().optional(),
   serviceNumber: z.string().optional(),
   unitName: z.string().optional(),
   formation: z.string().optional(),
+  // Medical Board Recommendations (for Opinion Reports)
+  recommendedMedicalClassification: z.string().optional(), // e.g., "SHAPE-3 (y)"
+  recommendedDisabilityProfile: z.string().optional(), // e.g., "P3 (T-24)"
+  clinicalDiagnosisForBoard: z.string().optional(), // e.g., "FOCAL SEGMENTAL GLOMERULOSCLEROSIS"
+  icdDiagnosis: z.string().optional(), // Full ICD diagnosis text
+  icd10Code: z.string().optional(), // e.g., "N 04.1"
+  medicalRecommendations: z.string().optional(), // Employment restrictions/Code 'E' details
+  employmentRestrictions: z.string().optional(), // Detailed restrictions text
+  // Structured Advice
+  dietRestrictions: z.string().optional(),
+  drugsToAvoid: z.string().optional(),
+  followUpInstructions: z.string().optional(),
+  otherAdvice: z.string().optional(),
 });
 
 export const visitSchema = z.object({
@@ -209,6 +223,11 @@ export const patientSchema = z.object({
   unitName: z.string().optional(),
   formation: z.string().optional(),
   patientStatus: z.enum(['OPD', 'IPD', 'Discharged']),
+
+  // Admission/Discharge tracking
+  admissionDate: z.string().optional(), // Date when patient was admitted (became IPD)
+  dischargeDate: z.string().optional(), // Date when patient was discharged
+
   nextAppointmentDate: z.string().optional().nullable(),
   isTracked: z.boolean(),
   residenceType: z.enum(RESIDENCE_TYPES).optional(),

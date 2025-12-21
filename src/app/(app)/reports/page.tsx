@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Search, FileText, Download, Calendar, Loader2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { DischargeSummaryButton } from '@/components/pdf/DischargeSummaryButton';
+import { OpinionReportButton } from '@/components/pdf/opinion-report/OpinionReportButton';
 import { Badge } from '@/components/ui/badge';
 import type { Patient } from '@/lib/types';
 
@@ -28,9 +29,9 @@ export default function ReportsPage() {
         if (!searchQuery || searchQuery.length < 2) return [];
         const query = searchQuery.toLowerCase();
         return patients.filter(p =>
-            p.firstName.toLowerCase().includes(query) ||
-            p.lastName.toLowerCase().includes(query) ||
-            p.nephroId.toLowerCase().includes(query)
+            p.firstName?.toLowerCase().includes(query) ||
+            p.lastName?.toLowerCase().includes(query) ||
+            p.nephroId?.toLowerCase().includes(query)
         ).slice(0, 5); // Limit results
     }, [patients, searchQuery]);
 
@@ -163,6 +164,60 @@ export default function ReportsPage() {
                                                     </TableCell>
                                                     <TableCell className="text-right">
                                                         <DischargeSummaryButton
+                                                            patient={displayPatient}
+                                                            visit={visit}
+                                                            variant="outline"
+                                                            size="sm"
+                                                        />
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                    </TableBody>
+                                </Table>
+                            ) : (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    No visits recorded for this patient.
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" /> Opinion Reports</CardTitle>
+                            <CardDescription>Generate specialist opinion reports for medical boards.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {loadingFullData ? (
+                                <div className="text-center py-8">
+                                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                                    <p className="text-muted-foreground mt-2">Loading visit data...</p>
+                                </div>
+                            ) : displayPatient?.visits && displayPatient.visits.length > 0 ? (
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Date</TableHead>
+                                            <TableHead>Type</TableHead>
+                                            <TableHead>Diagnosis</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {displayPatient.visits
+                                            .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
+                                            .map(visit => (
+                                                <TableRow key={visit.id}>
+                                                    <TableCell className="font-medium flex items-center gap-2">
+                                                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                                                        {format(parseISO(visit.date), 'PPP')}
+                                                    </TableCell>
+                                                    <TableCell>{visit.visitType}</TableCell>
+                                                    <TableCell>
+                                                        {visit.diagnoses?.map(d => <Badge key={d.id || d.name} variant="secondary" className="mr-1">{d.name}</Badge>) || "-"}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <OpinionReportButton
                                                             patient={displayPatient}
                                                             visit={visit}
                                                             variant="outline"

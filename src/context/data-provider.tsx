@@ -79,6 +79,9 @@ const getInitialClinicalProfile = (): Omit<ClinicalProfile, 'tags'> => ({
 const calculateInitialLastId = (patients: Patient[]): number => {
   if (patients.length === 0) return 1000;
   return patients.reduce((max, p) => {
+    // Skip patients without nephroId or with invalid format
+    if (!p.nephroId || typeof p.nephroId !== 'string') return max;
+
     const idPart = parseInt(p.nephroId.split('/')[0], 10);
     return isNaN(idPart) ? max : Math.max(idPart, max);
   }, 1000);

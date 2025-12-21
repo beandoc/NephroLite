@@ -128,10 +128,25 @@ export default function PatientHealthTrendsPage() {
       .sort((a, b) => parseISO(b.date!).getTime() - parseISO(a.date!).getTime());
 
     const getLatestFromInvestigations = (name: string): { value: number; date: string } | null => {
-      const test = allTests.find(t => t.name === name && t.result && !isNaN(parseFloat(t.result)));
+      const nameLower = name.toLowerCase();
+      const test = allTests.find(t => {
+        const testNameLower = t.name.toLowerCase();
+        // Match if test name contains the search term or vice versa
+        const matches = (testNameLower.includes(nameLower) || nameLower.includes(testNameLower))
+          && t.result
+          && !isNaN(parseFloat(t.result));
+
+        if (matches) {
+          console.log(`✓ Matched '${name}' to '${t.name}': ${t.result}`);
+        }
+        return matches;
+      });
+
       if (test && test.result) {
         return { value: parseFloat(test.result), date: test.date };
       }
+
+      console.log(`✗ No match found for '${name}'`);
       return null;
     };
 
@@ -158,17 +173,18 @@ export default function PatientHealthTrendsPage() {
       return parseISO(fromVisit.date).getTime() > parseISO(fromInv.date).getTime() ? fromVisit : fromInv;
     };
 
-    // 1. eGFR
-    let latestEgfr = getLatestFromInvestigations('eGFR'); // Check explicit eGFR in labs
+    // 1. eGFR - try multiple variations
+    let latestEgfr = getLatestFromInvestigations('egfr'); // Will match 'eGFR', 'EGFR', 'Egfr', etc.
 
     // If no explicit eGFR, calculate from Creatinine (checking both sources)
     if (!latestEgfr) {
-      const latestCreatinine = getLatestCombined('Serum Creatinine', 'serumCreatinine');
+      const latestCreatinine = getLatestCombined('creatinine', 'serumCreatinine'); // Flexible matching
       if (latestCreatinine) {
         const age = new Date().getFullYear() - parseISO(patient.dob).getFullYear();
         const calculated = calculateEgfrFromCreatinine(latestCreatinine.value, age, patient.gender);
         if (calculated) {
           latestEgfr = { value: calculated, date: latestCreatinine.date };
+          console.log(`✓ Calculated eGFR from Creatinine: ${calculated}`);
         }
       }
     } else {
@@ -183,9 +199,13 @@ export default function PatientHealthTrendsPage() {
       }
     }
 
-    const latestUacr = getLatestCombined('Urine for AC Ratio (mg/gm)', 'uacr');
-    const latestTotalCholesterol = getLatestCombined('Total Cholesterol', 'totalCholesterol');
-    const latestHdlCholesterol = getLatestCombined('HDL Cholesterol', 'hdlCholesterol');
+    // 2. UACR - try multiple variations
+    const latestUacr = getLatestCombined('uacr', 'uacr') // Matches 'UACR', 'uacr', 'Urine for AC Ratio', etc.
+      || getLatestCombined('albumin', 'uacr') // Fallback to albumin
+      || getLatestCombined('ac ratio', 'uacr'); // Fallback to AC ratio
+
+    const latestTotalCholesterol = getLatestCombined('cholesterol', 'totalCholesterol');
+    const latestHdlCholesterol = getLatestCombined('hdl', 'hdlCholesterol');
     const latestSystolicBP = getLatestFromVisits('systolicBP');
 
     const allDates = [

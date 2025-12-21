@@ -9,3 +9,5 @@ import '@/ai/flows/generate-opinion-report-flow';
 import '@/ai/flows/generate-opd-consultation-note-flow';
 import '@/ai/flows/search-notifications-flow';
 import '@/ai/flows/generate-patient-outreach-flow';
+import '@/ai/flows/check-drug-interactions';
+

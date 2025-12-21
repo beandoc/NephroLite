@@ -14,6 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import type { Appointment } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useMemo, useState, useEffect } from 'react';
+import { admitPatient } from '@/lib/firestore-helpers';
+import { useAuth } from '@/context/auth-provider';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +29,8 @@ import { MoreHorizontal } from "lucide-react";
 
 export function TodaysAppointments() {
   const { appointments, isLoading, updateAppointmentStatus } = useAppointmentData();
-  const { getPatientById, updatePatient } = usePatientData(); // Get admitPatient function
+  const { getPatientById, updatePatient } = usePatientData();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
 
@@ -42,7 +45,7 @@ export function TodaysAppointments() {
   }, [appointments]);
 
 
-  const handleUpdateStatus = (appointmentId: string, newStatus: Appointment['status'], patientId?: string) => {
+  const handleUpdateStatus = async (appointmentId: string, newStatus: Appointment['status'], patientId?: string) => {
     updateAppointmentStatus(appointmentId, newStatus);
     const patient = patientId ? getPatientById(patientId) : null;
     const patientFullName = patient ? [patient.firstName, patient.lastName].filter(Boolean).join(' ') : "The patient";
@@ -52,15 +55,23 @@ export function TodaysAppointments() {
       description: `${patientFullName}'s appointment marked as ${newStatus}.`
     });
 
-    if (newStatus === 'Admitted' && patient && patientId) {
+    if (newStatus === 'Admitted' && patient && patientId && user) {
       if (patient.patientStatus !== 'IPD') {
-        updatePatient(patientId, { patientStatus: 'IPD' });
-        toast({
-          title: "Patient Admitted",
-          description: `${patientFullName} has been admitted.`
-        });
+        try {
+          await admitPatient(user.uid, patientId);
+          toast({
+            title: "Patient Admitted",
+            description: `${patientFullName} admitted on ${format(new Date(), 'PPP')}`
+          });
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: "Failed to admit patient",
+            variant: "destructive"
+          });
+        }
       } else {
-         toast({
+        toast({
           title: "Patient Already Admitted",
           description: `${patientFullName} is already marked as IPD.`
         });
@@ -89,7 +100,7 @@ export function TodaysAppointments() {
           ))}
         </CardContent>
         <div className="p-4 border-t">
-           <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
         </div>
       </Card>
     );
@@ -116,71 +127,71 @@ export function TodaysAppointments() {
           <CardTitle className="font-headline">Today's Check-In</CardTitle>
           <div className="text-sm text-muted-foreground">{isClient ? format(new Date(), 'MMM d, yyyy') : <Skeleton className="h-4 w-24" />}</div>
         </div>
-         <CardDescription>Move scheduled patients to the OPD queue.</CardDescription>
+        <CardDescription>Move scheduled patients to the OPD queue.</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow flex flex-col p-0 sm:p-4 pt-0">
         {todaysAppointments.length > 0 ? (
           <ScrollArea className="flex-grow pr-3">
             <div className="space-y-3">
-            {todaysAppointments.map((appointment) => {
-              const patient = getPatientById(appointment.patientId);
-              const patientFullName = patient ? [patient.firstName, patient.lastName].filter(Boolean).join(' ') : "Unknown Patient";
+              {todaysAppointments.map((appointment) => {
+                const patient = getPatientById(appointment.patientId);
+                const patientFullName = patient ? [patient.firstName, patient.lastName].filter(Boolean).join(' ') : "Unknown Patient";
 
-              return (
-              <div 
-                key={appointment.id} 
-                className="flex flex-col p-3 rounded-md border bg-card hover:bg-muted/50 transition-colors shadow-sm"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-grow">
-                    <Link href={`/patients/${appointment.patientId}`} className="font-semibold text-sm text-primary hover:underline flex items-center">
-                      <User className="w-3.5 h-3.5 mr-1.5" /> {patientFullName}
-                    </Link>
-                    <Badge 
-                      variant={getStatusBadgeVariant(appointment.status)}
-                      className="text-xs mt-1"
-                    >
-                      {appointment.status}
-                    </Badge>
+                return (
+                  <div
+                    key={appointment.id}
+                    className="flex flex-col p-3 rounded-md border bg-card hover:bg-muted/50 transition-colors shadow-sm"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-grow">
+                        <Link href={`/patients/${appointment.patientId}`} className="font-semibold text-sm text-primary hover:underline flex items-center">
+                          <User className="w-3.5 h-3.5 mr-1.5" /> {patientFullName}
+                        </Link>
+                        <Badge
+                          variant={getStatusBadgeVariant(appointment.status)}
+                          className="text-xs mt-1"
+                        >
+                          {appointment.status}
+                        </Badge>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-7 w-7 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          {appointment.status === 'Scheduled' &&
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Waiting', appointment.patientId)}>
+                              <Hourglass className="mr-2 h-4 w-4 text-amber-600" /> Mark as Waiting
+                            </DropdownMenuItem>
+                          }
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Completed', appointment.patientId)}>
+                            <CalendarCheck className="mr-2 h-4 w-4 text-green-600" /> Mark Completed
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Not Showed', appointment.patientId)}>
+                            <CalendarX className="mr-2 h-4 w-4 text-red-600" /> Mark Not Showed
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Admitted', appointment.patientId)}>
+                            <Hospital className="mr-2 h-4 w-4" /> Admit Patient
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <p className="flex items-center"><Clock className="w-3.5 h-3.5 mr-1.5" /> {appointment.time}</p>
+                      <p className="flex items-center"><Stethoscope className="w-3.5 h-3.5 mr-1.5" /> {appointment.type}</p>
+                      <p className="flex items-center">Dr. {appointment.doctorName}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" asChild className="mt-2 self-start px-0 h-auto text-xs text-primary hover:underline">
+                      <Link href={`/patients/${appointment.patientId}`}><Eye className="w-3.5 h-3.5 mr-1" /> View Patient</Link>
+                    </Button>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-7 w-7 p-0">
-                        <span className="sr-only">Open menu</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      {appointment.status === 'Scheduled' &&
-                        <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Waiting', appointment.patientId)}>
-                          <Hourglass className="mr-2 h-4 w-4 text-amber-600" /> Mark as Waiting
-                        </DropdownMenuItem>
-                      }
-                      <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Completed', appointment.patientId)}>
-                        <CalendarCheck className="mr-2 h-4 w-4 text-green-600" /> Mark Completed
-                      </DropdownMenuItem>
-                       <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Not Showed', appointment.patientId)}>
-                        <CalendarX className="mr-2 h-4 w-4 text-red-600" /> Mark Not Showed
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleUpdateStatus(appointment.id, 'Admitted', appointment.patientId)}>
-                        <Hospital className="mr-2 h-4 w-4" /> Admit Patient
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <div className="text-xs text-muted-foreground space-y-1">
-                  <p className="flex items-center"><Clock className="w-3.5 h-3.5 mr-1.5" /> {appointment.time}</p>
-                  <p className="flex items-center"><Stethoscope className="w-3.5 h-3.5 mr-1.5" /> {appointment.type}</p>
-                  <p className="flex items-center">Dr. {appointment.doctorName}</p>
-                </div>
-                <Button variant="ghost" size="sm" asChild className="mt-2 self-start px-0 h-auto text-xs text-primary hover:underline">
-                   <Link href={`/patients/${appointment.patientId}`}><Eye className="w-3.5 h-3.5 mr-1"/> View Patient</Link>
-                </Button>
-              </div>
-              )
-            })}
+                )
+              })}
             </div>
           </ScrollArea>
         ) : (
@@ -190,11 +201,11 @@ export function TodaysAppointments() {
           </div>
         )}
       </CardContent>
-       <div className="p-4 pt-2 border-t mt-auto">
-          <Button asChild variant="outline" className="w-full">
-            <Link href="/appointments">View Full Schedule</Link>
-          </Button>
-        </div>
+      <div className="p-4 pt-2 border-t mt-auto">
+        <Button asChild variant="outline" className="w-full">
+          <Link href="/appointments">View Full Schedule</Link>
+        </Button>
+      </div>
     </Card>
   );
 }
