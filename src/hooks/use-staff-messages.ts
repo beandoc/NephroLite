@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { collection, query, where, or, orderBy, onSnapshot, addDoc, updateDoc, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/auth-provider';
 
@@ -32,35 +32,68 @@ export function useStaffMessages() {
             return;
         }
 
-        // Listen to messages where user is sender OR recipient
+        // Use two separate queries instead of OR to avoid index requirement
         const messagesRef = collection(db, 'staffMessages');
-        const q = query(
+
+        let sentMessages: StaffMessage[] = [];
+        let receivedMessages: StaffMessage[] = [];
+
+        // Query 1: Messages where user is sender (no orderBy to avoid index)
+        const sentQuery = query(
             messagesRef,
-            or(
-                where('senderId', '==', user.uid),
-                where('recipientId', '==', user.uid)
-            ),
-            orderBy('createdAt', 'desc')
+            where('senderId', '==', user.uid)
         );
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const messagesList: StaffMessage[] = [];
-            snapshot.forEach((doc) => {
-                messagesList.push({ id: doc.id, ...doc.data() } as StaffMessage);
+        // Query 2: Messages where user is recipient (no orderBy to avoid index)
+        const receivedQuery = query(
+            messagesRef,
+            where('recipientId', '==', user.uid)
+        );
+
+        const updateCombinedMessages = () => {
+            // Combine and sort all messages
+            const combined = [...sentMessages, ...receivedMessages];
+            const uniqueMessages = Array.from(
+                new Map(combined.map(m => [m.id, m])).values()
+            ).sort((a, b) => {
+                const aTime = a.createdAt?.toMillis?.() || 0;
+                const bTime = b.createdAt?.toMillis?.() || 0;
+                return bTime - aTime;
             });
 
-            setMessages(messagesList);
+            setMessages(uniqueMessages);
 
             // Count unread messages where user is recipient
-            const unread = messagesList.filter(
+            const unread = uniqueMessages.filter(
                 m => m.recipientId === user.uid && !m.isRead
             ).length;
             setUnreadCount(unread);
 
             setLoading(false);
+        };
+
+        // Listen to sent messages
+        const unsubscribeSent = onSnapshot(sentQuery, (snapshot) => {
+            sentMessages = [];
+            snapshot.forEach((doc) => {
+                sentMessages.push({ id: doc.id, ...doc.data() } as StaffMessage);
+            });
+            updateCombinedMessages();
         });
 
-        return () => unsubscribe();
+        // Listen to received messages
+        const unsubscribeReceived = onSnapshot(receivedQuery, (snapshot) => {
+            receivedMessages = [];
+            snapshot.forEach((doc) => {
+                receivedMessages.push({ id: doc.id, ...doc.data() } as StaffMessage);
+            });
+            updateCombinedMessages();
+        });
+
+        return () => {
+            unsubscribeSent();
+            unsubscribeReceived();
+        };
     }, [user]);
 
     const sendMessage = async (
