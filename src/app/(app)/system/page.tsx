@@ -210,7 +210,7 @@ export default function SystemSettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">User role and permission settings.</p>
-            <Button onClick={() => handleAction('User Management')}>Manage Users</Button>
+            <Button onClick={() => window.location.href = '/system/users'}>Manage Users</Button>
           </CardContent>
         </Card>
         <Card>

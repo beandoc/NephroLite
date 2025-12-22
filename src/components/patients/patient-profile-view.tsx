@@ -17,6 +17,7 @@ import { PatientDocumentsTabContent } from './profile-tabs/PatientDocumentsTabCo
 import { useSearchParams } from 'next/navigation';
 import { PatientInterventionsTabContent } from './profile-tabs/PatientInterventionsTabContent';
 import { PatientPortalAccess } from '@/components/patient/patient-portal-access';
+import { PatientRegistriesCard } from './cards/PatientRegistriesCard';
 
 interface PatientProfileViewProps {
   patient: Patient;
@@ -54,6 +55,10 @@ export function PatientProfileView({ patient, onDataChange }: PatientProfileView
         <DemographicsCard patient={patient} />
         {hasServiceDetails && <ServiceDetailsCard patient={patient} />}
         <ClinicalProfileCard patient={patient} />
+        <PatientRegistriesCard
+          patientId={patient.id}
+          patientName={`${patient.firstName} ${patient.lastName}`}
+        />
         <PatientPortalAccess
           patientId={patient.id}
           patientName={`${patient.firstName} ${patient.lastName}`}

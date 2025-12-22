@@ -46,7 +46,7 @@ const navItems: NavItem[] = [
   { href: "/opd-queue", label: "OPD Queue", icon: ListOrdered },
   { href: "/analytics", label: "Analytics", icon: BarChartBig, matchStartsWith: true },
   { href: "/patients", label: "Patient Management", icon: Users, matchStartsWith: true },
-  { href: "/hd-registry", label: "HD Registry", icon: Droplets, matchStartsWith: true },
+  { href: "/dialysis-registry", label: "HD Registry", icon: Droplets, matchStartsWith: true },
   { href: "/appointments", label: "Appointments", icon: CalendarDays, matchStartsWith: true },
   { href: "/interventions", label: "Interventions", icon: FileClock, matchStartsWith: true },
   { href: "/investigations", label: "Browse Investigations", icon: Beaker, matchStartsWith: true },
