@@ -178,7 +178,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
       lastName: patientData.lastName,
       dob: patientData.dob,
       gender: patientData.gender,
-      contact: patientData.contact || "",
+      phoneNumber: patientData.contact || "",
       email: patientData.email || "",
       address: {
         street: patientData.address.street || "",

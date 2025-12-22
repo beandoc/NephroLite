@@ -116,7 +116,7 @@ export function DemographicsCard({ patient }: DemographicsCardProps) {
         <DetailItem label="Date of Birth" value={patient.dob ? format(parseISO(patient.dob), 'PPP') : 'N/A'} />
         <DetailItem label="Age" value={patient.dob ? `${new Date().getFullYear() - new Date(patient.dob).getFullYear()} years` : 'N/A'} />
         <DetailItem label="Gender" value={patient.gender} />
-        <DetailItem label="Contact Number" value={patient.contact} />
+        <DetailItem label="Contact Number" value={patient.phoneNumber} />
         <DetailItem label="Email Address" value={patient.email} />
         <DetailItem label="WhatsApp Number" value={patient.clinicalProfile.whatsappNumber} icon={MessageSquare} />
         <DetailItem label="Aabha Number" value={patient.clinicalProfile.aabhaNumber} icon={Info} />

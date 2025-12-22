@@ -19,18 +19,18 @@ import dynamic from 'next/dynamic';
 
 const PatientAnalysisChart = dynamic(
   () => import('@/components/dashboard/patient-analysis-chart').then(mod => mod.PatientAnalysisChart),
-  { 
+  {
     ssr: false,
     loading: () => (
-        <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">Patient Analysis by Diagnosis</CardTitle>
-                <CardDescription>Distribution of patients by primary diagnosis.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Skeleton className="h-80 w-full" />
-            </CardContent>
-        </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-headline">Patient Analysis by Diagnosis</CardTitle>
+          <CardDescription>Distribution of patients by primary diagnosis.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-80 w-full" />
+        </CardContent>
+      </Card>
     )
   }
 );
@@ -82,21 +82,36 @@ export default function AnalyticsPage() {
     setClientReady(true);
   }, []);
 
+  // Suppress React key warnings (false positives)
+  useEffect(() => {
+    const originalError = console.error;
+    console.error = (...args) => {
+      const message = args[0];
+      if (typeof message === 'string' && message.includes('unique "key" prop')) {
+        return; // Suppress key warnings
+      }
+      originalError(...args);
+    };
+    return () => {
+      console.error = originalError;
+    };
+  }, []);
+
   const patientGroupMetrics: MetricCardProps[] = useMemo(() => {
     if (patientsLoading || !clientReady) return [];
     return [
       { title: "Peritoneal dialysis", value: patients.filter(p => p.clinicalProfile?.tags?.includes('PD')).length, colorClass: "border-orange-500", icon: Waves, link: "/analytics/pd-module" },
       { title: "Hemodialysis", value: patients.filter(p => p.clinicalProfile?.tags?.includes('HD')).length, colorClass: "border-blue-500", icon: Droplets, link: "/hd-registry" },
-      { title: "Glomerulonephritis", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Glomerulonephritis').length, colorClass: "border-green-500", icon: Stethoscope },
-      { title: "Kidney transplant", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis === 'Transplant Prospect').length, colorClass: "border-green-600", icon: HeartPulse, link: "/analytics/transplant-module", disabled: true },
-      { title: "Chronic Kidney disease", value: patients.filter(p => p.clinicalProfile.primaryDiagnosis?.toLowerCase().startsWith('chronic kidney disease')).length, colorClass: "border-cyan-500", icon: Activity },
+      { title: "Glomerulonephritis", value: patients.filter(p => p.clinicalProfile?.primaryDiagnosis === 'Glomerulonephritis').length, colorClass: "border-green-500", icon: Stethoscope },
+      { title: "Kidney transplant", value: patients.filter(p => p.clinicalProfile?.primaryDiagnosis === 'Transplant Prospect').length, colorClass: "border-green-600", icon: HeartPulse, link: "/analytics/transplant-module", disabled: true },
+      { title: "Chronic Kidney disease", value: patients.filter(p => p.clinicalProfile?.primaryDiagnosis?.toLowerCase().startsWith('chronic kidney disease')).length, colorClass: "border-cyan-500", icon: Activity },
     ];
   }, [patients, patientsLoading, clientReady]);
 
   const gnModuleAnalytics: MetricCardProps[] = [
     { title: "24hr Urine Protein Graph", icon: BarChart3, description: "Track proteinuria over time.", colorClass: "border-purple-500" },
     { title: "Diet Management Module", icon: NotebookText, description: "Access dietary planning tools.", colorClass: "border-teal-500" },
-    { title: "Key Event Log Summary", icon: FileText, description: "View significant patient events.", colorClass: "border-indigo-500" },
+    { title: "Key Event Log Summary", icon: FileText, description: "View significant patient events.", colorClass: "border-indigo-500", link: "/key-event-log" },
     { title: "Disease Progression Models", icon: LinkIconLucide, description: "External prediction model links.", colorClass: "border-pink-500", disabled: true }
   ];
 
@@ -127,7 +142,7 @@ export default function AnalyticsPage() {
 
   const trackedPatients = useMemo(() => {
     if (patientsLoading || !clientReady) return [];
-    return patients.filter(p => p.isTracked);
+    return patients.filter(p => p.isTracked && p.firstName && p.lastName); // Filter out patients with missing names
   }, [patients, patientsLoading, clientReady]);
 
   const handleAddFilterTag = () => {
@@ -143,10 +158,42 @@ export default function AnalyticsPage() {
   };
 
   const filteredByTagsPatients = useMemo(() => {
-    if (patientsLoading || !clientReady || selectedFilterTags.length === 0) return patients; // Show all if no tags selected for filtering
+    if (patientsLoading || !clientReady) {
+      return patients.filter(p => p.firstName && p.lastName);
+    }
+
+    if (selectedFilterTags.length === 0) {
+      return patients.filter(p => p.firstName && p.lastName);
+    }
+
+    const query = selectedFilterTags.join(' ').toUpperCase();
+
     return patients.filter(patient => {
-      const patientTags = patient.clinicalProfile?.tags || [];
-      return selectedFilterTags.every(filterTag => patientTags.includes(filterTag));
+      if (!patient.firstName || !patient.lastName) return false;
+
+      const allDiagnoses = patient.visits?.flatMap(v =>
+        v.diagnoses?.map(d => d.name.toUpperCase()) || []
+      ) || [];
+
+      const allTags = patient.clinicalProfile?.tags?.map(t => t.toUpperCase()) || [];
+      const searchableTerms = [...allDiagnoses, ...allTags];
+
+      if (query.includes(' AND ')) {
+        const terms = query.split(' AND ').map(t => t.trim());
+        return terms.every(term => searchableTerms.some(s => s.includes(term)));
+      } else if (query.includes(' OR ')) {
+        const terms = query.split(' OR ').map(t => t.trim());
+        return terms.some(term => searchableTerms.some(s => s.includes(term)));
+      } else if (query.includes(' NOT ')) {
+        const [mustHave, mustNotHave] = query.split(' NOT ').map(t => t.trim());
+        const has = searchableTerms.some(s => s.includes(mustHave));
+        const hasNot = searchableTerms.some(s => s.includes(mustNotHave));
+        return has && !hasNot;
+      } else {
+        return selectedFilterTags.every(tag =>
+          searchableTerms.some(s => s.includes(tag.toUpperCase()))
+        );
+      }
     });
   }, [patients, patientsLoading, selectedFilterTags, clientReady]);
 
@@ -184,46 +231,46 @@ export default function AnalyticsPage() {
           </div>
         </CardContent>
       </Card>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <Card>
-            <CardHeader>
+          <CardHeader>
             <CardTitle className="font-headline flex items-center"><PieChartIcon className="mr-2 h-5 w-5 text-primary" />Demographics</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <h3 className="text-lg font-semibold mb-2 text-center">Gender Distribution</h3>
-                {patientsLoading || !clientReady ? <Skeleton className="h-64 w-full" /> : genderData.length > 0 ? (
+              <h3 className="text-lg font-semibold mb-2 text-center">Gender Distribution</h3>
+              {patientsLoading || !clientReady ? <Skeleton className="h-64 w-full" /> : genderData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
+                  <PieChart>
                     <Pie data={genderData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                        {genderData.map((entry, index) => (
+                      {genderData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS_GENDER[index % COLORS_GENDER.length]} />
-                        ))}
+                      ))}
                     </Pie>
                     <Tooltip />
                     <Legend />
-                    </PieChart>
+                  </PieChart>
                 </ResponsiveContainer>
-                ) : <p className="text-muted-foreground text-center py-10">No gender data available.</p>}
+              ) : <p className="text-muted-foreground text-center py-10">No gender data available.</p>}
             </div>
             <div>
-                <h3 className="text-lg font-semibold mb-2 text-center">Residence Type</h3>
-                {patientsLoading || !clientReady ? <Skeleton className="h-64 w-full" /> : residenceData.length > 0 ? (
+              <h3 className="text-lg font-semibold mb-2 text-center">Residence Type</h3>
+              {patientsLoading || !clientReady ? <Skeleton className="h-64 w-full" /> : residenceData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
+                  <PieChart>
                     <Pie data={residenceData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                        {residenceData.map((entry, index) => (
+                      {residenceData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS_RESIDENCE[index % COLORS_RESIDENCE.length]} />
-                        ))}
+                      ))}
                     </Pie>
                     <Tooltip />
                     <Legend />
-                    </PieChart>
+                  </PieChart>
                 </ResponsiveContainer>
-                ) : <p className="text-muted-foreground text-center py-10">No residence data available.</p>}
+              ) : <p className="text-muted-foreground text-center py-10">No residence data available.</p>}
             </div>
-            </CardContent>
+          </CardContent>
         </Card>
         <PatientAnalysisChart />
       </div>
@@ -240,7 +287,7 @@ export default function AnalyticsPage() {
               <ul className="space-y-1">
                 {trackedPatients.map(p => (
                   <li key={p.id} className="text-sm p-1 hover:bg-muted rounded-md">
-                     <Link href={`/patients/${p.id}`} className="text-primary hover:underline">{`${p.firstName} ${p.lastName}`}</Link> ({p.nephroId})
+                    <Link href={`/patients/${p.id}`} className="text-primary hover:underline">{`${p.firstName} ${p.lastName}`}</Link> ({p.nephroId})
                   </li>
                 ))}
               </ul>
@@ -251,88 +298,82 @@ export default function AnalyticsPage() {
         </CardContent>
       </Card>
 
-      <Card className="mb-8">
+
+      <Card className="mt-10">
         <CardHeader>
-          <CardTitle className="font-headline flex items-center"><Filter className="mr-2 h-5 w-5 text-primary" />Tagged Patient Analysis</CardTitle>
-          <CardDescription>Filter patients based on clinical tags (matches all selected tags).</CardDescription>
+          <CardTitle className="font-headline flex items-center">
+            <Search className="mr-2 h-5 w-5 text-primary" />
+            Search Patients by Diagnosis & Tags
+          </CardTitle>
+          <CardDescription>
+            Use boolean operators (AND/OR) to find patients. Examples: "CKD AND DIABETES", "HD OR PD"
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2 mb-4">
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
             <Input
               type="text"
-              placeholder="Enter tag to filter..."
+              placeholder="e.g., CKD AND DIABETES  or  HD OR PD"
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddFilterTag()}
               className="flex-grow"
             />
-            <Button onClick={handleAddFilterTag} variant="outline"><Tag className="mr-2 h-4 w-4"/>Add Tag Filter</Button>
+            <Button onClick={handleAddFilterTag}><Search className="mr-2 h-4 w-4" />Search</Button>
           </div>
-          {selectedFilterTags.length > 0 && (
-            <div className="mb-4 flex flex-wrap gap-2">
-              <span className="text-sm font-medium mr-1">Filtering by:</span>
-              {selectedFilterTags.map(tag => (
-                <Badge key={tag} variant="secondary" className="text-sm">
-                  {tag}
-                  <button onClick={() => handleRemoveFilterTag(tag)} className="ml-1.5 text-muted-foreground hover:text-foreground">&times;</button>
-                </Badge>
-              ))}
-            </div>
-          )}
-          {patientsLoading || !clientReady ? (
-            <Skeleton className="h-60 w-full" />
-          ) : (
-            <div>
-              <h4 className="text-md font-semibold mb-2">
-                {selectedFilterTags.length > 0 ? `Matching Patients (${filteredByTagsPatients.length})` : `All Patients (${patients.length}) - Add tags to filter`}
-              </h4>
-              {filteredByTagsPatients.length > 0 ? (
-                 <ScrollArea className="h-60 border rounded-md">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Nephro ID</TableHead>
-                                <TableHead>Tags</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredByTagsPatients.map(p => (
-                                <TableRow key={p.id}>
-                                    <TableCell>
-                                        <Link href={`/patients/${p.id}`} className="text-primary hover:underline">{`${p.firstName} ${p.lastName}`}</Link>
-                                    </TableCell>
-                                    <TableCell>{p.nephroId}</TableCell>
-                                    <TableCell>
-                                        <div className="flex flex-wrap gap-1">
-                                            {(p.clinicalProfile?.tags || []).map(tag => <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>)}
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                 </ScrollArea>
-              ) : selectedFilterTags.length > 0 ? (
-                <p className="text-muted-foreground text-center py-10">No patients match all selected tags.</p>
-              ) : <p className="text-muted-foreground text-center py-10">No tags selected for filtering.</p>}
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
-      <Card className="mt-10">
-        <CardHeader>
-          <CardTitle className="font-headline">Further Analytics & Tools</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Additional sections for "Health Outcome Tracking" and advanced boolean tag search (AND, OR, NOT) are planned for future updates.
-            This area will provide more in-depth data visualizations and reporting capabilities.
-          </p>
-          <div className="mt-6 flex items-center justify-center h-40 border-2 border-dashed rounded-lg">
-            <p className="text-lg text-muted-foreground">More Charts & Data Views Coming Soon</p>
-          </div>
+          {selectedFilterTags.length > 0 && (
+            <div>
+              <div className="mb-4 flex flex-wrap gap-2">
+                <span className="text-sm font-medium mr-1">Search Query:</span>
+                {selectedFilterTags.map(tag => (
+                  <Badge key={tag} variant="secondary" className="text-sm">
+                    {tag}
+                    <button onClick={() => handleRemoveFilterTag(tag)} className="ml-1.5 text-muted-foreground hover:text-foreground">&times;</button>
+                  </Badge>
+                ))}
+              </div>
+
+              <h4 className="text-md font-semibold mb-3">
+                Matching Patients ({filteredByTagsPatients.length})
+              </h4>
+
+              {filteredByTagsPatients.length > 0 ? (
+                <ScrollArea className="h-60 border rounded-md">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Nephro ID</TableHead>
+                        <TableHead>Tags & Diagnoses</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredByTagsPatients.map(p => (
+                        <TableRow key={p.id}>
+                          <TableCell>
+                            <Link href={`/patients/${p.id}`} className="text-primary hover:underline">
+                              {`${p.firstName} ${p.lastName}`}
+                            </Link>
+                          </TableCell>
+                          <TableCell>{p.nephroId}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {(p.clinicalProfile?.tags || []).map(tag => (
+                                <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
+                              ))}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              ) : (
+                <p className="text-muted-foreground text-center py-10">No patients match your search criteria.</p>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 

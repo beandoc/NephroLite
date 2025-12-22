@@ -145,7 +145,7 @@ export const ModernDischargeSummary: React.FC<ModernDischargeSummaryProps> = ({
                     </View>
                     <View style={styles.infoItem}>
                         <Text style={styles.infoLabel}>Contact:</Text>
-                        <Text style={styles.infoValue}>{patient.contact || '-'}</Text>
+                        <Text style={styles.infoValue}>{patient.phoneNumber || '-'}</Text>
                     </View>
                     <View style={styles.infoItem}>
                         <Text style={styles.infoLabel}>Email:</Text>

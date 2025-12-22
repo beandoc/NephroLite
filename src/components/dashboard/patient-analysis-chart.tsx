@@ -11,7 +11,7 @@ import { Skeleton } from "../ui/skeleton";
 type ChartDataPoint = {
   diagnosis: string;
   count: number;
-  fill?: string; 
+  fill?: string;
 };
 
 const chartConfig = {
@@ -30,15 +30,15 @@ export function PatientAnalysisChart() {
     if (!patientsLoading) {
       const diagnosisCounts: Record<string, number> = {};
       patients.forEach(patient => {
-        const diagnosis = patient.clinicalProfile.primaryDiagnosis;
-        if(diagnosis) {
-            diagnosisCounts[diagnosis] = (diagnosisCounts[diagnosis] || 0) + 1;
+        const diagnosis = patient.clinicalProfile?.primaryDiagnosis;
+        if (diagnosis) {
+          diagnosisCounts[diagnosis] = (diagnosisCounts[diagnosis] || 0) + 1;
         }
       });
 
       const formattedData: ChartDataPoint[] = Object.entries(diagnosisCounts)
         .map(([diagnosis, count]) => ({ diagnosis, count }))
-        .sort((a,b) => b.count - a.count) // Sort by count descending
+        .sort((a, b) => b.count - a.count) // Sort by count descending
         .slice(0, 5); // Take top 5 for brevity
 
       setChartData(formattedData);
@@ -59,10 +59,10 @@ export function PatientAnalysisChart() {
       </Card>
     );
   }
-  
-  if(chartData.length === 0){
+
+  if (chartData.length === 0) {
     return (
-       <Card>
+      <Card>
         <CardHeader>
           <CardTitle className="font-headline">Patient Analysis by Diagnosis</CardTitle>
           <CardDescription>Distribution of patients by primary diagnosis.</CardDescription>
@@ -86,12 +86,12 @@ export function PatientAnalysisChart() {
             <BarChart data={chartData} layout="vertical" margin={{ right: 30 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} />
               <XAxis type="number" />
-              <YAxis 
-                dataKey="diagnosis" 
-                type="category" 
-                tickLine={false} 
+              <YAxis
+                dataKey="diagnosis"
+                type="category"
+                tickLine={false}
                 axisLine={false}
-                width={150} 
+                width={150}
                 tick={{ fontSize: 12 }}
               />
               <Tooltip
@@ -108,4 +108,4 @@ export function PatientAnalysisChart() {
   );
 }
 
-    
+

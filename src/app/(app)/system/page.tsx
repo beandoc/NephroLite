@@ -228,13 +228,13 @@ export default function SystemSettingsPage() {
               <Switch id="email-notifications" />
             </div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="sms-notifications" className="flex flex-col space-y-1">
-                <span>SMS Notifications</span>
+              <Label htmlFor="whatsapp-notifications" className="flex flex-col space-y-1">
+                <span>WhatsApp Notifications</span>
                 <span className="font-normal leading-snug text-muted-foreground">
-                  Receive SMS for urgent appointment changes.
+                  Receive WhatsApp messages for urgent appointment changes from +91 9665183839
                 </span>
               </Label>
-              <Switch id="sms-notifications" />
+              <Switch id="whatsapp-notifications" />
             </div>
           </CardContent>
         </Card>

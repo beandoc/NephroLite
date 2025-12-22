@@ -55,7 +55,7 @@ const getInitialValues = (patient?: Patient | null): PatientFormData => {
       lastName: patient.lastName || "",
       dob: patient.dob ? format(parseISO(patient.dob), "yyyy-MM-dd") : "",
       gender: patient.gender || "Male",
-      contact: patient.contact || "",
+      contact: patient.phoneNumber || "",
       email: patient.email || "",
       whatsappNumber: patient.clinicalProfile?.whatsappNumber || "",
       uhid: patient.clinicalProfile?.aabhaNumber || "",
@@ -83,12 +83,12 @@ interface PatientFormProps {
 }
 
 export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: PatientFormProps) {
-  
+
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientFormDataSchema),
     defaultValues: getInitialValues(existingPatientData),
   });
-  
+
   const today = new Date();
   const oneHundredYearsAgo = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
 
@@ -96,7 +96,7 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
   const firstName = form.watch("firstName");
   const lastName = form.watch("lastName");
   const patientContact = form.watch("contact");
-  
+
   React.useEffect(() => {
     if (relation === "Self") {
       const fullName = [firstName, lastName].filter(Boolean).join(' ');
@@ -109,7 +109,7 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
   const handleFormSubmit = (data: PatientFormData) => {
     onSubmit(data);
     if (!existingPatientData) {
-        form.reset(defaultFormValues);
+      form.reset(defaultFormValues);
     }
   }
 
@@ -130,7 +130,7 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
                 <FormMessage />
               </FormItem>
             )} />
-             <FormField control={form.control} name="lastName" render={({ field }) => (
+            <FormField control={form.control} name="lastName" render={({ field }) => (
               <FormItem>
                 <FormLabel>Last Name</FormLabel>
                 <FormControl><Input placeholder="Enter patient's last name" {...field} /></FormControl>
@@ -157,25 +157,25 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
                 }, [field.value]);
 
                 const handleManualChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-                    const typedValue = e.target.value;
-                    setDisplayValue(typedValue);
-                    
-                    // Only attempt to parse and set the value if the length is 10 (dd-mm-yyyy)
-                    if (typedValue.length === 10) {
-                        const parsedDate = parse(typedValue, 'dd-MM-yyyy', new Date());
-                        if (isValid(parsedDate)) {
-                            field.onChange(format(parsedDate, 'yyyy-MM-dd'));
-                        }
+                  const typedValue = e.target.value;
+                  setDisplayValue(typedValue);
+
+                  // Only attempt to parse and set the value if the length is 10 (dd-mm-yyyy)
+                  if (typedValue.length === 10) {
+                    const parsedDate = parse(typedValue, 'dd-MM-yyyy', new Date());
+                    if (isValid(parsedDate)) {
+                      field.onChange(format(parsedDate, 'yyyy-MM-dd'));
                     }
+                  }
                 };
 
                 const handleCalendarSelect = (date: Date | undefined) => {
-                    if (date) {
-                        field.onChange(format(date, 'yyyy-MM-dd'));
-                        setDisplayValue(format(date, 'dd-MM-yyyy'));
-                    }
+                  if (date) {
+                    field.onChange(format(date, 'yyyy-MM-dd'));
+                    setDisplayValue(format(date, 'dd-MM-yyyy'));
+                  }
                 };
-                
+
                 return (
                   <FormItem className="flex flex-col">
                     <FormLabel>Date of Birth</FormLabel>
@@ -225,7 +225,7 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
                 <FormMessage />
               </FormItem>
             )} />
-             <FormField control={form.control} name="whatsappNumber" render={({ field }) => (
+            <FormField control={form.control} name="whatsappNumber" render={({ field }) => (
               <FormItem>
                 <FormLabel>WhatsApp Number (Optional)</FormLabel>
                 <FormControl><Input type="tel" placeholder="Enter WhatsApp number" {...field} /></FormControl>
@@ -248,82 +248,82 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
             )} />
           </CardContent>
         </Card>
-        
+
         <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">Address Details (Optional)</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
-                <FormField control={form.control} name="address.state" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>State</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl>
-                            <SelectContent>{INDIAN_STATES.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}</SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-                <FormField control={form.control} name="address.city" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>City</FormLabel>
-                        <FormControl><Input placeholder="Enter city" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-                 <FormField control={form.control} name="address.street" render={({ field }) => (
-                    <FormItem className="md:col-span-2">
-                        <FormLabel>Street Address</FormLabel>
-                        <FormControl><Input placeholder="House No., Street, Area" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-                <FormField control={form.control} name="address.pincode" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Pincode</FormLabel>
-                        <FormControl><Input placeholder="Enter 6-digit pincode" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-            </CardContent>
+          <CardHeader>
+            <CardTitle className="font-headline">Address Details (Optional)</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
+            <FormField control={form.control} name="address.state" render={({ field }) => (
+              <FormItem>
+                <FormLabel>State</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger></FormControl>
+                  <SelectContent>{INDIAN_STATES.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}</SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="address.city" render={({ field }) => (
+              <FormItem>
+                <FormLabel>City</FormLabel>
+                <FormControl><Input placeholder="Enter city" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="address.street" render={({ field }) => (
+              <FormItem className="md:col-span-2">
+                <FormLabel>Street Address</FormLabel>
+                <FormControl><Input placeholder="House No., Street, Area" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="address.pincode" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Pincode</FormLabel>
+                <FormControl><Input placeholder="Enter 6-digit pincode" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </CardContent>
         </Card>
 
         <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">Guardian Details (Optional)</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
-                 <FormField control={form.control} name="guardian.relation" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Relation to Patient</FormLabel>
-                         <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Select relation" /></SelectTrigger></FormControl>
-                            <SelectContent>{RELATIONSHIPS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-                <FormField control={form.control} name="guardian.name" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Guardian's Name</FormLabel>
-                        <FormControl><Input placeholder="Enter guardian's full name" {...field} disabled={relation === 'Self'} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-                <FormField control={form.control} name="guardian.contact" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Guardian's Contact Number</FormLabel>
-                        <FormControl><Input type="tel" placeholder="Enter 10-digit mobile number" {...field} disabled={relation === 'Self'} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-            </CardContent>
+          <CardHeader>
+            <CardTitle className="font-headline">Guardian Details (Optional)</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
+            <FormField control={form.control} name="guardian.relation" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Relation to Patient</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select relation" /></SelectTrigger></FormControl>
+                  <SelectContent>{RELATIONSHIPS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="guardian.name" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Guardian's Name</FormLabel>
+                <FormControl><Input placeholder="Enter guardian's full name" {...field} disabled={relation === 'Self'} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="guardian.contact" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Guardian's Contact Number</FormLabel>
+                <FormControl><Input type="tel" placeholder="Enter 10-digit mobile number" {...field} disabled={relation === 'Self'} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </CardContent>
         </Card>
 
         <Button type="submit" className="w-full md:w-auto" disabled={isSubmitting}>
-          {isSubmitting 
-              ? (existingPatientData ? "Saving Changes..." : "Registering Patient...")
-              : (existingPatientData ? "Save Changes" : "Register Patient")
+          {isSubmitting
+            ? (existingPatientData ? "Saving Changes..." : "Registering Patient...")
+            : (existingPatientData ? "Save Changes" : "Register Patient")
           }
         </Button>
       </form>

@@ -58,7 +58,7 @@ export function PatientInfo({ patient, visit }: PatientInfoProps) {
 
                 <View style={styles.infoRow}>
                     <Text style={styles.label}>Contact:</Text>
-                    <Text style={styles.value}>{patient.contact || 'N/A'}</Text>
+                    <Text style={styles.value}>{patient.phoneNumber || 'N/A'}</Text>
                 </View>
 
                 <View style={styles.infoRow}>

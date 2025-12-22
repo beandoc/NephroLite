@@ -20,7 +20,7 @@ export default function HdRegistryPage() {
 
   const hdPatients = useMemo(() => {
     if (!isClient) return [];
-    return patients.filter(p => p.clinicalProfile.tags?.includes('HD'));
+    return patients.filter(p => p.clinicalProfile?.tags?.includes('HD'));
   }, [patients, isClient]);
 
   const renderContent = () => {

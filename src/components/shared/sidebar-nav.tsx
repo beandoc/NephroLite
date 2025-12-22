@@ -25,6 +25,7 @@ import {
   FlaskConical,
   Beaker,
   FileClock,
+  Calculator,
 } from "lucide-react";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,7 @@ const navItems: NavItem[] = [
   { href: "/documents", label: "Documents", icon: FileText, disabled: true },
   { href: "/templates", label: "Templates & Databases", icon: FileSignature },
   { href: "/reports", label: "Reports", icon: FileText },
+  { href: "/disability-assessment", label: "Disability Assessment", icon: Calculator },
   { href: "/system", label: "System", icon: Settings2, disabled: true },
 ];
 

@@ -200,8 +200,9 @@ export const patientSchema = z.object({
   lastName: z.string(),
   dob: z.string(),
   gender: z.enum(GENDERS),
-  contact: z.string().optional(),
-  email: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  whatsappNumber: z.string().optional(), // WhatsApp number for messaging
+  email: z.string().email().optional(),
   address: z.object({
     street: z.string().optional(),
     city: z.string().optional(),

@@ -12,12 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Settings, Bell, MessageSquare } from "lucide-react";
+import { LogOut, User, Settings, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { usePatientData } from "@/hooks/use-patient-data";
 import { useMemo, useState, useEffect } from "react";
 import type { Patient, InvestigationTest } from "@/lib/types";
 import { MOCK_USER } from "@/lib/constants";
+import { MessagesDropdown } from "@/components/shared/messages-dropdown";
 
 const isCritical = (test: InvestigationTest): boolean => {
   if (!test.result || !test.normalRange || test.normalRange === 'N/A') return false;
@@ -32,7 +33,7 @@ const isCritical = (test: InvestigationTest): boolean => {
   const lowerBoundMatch = test.normalRange.match(/>\s*([\d.]+)/);
   if (lowerBoundMatch) { return resultValue < parseFloat(lowerBoundMatch[1]); }
   const upperBoundMatch = test.normalRange.match(/<\s*([\d.]+)/);
-  if(upperBoundMatch) { return resultValue > parseFloat(upperBoundMatch[1]); }
+  if (upperBoundMatch) { return resultValue > parseFloat(upperBoundMatch[1]); }
   return false;
 };
 
@@ -48,7 +49,7 @@ export function UserNav() {
   const criticalResultsCount = useMemo(() => {
     // Prevent calculation on the server or before client has mounted
     if (!isClient || isLoading) return 0;
-    
+
     const allCriticalResults = new Set<string>();
     patients.forEach(patient => {
       patient.investigationRecords?.forEach(record => {
@@ -69,17 +70,13 @@ export function UserNav() {
       <Button variant="ghost" size="icon" className="relative rounded-full h-9 w-9">
         <Bell className="h-5 w-5" />
         {isClient && criticalResultsCount > 0 && (
-            <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 min-w-4 p-0 flex items-center justify-center text-xs">
-                {criticalResultsCount}
-            </Badge>
+          <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 min-w-4 p-0 flex items-center justify-center text-xs">
+            {criticalResultsCount}
+          </Badge>
         )}
         <span className="sr-only">Notifications</span>
       </Button>
-      <Button variant="ghost" size="icon" className="relative rounded-full h-9 w-9">
-        <MessageSquare className="h-5 w-5" />
-        {/* Placeholder for messages */}
-        <span className="sr-only">Messages</span>
-      </Button>
+      <MessagesDropdown />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
