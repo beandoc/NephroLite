@@ -11,41 +11,36 @@ import { Send, MessageSquare, Loader2, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/auth-provider';
 import { useStaffMessages } from '@/hooks/use-staff-messages';
+import { useSystemUsers } from '@/hooks/use-system-users';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-// Mock staff list - in production, fetch from Firestore users collection
-const STAFF_MEMBERS = [
-    { id: 'staff1', name: 'Dr. Sarah Johnson', role: 'doctor' as const },
-    { id: 'staff2', name: 'Nurse Mary Smith', role: 'staff' as const },
-    { id: 'staff3', name: 'Admin John Doe', role: 'staff' as const },
-];
 
 export function StaffMessaging() {
     const { user } = useAuth();
     const { toast } = useToast();
     const { messages, loading, sendMessage } = useStaffMessages();
+    const { users: systemUsers, loading: usersLoading } = useSystemUsers();
 
     const [messageText, setMessageText] = useState('');
     const [subject, setSubject] = useState('');
     const [selectedRecipient, setSelectedRecipient] = useState('');
     const [isSending, setIsSending] = useState(false);
 
-    // Filter staff members to exclude current user
-    const availableRecipients = STAFF_MEMBERS.filter(s => s.id !== user?.uid);
+    // Filter users to exclude current user
+    const availableRecipients = systemUsers.filter(u => u.uid !== user?.uid);
 
     const handleSend = async () => {
         if (!messageText.trim() || !selectedRecipient) return;
 
-        const recipient = STAFF_MEMBERS.find(s => s.id === selectedRecipient);
+        const recipient = systemUsers.find(u => u.uid === selectedRecipient);
         if (!recipient) return;
 
         setIsSending(true);
         try {
             await sendMessage(
-                recipient.id,
+                recipient.uid,
                 recipient.name,
-                recipient.role,
+                (recipient.role === 'admin' || recipient.role === 'nurse') ? 'staff' : recipient.role,
                 messageText.trim(),
                 subject.trim() || undefined
             );
@@ -137,7 +132,7 @@ export function StaffMessaging() {
                             </SelectTrigger>
                             <SelectContent>
                                 {availableRecipients.map((staff) => (
-                                    <SelectItem key={staff.id} value={staff.id}>
+                                    <SelectItem key={staff.uid} value={staff.uid}>
                                         {staff.name} ({staff.role})
                                     </SelectItem>
                                 ))}
