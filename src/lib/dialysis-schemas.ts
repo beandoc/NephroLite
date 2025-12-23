@@ -20,7 +20,7 @@ export const bpMonitoringSchema = z.object({
 // Hemodialysis Parameters Schema
 export const hdParamsSchema = z.object({
     ultrafiltrationVolume: z.number().min(0).optional(), // mL
-    fluidRemovalTolerance: z.boolean().optional(),
+    fluidRemovalTolerance: z.string().optional(),
     weightBefore: z.number().min(0).optional(), // kg
     weightAfter: z.number().min(0).optional(), // kg
     bloodFlowRate: z.number().min(0).optional(), // ml/min

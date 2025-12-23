@@ -158,9 +158,21 @@ export function DialysisSessionForm({ isOpen, onOpenChange, patient, session }: 
                                         <FormField control={form.control} name="weightAfter" render={({ field }) => (<FormItem><FormLabel>Post-HD Weight (kg)</FormLabel><FormControl><Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
                                         <FormField control={form.control} name="ultrafiltration" render={({ field }) => (<FormItem><FormLabel>Ultrafiltration (mL)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
                                         <FormField control={form.control} name="fluidRemovalTolerance" render={({ field }) => (
-                                            <FormItem className="flex flex-row items-center space-x-3 space-y-0 pt-6">
-                                                <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                                                <FormLabel className="text-sm font-medium">Good Fluid Tolerance</FormLabel>
+                                            <FormItem>
+                                                <FormLabel>Fluid Removal Tolerance</FormLabel>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select tolerance" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        <SelectItem value="Good">Good</SelectItem>
+                                                        <SelectItem value="Fair">Fair</SelectItem>
+                                                        <SelectItem value="Poor">Poor</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
                                             </FormItem>
                                         )} />
                                     </CardContent>

@@ -161,7 +161,7 @@ export const dialysisSessionSchema = z.object({
   duration: z.object({ hours: z.number(), minutes: z.number() }),
   dryWeight: z.number().optional(),
   ultrafiltration: z.number().optional(),
-  fluidRemovalTolerance: z.boolean().optional(),
+  fluidRemovalTolerance: z.string().optional(),
   weightBefore: z.number().optional(),
   weightAfter: z.number().optional(),
   complicationsFlag: z.boolean(),
