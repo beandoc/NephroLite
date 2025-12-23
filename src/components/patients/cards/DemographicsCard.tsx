@@ -43,6 +43,9 @@ export function DemographicsCard({ patient }: DemographicsCardProps) {
 
     try {
       await admitPatient(user.uid, patient.id);
+      // Refetch patient data to update UI
+      await updatePatient(patient.id, {}); // Trigger re-fetch
+
       toast({
         title: "Patient Admitted",
         description: `${patientFullName} admitted on ${format(new Date(), 'PPP')}`
@@ -61,6 +64,9 @@ export function DemographicsCard({ patient }: DemographicsCardProps) {
 
     try {
       await dischargePatient(user.uid, patient.id);
+      // Refetch patient data to update UI
+      await updatePatient(patient.id, {}); // Trigger re-fetch
+
       toast({
         title: "Patient Discharged",
         description: `${patientFullName} discharged on ${format(new Date(), 'PPP')}`

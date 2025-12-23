@@ -245,8 +245,8 @@ function NewDialysisSessionPage() {
                                     <SelectValue placeholder="Select patient" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {patients.map(patient => (
-                                        <SelectItem key={patient.id} value={patient.id}>
+                                    {patients.map((patient, index) => (
+                                        <SelectItem key={`${patient.id}-${index}`} value={patient.id}>
                                             {patient.firstName} {patient.lastName}
                                         </SelectItem>
                                     ))}
@@ -255,17 +255,16 @@ function NewDialysisSessionPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="provider">Provider *</Label>
+                            <Label htmlFor="provider">Primary Nephrologist *</Label>
                             <Select value={formData.providerId} onValueChange={(v) => updateField('providerId', v)}>
                                 <SelectTrigger id="provider">
-                                    <SelectValue placeholder="Select provider" />
+                                    <SelectValue placeholder="Select nephrologist" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {doctors.map(doctor => (
-                                        <SelectItem key={doctor.uid} value={doctor.uid}>
-                                            {doctor.name}
-                                        </SelectItem>
-                                    ))}
+                                    <SelectItem value="dr-atul-kumar">Dr Atul Kumar</SelectItem>
+                                    <SelectItem value="dr-sachin">Dr Sachin</SelectItem>
+                                    <SelectItem value="dr-parikshit-singh">Dr Parikshit Singh</SelectItem>
+                                    <SelectItem value="dr-vineet-behera">Dr Vineet Behera</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -366,10 +365,7 @@ function NewDialysisSessionPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="HD">HD</SelectItem>
-                                    <SelectItem value="HDF">Hemodiafiltration (HDF)</SelectItem>
-                                    <SelectItem value="PD">PD</SelectItem>
-                                    <SelectItem value="CAPD">CAPD</SelectItem>
-                                    <SelectItem value="APD">APD</SelectItem>
+                                    <SelectItem value="HDF">HDF</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -443,15 +439,21 @@ function NewDialysisSessionPage() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center space-x-2 pt-8">
-                                    <Checkbox
-                                        id="tolerance"
-                                        checked={formData.hdParams?.fluidRemovalTolerance || false}
-                                        onCheckedChange={(checked) => updateNestedField('hdParams', 'fluidRemovalTolerance', checked)}
-                                    />
-                                    <Label htmlFor="tolerance" className="font-normal cursor-pointer">
-                                        Fluid Removal Tolerance
-                                    </Label>
+                                <div className="space-y-2">
+                                    <Label htmlFor="tolerance">Fluid Removal Tolerance</Label>
+                                    <Select
+                                        value={formData.hdParams?.fluidRemovalTolerance || ''}
+                                        onValueChange={(v) => updateNestedField('hdParams', 'fluidRemovalTolerance', v)}
+                                    >
+                                        <SelectTrigger id="tolerance">
+                                            <SelectValue placeholder="Select tolerance" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Good">Good</SelectItem>
+                                            <SelectItem value="Fair">Fair</SelectItem>
+                                            <SelectItem value="Poor">Poor</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
 
                                 <div className="space-y-2">

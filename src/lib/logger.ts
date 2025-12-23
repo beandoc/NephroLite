@@ -1,88 +1,63 @@
-/**
- * Production-safe logger utility
- * Automatically switches between development and production logging
- */
+import pino from 'pino';
 
-type LogLevel = 'info' | 'warn' | 'error' | 'debug';
+const isDevelopment = process.env.NODE_ENV === 'development';
+const isBrowser = typeof window !== 'undefined';
 
-interface LogEntry {
-    level: LogLevel;
-    message: string;
-    data?: any;
-    timestamp: Date;
+// Base configuration
+const baseConfig: pino.LoggerOptions = {
+    level: process.env.LOG_LEVEL || (isDevelopment ? 'debug' : 'info'),
+    base: {
+        env: process.env.NODE_ENV,
+    },
+};
+
+// Browser logger (simpler, no pretty printing)
+const browserLogger = pino({
+    ...baseConfig,
+    browser: {
+        asObject: true,
+    },
+});
+
+// Server logger - simplified for Next.js compatibility
+// Logs as JSON (no pretty printing to avoid Next.js webpack issues)
+const serverLogger = pino(baseConfig);
+
+// Export the appropriate logger
+export const logger = isBrowser ? browserLogger : serverLogger;
+
+// Create child loggers for different modules
+export const apiLogger = logger.child({ module: 'api' });
+export const authLogger = logger.child({ module: 'auth' });
+export const dbLogger = logger.child({ module: 'database' });
+export const uiLogger = logger.child({ module: 'ui' });
+
+// Helper function to create contextual logger
+export function createLogger(module: string) {
+    return logger.child({ module });
 }
 
-class Logger {
-    private isDevelopment = process.env.NODE_ENV === 'development';
+// Type-safe log methods with context
+export type LogContext = {
+    [key: string]: any;
+};
 
-    /**
-     * Log an informational message
-     */
-    info(message: string, data?: any): void {
-        if (this.isDevelopment) {
-            console.log(`ℹ️ ${message}`, data || '');
-        }
-        // In production, send to error tracking service
-        this.sendToService('info', message, data);
-    }
+// Convenience exports that match original API but with structured logging
+export const logError = (message: string, error?: any) => {
+    const context = error ? { error: error instanceof Error ? error.message : error } : {};
+    logger.error(context, message);
+};
 
-    /**
-     * Log a warning message
-     */
-    warn(message: string, data?: any): void {
-        if (this.isDevelopment) {
-            console.warn(`⚠️ ${message}`, data || '');
-        }
-        this.sendToService('warn', message, data);
-    }
+export const logWarn = (message: string, data?: any) => {
+    logger.warn(data || {}, message);
+};
 
-    /**
-     * Log an error message
-     */
-    error(message: string, error?: any): void {
-        if (this.isDevelopment) {
-            console.error(`❌ ${message}`, error || '');
-        }
-        this.sendToService('error', message, error);
-    }
+export const logInfo = (message: string, data?: any) => {
+    logger.info(data || {}, message);
+};
 
-    /**
-     * Log a debug message (development only)
-     */
-    debug(message: string, data?: any): void {
-        if (this.isDevelopment) {
-            console.debug(`🐛 ${message}`, data || '');
-        }
-    }
+export const logDebug = (message: string, data?: any) => {
+    logger.debug(data || {}, message);
+};
 
-    /**
-     * Send logs to external service (production)
-     * TODO: Integrate with Sentry, LogRocket, or similar service
-     */
-    private sendToService(level: LogLevel, message: string, data?: any): void {
-        if (!this.isDevelopment && level === 'error') {
-            // In production, send errors to error tracking service
-            // Example: Sentry.captureException(new Error(message));
-
-            // For now, we'll store it for future integration
-            const logEntry: LogEntry = {
-                level,
-                message,
-                data,
-                timestamp: new Date(),
-            };
-
-            // TODO: Send to error tracking service
-            // This prevents errors from being lost in production
-        }
-    }
-}
-
-// Export singleton instance
-export const logger = new Logger();
-
-// Convenience exports for common patterns
-export const logError = (message: string, error?: any) => logger.error(message, error);
-export const logWarn = (message: string, data?: any) => logger.warn(message, data);
-export const logInfo = (message: string, data?: any) => logger.info(message, data);
-export const logDebug = (message: string, data?: any) => logger.debug(message, data);
+export default logger;

@@ -12,9 +12,28 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    // Get user role from users or patientUsers collection
+    // Get user data (staff)
+    function getUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    // Get user role from users collection
     function getUserRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      return getUser().role;
+    }
+    
+    // Check if user has specific role
+    function hasRole(role) {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             getUserRole() == role;
+    }
+    
+    // Check if user has any of the specified roles
+    function hasAnyRole(roles) {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             getUserRole() in roles;
     }
     
     // Check if user is a staff member (doctor, nurse, admin)
@@ -30,16 +49,24 @@ service cloud.firestore {
              exists(/databases/$(database)/documents/patientUsers/$(request.auth.uid));
     }
     
+    // Get patient data
+    function getPatientUser() {
+      return get(/databases/$(database)/documents/patientUsers/$(request.auth.uid)).data;
+    }
+    
     // Check if patient is accessing their own data
     function isOwnPatientData(patientId) {
-      return isPatient() && 
-             get(/databases/$(database)/documents/patientUsers/$(request.auth.uid)).data.patientId == patientId;
+      return isPatient() && getPatientUser().patientId == patientId;
     }
     
     // Check if patient account is active
     function isActivePatient() {
-      return isPatient() && 
-             get(/databases/$(database)/documents/patientUsers/$(request.auth.uid)).data.isActive == true;
+      return isPatient() && getPatientUser().isActive == true;
+    }
+    
+    // Validate that certain fields are not being modified
+    function notChangingFields(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
     }
     
     // ============================================================
@@ -48,26 +75,48 @@ service cloud.firestore {
     
     // Users collection (staff only)
     match /users/{userId} {
-      // Staff can read their own document
-      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Staff can read their own document, admins can read all
+      allow read: if (isAuthenticated() && request.auth.uid == userId) || hasRole('admin');
       
-      // Only authenticated users can create (during signup)
-      allow create: if isAuthenticated() && request.auth.uid == userId;
+      // Only system can create (via Cloud Functions)
+      allow create: if false; // Strict: must use Cloud Functions
       
-      // Staff can update their own data
-      allow update: if isAuthenticated() && request.auth.uid == userId;
+      // Staff can update their own non-critical fields
+      // Cannot change own role
+      allow update: if isAuthenticated() && 
+                      request.auth.uid == userId &&
+                      notChangingFields(['role', 'createdAt', 'createdBy']);
       
-      // Only admins can delete
-      allow delete: if isStaff() && getUserRole() == 'admin';
+      // Admins can update any user (including role changes)
+      allow update: if hasRole('admin');
+      
+      // Only admins can delete (soft delete recommended in app logic)
+      allow delete: if hasRole('admin');
     }
+    
+    // ============================================================
+    // PATIENT DATA
+    // ============================================================
     
     // Patients collection (staff read/write, patients read own)
     match /patients/{patientId} {
-      // Staff can read all patients
+      // Staff can read all patients, patients can read their own
       allow read: if isStaff() || isOwnPatientData(patientId);
       
-      // Only staff can create/update/delete patients
-      allow create, update, delete: if isStaff();
+      // Only doctors and admins can create patients
+      allow create: if hasAnyRole(['doctor', 'admin']);
+      
+      // Doctors and admins can update any field
+      // Nurses can update limited fields (no critical medical data)
+      allow update: if hasAnyRole(['doctor', 'admin']) ||
+                       (hasRole('nurse') && notChangingFields([
+                         'diagnosisProfile',
+                         'clinicalProfile.ckdStage',
+                         'clinicalProfile.primaryDiagnosis'
+                       ]));
+      
+      // Only admins can delete (should be soft delete in app)
+      allow delete: if hasRole('admin');
       
       // --------------------------------------------------------
       // Patient Sub-collections
@@ -76,19 +125,19 @@ service cloud.firestore {
       // PD Data - Baseline
       match /pdData/baseline {
         allow read: if isStaff() || isOwnPatientData(patientId);
-        allow write: if isStaff();
+        allow write: if hasAnyRole(['doctor', 'nurse']);
       }
       
       // PD Data - Exchanges
       match /pdData/exchanges/{exchangeId} {
         allow read: if isStaff() || isOwnPatientData(patientId);
-        allow write: if isStaff();
+        allow write: if hasAnyRole(['doctor', 'nurse']);
       }
       
       // PD Data - Peritonitis Episodes
       match /pdData/peritonitisEpisodes/{episodeId} {
         allow read: if isStaff() || isOwnPatientData(patientId);
-        allow write: if isStaff();
+        allow write: if hasAnyRole(['doctor', 'nurse']);
       }
       
       // PD Data - Daily Monitoring (patients can write their own)
@@ -104,7 +153,7 @@ service cloud.firestore {
                         isOwnPatientData(patientId) &&
                         request.resource.data.enteredBy == 'patient';
         
-        // Patients can update only their own entries
+        // Patients can update only their own entries (no role change)
         allow update: if isActivePatient() && 
                         isOwnPatientData(patientId) &&
                         resource.data.enteredBy == 'patient' &&
@@ -116,39 +165,76 @@ service cloud.firestore {
       
       // Investigation Records
       match /investigationRecords/{recordId} {
-        // Staff and patient can read
         allow read: if isStaff() || isOwnPatientData(patientId);
-        
-        // Only staff can write
-        allow write: if isStaff();
+        allow write: if hasAnyRole(['doctor', 'nurse']);
       }
       
-      // Dialysis Sessions
+      // Dialysis Sessions (sub-collection under patient)
       match /dialysisSessions/{sessionId} {
-        // Staff and patient can read
         allow read: if isStaff() || isOwnPatientData(patientId);
-        
-        // Only staff can write
-        allow write: if isStaff();
+        allow create: if hasAnyRole(['doctor', 'nurse']);
+        allow update: if hasAnyRole(['doctor', 'nurse']);
+        // Never delete sessions (audit trail)
+        allow delete: if false;
       }
       
-      // Visits
+      // Visits (sub-collection under patient)
       match /visits/{visitId} {
-        // Staff and patient can read
         allow read: if isStaff() || isOwnPatientData(patientId);
-        
-        // Only staff can write
-        allow write: if isStaff();
+        allow create: if hasAnyRole(['doctor', 'nurse']);
+        allow update: if hasRole('doctor'); // Only doctors can edit visits
+        // Never delete visits (audit trail)
+        allow delete: if false;
       }
       
       // Interventions
       match /interventions/{interventionId} {
-        // Staff and patient can read
         allow read: if isStaff() || isOwnPatientData(patientId);
-        
-        // Only staff can write
-        allow write: if isStaff();
+        allow write: if hasAnyRole(['doctor', 'nurse']);
       }
+    }
+    
+    // ============================================================
+    // TOP-LEVEL COLLECTIONS (for global queries)
+    // ============================================================
+    
+    // Dialysis Sessions (top-level for cross-patient queries)
+    match /dialysisSessions/{sessionId} {
+      // Staff can read all sessions
+      allow read: if isStaff();
+      
+      // Patients can read their own sessions
+      allow read: if isPatient() && 
+                    resource.data.patientId == getPatientUser().patientId;
+      
+      // Only doctors and nurses can create
+      allow create: if hasAnyRole(['doctor', 'nurse']);
+      
+      // Can update their own created sessions
+      allow update: if hasAnyRole(['doctor', 'nurse']) &&
+                       resource.data.createdBy == request.auth.uid;
+      
+      // Never delete (audit trail)
+      allow delete: if false;
+    }
+    
+    // Visits (top-level for cross-patient queries)
+    match /visits/{visitId} {
+      // Staff can read all visits
+      allow read: if isStaff();
+      
+      // Patients can read their own visits
+      allow read: if isPatient() && 
+                    resource.data.patientId == getPatientUser().patientId;
+      
+      // Only doctors and nurses can create
+      allow create: if hasAnyRole(['doctor', 'nurse']);
+      
+      // Only doctors can update visits
+      allow update: if hasRole('doctor');
+      
+      // Never delete (audit trail)
+      allow delete: if false;
     }
     
     // ============================================================
@@ -157,17 +243,17 @@ service cloud.firestore {
     
     // Patient Users collection (authentication data)
     match /patientUsers/{userId} {
-      // Only the patient can read their own document
-      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Only the patient can read their own document, or staff
+      allow read: if (isAuthenticated() && request.auth.uid == userId) || isStaff();
       
       // Only staff can create patient accounts
-      allow create: if isStaff();
+      allow create: if hasAnyRole(['doctor', 'nurse', 'admin']);
       
-      // Only staff can update patient accounts
-      allow update: if isStaff();
+      // Only staff can update patient accounts (cannot change patientId)
+      allow update: if isStaff() && notChangingFields(['patientId', 'createdAt']);
       
-      // Only staff can delete patient accounts
-      allow delete: if isStaff();
+      // Only admins can delete patient accounts
+      allow delete: if hasRole('admin');
     }
     
     // ============================================================
@@ -176,8 +262,7 @@ service cloud.firestore {
     
     // OPD Queue by date
     match /opdQueue/{date}/patients/{entryId} {
-      // Staff can read all queue entries
-      // Patients can read all entries (to see queue status)
+      // Anyone authenticated can read queue (see waiting time)
       allow read: if isAuthenticated();
       
       // Staff can create any entry
@@ -185,13 +270,12 @@ service cloud.firestore {
       
       // Active patients can check themselves in
       allow create: if isActivePatient() && 
-                      request.resource.data.patientId == get(/databases/$(database)/documents/patientUsers/$(request.auth.uid)).data.patientId &&
+                      request.resource.data.patientId == getPatientUser().patientId &&
                       request.resource.data.checkedInBy == 'patient';
       
       // Staff can update any entry
       allow update: if isStaff();
       
-      // Patients cannot update queue entries
       // Only staff can delete queue entries
       allow delete: if isStaff();
     }
@@ -206,10 +290,32 @@ service cloud.firestore {
       
       // Patients can read their own appointments
       allow read: if isPatient() && 
-                    resource.data.patientId == get(/databases/$(database)/documents/patientUsers/$(request.auth.uid)).data.patientId;
+                    resource.data.patientId == getPatientUser().patientId;
       
       // Only staff can create/update/delete appointments
       allow write: if isStaff();
+    }
+    
+    // ============================================================
+    // STAFF MESSAGES
+    // ============================================================
+    
+    match /staffMessages/{messageId} {
+      // Sender, recipient, and admins can read
+      allow read: if isStaff() && (
+                    resource.data.from == request.auth.uid ||
+                    resource.data.to == request.auth.uid ||
+                    hasRole('admin')
+                  );
+      
+      // Staff can create messages
+      allow create: if isStaff() && request.resource.data.from == request.auth.uid;
+      
+      // Only sender can update (mark as read, etc.)
+      allow update: if isStaff() && resource.data.from == request.auth.uid;
+      
+      // Only admins can delete
+      allow delete: if hasRole('admin');
     }
     
     // ============================================================
@@ -219,25 +325,25 @@ service cloud.firestore {
     // Investigation Masters
     match /investigationMasters/{masterId} {
       allow read: if isAuthenticated();
-      allow write: if isStaff();
+      allow write: if hasAnyRole(['doctor', 'admin']);
     }
     
     // Investigation Panels
-    match /investigationPanels/{panelId} {
+    match/investigationPanels/{panelId} {
       allow read: if isAuthenticated();
-      allow write: if isStaff();
+      allow write: if hasAnyRole(['doctor', 'admin']);
     }
     
     // Diagnosis Templates
     match /diagnosisTemplates/{templateId} {
       allow read: if isAuthenticated();
-      allow write: if isStaff();
+      allow write: if hasAnyRole(['doctor', 'admin']);
     }
     
     // Master Diagnoses
     match /masterDiagnoses/{diagnosisId} {
       allow read: if isAuthenticated();
-      allow write: if isStaff();
+      allow write: if hasAnyRole(['doctor', 'admin']);
     }
     
     // ============================================================
@@ -246,38 +352,44 @@ service cloud.firestore {
     
     match /analytics/{document=**} {
       allow read: if isStaff();
-      allow write: if isStaff();
+      allow write: if hasRole('admin');
     }
     
     match /reports/{document=**} {
       allow read: if isStaff();
-      allow write: if isStaff();
+      allow write: if hasRole('admin');
     }
     
     // ============================================================
-    // AUDIT LOGS (Staff only, append-only)
+    // AUDIT LOGS (Append-only, Admin read)
     // ============================================================
     
     match /auditLogs/{logId} {
-      // Only staff can read audit logs
-      allow read: if isStaff();
+      // Only admins can read audit logs
+      allow read: if hasRole('admin');
       
-      // System can create audit logs (server-side)
-      // Staff can create logs for their actions
+      // System/Staff can create audit logs
       allow create: if isStaff();
       
-      // No one can update or delete audit logs
+      // No one can update or delete audit logs (immutable)
+      allow update, delete: if false;
+    }
+    
+    // Backup logs (from Cloud Functions)
+    match /backupLogs/{logId} {
+      allow read: if hasRole('admin');
+      allow create: if true; // Cloud Function creates these
       allow update, delete: if false;
     }
     
     // ============================================================
-    // SYSTEM COLLECTIONS (No direct access)
+    // SYSTEM COLLECTIONS
     // ============================================================
     
     // System configuration (admin only)
     match /system/{document=**} {
-      allow read: if isStaff() && getUserRole() == 'admin';
-      allow write: if isStaff() && getUserRole() == 'admin';
+      allow read: if hasRole('admin');
+      allow write: if hasRole('admin');
     }
     
     // ============================================================
