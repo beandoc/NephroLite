@@ -234,6 +234,10 @@ export const updatePatient = async (userId: string, patientId: string, updates: 
 
 // Delete patient and all subcollections
 export const deletePatient = async (userId: string, patientId: string) => {
+    if (!patientId) {
+        throw new Error('Patient ID is required for deletion');
+    }
+
     const batch = writeBatch(db);
 
     // Delete subcollections first

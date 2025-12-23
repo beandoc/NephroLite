@@ -36,12 +36,30 @@ export function PatientsTable({ patients }: PatientsTableProps) {
   const { toast } = useToast();
   const { deletePatient } = usePatientData();
 
-  const handleDelete = (patientId: string, patientName: string) => {
-    deletePatient(patientId);
-    toast({
-      title: "Patient Deleted",
-      description: `${patientName} has been removed from the records.`,
-    });
+  const handleDelete = async (patientId: string, patientName: string) => {
+    if (!patientId) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Unable to delete patient: Invalid patient ID.",
+      });
+      return;
+    }
+
+    try {
+      await deletePatient(patientId);
+      toast({
+        title: "Patient Deleted",
+        description: `${patientName} has been removed from the records.`,
+      });
+    } catch (error) {
+      console.error('Error deleting patient:', error);
+      toast({
+        variant: "destructive",
+        title: "Deletion Failed",
+        description: error instanceof Error ? error.message : "An error occurred while deleting the patient.",
+      });
+    }
   };
 
   if (patients.length === 0) {
