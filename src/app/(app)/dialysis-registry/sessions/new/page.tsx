@@ -442,7 +442,7 @@ function NewDialysisSessionPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="tolerance">Fluid Removal Tolerance</Label>
                                     <Select
-                                        value={formData.hdParams?.fluidRemovalTolerance || ''}
+                                        value={formData.hdParams?.fluidRemovalTolerance}
                                         onValueChange={(v) => updateNestedField('hdParams', 'fluidRemovalTolerance', v)}
                                     >
                                         <SelectTrigger id="tolerance">
