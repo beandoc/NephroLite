@@ -194,6 +194,24 @@ export default function DisabilityAssessmentPage() {
                             </Select>
                         </div>
 
+                        {/* Warning for Dependents */}
+                        {selectedPatient && selectedPatient.guardian?.relation?.toUpperCase() !== 'SELF' && (
+                            <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded">
+                                <div className="flex items-start">
+                                    <AlertCircle className="h-5 w-5 text-amber-600 mr-3 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-amber-800">Not Applicable for Dependents</h4>
+                                        <p className="text-sm text-amber-700 mt-1">
+                                            Disability assessment is only applicable for serving military personnel (Relation = SELF), not for dependents or family members.
+                                        </p>
+                                        <p className="text-xs text-amber-600 mt-2">
+                                            This patient's relationship: <strong>{selectedPatient.guardian?.relation || 'Not specified'}</strong>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Age */}
                         <div className="space-y-2">
                             <Label htmlFor="age">Age (years) *</Label>
@@ -305,12 +323,18 @@ export default function DisabilityAssessmentPage() {
                         <Button
                             className="w-full"
                             onClick={handleCalculate}
-                            disabled={!isFormValid}
+                            disabled={!isFormValid || (selectedPatient && selectedPatient.guardian?.relation?.toUpperCase() !== 'SELF')}
                             size="lg"
                         >
                             <Calculator className="mr-2 h-4 w-4" />
                             Calculate Disability Assessment
                         </Button>
+
+                        {selectedPatient && selectedPatient.guardian?.relation?.toUpperCase() !== 'SELF' && (
+                            <p className="text-xs text-amber-600 text-center mt-2">
+                                Calculation disabled: Only applicable for military personnel (SELF)
+                            </p>
+                        )}
                     </CardContent>
                 </Card>
 

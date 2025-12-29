@@ -18,14 +18,30 @@ export const PatientDiagnosisRx = ({ patient: initialPatient }: PatientDiagnosis
 
   // Flatten and sort the history from all visits
   const history = (patient.visits || [])
-    .filter(visit => (visit.diagnoses && visit.diagnoses.length > 0) || (visit.clinicalData?.medications && visit.clinicalData.medications.length > 0))
-    .map(visit => ({
-      id: visit.id,
-      date: visit.date,
-      diagnosis: visit.diagnoses && visit.diagnoses.length > 0 ? visit.diagnoses[0].name : "N/A", // Display first diagnosis
-      medication: visit.clinicalData?.medications?.map(m => `${m.name} ${m.dosage || ''} ${m.frequency || ''}`.trim()).join(', ') || "No medication prescribed",
-      doctor: 'Dr. Sachin' // Placeholder
-    }))
+    // Filter visits that have diagnosis OR medication OR advice
+    .filter(visit => (visit.diagnoses && visit.diagnoses.length > 0) || (visit.clinicalData?.medications && visit.clinicalData.medications.length > 0) || (visit.clinicalData?.treatmentAdvised && visit.clinicalData.treatmentAdvised !== ''))
+    .map(visit => {
+      let medicationText = "No medication prescribed";
+
+      // Prefer structured medication
+      if (visit.clinicalData?.medications && visit.clinicalData.medications.length > 0) {
+        medicationText = visit.clinicalData.medications.map(m => `${m.name} ${m.dosage || ''} ${m.frequency || ''}`.trim()).join(', ');
+      }
+      // Fallback to unstructured advice/HTML for imported users
+      else if (visit.clinicalData?.treatmentAdvised) {
+        // Simple regex to strip HTML tags for cleaner display, or we could use dangerouslySetInnerHTML if strict is needed
+        // For now, let's keep it simple and just show the content, maybe stripping <p> tags
+        medicationText = visit.clinicalData.treatmentAdvised.replace(/<[^>]*>?/gm, ' ').replace(/\s\s+/g, ' ').trim();
+      }
+
+      return {
+        id: visit.id,
+        date: visit.date,
+        diagnosis: visit.diagnoses && visit.diagnoses.length > 0 ? visit.diagnoses[0].name : "N/A", // Display first diagnosis
+        medication: medicationText,
+        doctor: 'Dr. Sachin' // Placeholder
+      };
+    })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
 

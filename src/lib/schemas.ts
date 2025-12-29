@@ -50,6 +50,18 @@ export const clinicalProfileSchema = z.object({
   disabilityLocationOfOnset: z.string().optional(),
   disabilityDateOfOnset: z.string().optional(),
   pdDispositionValue: z.string().optional(),
+  secondaryDisability: z.string().optional(),
+  disabilityProfile: z.string().optional(), // NEW: Current disability status (P1, P2 (T-24), Fresh, etc.)
+  // Multiple disability entries
+  disabilityEntries: z.array(z.object({
+    id: z.string(),
+    primaryDisability: z.string().optional(),
+    locationOfOnset: z.string().optional(),
+    dateOfOnset: z.string().optional(),
+  })).optional(),
+  // Opinion and recommendations
+  opinionText: z.string().optional(),
+  recommendations: z.string().optional(),
 });
 
 export const diagnosisSchema = z.object({
@@ -69,6 +81,7 @@ export const medicationSchema = z.object({
 
 export const clinicalVisitDataSchema = z.object({
   diagnoses: z.array(diagnosisSchema).optional(),
+  secondaryDiagnosis: z.string().optional(), // NEW: Secondary diagnosis text
   history: z.string().optional(),
   height: z.string().optional(),
   weight: z.string().optional(),
@@ -92,7 +105,12 @@ export const clinicalVisitDataSchema = z.object({
   totalCholesterol: z.string().optional(),
   hdlCholesterol: z.string().optional(),
   investigationsText: z.string().optional(), // Free-form investigations text from template
-  // Military-specific fields
+  // Military-specific fields for visit-level tracking
+  pastMedicalClassification: z.string().optional(),
+  primaryDisability: z.string().optional(),
+  disabilityLocationOfOnset: z.string().optional(),
+  disabilityDateOfOnset: z.string().optional(),
+  pdDispositionValue: z.string().optional(),
   disabilityProfile: z.string().optional(),
   disabilityDetails: z.string().optional(),
   serviceNumber: z.string().optional(),
@@ -111,6 +129,7 @@ export const clinicalVisitDataSchema = z.object({
   drugsToAvoid: z.string().optional(),
   followUpInstructions: z.string().optional(),
   otherAdvice: z.string().optional(),
+  treatmentAdvised: z.string().optional(),
 });
 
 export const visitSchema = z.object({
@@ -198,11 +217,36 @@ export const patientSchema = z.object({
   nephroId: z.string(),
   firstName: z.string(),
   lastName: z.string(),
-  dob: z.string(),
+  dob: z.string()
+    .refine(val => {
+      const date = new Date(val);
+      return date < new Date();
+    }, {
+      message: "Date of birth must be in the past"
+    })
+    .refine(val => {
+      const date = new Date(val);
+      const age = new Date().getFullYear() - date.getFullYear();
+      return age >= 0 && age <= 120;
+    }, {
+      message: "Age must be between 0 and 120 years"
+    }),
   gender: z.enum(GENDERS),
-  phoneNumber: z.string().optional(),
-  whatsappNumber: z.string().optional(), // WhatsApp number for messaging
-  email: z.string().email().optional(),
+  phoneNumber: z.string()
+    .optional()
+    .refine(val => !val || /^\d{10}$/.test(val), {
+      message: "Phone number must be exactly 10 digits"
+    }),
+  whatsappNumber: z.string()
+    .optional()
+    .refine(val => !val || /^\d{10}$/.test(val), {
+      message: "WhatsApp number must be exactly 10 digits"
+    }),
+  email: z.string()
+    .optional()
+    .refine(val => !val || val === '' || z.string().email().safeParse(val).success, {
+      message: "Please enter a valid email address"
+    }),
   address: z.object({
     street: z.string().optional(),
     city: z.string().optional(),
@@ -236,6 +280,11 @@ export const patientSchema = z.object({
   investigationRecords: z.array(investigationRecordSchema).optional(),
   interventions: z.array(interventionSchema).optional(),
   dialysisSessions: z.array(dialysisSessionSchema).optional(),
+
+  // Computed/Migrated fields
+  age: z.string().or(z.number()).optional(),
+  relationshipToServiceMember: z.string().optional(),
+  referenceNumber: z.string().optional(),
 });
 
 export const patientFormDataSchema = z.object({

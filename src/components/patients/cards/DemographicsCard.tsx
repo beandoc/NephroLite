@@ -127,6 +127,25 @@ export function DemographicsCard({ patient }: DemographicsCardProps) {
         <DetailItem label="WhatsApp Number" value={patient.clinicalProfile.whatsappNumber} icon={MessageSquare} />
         <DetailItem label="Aabha Number" value={patient.clinicalProfile.aabhaNumber} icon={Info} />
         <DetailItem label="Blood Group" value={patient.clinicalProfile.bloodGroup} icon={Droplet} />
+
+        {/* Relationship to Service Member with Badge */}
+        <div className="flex flex-col space-y-1.5">
+          <h3 className="text-sm font-medium text-muted-foreground flex items-center">
+            <ShieldCheck className="w-4 h-4 mr-2 text-primary" /> Relationship to Service Member
+          </h3>
+          <div className="flex items-center gap-2">
+            <p className="text-base">{patient.guardian?.relation || 'Not specified'}</p>
+            {patient.guardian?.relation?.toUpperCase() === 'SELF' && (
+              <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+                Military Personnel
+              </Badge>
+            )}
+            {patient.guardian?.relation && patient.guardian.relation.toUpperCase() !== 'SELF' && (
+              <Badge variant="outline">Dependent</Badge>
+            )}
+          </div>
+        </div>
+
         <DetailItem label="Registration Date" value={patient.registrationDate ? format(parseISO(patient.registrationDate), 'PPP') : 'N/A'} />
         {patient.admissionDate && (
           <DetailItem

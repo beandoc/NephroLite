@@ -43,39 +43,44 @@ const clinicalVisitSchema = z.object({
   medications: z.array(medicationSchema).optional(),
 
   // Military-specific fields
+  pastMedicalClassification: z.string().optional(),
   disabilityProfile: z.string().optional(),
+  primaryDisability: z.string().optional(),
+  disabilityLocationOfOnset: z.string().optional(),
+  disabilityDateOfOnset: z.string().optional(),
+  pdDispositionValue: z.string().optional(),
   disabilityDetails: z.string().optional(),
   serviceNumber: z.string().optional(),
   unitName: z.string().optional(),
   formation: z.string().optional(),
 
-  // Common fields
+  // History & vitals
   history: z.string().optional(),
   height: z.string().optional(),
   weight: z.string().optional(),
   bmi: z.string().optional(),
   idealBodyWeight: z.string().optional(),
+  temperature: z.string().optional(),
   pulse: z.string().optional(),
+  bloodPressure: z.string().optional(),
   systolicBP: z.string().optional(),
   diastolicBP: z.string().optional(),
   respiratoryRate: z.string().optional(),
+  spo2: z.string().optional(),
+
+  // Examination
   generalExamination: z.string().optional(),
   systemicExamination: z.string().optional(),
+
+  // Summary & opinion
   courseInHospital: z.string().optional(),
   dischargeInstructions: z.string().optional(),
   opinionText: z.string().optional(),
   recommendations: z.string().optional(),
-  usgReport: z.string().optional(),
-  kidneyBiopsyReport: z.string().optional(),
-  serumCreatinine: z.string().optional(),
-  uacr: z.string().optional(),
-  totalCholesterol: z.string().optional(),
-  hdlCholesterol: z.string().optional(),
 });
 
 type ClinicalVisitFormData = z.infer<typeof clinicalVisitSchema>;
 
-import { DischargeSummaryButton } from '@/components/pdf/DischargeSummaryButton';
 
 interface ClinicalVisitDetailsProps {
   visit: Visit;
@@ -99,7 +104,12 @@ export function ClinicalVisitDetails({ visit, patient, onSaveComplete }: Clinica
       medications: visit.clinicalData?.medications?.map(m => ({ ...m, id: m.id || crypto.randomUUID() })) || [],
 
       // Military fields
+      pastMedicalClassification: visit.clinicalData?.pastMedicalClassification || "",
       disabilityProfile: visit.clinicalData?.disabilityProfile || "",
+      primaryDisability: visit.clinicalData?.primaryDisability || "",
+      disabilityLocationOfOnset: visit.clinicalData?.disabilityLocationOfOnset || "",
+      disabilityDateOfOnset: visit.clinicalData?.disabilityDateOfOnset || "",
+      pdDispositionValue: visit.clinicalData?.pdDispositionValue || "",
       disabilityDetails: visit.clinicalData?.disabilityDetails || "",
       serviceNumber: visit.clinicalData?.serviceNumber || "",
       unitName: visit.clinicalData?.unitName || "",
@@ -121,12 +131,7 @@ export function ClinicalVisitDetails({ visit, patient, onSaveComplete }: Clinica
       dischargeInstructions: visit.clinicalData?.dischargeInstructions || "",
       opinionText: visit.clinicalData?.opinionText || "",
       recommendations: visit.clinicalData?.recommendations || "",
-      usgReport: visit.clinicalData?.usgReport || "",
-      kidneyBiopsyReport: visit.clinicalData?.kidneyBiopsyReport || "",
-      serumCreatinine: visit.clinicalData?.serumCreatinine || "",
-      uacr: visit.clinicalData?.uacr || "",
-      totalCholesterol: visit.clinicalData?.totalCholesterol || "",
-      hdlCholesterol: visit.clinicalData?.hdlCholesterol || "",
+      // Investigation fields removed - not used in this form
     },
   });
 
@@ -270,16 +275,8 @@ export function ClinicalVisitDetails({ visit, patient, onSaveComplete }: Clinica
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             {isMilitaryPerson ? (
-              // Military Personnel Tabs
+              // Military Personnel Tabs - 7 tabs (Clinical Workflow Order)
               <TabsList className="grid w-full grid-cols-7">
-                <TabsTrigger value="disability" className="text-xs sm:text-sm">
-                  <Shield className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Disability</span>
-                </TabsTrigger>
-                <TabsTrigger value="service" className="text-xs sm:text-sm">
-                  <Users className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Service</span>
-                </TabsTrigger>
                 <TabsTrigger value="history" className="text-xs sm:text-sm">
                   <FileText className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">History</span>
@@ -291,6 +288,14 @@ export function ClinicalVisitDetails({ visit, patient, onSaveComplete }: Clinica
                 <TabsTrigger value="examination" className="text-xs sm:text-sm">
                   <FileSearch className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Exam</span>
+                </TabsTrigger>
+                <TabsTrigger value="disability" className="text-xs sm:text-sm">
+                  <Shield className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Diagnosis/Disability</span>
+                </TabsTrigger>
+                <TabsTrigger value="medications" className="text-xs sm:text-sm">
+                  <Pill className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Medications</span>
                 </TabsTrigger>
                 <TabsTrigger value="summary" className="text-xs sm:text-sm">
                   <ClipboardList className="h-4 w-4 sm:mr-2" />
@@ -302,12 +307,8 @@ export function ClinicalVisitDetails({ visit, patient, onSaveComplete }: Clinica
                 </TabsTrigger>
               </TabsList>
             ) : (
-              // Civilian Tabs
+              // Civilian Tabs - 7 tabs (Clinical Workflow Order)
               <TabsList className="grid w-full grid-cols-7">
-                <TabsTrigger value="diagnosis" className="text-xs sm:text-sm">
-                  <Stethoscope className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Diagnosis</span>
-                </TabsTrigger>
                 <TabsTrigger value="history" className="text-xs sm:text-sm">
                   <FileText className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">History</span>
@@ -320,17 +321,21 @@ export function ClinicalVisitDetails({ visit, patient, onSaveComplete }: Clinica
                   <FileSearch className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Exam</span>
                 </TabsTrigger>
-                <TabsTrigger value="summary" className="text-xs sm:text-sm">
-                  <ClipboardList className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Summary</span>
+                <TabsTrigger value="diagnosis" className="text-xs sm:text-sm">
+                  <Stethoscope className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Diagnosis/Disability</span>
                 </TabsTrigger>
                 <TabsTrigger value="medications" className="text-xs sm:text-sm">
                   <Pill className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Medications</span>
                 </TabsTrigger>
-                <TabsTrigger value="instructions" className="text-xs sm:text-sm">
+                <TabsTrigger value="summary" className="text-xs sm:text-sm">
+                  <ClipboardList className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Summary</span>
+                </TabsTrigger>
+                <TabsTrigger value="opinion" className="text-xs sm:text-sm">
                   <FileOutput className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Instructions</span>
+                  <span className="hidden sm:inline">Opinion</span>
                 </TabsTrigger>
               </TabsList>
             )}
@@ -338,48 +343,185 @@ export function ClinicalVisitDetails({ visit, patient, onSaveComplete }: Clinica
             {/* Military-Specific Tabs */}
             {isMilitaryPerson && (
               <>
-                {/* Disability Tab */}
+                {/* Diagnosis/Disability Tab for Military */}
                 <TabsContent value="disability" className="space-y-4">
+                  {/* Diagnoses Section */}
                   <Card>
                     <CardHeader>
-                      <CardTitle>Disability Assessment</CardTitle>
-                      <CardDescription>Document disability status and profile for military personnel</CardDescription>
+                      <CardTitle>Clinical Diagnosis</CardTitle>
+                      <CardDescription>Add one or more diagnoses for this visit. Each diagnosis can include ICD-10 codes.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="disabilityProfile"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Disability Profile</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                      {diagnosisFields.map((field, index) => (
+                        <Card key={field.id} className="p-4">
+                          <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                              <h4 className="font-semibold text-sm">Diagnosis #{index + 1}</h4>
+                              {diagnosisFields.length > 1 && (
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => removeDiagnosis(index)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4">
+                              <FormField
+                                control={form.control}
+                                name={`diagnoses.${index}.name`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Diagnosis Name</FormLabel>
+                                    <FormControl><Input placeholder="e.g., Hypertension" {...field} /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name={`diagnoses.${index}.icdCode`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>ICD-10</FormLabel>
+                                    <FormControl><Input placeholder="e.g., I10" {...field} className="w-full sm:w-24" /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => appendDiagnosis({ id: crypto.randomUUID(), name: "", icdCode: "", icdName: "" })}
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add Another Diagnosis
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Disability Tracking Section */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Disability Tracking</CardTitle>
+                      <CardDescription>Record disability profile and past medical classification for military personnel</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="pastMedicalClassification"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Past Medical Classification</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select SHAPE classification" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="SHAPE-I">SHAPE-I</SelectItem>
+                                  <SelectItem value="SHAPE-2(X)">SHAPE-2(X)</SelectItem>
+                                  <SelectItem value="SHAPE-2(Y)">SHAPE-2(Y)</SelectItem>
+                                  <SelectItem value="SHAPE-2(Z)">SHAPE-2(Z)</SelectItem>
+                                  <SelectItem value="SHAPE-3(X)">SHAPE-3(X)</SelectItem>
+                                  <SelectItem value="SHAPE-3(Y)">SHAPE-3(Y)</SelectItem>
+                                  <SelectItem value="SHAPE-3(Z)">SHAPE-3(Z)</SelectItem>
+                                  <SelectItem value="SHAPE-4">SHAPE-4</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="disabilityProfile"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Disability Profile</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select disability profile" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="P1">P1</SelectItem>
+                                  <SelectItem value="P2 (T-24)">P2 (T-24)</SelectItem>
+                                  <SelectItem value="P3 (T-24)">P3 (T-24)</SelectItem>
+                                  <SelectItem value="P2 (P)">P2 (P)</SelectItem>
+                                  <SelectItem value="P3 (P)">P3 (P)</SelectItem>
+                                  <SelectItem value="Fresh">Fresh</SelectItem>
+                                  <SelectItem value="F2(T-24)">F2(T-24)</SelectItem>
+                                  <SelectItem value="F2 (T-12)">F2 (T-12)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="primaryDisability"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Primary Disability</FormLabel>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select disability profile" />
-                                </SelectTrigger>
+                                <Input placeholder="e.g., IgA Nephropathy" {...field} />
                               </FormControl>
-                              <SelectContent>
-                                <SelectItem value="Shape-1">Shape-1</SelectItem>
-                                <SelectItem value="Low Medical Category">Low Medical Category</SelectItem>
-                                <SelectItem value="Permanent Disability">Permanent Disability</SelectItem>
-                                <SelectItem value="Temporary Disability">Temporary Disability</SelectItem>
-                                <SelectItem value="None">None</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="disabilityLocationOfOnset"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Location of Onset</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., Manasbal (J&K)" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="disabilityDateOfOnset"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Date of Onset</FormLabel>
+                              <FormControl>
+                                <Input type="month" placeholder="YYYY-MM" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
                       <FormField
                         control={form.control}
-                        name="disabilityDetails"
+                        name="pdDispositionValue"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Disability Details</FormLabel>
+                            <FormLabel>PD Disposition Value</FormLabel>
                             <FormControl>
                               <Textarea
-                                rows={10}
-                                placeholder="Enter detailed assessment of disability, limitations, and medical category..."
+                                rows={3}
+                                placeholder="Enter PD disposition details..."
                                 {...field}
                               />
                             </FormControl>
@@ -442,51 +584,6 @@ export function ClinicalVisitDetails({ visit, patient, onSaveComplete }: Clinica
                   </Card>
                 </TabsContent>
 
-                {/* Opinion Tab (Military) */}
-                <TabsContent value="opinion" className="space-y-4">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Medical Opinion & Recommendations</CardTitle>
-                      <CardDescription>Professional medical opinion for military medical board</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="opinionText"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Medical Opinion</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                rows={8}
-                                placeholder="Provide detailed medical opinion for military medical board..."
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="recommendations"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Recommendations</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                rows={8}
-                                placeholder="Specific recommendations for medical board consideration..."
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </CardContent>
-                  </Card>
-                </TabsContent>
               </>
             )}
 
@@ -555,91 +652,12 @@ export function ClinicalVisitDetails({ visit, patient, onSaveComplete }: Clinica
                   </Card>
                 </TabsContent>
 
-                {/* Medications Tab */}
-                <TabsContent value="medications" className="space-y-4">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Medications</CardTitle>
-                      <CardDescription>Medications can be loaded from a template or added manually.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="rounded-md border">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Medicine Name</TableHead>
-                              <TableHead>Dosage</TableHead>
-                              <TableHead>Frequency</TableHead>
-                              <TableHead>Instructions</TableHead>
-                              <TableHead className="w-[50px]">Action</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {medicationFields.length > 0 ? (
-                              medicationFields.map((field, index) => (
-                                <TableRow key={field.id}>
-                                  <TableCell>
-                                    <FormField control={form.control} name={`medications.${index}.name`} render={({ field }) => <Input placeholder="Medication" {...field} />} />
-                                  </TableCell>
-                                  <TableCell>
-                                    <FormField control={form.control} name={`medications.${index}.dosage`} render={({ field }) => <Input placeholder="e.g., 40mg" {...field} />} />
-                                  </TableCell>
-                                  <TableCell>
-                                    <FormField control={form.control} name={`medications.${index}.frequency`} render={({ field }) => <Input placeholder="e.g., OD" {...field} />} />
-                                  </TableCell>
-                                  <TableCell>
-                                    <FormField control={form.control} name={`medications.${index}.instructions`} render={({ field }) => <Input placeholder="e.g., After food" {...field} />} />
-                                  </TableCell>
-                                  <TableCell>
-                                    <Button type="button" variant="destructive" size="icon" onClick={() => removeMedication(index)}>
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </TableCell>
-                                </TableRow>
-                              ))
-                            ) : (
-                              <TableRow>
-                                <TableCell colSpan={5} className="text-center text-muted-foreground h-24">
-                                  No medications added. Load a template or add manually.
-                                </TableCell>
-                              </TableRow>
-                            )}
-                          </TableBody>
-                        </Table>
-                      </div>
-                      <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => appendMedication({ id: crypto.randomUUID(), name: "", dosage: "", frequency: "", instructions: "" })}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Medication
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
 
-                {/* Instructions Tab */}
-                <TabsContent value="instructions" className="space-y-4">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Discharge Instructions</CardTitle>
-                      <CardDescription>Provide discharge and follow-up instructions for the patient.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <FormField
-                        control={form.control}
-                        name="dischargeInstructions"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Instructions</FormLabel>
-                            <FormControl><Textarea rows={10} placeholder="Advised to...&#10;Follow-up in...&#10;Precautions..." {...field} /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </CardContent>
-                  </Card>
-                </TabsContent>
               </>
             )}
 
             {/* Common Tabs (shown for both military and civilian) */}
+
 
             {/* History Tab */}
             <TabsContent value="history" className="space-y-4">
@@ -713,7 +731,7 @@ export function ClinicalVisitDetails({ visit, patient, onSaveComplete }: Clinica
               <Card>
                 <CardHeader>
                   <CardTitle>Clinical Summary</CardTitle>
-                  <CardDescription>Document the patient's hospital course.</CardDescription>
+                  <CardDescription>Document the patient's hospital course and discharge instructions.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
@@ -722,7 +740,123 @@ export function ClinicalVisitDetails({ visit, patient, onSaveComplete }: Clinica
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Course in Hospital (if applicable)</FormLabel>
-                        <FormControl><Textarea rows={10} placeholder="Describe the patient's course during admission..." {...field} /></FormControl>
+                        <FormControl><Textarea rows={8} placeholder="Describe the patient's course during admission..." {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="dischargeInstructions"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Discharge Instructions</FormLabel>
+                        <FormControl><Textarea rows={8} placeholder="Advised to...&#10;Follow-up in...&#10;Precautions..." {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Medications Tab (Common for all patients) */}
+            <TabsContent value="medications" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Medications</CardTitle>
+                  <CardDescription>Medications can be loaded from a template or added manually.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Medicine Name</TableHead>
+                          <TableHead>Dosage</TableHead>
+                          <TableHead>Frequency</TableHead>
+                          <TableHead>Instructions</TableHead>
+                          <TableHead className="w-[50px]">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {medicationFields.length > 0 ? (
+                          medicationFields.map((field, index) => (
+                            <TableRow key={field.id}>
+                              <TableCell>
+                                <FormField control={form.control} name={`medications.${index}.name`} render={({ field }) => <Input placeholder="Medication" {...field} />} />
+                              </TableCell>
+                              <TableCell>
+                                <FormField control={form.control} name={`medications.${index}.dosage`} render={({ field }) => <Input placeholder="e.g., 40mg" {...field} />} />
+                              </TableCell>
+                              <TableCell>
+                                <FormField control={form.control} name={`medications.${index}.frequency`} render={({ field }) => <Input placeholder="e.g., OD" {...field} />} />
+                              </TableCell>
+                              <TableCell>
+                                <FormField control={form.control} name={`medications.${index}.instructions`} render={({ field }) => <Input placeholder="e.g., After food" {...field} />} />
+                              </TableCell>
+                              <TableCell>
+                                <Button type="button" variant="destructive" size="icon" onClick={() => removeMedication(index)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center text-muted-foreground h-24">
+                              No medications added. Load a template or add manually.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => appendMedication({ id: crypto.randomUUID(), name: "", dosage: "", frequency: "", instructions: "" })}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Medication
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Opinion Tab (Common for all patients) */}
+            <TabsContent value="opinion" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Medical Opinion & Recommendations</CardTitle>
+                  <CardDescription>Professional medical opinion and recommendations</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="opinionText"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Opinion Text</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            rows={8}
+                            placeholder="Provide detailed medical opinion..."
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="recommendations"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Recommendations</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            rows={8}
+                            placeholder="Specific recommendations..."
+                            {...field}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -732,18 +866,7 @@ export function ClinicalVisitDetails({ visit, patient, onSaveComplete }: Clinica
             </TabsContent>
           </Tabs>
 
-          <div className="flex justify-between items-center gap-3 sticky bottom-0 bg-background p-4 border-t">
-            {patient && (
-              <DischargeSummaryButton
-                patient={patient}
-                visit={visit}
-                variant="outline"
-                size="default"
-              />
-            )}
-
-            <div className="flex-1" />
-
+          <div className="flex justify-end items-center gap-3 sticky bottom-0 bg-background p-4 border-t">
             <Button type="submit" disabled={isSubmitting}>
               <Save className="mr-2 h-4 w-4" />
               {isSubmitting ? "Saving..." : "Save Clinical Data"}

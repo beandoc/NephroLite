@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS } from "@/lib/constants";
+import { PRIMARY_DIAGNOSIS_OPTIONS, NUTRITIONAL_STATUSES, DISABILITY_PROFILES, BLOOD_GROUPS, DISABILITY_PROFILE_VALUES, SHAPE_CLASSIFICATIONS } from "@/lib/constants";
 import { Save, Syringe, HeartPulse } from "lucide-react";
 import { getDefaultVaccinations } from "@/lib/data-helpers";
 import { useEffect } from "react";
@@ -114,9 +114,33 @@ export function ClinicalProfileForm({ onSubmit, isSubmitting, existingProfileDat
               <FormField control={form.control} name="pastMedicalClassification" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Past Medical Classification</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., SHAPE-2(X)" {...field} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select SHAPE classification" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {SHAPE_CLASSIFICATIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <FormField control={form.control} name="disabilityProfile" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Disability Profile</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select disability profile" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {DISABILITY_PROFILE_VALUES.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )} />

@@ -16,7 +16,7 @@ export interface DataContextType {
   addPatient: (patientData: PatientFormData) => Promise<Patient>;
   getPatientById: (id: string) => Patient | null;
   currentPatient: (id: string) => Patient | undefined;
-  updatePatient: (patientId: string, updatedData: Partial<PatientFormData & { isTracked?: boolean, patientStatus?: Patient['patientStatus'] }>) => Promise<void>;
+  updatePatient: (patientId: string, updatedData: Partial<Patient>) => Promise<void>;
   deletePatient: (patientId: string) => Promise<void>;
   addVisitToPatient: (patientId: string, visitData: {
     id?: string;
@@ -218,33 +218,19 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     return foundPatient || null;
   }, [patients]);
 
-  const updatePatient = useCallback(async (patientId: string, updatedData: Partial<PatientFormData & { isTracked?: boolean, patientStatus?: Patient['patientStatus'] }>): Promise<void> => {
+  const updatePatient = useCallback(async (patientId: string, updatedData: Partial<Patient>): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
 
     const patient = patients.find(p => p.id === patientId);
     if (!patient) return;
 
-    const updates: Partial<Patient> = {};
+    // Directly use all provided updates (Patient type already validated)
+    const updates: Partial<Patient> = { ...updatedData };
 
-    const patientFormKeys: Array<keyof PatientFormData> = ['firstName', 'lastName', 'dob', 'gender', 'contact', 'email'];
-    patientFormKeys.forEach(key => {
-      if (updatedData[key] !== undefined) {
-        (updates as any)[key] = updatedData[key];
-      }
-    });
-
+    // Handle nested objects or specific fields that need merging/special handling
     if (updatedData.address) updates.address = { ...patient.address, ...updatedData.address };
     if (updatedData.guardian) updates.guardian = { ...patient.guardian, ...updatedData.guardian };
-    if (updatedData.isTracked !== undefined) updates.isTracked = updatedData.isTracked;
-    if (updatedData.patientStatus !== undefined) updates.patientStatus = updatedData.patientStatus;
-
-    if (updatedData.uhid !== undefined || updatedData.whatsappNumber !== undefined) {
-      updates.clinicalProfile = {
-        ...patient.clinicalProfile,
-        ...(updatedData.uhid !== undefined && { aabhaNumber: updatedData.uhid }),
-        ...(updatedData.whatsappNumber !== undefined && { whatsappNumber: updatedData.whatsappNumber })
-      };
-    }
+    // isTracked and patientStatus are directly assigned by spread operator if present in updatedData
 
     await firestoreHelpers.updatePatient(user.uid, patientId, updates);
   }, [patients, user]);

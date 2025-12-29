@@ -77,6 +77,31 @@ export const DISABILITY_PROFILES = [
   'Not Set',
 ] as const;
 
+// Disability Profile Values (for form field - patient's current status)
+export const DISABILITY_PROFILE_VALUES = [
+  'P1',
+  'P2 (T-24)',
+  'P3 (T-24)',
+  'P2 (P)',
+  'P3 (P)',
+  'Fresh',
+  'F2(T-24)',
+  'F2 (T-12)',
+] as const;
+
+// SHAPE Medical Classifications (for past and recommended classifications)
+export const SHAPE_CLASSIFICATIONS = [
+  'SHAPE-I',
+  'SHAPE-2(X)',
+  'SHAPE-2(Y)',
+  'SHAPE-2(Z)',
+  'SHAPE-3(X)',
+  'SHAPE-3(Y)',
+  'SHAPE-3(Z)',
+  'SHAPE-4',
+] as const;
+
+
 export const APPOINTMENT_TYPES = [
   'Routine Checkup',
   'Follow-up',

@@ -4,7 +4,7 @@
 import type { Patient } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, Microscope, Pill, FileText, TrendingUp, FileClock, FolderOpen } from 'lucide-react';
+import { User, Microscope, Pill, FileText, TrendingUp, FileClock, Shield } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { DemographicsCard } from './cards/DemographicsCard';
 import { ClinicalProfileCard } from './cards/ClinicalProfileCard';
@@ -13,7 +13,7 @@ import { PatientVisitsTabContent } from './profile-tabs/PatientVisitsTabContent'
 import { PatientInvestigationsTabContent } from './profile-tabs/PatientInvestigationsTabContent';
 import { PatientDiagnosisRx } from './profile-tabs/PatientDiagnosisRx';
 import { HealthTrendsTabContent } from './profile-tabs/HealthTrendsTabContent';
-import { PatientDocumentsTabContent } from './profile-tabs/PatientDocumentsTabContent';
+import { ServiceDataTabContent } from './profile-tabs/ServiceDataTabContent';
 import { useSearchParams } from 'next/navigation';
 import { PatientInterventionsTabContent } from './profile-tabs/PatientInterventionsTabContent';
 import { PatientPortalAccess } from '@/components/patient/patient-portal-access';
@@ -47,7 +47,7 @@ export function PatientProfileView({ patient, onDataChange }: PatientProfileView
         <TabsTrigger value="interventions"><FileClock className="w-4 h-4 mr-2 sm:hidden md:inline-block" />Interventions</TabsTrigger>
         <TabsTrigger value="investigations"><Microscope className="w-4 h-4 mr-2 sm:hidden md:inline-block" />Investigations</TabsTrigger>
         <TabsTrigger value="diagnosis"><Pill className="w-4 h-4 mr-2 sm:hidden md:inline-block" />Diagnosis/Rx</TabsTrigger>
-        <TabsTrigger value="documents"><FolderOpen className="w-4 h-4 mr-2 sm:hidden md:inline-block" />Documents</TabsTrigger>
+        <TabsTrigger value="service"><Shield className="w-4 h-4 mr-2 sm:hidden md:inline-block" />Service Data</TabsTrigger>
         <TabsTrigger value="healthTrends"><TrendingUp className="w-4 h-4 mr-2 sm:hidden md:inline-block" />Trends</TabsTrigger>
       </TabsList>
 
@@ -98,8 +98,8 @@ export function PatientProfileView({ patient, onDataChange }: PatientProfileView
         </Card>
       </TabsContent>
 
-      <TabsContent value="documents">
-        <PatientDocumentsTabContent patientId={patient.id} />
+      <TabsContent value="service">
+        <ServiceDataTabContent patient={patient} />
       </TabsContent>
 
       <TabsContent value="healthTrends">

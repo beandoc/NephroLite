@@ -27,8 +27,9 @@ export function PatientVisitsTabContent({ patient }: PatientVisitsTabContentProp
   const [isVisitDialogOpen, setIsVisitDialogOpen] = useState(false);
 
   // We need to get the latest patient data from the hook in case it was updated
-  const currentPatientData = currentPatient(patient.id) || patient;
-  const visits = [...(currentPatientData?.visits || [])].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // Use the passed patient object which contains the full subcollection data
+  // The context patient object (currentPatientData) typically only contains the root document
+  const visits = [...(patient?.visits || [])].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const handleVisitCreated = (patientId: string) => {
     setIsVisitDialogOpen(false);
@@ -60,30 +61,32 @@ export function PatientVisitsTabContent({ patient }: PatientVisitsTabContentProp
 
               return (
                 <AccordionItem value={visit.id} key={visit.id} className="border-b last:border-b-0 rounded-md mb-2 shadow-sm bg-card">
-                  <AccordionTrigger className="hover:bg-muted/50 px-4 py-3 text-left rounded-t-md">
-                    <div className="flex items-center gap-4 w-full">
-                      <CalendarDays className="w-5 h-5 text-primary flex-shrink-0" />
-                      <div className="flex-grow">
-                        <p className="font-medium">{visitDate} - <span className="font-semibold">{visit.visitType}</span></p>
-                        <p className="text-sm text-muted-foreground">Remark: {visit.visitRemark}</p>
+                  <div className="flex items-center gap-2 px-4 py-3 hover:bg-muted/50 rounded-t-md">
+                    <AccordionTrigger className="flex-1 hover:no-underline py-0">
+                      <div className="flex items-center gap-4 w-full">
+                        <CalendarDays className="w-5 h-5 text-primary flex-shrink-0" />
+                        <div className="flex-grow text-left">
+                          <p className="font-medium">{visitDate} - <span className="font-semibold">{visit.visitType}</span></p>
+                          <p className="text-sm text-muted-foreground">Remark: {visit.visitRemark}</p>
+                        </div>
                       </div>
-                      {/* PDF Download Buttons */}
-                      <div className="flex gap-2 ml-auto" onClick={(e) => e.stopPropagation()}>
-                        <OpinionReportButton
-                          patient={patient}
-                          visit={{ ...visit, patientId: patient.id }}
-                          variant="outline"
-                          size="sm"
-                        />
-                        <DischargeSummaryButton
-                          patient={patient}
-                          visit={{ ...visit, patientId: patient.id }}
-                          variant="outline"
-                          size="sm"
-                        />
-                      </div>
+                    </AccordionTrigger>
+                    {/* PDF Download Buttons - Outside accordion trigger */}
+                    <div className="flex gap-2 flex-shrink-0">
+                      <OpinionReportButton
+                        patient={patient}
+                        visit={{ ...visit, patientId: patient.id }}
+                        variant="outline"
+                        size="sm"
+                      />
+                      <DischargeSummaryButton
+                        patient={patient}
+                        visit={{ ...visit, patientId: patient.id }}
+                        variant="outline"
+                        size="sm"
+                      />
                     </div>
-                  </AccordionTrigger>
+                  </div>
                   <AccordionContent className="px-0 sm:px-4 pt-2 pb-4 bg-card rounded-b-md">
                     <ClinicalVisitDetails visit={{ ...visit, patientId: patient.id }} patient={patient} />
                   </AccordionContent>
