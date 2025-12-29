@@ -8,6 +8,7 @@ import { useAuth } from '@/context/auth-provider';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { format } from 'date-fns';
+import { LabTrendsChart } from '@/components/patient/LabTrendsChart';
 
 export default function InvestigationsPage() {
     const { user } = useAuth();
@@ -51,6 +52,11 @@ export default function InvestigationsPage() {
                     View your lab test results and reports
                 </p>
             </div>
+
+            {/* Trends Chart */}
+            {!loading && investigations.length > 0 && (
+                <LabTrendsChart investigations={investigations} />
+            )}
 
             <Card>
                 <CardHeader>

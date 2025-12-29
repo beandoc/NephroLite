@@ -7,18 +7,20 @@ import Link from 'next/link';
 import { useAuth } from '@/context/auth-provider';
 import { PatientQueueStatus } from '@/components/patient/patient-queue-status';
 import { PatientDashboardWidgets } from '@/components/patient/dashboard-widgets';
+import { AppointmentRequestDialog } from '@/components/patient/AppointmentRequestDialog';
 
 export default function PatientDashboard() {
     const { user } = useAuth();
 
     const quickActions = [
         {
-            title: 'Log PD Data',
-            description: 'Record your daily PD monitoring',
-            icon: Activity,
-            href: '/patient/pd-logs',
-            color: 'bg-blue-500',
+            title: 'Request Appointment',
+            description: 'Schedule a consultation with your doctor',
+            icon: Calendar,
+            href: '#',
+            color: 'bg-indigo-500',
             priority: 1,
+            isDialog: true,
         },
         {
             title: 'Check-in to OPD',
@@ -29,12 +31,20 @@ export default function PatientDashboard() {
             priority: 2,
         },
         {
+            title: 'Log PD Data',
+            description: 'Record your daily PD monitoring',
+            icon: Activity,
+            href: '/patient/pd-logs',
+            color: 'bg-blue-500',
+            priority: 3,
+        },
+        {
             title: 'View Results',
             description: 'See your investigation results',
             icon: FileText,
             href: '/patient/investigations',
             color: 'bg-purple-500',
-            priority: 3,
+            priority: 4,
         },
     ];
 
@@ -77,7 +87,26 @@ export default function PatientDashboard() {
                         return !!user?.isPD;
                     }
                     return true;
-                }).map((action) => (
+                }).map((action) => action.isDialog ? (
+                    <Card key={action.title} className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                        <CardHeader>
+                            <div className={`w-12 h-12 rounded-full ${action.color} flex items-center justify-center mb-2`}>
+                                <action.icon className="h-6 w-6 text-white" />
+                            </div>
+                            <CardTitle>{action.title}</CardTitle>
+                            <CardDescription>{action.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <AppointmentRequestDialog
+                                trigger={
+                                    <Button className="w-full">
+                                        {action.title}
+                                    </Button>
+                                }
+                            />
+                        </CardContent>
+                    </Card>
+                ) : (
                     <Link key={action.title} href={action.href}>
                         <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
                             <CardHeader>

@@ -3,7 +3,7 @@
 import { useAuth } from '@/context/auth-provider';
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Activity, ClipboardList, FileText, LogOut, User, Home } from 'lucide-react';
+import { Activity, ClipboardList, FileText, LogOut, User, Home, Clock, Pill } from 'lucide-react';
 import Link from 'next/link';
 import { PatientOnly } from '@/components/auth/role-guard';
 
@@ -17,8 +17,10 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
 
     const navigation = [
         { name: 'Home', href: '/patient/dashboard', icon: Home },
-        { name: 'PD Daily Logs', href: '/patient/pd-logs', icon: Activity },
+        { name: 'Queue Status', href: '/patient/queue-status', icon: Clock },
         { name: 'Check-in', href: '/patient/checkin', icon: ClipboardList },
+        { name: 'My Medications', href: '/patient/medications', icon: Pill },
+        { name: 'PD Daily Logs', href: '/patient/pd-logs', icon: Activity },
         { name: 'My Results', href: '/patient/investigations', icon: FileText },
         { name: 'Profile', href: '/patient/profile', icon: User },
     ].filter(item => {

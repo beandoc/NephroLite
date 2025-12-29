@@ -185,11 +185,14 @@ export default function DisabilityAssessmentPage() {
                                     <SelectValue placeholder="Select patient to auto-fill..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {patients.map(p => (
-                                        <SelectItem key={p.id} value={p.id}>
-                                            {`${p.firstName} ${p.lastName}`} ({p.nephroId})
-                                        </SelectItem>
-                                    ))}
+                                    {patients
+                                        .filter(p => p.guardian?.relation?.toUpperCase() === 'SELF') // Only military personnel
+                                        .map(p => (
+                                            <SelectItem key={p.id} value={p.id}>
+                                                {`${p.firstName} ${p.lastName}`} ({p.nephroId})
+                                            </SelectItem>
+                                        ))
+                                    }
                                 </SelectContent>
                             </Select>
                         </div>

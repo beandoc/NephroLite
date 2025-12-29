@@ -70,24 +70,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Fetch user role and additional data from Firestore
     const fetchUserData = async (firebaseUser: FirebaseUser): Promise<ExtendedUser | null> => {
         try {
-            // First try to find user in staff users (users collection)
-            const staffDocRef = doc(db, `users/${firebaseUser.uid}`);
-            const staffDoc = await getDoc(staffDocRef);
-
-            if (staffDoc.exists()) {
-                const data = staffDoc.data();
-                return {
-                    uid: firebaseUser.uid,
-                    email: firebaseUser.email,
-                    displayName: firebaseUser.displayName || data.name || data.email,
-                    photoURL: firebaseUser.photoURL,
-                    role: data.role || 'doctor', // Default to doctor for existing users
-                    staffId: data.staffId || firebaseUser.uid,
-                    department: data.department,
-                };
-            }
-
-            // If not staff, check patientUsers collection
+            // CHANGED: Check patientUsers FIRST to prioritize patient accounts
             const patientDocRef = doc(db, `patientUsers/${firebaseUser.uid}`);
             const patientDoc = await getDoc(patientDocRef);
 
@@ -114,10 +97,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                     };
                 } else {
                     // Fallback: Try to find patient by email (Self-Healing)
-                    // This handles cases where patientId in patientUsers points to a non-existent doc
                     const { collection, query, where, getDocs, updateDoc } = await import('firebase/firestore');
                     const patientsRef = collection(db, 'patients');
-                    // Check 'portalEmail' which is explicitly set during portal account creation
                     const q = query(patientsRef, where('portalEmail', '==', firebaseUser.email));
                     const querySnapshot = await getDocs(q);
 
@@ -129,7 +110,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                             patientData.clinicalProfile?.tags?.includes('Peritoneal Dialysis') || false;
 
                         console.log('Self-healing: Found patient record by email, updating link.');
-                        // Attempt to self-heal the broken link
                         try {
                             await updateDoc(patientDocRef, { patientId: foundPatientDoc.id });
                         } catch (err) {
@@ -149,7 +129,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                     }
                 }
 
-                // If still not found, return safe defaults
+                // If still not found after checking patient record, return safe defaults
                 return {
                     uid: firebaseUser.uid,
                     email: firebaseUser.email,
@@ -159,6 +139,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                     patientId: data.patientId,
                     nephroId: 'Pending',
                     isPD: false,
+                };
+            }
+
+            // If not a patient, check staff users (users collection)
+            const staffDocRef = doc(db, `users/${firebaseUser.uid}`);
+            const staffDoc = await getDoc(staffDocRef);
+
+            if (staffDoc.exists()) {
+                const data = staffDoc.data();
+                return {
+                    uid: firebaseUser.uid,
+                    email: firebaseUser.email,
+                    displayName: firebaseUser.displayName || data.name || data.email,
+                    photoURL: firebaseUser.photoURL,
+                    role: data.role || 'doctor', // Default to doctor for existing users
+                    staffId: data.staffId || firebaseUser.uid,
+                    department: data.department,
                 };
             }
 

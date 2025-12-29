@@ -295,7 +295,7 @@ export function PatientForm({ onSubmit, isSubmitting, existingPatientData }: Pat
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
             <FormField control={form.control} name="guardian.relation" render={({ field }) => (
               <FormItem>
-                <FormLabel>Relation to Patient</FormLabel>
+                <FormLabel>Relation to Serving Personnel</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl><SelectTrigger><SelectValue placeholder="Select relation" /></SelectTrigger></FormControl>
                   <SelectContent>{RELATIONSHIPS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
