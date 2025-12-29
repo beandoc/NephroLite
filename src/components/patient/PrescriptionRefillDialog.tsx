@@ -14,8 +14,8 @@ import { db } from '@/lib/firebase';
 
 interface Medication {
     name: string;
-    dosage: string;
-    frequency: string;
+    dosage?: string;
+    frequency?: string;
 }
 
 interface PrescriptionRefillDialogProps {
@@ -41,8 +41,8 @@ export function PrescriptionRefillDialog({ medication }: PrescriptionRefillDialo
                 patientName: user.displayName || 'Patient',
                 patientNephroId: user.nephroId || 'N/A',
                 medicationName: medication.name,
-                dosage: medication.dosage,
-                frequency: medication.frequency,
+                dosage: medication.dosage || 'Not specified',
+                frequency: medication.frequency || 'Not specified',
                 notes: notes.trim(),
                 status: 'pending',
                 requestedAt: serverTimestamp(),
@@ -92,11 +92,11 @@ export function PrescriptionRefillDialog({ medication }: PrescriptionRefillDialo
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label>Dosage</Label>
-                            <Input value={medication.dosage} disabled />
+                            <Input value={medication.dosage || 'N/A'} disabled />
                         </div>
                         <div className="space-y-2">
                             <Label>Frequency</Label>
-                            <Input value={medication.frequency} disabled />
+                            <Input value={medication.frequency || 'N/A'} disabled />
                         </div>
                     </div>
 
