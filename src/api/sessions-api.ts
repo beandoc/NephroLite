@@ -1,19 +1,4 @@
-import {
-    collection,
-    doc,
-    getDocs,
-    getDoc,
-    addDoc,
-    updateDoc,
-    query,
-    where,
-    orderBy,
-    limit,
-    Timestamp,
-    QueryConstraint,
-} from 'firebase/firestore';
 import { BaseAPI } from './base-api';
-import { db } from '@/lib/firebase';
 import { apiLogger } from '@/lib/logger';
 
 /**
@@ -25,8 +10,8 @@ export interface DialysisSession {
     sessionDate: string;
     dialysisType?: string;
     status?: string;
-    createdAt?: Timestamp;
-    updatedAt?: Timestamp;
+    createdAt?: string;
+    updatedAt?: string;
     [key: string]: any;
 }
 
@@ -37,7 +22,7 @@ export type SessionInput = Omit<DialysisSession, 'id' | 'createdAt' | 'updatedAt
  */
 export class SessionsAPI extends BaseAPI {
     constructor() {
-        super(db, 'dialysisSessions', apiLogger);
+        super('dialysis_sessions', apiLogger);
     }
 
     /**
@@ -47,25 +32,19 @@ export class SessionsAPI extends BaseAPI {
         return this.withErrorHandling(async () => {
             this.logOperation('start', 'getAll', { patientId });
 
-            let q;
+            let query = this.supabase
+                .from(this.tableName)
+                .select('*')
+                .order('date_of_session', { ascending: false }); // Note: DB column is date_of_session
+
             if (patientId) {
-                q = query(
-                    collection(this.db, this.collectionName),
-                    where('patientId', '==', patientId),
-                    orderBy('sessionDate', 'desc')
-                );
-            } else {
-                q = query(
-                    collection(this.db, this.collectionName),
-                    orderBy('sessionDate', 'desc')
-                );
+                query = query.eq('patient_id', patientId);
             }
 
-            const snapshot = await getDocs(q);
+            const { data, error } = await query;
+            if (error) throw error;
 
-            const sessions = this.formatDocs<DialysisSession>(snapshot.docs);
-            this.logger.info({ count: sessions.length, patientId }, 'Fetched sessions');
-            return sessions;
+            return data.map(this.mapToSession);
         }, 'getAll');
     }
 
@@ -74,15 +53,18 @@ export class SessionsAPI extends BaseAPI {
      */
     async getById(id: string): Promise<DialysisSession | null> {
         return this.withErrorHandling(async () => {
-            const docRef = doc(this.db, this.collectionName, id);
-            const snapshot = await getDoc(docRef);
+            const { data, error } = await this.supabase
+                .from(this.tableName)
+                .select('*')
+                .eq('id', id)
+                .single();
 
-            if (!snapshot.exists()) {
-                this.logger.warn({ sessionId: id }, 'Session not found');
-                return null;
+            if (error) {
+                if (error.code === 'PGRST116') return null;
+                throw error;
             }
 
-            return this.formatDoc<DialysisSession>(snapshot);
+            return this.mapToSession(data);
         }, 'getById');
     }
 
@@ -91,25 +73,37 @@ export class SessionsAPI extends BaseAPI {
      */
     async create(data: SessionInput): Promise<DialysisSession> {
         return this.withErrorHandling(async () => {
-            const now = Timestamp.now();
-            const docData = {
-                ...data,
-                createdAt: now,
-                updatedAt: now,
+            const now = new Date().toISOString();
+
+            // Map camelCase -> snake_case
+            const dbPayload = {
+                patient_id: data.patientId,
+                date_of_session: data.sessionDate,
+                type_of_dialysis: data.dialysisType,
+                status: data.status,
+                // Add other fields from earlier migration script if they exist in SessionInput
+                // e.g. duration, stats, details
+                ...data, // Spread remaining fields (careful with non-matching columns)
+
+                created_at: now,
+                updated_at: now
             };
 
-            const docRef = await addDoc(
-                collection(this.db, this.collectionName),
-                docData
-            );
+            // Fix up specific internal fields if they leak through spread
+            delete (dbPayload as any).patientId;
+            delete (dbPayload as any).sessionDate;
+            delete (dbPayload as any).dialysisType;
 
-            const session = {
-                id: docRef.id,
-                ...docData,
-            } as DialysisSession;
+            const { data: newRecord, error } = await this.supabase
+                .from(this.tableName)
+                .insert(dbPayload)
+                .select()
+                .single();
 
-            this.logger.info({ sessionId: session.id, patientId: data.patientId }, 'Session created');
-            return session;
+            if (error) throw error;
+
+            this.logger.info({ sessionId: newRecord.id, patientId: data.patientId }, 'Session created');
+            return this.mapToSession(newRecord);
         }, 'create');
     }
 
@@ -118,12 +112,29 @@ export class SessionsAPI extends BaseAPI {
      */
     async update(id: string, data: Partial<SessionInput>): Promise<void> {
         return this.withErrorHandling(async () => {
-            const docRef = doc(this.db, this.collectionName, id);
+            const updates: any = { ...data };
 
-            await updateDoc(docRef, {
-                ...data,
-                updatedAt: Timestamp.now(),
-            });
+            if (data.patientId) {
+                updates.patient_id = data.patientId;
+                delete updates.patientId;
+            }
+            if (data.sessionDate) {
+                updates.date_of_session = data.sessionDate;
+                delete updates.sessionDate;
+            }
+            if (data.dialysisType) {
+                updates.type_of_dialysis = data.dialysisType;
+                delete updates.dialysisType;
+            }
+
+            updates.updated_at = new Date().toISOString();
+
+            const { error } = await this.supabase
+                .from(this.tableName)
+                .update(updates)
+                .eq('id', id);
+
+            if (error) throw error;
 
             this.logger.info({ sessionId: id }, 'Session updated');
         }, 'update');
@@ -134,20 +145,32 @@ export class SessionsAPI extends BaseAPI {
      */
     async getRecent(count: number = 10): Promise<DialysisSession[]> {
         return this.withErrorHandling(async () => {
-            const snapshot = await getDocs(
-                query(
-                    collection(this.db, this.collectionName),
-                    orderBy('sessionDate', 'desc'),
-                    limit(count)
-                )
-            );
+            const { data, error } = await this.supabase
+                .from(this.tableName)
+                .select('*')
+                .order('date_of_session', { ascending: false })
+                .limit(count);
 
-            const sessions = this.formatDocs<DialysisSession>(snapshot.docs);
-            this.logger.info({ count: sessions.length }, 'Fetched recent sessions');
-            return sessions;
+            if (error) throw error;
+
+            return data.map(this.mapToSession);
         }, 'getRecent');
+    }
+
+    private mapToSession(row: any): DialysisSession {
+        return {
+            id: row.id,
+            patientId: row.patient_id,
+            sessionDate: row.date_of_session,
+            dialysisType: row.type_of_dialysis,
+            status: row.status,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+            ...row // Spread other fields
+        };
     }
 }
 
 // Export singleton
 export const sessionsAPI = new SessionsAPI();
+

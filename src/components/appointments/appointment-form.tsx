@@ -13,7 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  useFormField, 
+  useFormField,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -38,7 +38,7 @@ import { Skeleton } from "../ui/skeleton";
 import Link from "next/link";
 
 interface AppointmentFormProps {
-  appointment?: Appointment; 
+  appointment?: Appointment;
   onSubmit: (data: AppointmentFormData, patient: Patient) => void;
   isSubmitting?: boolean;
 }
@@ -53,13 +53,36 @@ export function AppointmentForm({ appointment, onSubmit, isSubmitting }: Appoint
       date: appointment.date ? format(parseISO(appointment.date), "yyyy-MM-dd") : "",
     } : {
       patientId: "",
-      date: format(addDays(new Date(), 14), "yyyy-MM-dd"), 
+      date: format(addDays(new Date(), 14), "yyyy-MM-dd"),
       time: "",
       type: "",
       doctorName: "",
       notes: "",
     },
   });
+
+  // Get available time slots based on selected date
+  const selectedDate = form.watch("date");
+  const getAvailableTimeSlots = () => {
+    if (!selectedDate) return TIME_SLOTS;
+
+    const today = format(new Date(), "yyyy-MM-dd");
+    const isToday = selectedDate === today;
+
+    if (!isToday) return TIME_SLOTS;
+
+    // Filter out past time slots for today
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    return TIME_SLOTS.filter(slot => {
+      const [slotHour, slotMinute] = slot.split(':').map(Number);
+      return slotHour > currentHour || (slotHour === currentHour && slotMinute > currentMinute);
+    });
+  };
+
+  const availableTimeSlots = getAvailableTimeSlots();
 
   const handleSubmit = (data: AppointmentFormData) => {
     const selectedPatient = patients.find(p => p.id === data.patientId);
@@ -79,18 +102,18 @@ export function AppointmentForm({ appointment, onSubmit, isSubmitting }: Appoint
       </div>
     );
   }
-  
+
   if (!patientsLoading && patients.length === 0) {
-     return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">No Patients Available</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p>There are no patients registered in the system. Please <Link href="/patients/new" className="text-primary hover:underline">add a patient</Link> before scheduling an appointment.</p>
-            </CardContent>
-        </Card>
-     );
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-headline">No Patients Available</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>There are no patients registered in the system. Please <Link href="/patients/new" className="text-primary hover:underline">add a patient</Link> before scheduling an appointment.</p>
+        </CardContent>
+      </Card>
+    );
   }
 
 
@@ -106,54 +129,58 @@ export function AppointmentForm({ appointment, onSubmit, isSubmitting }: Appoint
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl><SelectTrigger><SelectValue placeholder="Select patient" /></SelectTrigger></FormControl>
                   <SelectContent>
-                    {patients.map(p => <SelectItem key={p.id} value={p.id}>{`${p.firstName} ${p.lastName}`} ({p.nephroId})</SelectItem>)}
+                    {patients.filter(p => p.id).map(p => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {`${p.firstName} ${p.lastName}`} ({p.nephroId})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
               </FormItem>
             )} />
-            
+
             <FormField control={form.control} name="date" render={({ field }) => {
-                const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
-                return (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                            id={formItemId}
-                            aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
-                            aria-invalid={!!error}
-                          >
-                            {field.value ? (
-                              format(parse(field.value, "yyyy-MM-dd", new Date()), "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined}
-                          onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
-                          disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) } 
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                );
-              }}
+              const { formItemId, formDescriptionId, formMessageId, error } = useFormField();
+              return (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                          id={formItemId}
+                          aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
+                          aria-invalid={!!error}
+                        >
+                          {field.value ? (
+                            format(parse(field.value, "yyyy-MM-dd", new Date()), "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined}
+                        onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
             />
 
             <FormField control={form.control} name="time" render={({ field }) => (
@@ -169,7 +196,11 @@ export function AppointmentForm({ appointment, onSubmit, isSubmitting }: Appoint
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {TIME_SLOTS.map(slot => <SelectItem key={slot} value={slot}>{slot}</SelectItem>)}
+                    {availableTimeSlots.map(slot => (
+                      <SelectItem key={slot} value={slot}>
+                        {slot}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -181,7 +212,13 @@ export function AppointmentForm({ appointment, onSubmit, isSubmitting }: Appoint
                 <FormLabel>Appointment Type</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
-                  <SelectContent>{APPOINTMENT_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent>
+                  <SelectContent>
+                    {APPOINTMENT_TYPES.map(type => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
                 <FormMessage />
               </FormItem>
@@ -192,7 +229,13 @@ export function AppointmentForm({ appointment, onSubmit, isSubmitting }: Appoint
                 <FormLabel>Doctor</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl><SelectTrigger><SelectValue placeholder="Select doctor" /></SelectTrigger></FormControl>
-                  <SelectContent>{MOCK_DOCTORS.map(doc => <SelectItem key={doc} value={doc}>{doc}</SelectItem>)}</SelectContent>
+                  <SelectContent>
+                    {MOCK_DOCTORS.map(doc => (
+                      <SelectItem key={doc} value={doc}>
+                        {doc}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
                 <FormMessage />
               </FormItem>

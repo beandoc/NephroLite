@@ -1,15 +1,4 @@
-import {
-    collection,
-    doc,
-    getDocs,
-    getDoc,
-    updateDoc,
-    query,
-    where,
-    orderBy,
-} from 'firebase/firestore';
 import { BaseAPI } from './base-api';
-import { db } from '@/lib/firebase';
 import { apiLogger } from '@/lib/logger';
 
 /**
@@ -36,138 +25,91 @@ export type UserInput = Omit<User, 'id' | 'createdAt' | 'updatedAt'>;
 
 /**
  * Users API
- * Handles all user-related Firestore operations
- * 
- * Note: User creation is handled by Firebase Auth + Cloud Functions
- * This API is for reading and updating user metadata
- * 
- * @example
- * ```typescript
- * import { api } from '@/api';
- * 
- * // Get all users
- * const users = await api.users.getAll();
- * 
- * // Update user role
- * await api.users.updateRole('user123', 'doctor');
- * 
- * // Search by email
- * const user = await api.users.findByEmail('doctor@example.com');
- * ```
  */
 export class UsersAPI extends BaseAPI {
     constructor() {
-        super(db, 'users', apiLogger);
+        // Assuming we created a 'profiles' table which is common in Supabase for user metadata
+        // If not, we might need to fallback to 'users' table if we migrated it exactly
+        super('profiles', apiLogger);
     }
 
     /**
      * Get all users
-     * 
-     * @param activeOnly - If true, only return active users (default: true)
-     * @returns Promise with array of users
-     * @throws {AppError} If database query fails
      */
     async getAll(activeOnly: boolean = true): Promise<User[]> {
         return this.withErrorHandling(async () => {
             this.logOperation('start', 'getAll', { activeOnly });
 
-            let q;
+            let query = this.supabase
+                .from(this.tableName)
+                .select('*')
+                .order('display_name', { ascending: true }); // snake_case
+
             if (activeOnly) {
-                q = query(
-                    collection(this.db, this.collectionName),
-                    where('isActive', '==', true),
-                    orderBy('displayName')
-                );
-            } else {
-                q = query(
-                    collection(this.db, this.collectionName),
-                    orderBy('displayName')
-                );
+                query = query.eq('is_active', true);
             }
 
-            const snapshot = await getDocs(q);
-            const users = this.formatDocs<User>(snapshot.docs);
+            const { data, error } = await query;
+            if (error) throw error;
 
-            this.logger.info({ count: users.length, activeOnly }, 'Fetched users');
-            return users;
+            return data.map(this.mapToUser);
         }, 'getAll');
     }
 
     /**
      * Get user by ID
-     * 
-     * @param id - User document ID (same as Firebase Auth UID)
-     * @returns Promise with user or null if not found
-     * @throws {AppError} If database query fails
      */
     async getById(id: string): Promise<User | null> {
         return this.withErrorHandling(async () => {
-            const docRef = doc(this.db, this.collectionName, id);
-            const snapshot = await getDoc(docRef);
+            const { data, error } = await this.supabase
+                .from(this.tableName)
+                .select('*')
+                .eq('id', id)
+                .single();
 
-            if (!snapshot.exists()) {
-                this.logger.warn({ userId: id }, 'User not found');
-                return null;
+            if (error) {
+                if (error.code === 'PGRST116') return null;
+                throw error;
             }
 
-            return this.formatDoc<User>(snapshot);
+            return this.mapToUser(data);
         }, 'getById');
     }
 
     /**
      * Find user by email
-     * 
-     * @param email - User email address
-     * @returns Promise with user or null if not found
-     * @throws {AppError} If database query fails
-     * 
-     * @example
-     * ```typescript
-     * const user = await api.users.findByEmail('doctor@example.com');
-     * if (user) {
-     *   console.log('User role:', user.role);
-     * }
-     * ```
      */
     async findByEmail(email: string): Promise<User | null> {
         return this.withErrorHandling(async () => {
-            const snapshot = await getDocs(
-                query(
-                    collection(this.db, this.collectionName),
-                    where('email', '==', email.toLowerCase())
-                )
-            );
+            const { data, error } = await this.supabase
+                .from(this.tableName)
+                .select('*')
+                .eq('email', email.toLowerCase())
+                .single();
 
-            if (snapshot.empty) {
-                this.logger.warn({ email }, 'User not found by email');
-                return null;
+            if (error) {
+                if (error.code === 'PGRST116') return null;
+                throw error;
             }
 
-            return this.formatDoc<User>(snapshot.docs[0]);
+            return this.mapToUser(data);
         }, 'findByEmail');
     }
 
     /**
      * Update user role
-     * 
-     * @param id - User document ID
-     * @param role - New role to assign
-     * @throws {AppError} If update fails
-     * 
-     * @example
-     * ```typescript
-     * // Promote nurse to doctor
-     * await api.users.updateRole('user123', 'doctor');
-     * ```
      */
     async updateRole(id: string, role: UserRole): Promise<void> {
         return this.withErrorHandling(async () => {
-            const docRef = doc(this.db, this.collectionName, id);
+            const { error } = await this.supabase
+                .from(this.tableName)
+                .update({
+                    role,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', id);
 
-            await updateDoc(docRef, {
-                role,
-                updatedAt: new Date(),
-            });
+            if (error) throw error;
 
             this.logger.info({ userId: id, role }, 'User role updated');
         }, 'updateRole');
@@ -175,21 +117,23 @@ export class UsersAPI extends BaseAPI {
 
     /**
      * Update user profile
-     * 
-     * @param id - User document ID
-     * @param data - Partial user data to update
-     * @throws {AppError} If update fails
-     * 
-     * Note: Cannot change role via this method, use updateRole instead
      */
     async update(id: string, data: Partial<Omit<UserInput, 'role'>>): Promise<void> {
         return this.withErrorHandling(async () => {
-            const docRef = doc(this.db, this.collectionName, id);
+            const updates: any = {};
+            if (data.displayName) updates.display_name = data.displayName;
+            if (data.phoneNumber) updates.phone = data.phoneNumber; // Assuming phone column
+            if (data.email) updates.email = data.email;
+            if (data.isActive !== undefined) updates.is_active = data.isActive;
 
-            await updateDoc(docRef, {
-                ...data,
-                updatedAt: new Date(),
-            });
+            updates.updated_at = new Date().toISOString();
+
+            const { error } = await this.supabase
+                .from(this.tableName)
+                .update(updates)
+                .eq('id', id);
+
+            if (error) throw error;
 
             this.logger.info({ userId: id }, 'User profile updated');
         }, 'update');
@@ -197,32 +141,36 @@ export class UsersAPI extends BaseAPI {
 
     /**
      * Get users by role
-     * 
-     * @param role - User role to filter by
-     * @returns Promise with array of users with specified role
-     * 
-     * @example
-     * ```typescript
-     * // Get all doctors
-     * const doctors = await api.users.getByRole('doctor');
-     * ```
      */
     async getByRole(role: UserRole): Promise<User[]> {
         return this.withErrorHandling(async () => {
-            const snapshot = await getDocs(
-                query(
-                    collection(this.db, this.collectionName),
-                    where('role', '==', role),
-                    where('isActive', '==', true)
-                )
-            );
+            const { data, error } = await this.supabase
+                .from(this.tableName)
+                .select('*')
+                .eq('role', role)
+                .eq('is_active', true);
 
-            const users = this.formatDocs<User>(snapshot.docs);
-            this.logger.info({ role, count: users.length }, 'Fetched users by role');
-            return users;
+            if (error) throw error;
+
+            return data.map(this.mapToUser);
         }, 'getByRole');
+    }
+
+    private mapToUser(row: any): User {
+        return {
+            id: row.id,
+            email: row.email,
+            displayName: row.display_name,
+            role: row.role,
+            phoneNumber: row.phone,
+            isActive: row.is_active,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+            ...row
+        };
     }
 }
 
 // Export singleton instance
 export const usersAPI = new UsersAPI();
+

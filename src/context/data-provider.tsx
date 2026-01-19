@@ -6,7 +6,7 @@ import type { Patient, PatientFormData, Visit, VisitFormData, ClinicalProfile, C
 import { format, parseISO } from 'date-fns';
 import { getDefaultVaccinations } from '@/lib/data-helpers';
 import { useAuth } from './auth-provider';
-import * as firestoreHelpers from '@/lib/firestore-helpers';
+import { api } from '@/api';
 
 // Define the shape of the context data
 export interface DataContextType {
@@ -100,63 +100,50 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
   const [lastId, setLastId] = useState(1000);
   const [isLoading, setIsLoading] = useState(true);
 
-  // --- FIRESTORE SUBSCRIPTIONS ---
+  // --- INITIAL DATA LOAD ---
   useEffect(() => {
-    if (!user) {
-      setPatients([]);
-      setAppointments([]);
-      setIsLoading(false);
-      return;
-    }
+    const fetchInitialData = async () => {
+      if (!user) {
+        setPatients([]);
+        setAppointments([]);
+        setIsLoading(false);
+        return;
+      }
 
-    setIsLoading(true);
+      setIsLoading(true);
+      try {
+        // Parallel fetch for speed
+        const [patientsData, apptsData, masterList, panels] = await Promise.all([
+          api.patients.getAll(),
+          api.appointments.getAll(),
+          api.masterData.getInvestigationMasterList(),
+          api.masterData.getInvestigationPanels()
+        ]);
 
-    // Subscribe to patients
-    const unsubscribePatients = firestoreHelpers.subscribeToPatients(
-      user.uid,
-      (patientsData) => {
-        setPatients(prevPatients => {
-          // Merge new patient data with existing subcollections
-          return patientsData.map(newPatient => {
-            const existingPatient = prevPatients.find(p => p.id === newPatient.id);
-            if (existingPatient) {
-              // Preserve subcollections from existing patient
-              return {
-                ...newPatient,
-                visits: existingPatient.visits || [],
-                investigationRecords: existingPatient.investigationRecords || [],
-                interventions: existingPatient.interventions || [],
-                dialysisSessions: existingPatient.dialysisSessions || []
-              };
-            }
-            // New patient - use empty subcollections
-            return newPatient;
-          });
-        });
+        setPatients(patientsData);
+        setAppointments(apptsData);
+        setInvestigationMasterList(masterList);
+        setInvestigationPanels(panels);
         setLastId(calculateInitialLastId(patientsData));
+        // I should migrate master data api too or mock it.
+
+      } catch (error) {
+        console.error("Failed to load initial data from Supabase:", error);
+      } finally {
         setIsLoading(false);
       }
-    );
-
-    // Subscribe to appointments
-    const unsubscribeAppointments = firestoreHelpers.subscribeToAppointments(
-      user.uid,
-      (appointmentsData) => {
-        setAppointments(appointmentsData);
-      }
-    );
-
-    // Load investigation master data
-    firestoreHelpers.getInvestigationMaster(user.uid).then((data) => {
-      setInvestigationMasterList(data.investigationMasterList);
-      setInvestigationPanels(data.investigationPanels);
-    });
-
-    return () => {
-      unsubscribePatients();
-      unsubscribeAppointments();
     };
+
+    fetchInitialData();
   }, [user]);
+
+  // --- HELPER TO REFRESH PATIENT STATE ---
+  const refreshPatient = useCallback(async (patientId: string) => {
+    const refreshedPatient = await api.patients.getById(patientId);
+    if (refreshedPatient) {
+      setPatients(prev => prev.map(p => p.id === patientId ? refreshedPatient : p));
+    }
+  }, []);
 
   // --- PATIENT DATA LOGIC ---
   const addPatient = useCallback(async (patientData: PatientFormData): Promise<Patient> => {
@@ -171,8 +158,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     const newNephroId = `${newIdNumber}/${month}${year}`;
     const nowISO = new Date().toISOString();
 
-    const newPatient: Patient = {
-      id: crypto.randomUUID(),
+    const newPatientInput = {
       nephroId: newNephroId,
       firstName: patientData.firstName,
       lastName: patientData.lastName,
@@ -192,15 +178,9 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
         contact: patientData.guardian.relation === 'Self' ? (patientData.contact || "") : (patientData.guardian.contact || ""),
       },
       registrationDate: nowISO.split('T')[0],
-      createdAt: nowISO,
-      patientStatus: 'OPD',
+      patientStatus: 'OPD' as const,
       isTracked: false,
-      residenceType: 'Not Set',
-      visits: [],
-      investigationRecords: [],
-      nextAppointmentDate: "",
-      interventions: [],
-      dialysisSessions: [],
+      residenceType: 'Not Set' as const,
       clinicalProfile: {
         ...getInitialClinicalProfile(),
         tags: [],
@@ -209,8 +189,9 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
       },
     };
 
-    await firestoreHelpers.createPatient(user.uid, newPatient);
-    return newPatient;
+    const createdPatient = await api.patients.create(newPatientInput);
+    setPatients(prev => [createdPatient, ...prev]);
+    return createdPatient;
   }, [lastId, user]);
 
   const getPatientById = useCallback((id: string): Patient | null => {
@@ -222,17 +203,16 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user) throw new Error('User not authenticated');
 
     const patient = patients.find(p => p.id === patientId);
-    if (!patient) return;
+    const updates: any = { ...updatedData };
 
-    // Directly use all provided updates (Patient type already validated)
-    const updates: Partial<Patient> = { ...updatedData };
+    if (patient) {
+      if (updatedData.address) updates.address = { ...patient.address, ...updatedData.address };
+      if (updatedData.guardian) updates.guardian = { ...patient.guardian, ...updatedData.guardian };
+    }
 
-    // Handle nested objects or specific fields that need merging/special handling
-    if (updatedData.address) updates.address = { ...patient.address, ...updatedData.address };
-    if (updatedData.guardian) updates.guardian = { ...patient.guardian, ...updatedData.guardian };
-    // isTracked and patientStatus are directly assigned by spread operator if present in updatedData
+    await api.patients.update(patientId, updates);
 
-    await firestoreHelpers.updatePatient(user.uid, patientId, updates);
+    setPatients(prev => prev.map(p => p.id === patientId ? { ...p, ...updates } : p));
   }, [patients, user]);
 
   const updateClinicalProfile = useCallback(async (patientId: string, clinicalProfileData: ClinicalProfile): Promise<void> => {
@@ -245,8 +225,9 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
         : getDefaultVaccinations(),
     };
 
-    await firestoreHelpers.updatePatient(user.uid, patientId, { clinicalProfile: profileWithVaccinations });
-  }, [user]);
+    await api.patients.update(patientId, { clinicalProfile: profileWithVaccinations });
+    await refreshPatient(patientId);
+  }, [user, refreshPatient]);
 
   const addVisitToPatient = useCallback(async (
     patientId: string,
@@ -262,119 +243,111 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
   ): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
 
-    const patient = await firestoreHelpers.getPatientWithSubcollections(user.uid, patientId);
-    if (!patient) throw new Error('Patient not found');
-
-    const visit: Visit = {
-      id: visitData.id || crypto.randomUUID(),
+    const visitInput = {
       patientId,
-      date: visitData.date || new Date().toISOString().split('T')[0], // Default to today
-      createdAt: new Date().toISOString(),
+      visitDate: visitData.date || new Date().toISOString().split('T')[0],
       visitType: visitData.visitType,
       visitRemark: visitData.visitRemark,
       groupName: visitData.groupName,
-      patientGender: patient.gender,
-      patientRelation: patient.guardian?.relation,
       diagnoses: visitData.diagnoses || [],
       clinicalData: visitData.clinicalData || {},
     };
 
-    await firestoreHelpers.addVisit(user.uid, patientId, visit);
-
-    // Refresh patient data to include the new visit from subcollection
-    const refreshedPatient = await firestoreHelpers.getPatientWithSubcollections(user.uid, patientId);
-    if (refreshedPatient) {
-      setPatients(prev => prev.map(p => p.id === patientId ? refreshedPatient : p));
-    }
-  }, [user]);
+    await api.visits.create(visitInput);
+    await refreshPatient(patientId);
+  }, [user, refreshPatient]);
 
   const updateVisitData = useCallback(async (patientId: string, visitId: string, data: ClinicalVisitData): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
 
-    // Fetch the full patient with subcollections to get the visit
-    const patient = await firestoreHelpers.getPatientWithSubcollections(user.uid, patientId);
+    const patient = patients.find(p => p.id === patientId);
     if (!patient) return;
 
-    const visit = patient.visits.find(v => v.id === visitId);
-    if (!visit) return;
+    const visit = patient.visits?.find(v => v.id === visitId);
+    const existingClinicalData = visit?.clinicalData || {};
+    const updatedClinicalData = { ...existingClinicalData, ...data };
 
-    const updatedVisit: Partial<Visit> = {
-      clinicalData: { ...(visit.clinicalData || {}), ...data }
-    };
+    const updates: any = { clinicalData: updatedClinicalData };
+    if (data.diagnoses) updates.diagnoses = data.diagnoses;
 
-    if (data?.diagnoses && data.diagnoses.length > 0) {
-      updatedVisit.diagnoses = data.diagnoses;
-    } else if (data?.diagnoses !== undefined) {
-      updatedVisit.diagnoses = [];
-    }
-
-    await firestoreHelpers.updateVisit(user.uid, patientId, visitId, updatedVisit);
-  }, [user]);
+    await api.visits.update(visitId, updates);
+    await refreshPatient(patientId);
+  }, [user, patients, refreshPatient]);
 
   const addOrUpdateInvestigationRecord = useCallback(async (patientId: string, record: InvestigationRecord): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
 
-    if (!record.id) {
-      record.id = crypto.randomUUID();
-    }
+    const patient = patients.find(p => p.id === patientId);
+    const existing = patient?.investigationRecords?.find(r => r.id === record.id);
 
-    console.log('💾 SAVING investigation for patient:', patientId);
-    console.log('💾 Record being saved:', record);
-
-    await firestoreHelpers.addInvestigationRecord(user.uid, patientId, record);
-    console.log('✅ Saved to Firestore');
-
-    // Refresh patient data to include the new investigation record from subcollection
-    console.log('🔄 Fetching refreshed patient data...');
-    const refreshedPatient = await firestoreHelpers.getPatientWithSubcollections(user.uid, patientId);
-    console.log('🔄 Refreshed patient:', refreshedPatient);
-    console.log('🔄 Investigation records in refreshed data:', refreshedPatient?.investigationRecords);
-
-    if (refreshedPatient) {
-      console.log('✅ Updating local state with', refreshedPatient.investigationRecords?.length, 'investigation records');
-      setPatients(prev => {
-        const updated = prev.map(p => p.id === patientId ? refreshedPatient : p);
-        console.log('✅ Updated patients state');
-        return updated;
+    if (existing) {
+      await api.investigations.update(record.id, {
+        date: record.date,
+        tests: record.tests,
+        notes: record.notes
       });
     } else {
-      console.error('❌ No refreshed patient data returned!');
+      await api.investigations.create({
+        patientId,
+        date: record.date,
+        tests: record.tests,
+        notes: record.notes
+      });
     }
-  }, [user]);
+
+    await refreshPatient(patientId);
+  }, [user, patients, refreshPatient]);
 
   const deleteInvestigationRecord = useCallback(async (patientId: string, recordId: string): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
-    await firestoreHelpers.deleteInvestigationRecord(user.uid, patientId, recordId);
-  }, [user]);
+    await api.investigations.delete(recordId);
+    await refreshPatient(patientId);
+  }, [user, refreshPatient]);
 
   const addOrUpdateIntervention = useCallback(async (patientId: string, intervention: Intervention): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
-    await firestoreHelpers.addIntervention(user.uid, patientId, intervention);
-  }, [user]);
+
+    const patient = patients.find(p => p.id === patientId);
+    const existing = patient?.interventions?.find(i => i.id === intervention.id);
+
+    if (existing) {
+      await api.interventions.update(intervention.id, intervention);
+    } else {
+      await api.interventions.create(patientId, intervention);
+    }
+    await refreshPatient(patientId);
+  }, [user, patients, refreshPatient]);
 
   const deleteIntervention = useCallback(async (patientId: string, interventionId: string): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
-    await firestoreHelpers.deleteIntervention(user.uid, patientId, interventionId);
-  }, [user]);
+    await api.interventions.delete(interventionId);
+    await refreshPatient(patientId);
+  }, [user, refreshPatient]);
 
   const addOrUpdateDialysisSession = useCallback(async (patientId: string, session: DialysisSession): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
 
-    if (!session.id) {
-      session.id = crypto.randomUUID();
-    }
+    const patient = patients.find(p => p.id === patientId);
+    const existing = patient?.dialysisSessions?.find(s => s.id === session.id);
 
-    await firestoreHelpers.addDialysisSession(user.uid, patientId, session);
-  }, [user]);
+    if (existing) {
+      await api.dialysis.update(session.id, session);
+    } else {
+      await api.dialysis.create(patientId, session);
+    }
+    await refreshPatient(patientId);
+  }, [user, patients, refreshPatient]);
 
   const deleteDialysisSession = useCallback(async (patientId: string, sessionId: string): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
-    await firestoreHelpers.deleteDialysisSession(user.uid, patientId, sessionId);
-  }, [user]);
+    await api.dialysis.delete(sessionId);
+    await refreshPatient(patientId);
+  }, [user, refreshPatient]);
 
   const deletePatient = useCallback(async (patientId: string): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
-    await firestoreHelpers.deletePatient(user.uid, patientId);
+    await api.patients.delete(patientId);
+    setPatients(prev => prev.filter(p => p.id !== patientId));
   }, [user]);
 
   const currentPatient = useCallback((id: string): Patient | undefined => {
@@ -385,47 +358,55 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
   const addAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'status' | 'createdAt'>): Promise<Appointment> => {
     if (!user) throw new Error('User not authenticated');
 
-    const nowISO = new Date().toISOString();
-    const newAppointment: Appointment = {
-      id: crypto.randomUUID(),
+    const newAppointment = await api.appointments.create({
       patientId: appointmentData.patientId,
-      patientName: appointmentData.patientName,
+      // patientName not in Input
       date: appointmentData.date,
       time: appointmentData.time,
       type: appointmentData.type,
       doctorName: appointmentData.doctorName,
       notes: appointmentData.notes,
       status: 'Scheduled',
-      createdAt: nowISO,
-    };
+    });
 
-    await firestoreHelpers.createAppointment(user.uid, newAppointment);
+    setAppointments(prev => [newAppointment, ...prev]);
     return newAppointment;
   }, [user]);
 
   const updateAppointmentStatus = useCallback(async (id: string, status: Appointment['status']): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
-    await firestoreHelpers.updateAppointment(user.uid, id, { status });
+    await api.appointments.update(id, { status });
+    setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
   }, [user]);
 
   const updateMultipleAppointmentStatuses = useCallback(async (updates: { id: string, status: Appointment['status'] }[]): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
 
     await Promise.all(
-      updates.map(update => firestoreHelpers.updateAppointment(user.uid, update.id, { status: update.status }))
+      updates.map(update => api.appointments.update(update.id, { status: update.status }))
     );
+
+    setAppointments(prev => prev.map(a => {
+      const update = updates.find(u => u.id === a.id);
+      return update ? { ...a, status: update.status } : a;
+    }));
   }, [user]);
 
   const updateAppointment = useCallback(async (updatedAppointmentData: Appointment): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
     const { id, ...updates } = updatedAppointmentData;
-    await firestoreHelpers.updateAppointment(user.uid, id, updates);
+    await api.appointments.update(id, updates);
+    setAppointments(prev => prev.map(a => a.id === id ? updatedAppointmentData : a));
   }, [user]);
 
   // --- INVESTIGATION DATABASE LOGIC ---
   const addOrUpdateInvestigation = useCallback(async (investigation: InvestigationMaster): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
 
+    // Update Supabase
+    await api.masterData.upsertInvestigationMaster(investigation);
+
+    // Update Local State
     const newList = [...investigationMasterList];
     const index = newList.findIndex(item => item.id === investigation.id);
 
@@ -434,35 +415,35 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     } else {
       newList.push({ ...investigation, id: investigation.id || crypto.randomUUID() });
     }
-
-    await firestoreHelpers.updateInvestigationMaster(user.uid, {
-      investigationMasterList: newList,
-      investigationPanels
-    });
-
     setInvestigationMasterList(newList);
-  }, [investigationMasterList, investigationPanels, user]);
+  }, [user, investigationMasterList]);
 
   const deleteInvestigation = useCallback(async (investigationId: string): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
 
+    // Update Supabase
+    await api.masterData.deleteInvestigationMaster(investigationId);
+
+    // Update Local State
     const newList = investigationMasterList.filter(item => item.id !== investigationId);
+    setInvestigationMasterList(newList);
+
+    // Also remove from panels locally (and maybe Supabase? Panels implementation handles its own structure)
+    // IMPORTANT: If we delete a test, we should probably update panels too. 
+    // But for now, just local update is fine or separate call.
+    // The previous implementation updated panels locally.
+
     const newPanels = investigationPanels.map(panel => ({
       ...panel,
       testIds: panel.testIds.filter(id => id !== investigationId)
     }));
-
-    await firestoreHelpers.updateInvestigationMaster(user.uid, {
-      investigationMasterList: newList,
-      investigationPanels: newPanels
-    });
-
-    setInvestigationMasterList(newList);
     setInvestigationPanels(newPanels);
-  }, [investigationMasterList, investigationPanels, user]);
+  }, [user, investigationMasterList, investigationPanels]);
 
   const addOrUpdatePanel = useCallback(async (panel: InvestigationPanel): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
+
+    await api.masterData.upsertInvestigationPanel(panel);
 
     const newPanels = [...investigationPanels];
     const index = newPanels.findIndex(item => item.id === panel.id);
@@ -472,27 +453,17 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     } else {
       newPanels.push({ ...panel, id: panel.id || crypto.randomUUID() });
     }
-
-    await firestoreHelpers.updateInvestigationMaster(user.uid, {
-      investigationMasterList,
-      investigationPanels: newPanels
-    });
-
     setInvestigationPanels(newPanels);
-  }, [investigationMasterList, investigationPanels, user]);
+  }, [user, investigationPanels]);
 
   const deletePanel = useCallback(async (panelId: string): Promise<void> => {
     if (!user) throw new Error('User not authenticated');
 
+    await api.masterData.deleteInvestigationPanel(panelId);
+
     const newPanels = investigationPanels.filter(item => item.id !== panelId);
-
-    await firestoreHelpers.updateInvestigationMaster(user.uid, {
-      investigationMasterList,
-      investigationPanels: newPanels
-    });
-
     setInvestigationPanels(newPanels);
-  }, [investigationMasterList, investigationPanels, user]);
+  }, [user, investigationPanels]);
 
   // --- PROVIDER VALUE ---
   const value = useMemo(() => ({

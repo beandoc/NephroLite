@@ -1,47 +1,18 @@
-import {
-    collection,
-    doc,
-    getDocs,
-    getDoc,
-    addDoc,
-    updateDoc,
-    deleteDoc,
-    query,
-    where,
-    orderBy,
-    limit,
-    Timestamp,
-    QueryConstraint,
-} from 'firebase/firestore';
 import { BaseAPI } from './base-api';
-import { db } from '@/lib/firebase';
 import { apiLogger } from '@/lib/logger';
+import type { Patient } from '@/lib/types';
+export type { Patient };
 
-/**
- * Patient type (simplified - extend as needed)
- */
-export interface Patient {
-    id: string;
-    personalInfo?: {
-        name?: string;
-        email?: string;
-        phoneNumber?: string;
-    };
-    createdAt?: Timestamp;
-    updatedAt?: Timestamp;
-    isDeleted?: boolean;
-    [key: string]: any;
-}
+export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'updatedAt' | 'visits' | 'investigationRecords' | 'dialysisSessions' | 'interventions'>;
 
-export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'updatedAt'>;
 
 /**
  * Patients API
- * Handles all patient-related Firestore operations
+ * Handles all patient-related Supabase operations
  */
 export class PatientsAPI extends BaseAPI {
     constructor() {
-        super(db, 'patients', apiLogger);
+        super('patients', apiLogger);
     }
 
     /**
@@ -51,19 +22,21 @@ export class PatientsAPI extends BaseAPI {
         return this.withErrorHandling(async () => {
             this.logOperation('start', 'getAll');
 
-            const snapshot = await getDocs(
-                query(
-                    collection(this.db, this.collectionName),
-                    where('isDeleted', '!=', true),
-                    orderBy('isDeleted'),
-                    orderBy('createdAt', 'desc')
-                )
-            );
+            const { data, error } = await this.supabase
+                .from(this.tableName)
+                // Fetch patient and related sub-resources
+                .select(`
+                    *,
+                    visits(*),
+                    investigation_records(*),
+                    dialysis_sessions(*)
+                `)
+                .order('created_at', { ascending: false });
 
-            const patients = this.formatDocs<Patient>(snapshot.docs);
+            if (error) throw error;
 
-            this.logger.info({ count: patients.length }, 'Fetched all patients');
-            return patients;
+            // Map DB snake_case to app camelCase
+            return data.map(this.mapToPatient);
         }, 'getAll');
     }
 
@@ -74,16 +47,23 @@ export class PatientsAPI extends BaseAPI {
         return this.withErrorHandling(async () => {
             this.logOperation('start', 'getById', { patientId: id });
 
-            const docRef = doc(this.db, this.collectionName, id);
-            const snapshot = await getDoc(docRef);
+            const { data, error } = await this.supabase
+                .from(this.tableName)
+                .select(`
+                    *,
+                    visits(*),
+                    investigation_records(*),
+                    dialysis_sessions(*)
+                `)
+                .eq('id', id)
+                .single();
 
-            if (!snapshot.exists()) {
-                this.logger.warn({ patientId: id }, 'Patient not found');
-                return null;
+            if (error) {
+                if (error.code === 'PGRST116') return null; // Not found code
+                throw error;
             }
 
-            const patient = this.formatDoc<Patient>(snapshot);
-            return patient;
+            return this.mapToPatient(data);
         }, 'getById');
     }
 
@@ -94,26 +74,35 @@ export class PatientsAPI extends BaseAPI {
         return this.withErrorHandling(async () => {
             this.logOperation('start', 'create');
 
-            const now = Timestamp.now();
-            const docData = {
-                ...data,
-                createdAt: now,
-                updatedAt: now,
-                isDeleted: false,
+            // Map app camelCase to DB snake_case
+            const dbPayload = {
+                nephro_id: data.nephroId,
+                first_name: data.firstName,
+                last_name: data.lastName,
+                dob: data.dob,
+                gender: data.gender,
+                phone: data.phoneNumber,
+                email: data.email,
+                address: data.address,
+                guardian: data.guardian,
+                clinical_profile: data.clinicalProfile,
+                registration_date: data.registrationDate,
+                is_tracked: data.isTracked ?? true,
+                patient_status: data.patientStatus,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
             };
 
-            const docRef = await addDoc(
-                collection(this.db, this.collectionName),
-                docData
-            );
+            const { data: newRecord, error } = await this.supabase
+                .from(this.tableName)
+                .insert(dbPayload)
+                .select()
+                .single();
 
-            const patient: Patient = {
-                id: docRef.id,
-                ...docData,
-            };
+            if (error) throw error;
 
-            this.logger.info({ patientId: patient.id }, 'Patient created');
-            return patient;
+            this.logger.info({ patientId: newRecord.id }, 'Patient created');
+            return this.mapToPatient(newRecord);
         }, 'create');
     }
 
@@ -124,51 +113,50 @@ export class PatientsAPI extends BaseAPI {
         return this.withErrorHandling(async () => {
             this.logOperation('start', 'update', { patientId: id });
 
-            const docRef = doc(this.db, this.collectionName, id);
+            const updates: any = {};
+            if (data.firstName) updates.first_name = data.firstName;
+            if (data.lastName) updates.last_name = data.lastName;
+            if (data.nephroId) updates.nephro_id = data.nephroId;
+            if (data.dob) updates.dob = data.dob;
+            if (data.gender) updates.gender = data.gender;
+            if (data.phoneNumber) updates.phone = data.phoneNumber;
+            if (data.email) updates.email = data.email;
+            if (data.address) updates.address = data.address;
+            if (data.guardian) updates.guardian = data.guardian;
+            if (data.clinicalProfile) updates.clinical_profile = data.clinicalProfile;
+            if (data.isTracked !== undefined) updates.is_tracked = data.isTracked;
+            if (data.patientStatus) updates.patient_status = data.patientStatus;
 
-            await updateDoc(docRef, {
-                ...data,
-                updatedAt: Timestamp.now(),
-            });
+            updates.updated_at = new Date().toISOString();
+
+            const { error } = await this.supabase
+                .from(this.tableName)
+                .update(updates)
+                .eq('id', id);
+
+            if (error) throw error;
 
             this.logger.info({ patientId: id }, 'Patient updated');
         }, 'update');
     }
 
     /**
-     * Soft delete patient
-     */
-    async delete(id: string): Promise<void> {
-        return this.withErrorHandling(async () => {
-            this.logOperation('start', 'delete', { patientId: id });
-
-            await this.update(id, {
-                isDeleted: true
-            } as any);
-
-            this.logger.info({ patientId: id }, 'Patient soft-deleted');
-        }, 'delete');
-    }
-
-    /**
      * Search patients by name
+     * Uses Postgres ILIKE for case-insensitive partial match
      */
     async searchByName(name: string): Promise<Patient[]> {
         return this.withErrorHandling(async () => {
             this.logOperation('start', 'searchByName', { query: name });
 
-            const snapshot = await getDocs(
-                query(
-                    collection(this.db, this.collectionName),
-                    where('personalInfo.name', '>=', name),
-                    where('personalInfo.name', '<=', name + '\uf8ff'),
-                    where('isDeleted', '!=', true),
-                    limit(20)
-                )
-            );
+            const { data, error } = await this.supabase
+                .from(this.tableName)
+                .select('*')
+                .or(`first_name.ilike.%${name}%,last_name.ilike.%${name}%`)
+                .limit(20);
 
-            const patients = this.formatDocs<Patient>(snapshot.docs);
+            if (error) throw error;
 
+            const patients = data.map(this.mapToPatient);
             this.logger.info({ query: name, count: patients.length }, 'Search completed');
             return patients;
         }, 'searchByName');
@@ -177,26 +165,115 @@ export class PatientsAPI extends BaseAPI {
     /**
      * Get patients with pagination
      */
-    async getPaginated(pageSize: number = 20, filters: QueryConstraint[] = []): Promise<Patient[]> {
+    async getPaginated(page: number = 1, pageSize: number = 20, filters?: any): Promise<{ data: Patient[], count: number }> {
         return this.withErrorHandling(async () => {
-            this.logOperation('start', 'getPaginated', { pageSize });
+            this.logOperation('start', 'getPaginated', { page, pageSize });
 
-            const snapshot = await getDocs(
-                query(
-                    collection(this.db, this.collectionName),
-                    where('isDeleted', '!=', true),
-                    ...filters,
-                    limit(pageSize)
-                )
-            );
+            let query = this.supabase
+                .from(this.tableName)
+                .select('*', { count: 'exact' });
 
-            const patients = this.formatDocs<Patient>(snapshot.docs);
+            // Apply filters if needed (simple implementation for now)
+            if (filters?.search) {
+                query = query.or(`first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%`);
+            }
 
-            this.logger.info({ pageSize, count: patients.length }, 'Paginated fetch completed');
-            return patients;
+            const from = (page - 1) * pageSize;
+            const to = from + pageSize - 1;
+
+            const { data, error, count } = await query
+                .order('created_at', { ascending: false })
+                .range(from, to);
+
+            if (error) throw error;
+
+            return {
+                data: data.map(this.mapToPatient),
+                count: count || 0
+            };
         }, 'getPaginated');
+    }
+
+    // Helper to map DB columns to App types
+    /**
+     * Delete patient and all related data (cascaded by DB)
+     */
+    async delete(id: string): Promise<void> {
+        return this.withErrorHandling(async () => {
+            this.logOperation('start', 'delete', { patientId: id });
+
+            const { error } = await this.supabase
+                .from(this.tableName)
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            this.logger.info({ patientId: id }, 'Patient deleted');
+        }, 'delete');
+    }
+
+    // Helper to map DB columns to App types
+    private mapToPatient = (row: any): Patient => {
+        // Map Visits
+        const visits = Array.isArray(row.visits) ? row.visits.map((v: any) => ({
+            id: v.id,
+            patientId: v.patient_id,
+            visitDate: v.date,
+            visitType: v.visit_type,
+            visitRemark: v.visit_remark,
+            groupName: v.group_name,
+            clinicalData: v.clinical_data,
+            diagnoses: v.diagnoses,
+            createdAt: v.created_at
+        })) : [];
+
+        // Map Investigation Records
+        const investigationRecords = Array.isArray(row.investigation_records) ? row.investigation_records.map((i: any) => ({
+            id: i.id,
+            patientId: i.patient_id,
+            date: i.date,
+            tests: i.tests,
+            notes: i.notes,
+            createdAt: i.created_at
+        })) : [];
+
+        // Map Dialysis Sessions
+        const dialysisSessions = Array.isArray(row.dialysis_sessions) ? row.dialysis_sessions.map((s: any) => ({
+            id: s.id,
+            patientId: s.patient_id,
+            dateOfSession: s.date_of_session,
+            typeOfDialysis: s.type_of_dialysis,
+            duration: s.duration,
+            stats: s.stats,
+            details: s.details,
+            createdAt: s.created_at
+        })) : [];
+
+        return {
+            id: row.id,
+            nephroId: row.nephro_id,
+            firstName: row.first_name,
+            lastName: row.last_name,
+            dob: row.dob,
+            gender: row.gender,
+            phoneNumber: row.phone,
+            email: row.email,
+            address: row.address,
+            guardian: row.guardian,
+            clinicalProfile: row.clinical_profile,
+            registrationDate: row.registration_date,
+            createdAt: row.created_at,
+            isTracked: row.is_tracked,
+            patientStatus: row.patient_status,
+            visits,
+            investigationRecords,
+            dialysisSessions
+        };
     }
 }
 
 // Export singleton instance
 export const patientsAPI = new PatientsAPI();
+
+

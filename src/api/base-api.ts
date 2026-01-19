@@ -1,27 +1,28 @@
-import { Firestore } from 'firebase/firestore';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
+import { supabase } from '@/lib/supabase/client';
 import { handleError } from '@/lib/error-handler';
 
 /**
- * Base API class for all Firestore operations
- * Provides common functionality: retry logic, logging, error handling
+ * Base API class for all Supabase operations
+ * Provides common functionality: error handling, logging
  */
 export abstract class BaseAPI {
-    protected db: Firestore;
+    protected supabase: SupabaseClient;
     protected logger: typeof logger;
-    protected collectionName: string;
+    protected tableName: string;
 
-    constructor(db: Firestore, collectionName: string, loggerInstance: typeof logger) {
-        this.db = db;
-        this.collectionName = collectionName;
+    constructor(tableName: string, loggerInstance: typeof logger) {
+        this.supabase = supabase;
+        this.tableName = tableName;
         this.logger = loggerInstance.child({
             api: this.constructor.name,
-            collection: collectionName
+            table: tableName
         });
     }
 
     /**
-     * Wrap operations with error handling and retry logic
+     * Wrap operations with error handling
      */
     protected async withErrorHandling<T>(
         operation: () => Promise<T>,
@@ -44,25 +45,9 @@ export abstract class BaseAPI {
         this.logger.info({
             status,
             operation,
-            collection: this.collectionName,
+            table: this.tableName,
             ...data
         }, `${operation}`);
     }
-
-    /**
-     * Format Firestore document for API response
-     */
-    protected formatDoc<T>(doc: any): T {
-        return {
-            id: doc.id,
-            ...doc.data(),
-        } as T;
-    }
-
-    /**
-     * Format multiple Firestore documents
-     */
-    protected formatDocs<T>(docs: any[]): T[] {
-        return docs.map(doc => this.formatDoc<T>(doc));
-    }
 }
+

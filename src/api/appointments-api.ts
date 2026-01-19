@@ -1,185 +1,125 @@
-import {
-    collection,
-    doc,
-    getDocs,
-    getDoc,
-    addDoc,
-    updateDoc,
-    query,
-    where,
-    orderBy,
-    Timestamp,
-} from 'firebase/firestore';
 import { BaseAPI } from './base-api';
-import { db } from '@/lib/firebase';
 import { apiLogger } from '@/lib/logger';
+import type { Appointment } from '@/lib/types';
+export type { Appointment };
 
-/**
- * Appointment status types
- */
-export type AppointmentStatus = 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
+export type AppointmentInput = Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | 'patientName'>; // patientName usually derived or passed for UI but in DB?
 
-/**
- * Appointment type representing patient appointments
- */
-export interface Appointment {
-    id: string;
-    patientId: string;
-    appointmentDate: string;
-    appointmentTime: string;
-    status: AppointmentStatus;
-    appointmentType?: string;
-    doctorId?: string;
-    notes?: string;
-    createdAt?: Timestamp;
-    updatedAt?: Timestamp;
-    [key: string]: any;
-}
+// DB doesn't have patient_name, only patient_id. 
+// However, the App type `Appointment` requires `patientName`.
+// We should perhaps fetch it via join in `select`?
+// Or if it's not in DB, we return empty string or handle it.
+// The schema showed `patient_id` FK.
 
-export type AppointmentInput = Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>;
+export type AppointmentStatus = Appointment['status'];
 
 /**
  * Appointments API
- * Handles all appointment-related Firestore operations
- * 
- * @example
- * ```typescript
- * import { api } from '@/api';
- * 
- * // Create appointment
- * const appointment = await api.appointments.create({
- *   patientId: 'patient123',
- *   appointmentDate: '2024-12-25',
- *   appointmentTime: '10:00',
- *   status: 'scheduled'
- * });
- * 
- * // Get appointments for a date
- * const appointments = await api.appointments.getByDate('2024-12-25');
- * ```
+ * Handles all appointment-related Supabase operations
  */
 export class AppointmentsAPI extends BaseAPI {
     constructor() {
-        super(db, 'appointments', apiLogger);
+        super('appointments', apiLogger);
     }
 
     /**
      * Get all appointments, optionally filtered by patient
-     * 
-     * @param patientId - Optional patient ID to filter appointments
-     * @returns Promise with array of appointments
-     * @throws {AppError} If database query fails
      */
     async getAll(patientId?: string): Promise<Appointment[]> {
         return this.withErrorHandling(async () => {
             this.logOperation('start', 'getAll', { patientId });
 
-            let q;
+            let query = this.supabase
+                .from(this.tableName)
+                .select('*, patients(first_name, last_name)') // Join patients to get Name
+                .order('date', { ascending: false });
+
             if (patientId) {
-                q = query(
-                    collection(this.db, this.collectionName),
-                    where('patientId', '==', patientId),
-                    orderBy('appointmentDate', 'desc')
-                );
-            } else {
-                q = query(
-                    collection(this.db, this.collectionName),
-                    orderBy('appointmentDate', 'desc')
-                );
+                query = query.eq('patient_id', patientId);
             }
 
-            const snapshot = await getDocs(q);
-            const appointments = this.formatDocs<Appointment>(snapshot.docs);
+            const { data, error } = await query;
+            if (error) throw error;
 
-            this.logger.info({ count: appointments.length, patientId }, 'Fetched appointments');
-            return appointments;
+            return data.map(this.mapToAppointment);
         }, 'getAll');
     }
 
     /**
      * Get appointment by ID
-     * 
-     * @param id - Appointment document ID
-     * @returns Promise with appointment or null if not found
-     * @throws {AppError} If database query fails
      */
     async getById(id: string): Promise<Appointment | null> {
         return this.withErrorHandling(async () => {
-            const docRef = doc(this.db, this.collectionName, id);
-            const snapshot = await getDoc(docRef);
+            const { data, error } = await this.supabase
+                .from(this.tableName)
+                .select('*, patients(first_name, last_name)')
+                .eq('id', id)
+                .single();
 
-            if (!snapshot.exists()) {
-                this.logger.warn({ appointmentId: id }, 'Appointment not found');
-                return null;
+            if (error) {
+                if (error.code === 'PGRST116') return null;
+                throw error;
             }
 
-            return this.formatDoc<Appointment>(snapshot);
+            return this.mapToAppointment(data);
         }, 'getById');
     }
 
     /**
      * Create new appointment
-     * 
-     * @param data - Appointment data (without id, createdAt, updatedAt)
-     * @returns Promise with created appointment including generated ID
-     * @throws {AppError} If creation fails
-     * 
-     * @example
-     * ```typescript
-     * const appointment = await api.appointments.create({
-     *   patientId: 'patient123',
-     *   appointmentDate: '2024-12-25',
-     *   appointmentTime: '10:00',
-     *   status: 'scheduled',
-     *   appointmentType: 'follow-up',
-     *   doctorId: 'doctor456'
-     * });
-     * ```
      */
     async create(data: AppointmentInput): Promise<Appointment> {
         return this.withErrorHandling(async () => {
-            const now = Timestamp.now();
-            const docData = {
-                ...data,
-                createdAt: now,
-                updatedAt: now,
+            const now = new Date().toISOString();
+            const dbPayload = {
+                patient_id: data.patientId,
+                date: data.date,
+                time: data.time,
+                status: data.status,
+                type: data.type,
+                doctor_name: data.doctorName,
+                notes: data.notes,
+                created_at: now
             };
 
-            const docRef = await addDoc(
-                collection(this.db, this.collectionName),
-                docData
-            );
+            const { data: newRecord, error } = await this.supabase
+                .from(this.tableName)
+                .insert(dbPayload)
+                .select('*, patients(first_name, last_name)')
+                .single();
 
-            const appointment = {
-                id: docRef.id,
-                ...docData,
-            } as Appointment;
+            if (error) throw error;
 
             this.logger.info({
-                appointmentId: appointment.id,
+                appointmentId: newRecord.id,
                 patientId: data.patientId,
-                date: data.appointmentDate
+                date: data.date
             }, 'Appointment created');
 
-            return appointment;
+            return this.mapToAppointment(newRecord);
         }, 'create');
     }
 
     /**
      * Update existing appointment
-     * 
-     * @param id - Appointment document ID
-     * @param data - Partial appointment data to update
-     * @throws {AppError} If update fails
      */
     async update(id: string, data: Partial<AppointmentInput>): Promise<void> {
         return this.withErrorHandling(async () => {
-            const docRef = doc(this.db, this.collectionName, id);
+            const updates: any = {};
+            if (data.patientId) updates.patient_id = data.patientId;
+            if (data.date) updates.date = data.date;
+            if (data.time) updates.time = data.time;
+            if (data.status) updates.status = data.status;
+            if (data.type) updates.type = data.type;
+            if (data.doctorName) updates.doctor_name = data.doctorName;
+            if (data.notes) updates.notes = data.notes;
 
-            await updateDoc(docRef, {
-                ...data,
-                updatedAt: Timestamp.now(),
-            });
+            const { error } = await this.supabase
+                .from(this.tableName)
+                .update(updates)
+                .eq('id', id);
+
+            if (error) throw error;
 
             this.logger.info({ appointmentId: id }, 'Appointment updated');
         }, 'update');
@@ -187,56 +127,57 @@ export class AppointmentsAPI extends BaseAPI {
 
     /**
      * Update appointment status
-     * 
-     * @param id - Appointment document ID
-     * @param status - New status
-     * @throws {AppError} If update fails
-     * 
-     * @example
-     * ```typescript
-     * // Mark appointment as completed
-     * await api.appointments.updateStatus('appt123', 'completed');
-     * 
-     * // Cancel appointment
-     * await api.appointments.updateStatus('appt123', 'cancelled');
-     * ```
      */
     async updateStatus(id: string, status: AppointmentStatus): Promise<void> {
         return this.withErrorHandling(async () => {
-            await this.update(id, { status });
+            await this.update(id, { status } as any);
             this.logger.info({ appointmentId: id, status }, 'Appointment status updated');
         }, 'updateStatus');
     }
 
     /**
      * Get appointments by date
-     * 
-     * @param date - Date in YYYY-MM-DD format
-     * @returns Promise with array of appointments for the specified date
-     * 
-     * @example
-     * ```typescript
-     * // Get all appointments for today
-     * const today = new Date().toISOString().split('T')[0];
-     * const appointments = await api.appointments.getByDate(today);
-     * ```
      */
     async getByDate(date: string): Promise<Appointment[]> {
         return this.withErrorHandling(async () => {
-            const snapshot = await getDocs(
-                query(
-                    collection(this.db, this.collectionName),
-                    where('appointmentDate', '==', date),
-                    orderBy('appointmentTime')
-                )
-            );
+            const { data, error } = await this.supabase
+                .from(this.tableName)
+                .select('*, patients(first_name, last_name)')
+                .eq('date', date)
+                .order('time', { ascending: true });
 
-            const appointments = this.formatDocs<Appointment>(snapshot.docs);
+            if (error) throw error;
+
+            const appointments = data.map(this.mapToAppointment);
             this.logger.info({ date, count: appointments.length }, 'Fetched appointments by date');
             return appointments;
         }, 'getByDate');
+    }
+
+    private mapToAppointment(row: any): Appointment {
+        // Handle joined patient data if available
+        let patientName = 'Unknown';
+        if (row.patients) {
+            patientName = `${row.patients.first_name} ${row.patients.last_name}`.trim();
+        } else if (row.patient_name) { // Fallback if explicit column exists
+            patientName = row.patient_name;
+        }
+
+        return {
+            id: row.id,
+            patientId: row.patient_id,
+            date: row.date,
+            time: row.time,
+            status: row.status,
+            type: row.type,
+            doctorName: row.doctor_name,
+            notes: row.notes,
+            createdAt: row.created_at,
+            patientName: patientName // Required by type
+        };
     }
 }
 
 // Export singleton instance
 export const appointmentsAPI = new AppointmentsAPI();
+

@@ -28,7 +28,7 @@ import { Label } from '@/components/ui/label';
 import { InvestigationDatabase } from '@/components/investigations/investigation-database';
 import { usePatientData } from '@/hooks/use-patient-data';
 import { useAuth } from '@/context/auth-provider';
-import { saveTemplate, getTemplates, saveMasterDiagnoses, getMasterDiagnoses } from '@/lib/firestore-helpers';
+import { api } from '@/api';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const diagnosisSchema = z.object({
@@ -304,11 +304,11 @@ export default function TemplatesPage() {
             try {
                 setIsLoading(true);
                 const [loadedTemplates, loadedDiagnoses] = await Promise.all([
-                    getTemplates(user.uid),
-                    getMasterDiagnoses(user.uid)
+                    api.templates.getTemplates(user.uid),
+                    api.templates.getMasterDiagnoses(user.uid)
                 ]);
 
-                // If no templates in Firestore, use defaults
+                // If no templates, use defaults
                 if (Object.keys(loadedTemplates).length === 0) {
                     const defaultTemplates = JSON.parse(JSON.stringify(DIAGNOSIS_TEMPLATES));
                     setTemplates(defaultTemplates);
@@ -316,18 +316,17 @@ export default function TemplatesPage() {
                     setTemplates(loadedTemplates);
                 }
 
-                // If no diagnoses in Firestore, use defaults
+                // If no diagnoses, use defaults
                 if (loadedDiagnoses.length === 0) {
                     setMasterDiagnoses(MOCK_DIAGNOSES);
-                    // Save defaults to Firestore
-                    await saveMasterDiagnoses(user.uid, MOCK_DIAGNOSES);
+                    // Save defaults
+                    await api.templates.saveMasterDiagnoses(user.uid, MOCK_DIAGNOSES);
                 } else {
                     setMasterDiagnoses(loadedDiagnoses);
                 }
             } catch (error) {
                 console.error('Error loading templates:', error);
                 toast({ title: 'Error', description: 'Failed to load templates', variant: 'destructive' });
-                // Fallback to defaults
                 setTemplates(JSON.parse(JSON.stringify(DIAGNOSIS_TEMPLATES)));
                 setMasterDiagnoses(MOCK_DIAGNOSES);
             } finally {
@@ -368,42 +367,6 @@ export default function TemplatesPage() {
 
     const templateType = form.watch("templateType");
 
-    useEffect(() => {
-        if (selectedTemplate) {
-            const templateData = templates[selectedTemplate];
-            if (templateData) {
-                form.reset({
-                    ...templateData,
-                    medications: templateData.medications.map(m => ({ ...m, id: m.id || crypto.randomUUID() })),
-                });
-            }
-        } else {
-            handleCreateNew();
-        }
-    }, [selectedTemplate, templates, form]);
-
-    const handleSelectTemplate = (templateName: string) => {
-        if (templateName && templates[templateName]) {
-            setSelectedTemplate(templateName);
-        } else {
-            setSelectedTemplate(null);
-        }
-    };
-
-    const onSaveTemplate = async (data: TemplateFormData) => {
-        if (!user) return;
-
-        try {
-            await saveTemplate(user.uid, data);
-            setTemplates(prev => ({ ...prev, [data.templateName]: data }));
-            toast({ title: "Template Saved", description: `Template "${data.templateName}" has been saved to Firestore.` });
-            setSelectedTemplate(data.templateName);
-        } catch (error) {
-            console.error('Error saving template:', error);
-            toast({ title: 'Error', description: 'Failed to save template', variant: 'destructive' });
-        }
-    };
-
     const handleCreateNew = () => {
         setSelectedTemplate(null);
         form.reset({
@@ -420,7 +383,43 @@ export default function TemplatesPage() {
             opinionText: "",
             recommendations: "",
         });
-    }
+    };
+
+    const handleSelectTemplate = (templateName: string) => {
+        if (templateName && templates[templateName]) {
+            setSelectedTemplate(templateName);
+        } else {
+            setSelectedTemplate(null);
+        }
+    };
+
+    useEffect(() => {
+        if (selectedTemplate) {
+            const templateData = templates[selectedTemplate];
+            if (templateData) {
+                form.reset({
+                    ...templateData,
+                    medications: templateData.medications.map(m => ({ ...m, id: m.id || crypto.randomUUID() })),
+                });
+            }
+        } else {
+            handleCreateNew();
+        }
+    }, [selectedTemplate, templates, form]);
+
+    const onSaveTemplate = async (data: TemplateFormData) => {
+        if (!user) return;
+
+        try {
+            await api.templates.saveTemplate(user.uid, data as DiagnosisTemplate);
+            setTemplates(prev => ({ ...prev, [data.templateName]: data }));
+            toast({ title: "Template Saved", description: `Template "${data.templateName}" has been saved.` });
+            setSelectedTemplate(data.templateName);
+        } catch (error) {
+            console.error('Error saving template:', error);
+            toast({ title: 'Error', description: 'Failed to save template', variant: 'destructive' });
+        }
+    };
 
     const handleAddDiagnosis = (diagnosisId: string) => {
         const diagnosisToAdd = masterDiagnoses.find(d => d.id === diagnosisId);
@@ -456,10 +455,10 @@ export default function TemplatesPage() {
         setMasterDiagnoses(updatedList);
 
         try {
-            await saveMasterDiagnoses(user.uid, updatedList);
+            await api.templates.saveMasterDiagnoses(user.uid, [updatedDiagnosis]);
             toast({
                 title: 'Master Diagnosis Updated',
-                description: `"${updatedDiagnosis.clinicalDiagnosis}" has been updated and saved to Firestore.`,
+                description: `"${updatedDiagnosis.clinicalDiagnosis}" has been updated.`,
             });
         } catch (error) {
             console.error('Error saving master diagnosis:', error);
@@ -484,8 +483,8 @@ export default function TemplatesPage() {
         setMasterDiagnoses(updatedList);
 
         try {
-            await saveMasterDiagnoses(user.uid, updatedList);
-            toast({ title: "Diagnosis Added", description: `Successfully added ${newDiagnosis.clinicalDiagnosis} to the master list and saved to Firestore.` });
+            await api.templates.saveMasterDiagnoses(user.uid, [newDiagnosis]);
+            toast({ title: "Diagnosis Added", description: `Successfully added ${newDiagnosis.clinicalDiagnosis} to the master list.` });
         } catch (error) {
             console.error('Error saving new diagnosis:', error);
             toast({ title: 'Error', description: 'Failed to save diagnosis', variant: 'destructive' });

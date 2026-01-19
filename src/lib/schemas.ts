@@ -159,6 +159,7 @@ export const investigationTestSchema = z.object({
 
 export const investigationRecordSchema = z.object({
   id: z.string(),
+  patientId: z.string(),
   date: z.string(),
   tests: z.array(investigationTestSchema),
   notes: z.string().optional(),
@@ -186,7 +187,7 @@ export const dialysisSessionSchema = z.object({
   complicationsFlag: z.boolean(),
   complicationsDesc: z.array(z.string()).optional(),
   complicationsManagementDesc: z.array(z.string()).optional(),
-  bpBefore: z.object({ systolic: z.number().optional(), diastolic: z.number().optional() }).optional(),
+  bpBefore: z.string().optional(),
   bpDuring: z.string().optional(),
   bpPeak: z.object({ systolic: z.number().optional(), diastolic: z.number().optional() }).optional(),
   bpNadir: z.object({ systolic: z.number().optional(), diastolic: z.number().optional() }).optional(),
